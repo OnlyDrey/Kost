@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "Familieøkonomi",
+    "title": "Familieøkonomi Manager"
+  },
+  "nav": {
+    "dashboard": "Oversikt",
+    "invoices": "Fakturaer",
+    "periods": "Perioder",
+    "settings": "Innstillinger",
+    "logout": "Logg ut"
+  },
+  "auth": {
+    "login": "Logg inn",
+    "email": "E-post",
+    "sendMagicLink": "Send magisk lenke",
+    "checkEmail": "Sjekk e-posten din for den magiske lenken!",
+    "verifying": "Verifiserer...",
+    "loginFailed": "Innlogging mislyktes. Vennligst prøv igjen."
+  },
+  "dashboard": {
+    "title": "Oversikt",
+    "currentPeriod": "Nåværende periode",
+    "periodStatus": "Periodestatus",
+    "totalInvoices": "Totalt antall fakturaer",
+    "totalAmount": "Total beløp",
+    "yourShare": "Din andel",
+    "recentInvoices": "Nylige fakturaer",
+    "viewAll": "Vis alle"
+  },
+  "invoice": {
+    "title": "Faktura",
+    "invoices": "Fakturaer",
+    "addInvoice": "Legg til faktura",
+    "editInvoice": "Rediger faktura",
+    "description": "Beskrivelse",
+    "amount": "Beløp",
+    "totalAmount": "Total beløp",
+    "category": "Kategori",
+    "paidBy": "Betalt av",
+    "invoiceDate": "Fakturadato",
+    "dueDate": "Forfallsdato",
+    "status": "Status",
+    "distributionMethod": "Fordelingsmetode",
+    "equal": "Lik fordeling",
+    "custom": "Tilpasset fordeling",
+    "incomeBased": "Inntektsbasert fordeling",
+    "shares": "Andeler",
+    "yourShare": "Din andel",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "delete": "Slett",
+    "confirmDelete": "Er du sikker på at du vil slette denne fakturaen?",
+    "allocationExplanation": "Fordelingsforklaring",
+    "customShares": "Tilpassede andeler",
+    "shareAmount": "Andelsbeløp",
+    "addShare": "Legg til andel",
+    "selectUser": "Velg bruker"
+  },
+  "period": {
+    "title": "Periode",
+    "periods": "Perioder",
+    "currentPeriod": "Nåværende periode",
+    "createPeriod": "Opprett periode",
+    "closePeriod": "Lukk periode",
+    "name": "Navn",
+    "startDate": "Startdato",
+    "endDate": "Sluttdato",
+    "status": "Status",
+    "open": "Åpen",
+    "closed": "Lukket",
+    "confirmClose": "Er du sikker på at du vil lukke denne perioden? Dette kan ikke angres.",
+    "stats": "Statistikk",
+    "userShares": "Brukerandeler"
+  },
+  "settings": {
+    "title": "Innstillinger",
+    "theme": "Tema",
+    "language": "Språk",
+    "light": "Lys",
+    "dark": "Mørk",
+    "english": "Engelsk",
+    "norwegian": "Norsk"
+  },
+  "common": {
+    "loading": "Laster...",
+    "error": "Feil",
+    "success": "Suksess",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "delete": "Slett",
+    "edit": "Rediger",
+    "add": "Legg til",
+    "search": "Søk",
+    "filter": "Filtrer",
+    "noData": "Ingen data tilgjengelig",
+    "confirm": "Bekreft",
+    "close": "Lukk",
+    "back": "Tilbake",
+    "next": "Neste",
+    "previous": "Forrige"
+  },
+  "validation": {
+    "required": "Dette feltet er påkrevd",
+    "invalidEmail": "Ugyldig e-postadresse",
+    "invalidAmount": "Ugyldig beløp",
+    "invalidDate": "Ugyldig dato"
+  },
+  "errors": {
+    "networkError": "Nettverksfeil. Vennligst sjekk tilkoblingen din.",
+    "serverError": "Serverfeil. Vennligst prøv igjen senere.",
+    "notFound": "Ikke funnet",
+    "unauthorized": "Uautorisert. Vennligst logg inn.",
+    "forbidden": "Du har ikke tillatelse til å utføre denne handlingen."
+  }
+}

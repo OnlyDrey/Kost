@@ -1,0 +1,96 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: family-finance-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-financeuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-financepass}
+      POSTGRES_DB: ${DB_NAME:-familyfinance}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-financeuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: family-finance-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgresql://${DB_USER:-financeuser}:${DB_PASSWORD:-financepass}@db:5432/${DB_NAME:-familyfinance}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-Family Finance}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+      WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-https://localhost}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM:-noreply@familyfinance.local}
+      MAGIC_LINK_SECRET: ${MAGIC_LINK_SECRET}
+      MAGIC_LINK_EXPIRES_IN: ${MAGIC_LINK_EXPIRES_IN:-600}
+      APP_URL: ${APP_URL:-https://localhost}
+      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api/prisma:/app/apps/api/prisma
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://localhost/api}
+    container_name: family-finance-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  reverse-proxy:
+    image: caddy:2-alpine
+    container_name: family-finance-proxy
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./reverse-proxy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

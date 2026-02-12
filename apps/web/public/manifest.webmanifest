@@ -1,0 +1,61 @@
+{
+  "name": "Family Finance",
+  "short_name": "FamFin",
+  "description": "Family finance and invoice management application",
+  "lang": "nb-NO",
+  "dir": "ltr",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Add Invoice",
+      "short_name": "New Invoice",
+      "description": "Create a new invoice",
+      "url": "/invoices/add",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

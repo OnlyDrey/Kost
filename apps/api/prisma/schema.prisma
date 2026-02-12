@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ADULT
+  JUNIOR
+}
+
+enum PeriodStatus {
+  OPEN
+  CLOSED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+}
+
+enum DistributionMethod {
+  BY_PERCENT
+  BY_INCOME
+  FIXED
+}
+
+enum RemainderMethod {
+  EQUAL
+  BY_INCOME
+}
+
+enum IncomeType {
+  MONTHLY_GROSS
+  MONTHLY_NET
+  ANNUAL_GROSS
+  ANNUAL_NET
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  PERIOD_CLOSE
+  PERIOD_REOPEN
+  INVITE_USER
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  periods       Period[]
+  invoices      Invoice[]
+  subscriptions Subscription[]
+  auditLogs     AuditLog[]
+
+  @@map("families")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(ADULT)
+  familyId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  family              Family               @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  incomes             Income[]
+  paymentsCreated     Payment[]            @relation("PaymentCreator")
+  invoiceShares       InvoiceShare[]
+  magicLinkTokens     MagicLinkToken[]
+  webAuthnCredentials WebAuthnCredential[]
+  auditLogs           AuditLog[]
+
+  @@index([familyId])
+  @@index([email])
+  @@map("users")
+}
+
+model Period {
+  id        String       @id
+  familyId  String
+  status    PeriodStatus @default(OPEN)
+  closedAt  DateTime?
+  closedBy  String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  family   Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  incomes  Income[]
+  invoices Invoice[]
+
+  settlementData Json?
+
+  @@unique([familyId, id])
+  @@index([familyId, status])
+  @@map("periods")
+}
+
+model Income {
+  id        String     @id @default(cuid())
+  userId    String
+  periodId  String
+  inputType IncomeType
+  inputCents Int       @default(0)
+
+  normalizedMonthlyGrossCents Int
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period Period @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodId])
+  @@index([periodId])
+  @@map("incomes")
+}
+
+model Invoice {
+  id                String             @id @default(cuid())
+  familyId          String
+  periodId          String
+  category          String
+  vendor            String
+  description       String?
+  dueDate           DateTime?
+  totalCents        Int
+  distributionMethod DistributionMethod
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  family       Family                     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  period       Period                     @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  lines        InvoiceLine[]
+  distribution InvoiceDistributionRule?
+  shares       InvoiceShare[]
+  payments     Payment[]
+
+  @@index([familyId, periodId])
+  @@index([periodId])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  amountCents Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_lines")
+}
+
+model InvoiceDistributionRule {
+  id              String             @id @default(cuid())
+  invoiceId       String             @unique
+  method          DistributionMethod
+
+  percentRules    Json?
+  fixedRules      Json?
+  remainderMethod RemainderMethod?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_distribution_rules")
+}
+
+model InvoiceShare {
+  id          String @id @default(cuid())
+  invoiceId   String
+  userId      String
+  shareCents  Int
+  explanation String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceId, userId])
+  @@index([invoiceId])
+  @@index([userId])
+  @@map("invoice_shares")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  paidById    String
+  amountCents Int
+  paidAt      DateTime @default(now())
+  note        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  paidBy  User    @relation("PaymentCreator", fields: [paidById], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([paidById])
+  @@map("payments")
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  familyId           String
+  name               String
+  vendor             String
+  category           String
+  amountCents        Int
+  frequency          String
+  dayOfMonth         Int?
+  startDate          DateTime
+  endDate            DateTime?
+  distributionMethod DistributionMethod
+  distributionRules  Json
+  active             Boolean            @default(true)
+
+  lastGenerated DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId, active])
+  @@map("subscriptions")
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  familyId     String
+  userId       String?
+  action       AuditAction
+  entityType   String
+  entityId     String
+  changes      Json?
+  metadata     Json?
+  ipAddress    String?
+  userAgent    String?
+
+  createdAt DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([familyId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+model MagicLinkToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expiresAt])
+  @@map("magic_link_tokens")
+}
+
+model WebAuthnCredential {
+  id              String   @id
+  userId          String
+  publicKey       Bytes
+  counter         BigInt   @default(0)
+  transports      String[]
+
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("webauthn_credentials")
+}
