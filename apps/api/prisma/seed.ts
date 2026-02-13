@@ -1,9 +1,13 @@
 import { PrismaClient, DistributionMethod, UserRole, PeriodStatus, IncomeType } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding database...');
+
+  // Hash password for test users (password: "password123")
+  const passwordHash = await bcrypt.hash('password123', 10);
 
   // Clean existing data
   await prisma.auditLog.deleteMany();
@@ -32,6 +36,7 @@ async function main() {
     data: {
       email: 'admin@familyfinance.local',
       name: 'Kari Hansen',
+      passwordHash,
       role: UserRole.ADMIN,
       familyId: family.id,
     },
@@ -41,6 +46,7 @@ async function main() {
     data: {
       email: 'ola@familyfinance.local',
       name: 'Ola Hansen',
+      passwordHash,
       role: UserRole.ADULT,
       familyId: family.id,
     },
@@ -50,6 +56,7 @@ async function main() {
     data: {
       email: 'lisa@familyfinance.local',
       name: 'Lisa Hansen',
+      passwordHash,
       role: UserRole.ADULT,
       familyId: family.id,
     },
@@ -363,7 +370,7 @@ async function main() {
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📊 Summary:');
   console.log(`   - Family: ${family.name}`);
-  console.log(`   - Users: 3 (1 Admin, 2 Adults)`);
+  console.log(`   - Users: 3 (1 Admin, 2 Adults) - password: "password123"`);
   console.log(`   - Periods: 2 (Feb closed, Mar open)`);
   console.log(`   - Invoices: 3 (various distribution methods)`);
   console.log(`   - Payments: 2 (1 full, 1 partial)`);

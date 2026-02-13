@@ -1,9 +1,10 @@
-import { Injectable, BadRequestException, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, Logger, NotImplementedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomBytes } from 'crypto';
 import * as nodemailer from 'nodemailer';
+import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -16,27 +17,149 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {
-    // Initialize email transporter
-    const smtpConfig = this.configService.get('smtp');
-    if (smtpConfig.host && smtpConfig.user) {
-      this.transporter = nodemailer.createTransport({
-        host: smtpConfig.host,
-        port: smtpConfig.port,
-        secure: smtpConfig.secure,
-        auth: {
-          user: smtpConfig.user,
-          pass: smtpConfig.password,
-        },
-      });
-    } else {
-      this.logger.warn('SMTP not configured - magic link emails will be logged instead');
+    // Initialize email transporter only if magic link is enabled
+    const isMagicLinkEnabled = this.configService.get<boolean>('auth.magicLinkEnabled');
+    if (isMagicLinkEnabled) {
+      const smtpConfig = this.configService.get('smtp');
+      if (smtpConfig.host && smtpConfig.user) {
+        this.transporter = nodemailer.createTransport({
+          host: smtpConfig.host,
+          port: smtpConfig.port,
+          secure: smtpConfig.secure,
+          auth: {
+            user: smtpConfig.user,
+            pass: smtpConfig.password,
+          },
+        });
+      } else {
+        this.logger.warn('SMTP not configured - magic link emails will be logged instead');
+      }
     }
+  }
+
+  /**
+   * Register a new user with password
+   */
+  async registerWithPassword(name: string, email: string, password: string): Promise<{ accessToken: string; user: any }> {
+    const isPasswordEnabled = this.configService.get<boolean>('auth.passwordEnabled');
+    if (!isPasswordEnabled) {
+      throw new NotImplementedException('Password authentication is not enabled');
+    }
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    // Hash password with bcrypt (10 rounds)
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create family for the new user
+    const family = await this.prisma.family.create({
+      data: {
+        name: `${name}'s Family`,
+      },
+    });
+
+    // Create user
+    const user = await this.prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        name,
+        passwordHash,
+        familyId: family.id,
+        role: 'ADMIN', // First user is admin
+      },
+      include: {
+        family: true,
+      },
+    });
+
+    // Generate JWT
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      familyId: user.familyId,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        familyId: user.familyId,
+        family: user.family,
+      },
+    };
+  }
+
+  /**
+   * Login with email and password
+   */
+  async loginWithPassword(email: string, password: string): Promise<{ accessToken: string; user: any }> {
+    const isPasswordEnabled = this.configService.get<boolean>('auth.passwordEnabled');
+    if (!isPasswordEnabled) {
+      throw new NotImplementedException('Password authentication is not enabled');
+    }
+
+    // Find user by email
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      include: {
+        family: true,
+      },
+    });
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Generate JWT
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      familyId: user.familyId,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        familyId: user.familyId,
+        family: user.family,
+      },
+    };
   }
 
   /**
    * Request a magic link for authentication
    */
   async requestMagicLink(email: string): Promise<{ message: string }> {
+    const isMagicLinkEnabled = this.configService.get<boolean>('auth.magicLinkEnabled');
+    if (!isMagicLinkEnabled) {
+      throw new NotImplementedException('Magic link authentication is not enabled');
+    }
     // Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -75,6 +198,10 @@ export class AuthService {
    * Verify magic link token and return JWT
    */
   async verifyMagicLink(token: string): Promise<{ accessToken: string; user: any }> {
+    const isMagicLinkEnabled = this.configService.get<boolean>('auth.magicLinkEnabled');
+    if (!isMagicLinkEnabled) {
+      throw new NotImplementedException('Magic link authentication is not enabled');
+    }
     // Find and validate token
     const magicLinkToken = await this.prisma.magicLinkToken.findUnique({
       where: { token },

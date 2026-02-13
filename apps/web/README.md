@@ -9,7 +9,7 @@ A Progressive Web Application (PWA) for managing family finances and invoices.
 - **Dark/Light Theme**: Automatic detection with manual toggle
 - **Offline Queue**: Mutations are queued when offline and synced when online
 - **Material UI**: Modern, responsive design
-- **Magic Link Authentication**: Passwordless login via email
+- **Flexible Authentication**: Password-based (default), magic links (optional), or passkeys (optional)
 - **Real-time Updates**: React Query for efficient server state management
 
 ## Tech Stack
@@ -49,7 +49,7 @@ cp .env.example .env
 # Start development server
 npm run dev
 
-# The app will be available at http://localhost:3000
+# The app will be available at http://localhost:3001
 ```
 
 ### Build
@@ -117,9 +117,11 @@ src/
 ## Environment Variables
 
 ```env
-VITE_API_URL=http://localhost:3001/api
+VITE_API_URL=http://localhost:3000/api
 VITE_APP_NAME=Family Finance
 ```
+
+**Note:** In production, use your external reverse proxy's HTTPS URL (e.g., `https://finance.yourdomain.com/api`).
 
 ## Browser Support
 
@@ -159,12 +161,28 @@ All dates are stored in ISO format (YYYY-MM-DD) and formatted for display using 
 
 ### Authentication
 
-The app uses magic link authentication:
+The app supports multiple authentication methods configured on the backend:
+
+**Password Authentication (Default):**
+1. User enters email and password
+2. Backend verifies credentials
+3. JWT token issued and stored in HTTP-only cookie
+4. No SMTP configuration required
+
+**Magic Link Authentication (Optional, requires SMTP):**
 1. User enters email
 2. Backend sends email with magic link
 3. User clicks link with token
 4. Frontend verifies token and logs in
-5. JWT stored in localStorage
+5. JWT stored in HTTP-only cookie
+
+**Passkey/WebAuthn Authentication (Optional):**
+1. User registers a passkey (biometric or hardware key)
+2. Future logins use the registered passkey
+3. Most secure option with phishing resistance
+4. Requires HTTPS in production
+
+At least one authentication method must be enabled on the backend via environment variables (`AUTH_PASSWORD_ENABLED`, `AUTH_MAGIC_LINK_ENABLED`, `AUTH_PASSKEY_ENABLED`).
 
 ## Contributing
 

@@ -10,10 +10,17 @@
 
 Family Finance is a complete, production-ready PWA for managing shared household expenses among family members. It handles invoice registration, payment tracking, cost allocation (by percentage, income, or fixed amounts), period closing with automatic settlement calculations, and comprehensive audit logging.
 
+**Key Deployment Features:**
+- 🔑 **Password authentication enabled by default** - No SMTP setup required to get started
+- 🚀 **Runs directly on standard ports** - API: 3000, Web: 3001
+- 🔌 **Works with any reverse proxy** - Designed for Pangolin, Nginx, Caddy, Traefik, etc.
+- ⚙️ **Configurable auth methods** - Enable/disable password, magic link, or passkey authentication
+- 🔒 **HTTPS via external proxy** - Keep TLS termination where you want it
+
 ### Key Features
 
 - ✅ **Precise Money Handling**: All amounts stored and calculated in cents (øre) using integer arithmetic—no floating-point errors
-- 🔐 **Passwordless Authentication**: WebAuthn/FIDO2 passkeys + magic link email fallback
+- 🔐 **Flexible Authentication**: Password-based (default), magic link (optional with SMTP), or WebAuthn/FIDO2 passkeys (optional)
 - 📱 **Full PWA Support**: Install on any device, works offline, background sync for mutations
 - 💰 **Flexible Cost Allocation**:
   - **By Percent**: Custom percentage splits (e.g., 50/30/20)
@@ -35,17 +42,14 @@ Family Finance is a complete, production-ready PWA for managing shared household
 │  │   (React)    │──│    Worker    │──│   (Dexie)    │      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
 └─────────────────────────────────────────────────────────────┘
-                              │ HTTPS
-┌─────────────────────────────────────────────────────────────┐
-│                     Reverse Proxy (Caddy)                   │
-│                    TLS Termination + Routing                │
-└─────────────────────────────────────────────────────────────┘
-                    │                    │
-        ┌───────────┘                    └───────────┐
+                              │ HTTP (dev) or HTTPS (via external proxy)
+                              │
+        ┌─────────────────────┴─────────────────────┐
         │                                            │
 ┌───────────────┐                            ┌───────────────┐
 │  React PWA    │                            │  NestJS API   │
 │  (Vite)       │                            │  (TypeScript) │
+│  Port 3001    │                            │  Port 3000    │
 │  - MUI        │                            │  - Prisma ORM │
 │  - i18n       │                            │  - OpenAPI    │
 │  - Workbox    │                            │  - Passport   │
@@ -55,6 +59,9 @@ Family Finance is a complete, production-ready PWA for managing shared household
                                              │  PostgreSQL   │
                                              │  (Database)   │
                                              └───────────────┘
+
+Note: Use external reverse proxy (Pangolin, Nginx, Caddy, Traefik, etc.)
+      for HTTPS and routing in production
 ```
 
 ### Tech Stack
@@ -80,16 +87,19 @@ Family Finance is a complete, production-ready PWA for managing shared household
 
 **Infrastructure:**
 - Docker + Docker Compose
-- Caddy (reverse proxy with auto-HTTPS)
 - GitHub Actions (CI/CD)
+- External reverse proxy recommended for production (Pangolin, Nginx, Caddy, Traefik, etc.)
 
 ## 🚀 Quick Start
+
+Get up and running in 5 minutes with **password authentication** (no SMTP required).
 
 ### Prerequisites
 
 - Node.js >= 20
 - Docker & Docker Compose
 - PostgreSQL 16 (if running locally without Docker)
+- **No email/SMTP setup needed** for the quick start (password auth enabled by default)
 
 ### 1. Clone and Install
 
@@ -113,17 +123,24 @@ DB_PASSWORD=your-secure-password
 
 # Secrets (generate with: openssl rand -base64 32)
 JWT_SECRET=your-jwt-secret-here
-MAGIC_LINK_SECRET=your-magic-link-secret-here
 
-# SMTP (for magic links)
+# Authentication Methods (at least one must be enabled)
+AUTH_PASSWORD_ENABLED=true      # Password auth (enabled by default, no SMTP required)
+AUTH_MAGIC_LINK_ENABLED=false   # Magic link auth (requires SMTP configuration)
+AUTH_PASSKEY_ENABLED=false      # WebAuthn/Passkey auth
+
+# SMTP (only required if AUTH_MAGIC_LINK_ENABLED=true)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 SMTP_FROM=noreply@familyfinance.local
+MAGIC_LINK_SECRET=your-magic-link-secret-here
 
-# Domain
-DOMAIN=localhost  # or your.domain.com for production
+# WebAuthn (only required if AUTH_PASSKEY_ENABLED=true)
+WEBAUTHN_RP_NAME="Family Finance"
+WEBAUTHN_RP_ID=localhost        # or your.domain.com for production
+WEBAUTHN_ORIGIN=http://localhost:3001  # or https://your.domain.com
 ```
 
 ### 3. Start with Docker Compose
@@ -139,11 +156,12 @@ npm run docker:logs
 npm run docker:down
 ```
 
-This starts:
-- PostgreSQL on port `5432`
-- API on port `3000`
-- Web UI on port `8080`
-- Reverse proxy (Caddy) on ports `80` and `443`
+This starts **3 services**:
+- **PostgreSQL** (database) on port `5432`
+- **API** (backend) on port `3000`
+- **Web** (frontend) on port `3001`
+
+**Note:** No reverse proxy service is included. The application runs directly on these ports. For production, use an external reverse proxy (see "Reverse Proxy & HTTPS" section below).
 
 ### 4. Database Setup
 
@@ -157,14 +175,22 @@ npm run db:seed
 
 ### 5. Access the Application
 
-Open https://localhost in your browser.
+Open http://localhost:3001 in your browser.
 
-**Development Users (from seed):**
-- admin@familyfinance.local (Admin role)
-- ola@familyfinance.local (Adult role)
-- lisa@familyfinance.local (Adult role)
+**Default Login Credentials (from seed):**
 
-Use the **magic link** flow to log in (links will be logged to API console in dev mode).
+| Email                        | Password      | Role    | Description |
+|------------------------------|---------------|---------|-------------|
+| admin@familyfinance.local    | `password123` | `ADMIN` | Full administrative access |
+| ola@familyfinance.local      | `password123` | `ADULT` | Can create/edit invoices & payments |
+| lisa@familyfinance.local     | `password123` | `ADULT` | Can create/edit invoices & payments |
+
+**Authentication Notes:**
+- **Password authentication is enabled by default** (no SMTP configuration required)
+- To enable magic links: Set `AUTH_MAGIC_LINK_ENABLED=true` and configure SMTP in `.env`
+- To enable passkeys: Set `AUTH_PASSKEY_ENABLED=true` and configure WebAuthn settings
+- Multiple authentication methods can be enabled simultaneously
+- Users can choose their preferred method at login
 
 ## 📦 Project Structure
 
@@ -173,7 +199,7 @@ family-finance/
 ├── apps/
 │   ├── api/                    # NestJS Backend
 │   │   ├── src/
-│   │   │   ├── auth/           # Authentication (magic link, WebAuthn)
+│   │   │   ├── auth/           # Authentication (password, magic link, WebAuthn)
 │   │   │   ├── users/          # User management
 │   │   │   ├── periods/        # Period lifecycle & closing
 │   │   │   ├── incomes/        # Income tracking
@@ -203,9 +229,6 @@ family-finance/
 │
 ├── packages/
 │   └── shared/                 # Shared TypeScript types & schemas
-│
-├── reverse-proxy/
-│   └── Caddyfile               # Reverse proxy config
 │
 ├── docker-compose.yml
 └── README.md
@@ -335,17 +358,31 @@ When closing period `2026-03`:
 
 ## 🔐 Authentication & Security
 
-### Passwordless Authentication
+### Authentication Methods
 
-**1. Magic Link (Primary)**
+The application supports three configurable authentication methods. **At least one must be enabled.**
+
+**1. Password Authentication (Default)**
+- **Enabled by default** with `AUTH_PASSWORD_ENABLED=true`
+- Traditional email + password login
+- No SMTP configuration required
+- Passwords hashed with bcrypt
+- Ideal for self-hosted deployments without email setup
+
+**2. Magic Link Authentication (Optional)**
+- **Requires SMTP configuration** and `AUTH_MAGIC_LINK_ENABLED=true`
 - User enters email
 - API generates one-time token (JWT signed, 10 min expiry)
-- Email sent with link: `https://app.example.com/auth/verify?token=...`
+- Email sent with link: `http://localhost:3001/auth/verify?token=...`
 - User clicks link → token verified → session created
+- Passwordless convenience when email is available
 
-**2. WebAuthn/Passkeys (Future Enhancement)**
-- Currently scaffolded but not fully integrated in UI
+**3. WebAuthn/Passkey Authentication (Optional)**
+- **Requires WebAuthn configuration** and `AUTH_PASSKEY_ENABLED=true`
+- Biometric or hardware key authentication
 - Uses `@simplewebauthn/server` for registration/verification
+- Most secure option with phishing resistance
+- Requires HTTPS in production (works with HTTP on localhost)
 
 ### Security Features
 
@@ -353,11 +390,50 @@ When closing period `2026-03`:
 - ✅ `SameSite=Strict` cookie policy
 - ✅ Helmet.js security headers
 - ✅ Rate limiting on auth endpoints (10 req/min)
-- ✅ HTTPS enforced via Caddy
+- ✅ HTTPS recommended for production (via external reverse proxy)
 - ✅ CORS restricted to configured origin
 - ✅ Input validation with `class-validator`
 - ✅ SQL injection protection via Prisma parameterized queries
 - ✅ Family-scoped data isolation (users only see their family's data)
+- ✅ bcrypt password hashing (when password auth enabled)
+
+### Configuring Authentication Methods
+
+You can enable or disable each authentication method independently via environment variables. **At least one method must be enabled** for users to log in.
+
+**Recommended Configurations:**
+
+**Quick Start / Self-Hosted (No Email):**
+```bash
+AUTH_PASSWORD_ENABLED=true      # ✅ Enabled
+AUTH_MAGIC_LINK_ENABLED=false
+AUTH_PASSKEY_ENABLED=false
+```
+- Simplest setup, no SMTP required
+- Users log in with email + password
+- Default password for seed users: `password123`
+
+**Production with Email:**
+```bash
+AUTH_PASSWORD_ENABLED=true      # ✅ Enabled (fallback)
+AUTH_MAGIC_LINK_ENABLED=true    # ✅ Enabled
+AUTH_PASSKEY_ENABLED=false
+# Requires SMTP configuration
+```
+- Users can choose password or magic link
+- Magic links provide better security (no password reuse)
+- Requires working SMTP server
+
+**Maximum Security:**
+```bash
+AUTH_PASSWORD_ENABLED=false
+AUTH_MAGIC_LINK_ENABLED=true    # ✅ Enabled
+AUTH_PASSKEY_ENABLED=true       # ✅ Enabled
+# Requires SMTP + WebAuthn configuration
+```
+- No passwords, only magic links and passkeys
+- Best security posture (phishing-resistant)
+- Requires HTTPS in production for WebAuthn
 
 ### Roles & Permissions
 
@@ -366,6 +442,68 @@ When closing period `2026-03`:
 | `ADMIN` | Full access: invite users, close/reopen periods, delete     |
 | `ADULT` | Create/edit invoices & payments in open periods, view all   |
 | `JUNIOR`| Read-only (future: limited visibility)                       |
+
+## 🌐 Reverse Proxy & HTTPS
+
+This application **does not include a built-in reverse proxy**. For production deployments, use an external reverse proxy to handle HTTPS, SSL/TLS certificates, and routing.
+
+### Supported Reverse Proxies
+
+- **Pangolin** (user's choice)
+- **Nginx**
+- **Caddy**
+- **Traefik**
+- **Apache**
+- Any other reverse proxy that supports HTTP proxying
+
+### Why External Reverse Proxy?
+
+1. **Flexibility**: Choose the reverse proxy that fits your infrastructure
+2. **Simplicity**: Application focuses on core functionality
+3. **Standard Ports**: App runs on ports 3000 (API) and 3001 (Web)
+4. **Easy Integration**: Works seamlessly with existing reverse proxy setups
+
+### Development vs Production
+
+| Environment | Protocol | URL                          | Notes                        |
+|-------------|----------|------------------------------|------------------------------|
+| Development | HTTP     | `http://localhost:3001`      | No reverse proxy needed      |
+| Production  | HTTPS    | `https://finance.yourdomain.com` | External reverse proxy required |
+
+### Example Configurations
+
+**Caddy (Caddyfile):**
+```caddy
+finance.yourdomain.com {
+    reverse_proxy /api* localhost:3000
+    reverse_proxy localhost:3001
+}
+```
+
+**Traefik (docker-compose labels):**
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.finance.rule=Host(`finance.yourdomain.com`)"
+  - "traefik.http.services.finance.loadbalancer.server.port=3001"
+```
+
+**Apache (.conf):**
+```apache
+<VirtualHost *:443>
+    ServerName finance.yourdomain.com
+
+    ProxyPass /api http://localhost:3000/api
+    ProxyPassReverse /api http://localhost:3000/api
+
+    ProxyPass / http://localhost:3001/
+    ProxyPassReverse / http://localhost:3001/
+
+    SSLEngine on
+    SSLCertificateFile /path/to/cert.pem
+    SSLCertificateKeyFile /path/to/key.pem
+</VirtualHost>
+```
 
 ## 🧪 Testing
 
@@ -501,59 +639,109 @@ formatDate('2026-03-15', 'en-US') // "March 15, 2026"
 1. **Generate secrets:**
    ```bash
    openssl rand -base64 32  # for JWT_SECRET
-   openssl rand -base64 32  # for MAGIC_LINK_SECRET
+   openssl rand -base64 32  # for MAGIC_LINK_SECRET (if using magic links)
    ```
 
-2. **Configure SMTP** (required for magic links):
+2. **Configure authentication methods** in `.env`:
+   ```bash
+   # At least one must be enabled
+   AUTH_PASSWORD_ENABLED=true      # Recommended: enabled by default
+   AUTH_MAGIC_LINK_ENABLED=false   # Optional: requires SMTP
+   AUTH_PASSKEY_ENABLED=false      # Optional: requires WebAuthn setup
+   ```
+
+3. **Configure SMTP** (only if `AUTH_MAGIC_LINK_ENABLED=true`):
    - Gmail: Use [App Passwords](https://support.google.com/accounts/answer/185833)
    - SendGrid, Mailgun, or any SMTP provider
-
-3. **Set domain** in `.env`:
    ```bash
-   DOMAIN=finance.yourdomain.com
-   WEBAUTHN_RP_ID=finance.yourdomain.com
-   WEBAUTHN_ORIGIN=https://finance.yourdomain.com
-   APP_URL=https://finance.yourdomain.com
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASSWORD=your-app-password
+   SMTP_FROM=noreply@yourdomain.com
    ```
 
-4. **Deploy with Docker Compose:**
+4. **Set application URLs** in `.env`:
+   ```bash
+   APP_URL=https://finance.yourdomain.com
+   # WebAuthn settings (only if AUTH_PASSKEY_ENABLED=true)
+   WEBAUTHN_RP_ID=finance.yourdomain.com
+   WEBAUTHN_ORIGIN=https://finance.yourdomain.com
+   ```
+
+5. **Configure external reverse proxy** (Pangolin, Nginx, Caddy, Traefik, etc.):
+   - Set up HTTPS/TLS certificates (Let's Encrypt recommended)
+   - Route requests to:
+     - Web UI: `http://localhost:3001`
+     - API: `http://localhost:3000`
+
+   Example Nginx configuration:
+   ```nginx
+   server {
+       listen 443 ssl;
+       server_name finance.yourdomain.com;
+
+       ssl_certificate /path/to/cert.pem;
+       ssl_certificate_key /path/to/key.pem;
+
+       location / {
+           proxy_pass http://localhost:3001;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+
+       location /api {
+           proxy_pass http://localhost:3000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
+   ```
+
+6. **Deploy with Docker Compose:**
    ```bash
    docker-compose up -d
    ```
 
-5. **Run migrations:**
+7. **Run migrations:**
    ```bash
    docker-compose exec api npx prisma migrate deploy
    ```
 
-6. **Backup PostgreSQL:**
+8. **Backup PostgreSQL:**
    ```bash
    docker-compose exec db pg_dump -U financeuser familyfinance > backup.sql
    ```
 
 ### Environment Variables Reference
 
-| Variable                | Required | Description                              |
-|-------------------------|----------|------------------------------------------|
-| `NODE_ENV`              | No       | `production` or `development`            |
-| `DB_USER`               | Yes      | PostgreSQL username                      |
-| `DB_PASSWORD`           | Yes      | PostgreSQL password                      |
-| `DB_NAME`               | Yes      | PostgreSQL database name                 |
-| `DATABASE_URL`          | Yes      | Full connection string (auto-generated)  |
-| `JWT_SECRET`            | Yes      | Secret for signing JWTs                  |
-| `JWT_EXPIRES_IN`        | No       | Token expiry (default: `7d`)             |
-| `MAGIC_LINK_SECRET`     | Yes      | Secret for magic link tokens             |
-| `MAGIC_LINK_EXPIRES_IN` | No       | Token expiry in seconds (default: `600`) |
-| `SMTP_HOST`             | Yes      | SMTP server hostname                     |
-| `SMTP_PORT`             | Yes      | SMTP port (usually `587` or `465`)       |
-| `SMTP_USER`             | Yes      | SMTP username                            |
-| `SMTP_PASSWORD`         | Yes      | SMTP password                            |
-| `SMTP_FROM`             | Yes      | From address for emails                  |
-| `APP_URL`               | Yes      | Application base URL (with `https://`)   |
-| `DOMAIN`                | Yes      | Domain for Caddy reverse proxy           |
-| `WEBAUTHN_RP_NAME`      | No       | Relying party name (default: `Family Finance`) |
-| `WEBAUTHN_RP_ID`        | Yes      | Relying party ID (must match domain)     |
-| `WEBAUTHN_ORIGIN`       | Yes      | Origin for WebAuthn (must match APP_URL) |
+| Variable                   | Required | Description                              |
+|----------------------------|----------|------------------------------------------|
+| `NODE_ENV`                 | No       | `production` or `development`            |
+| `DB_USER`                  | Yes      | PostgreSQL username                      |
+| `DB_PASSWORD`              | Yes      | PostgreSQL password                      |
+| `DB_NAME`                  | Yes      | PostgreSQL database name                 |
+| `DATABASE_URL`             | Yes      | Full connection string (auto-generated)  |
+| `JWT_SECRET`               | Yes      | Secret for signing JWTs                  |
+| `JWT_EXPIRES_IN`           | No       | Token expiry (default: `7d`)             |
+| **Authentication**         |          |                                          |
+| `AUTH_PASSWORD_ENABLED`    | No       | Enable password auth (default: `true`)   |
+| `AUTH_MAGIC_LINK_ENABLED`  | No       | Enable magic link auth (default: `false`) |
+| `AUTH_PASSKEY_ENABLED`     | No       | Enable passkey auth (default: `false`)   |
+| **Magic Link (if enabled)**|          |                                          |
+| `MAGIC_LINK_SECRET`        | Conditional | Secret for magic link tokens (required if magic link enabled) |
+| `MAGIC_LINK_EXPIRES_IN`    | No       | Token expiry in seconds (default: `600`) |
+| `SMTP_HOST`                | Conditional | SMTP server hostname (required if magic link enabled) |
+| `SMTP_PORT`                | Conditional | SMTP port (usually `587` or `465`)    |
+| `SMTP_USER`                | Conditional | SMTP username                          |
+| `SMTP_PASSWORD`            | Conditional | SMTP password                          |
+| `SMTP_FROM`                | Conditional | From address for emails                |
+| **WebAuthn (if enabled)**  |          |                                          |
+| `WEBAUTHN_RP_NAME`         | No       | Relying party name (default: `Family Finance`) |
+| `WEBAUTHN_RP_ID`           | Conditional | Relying party ID (must match domain, required if passkey enabled) |
+| `WEBAUTHN_ORIGIN`          | Conditional | Origin for WebAuthn (must match APP_URL, required if passkey enabled) |
+| **Application URLs**       |          |                                          |
+| `APP_URL`                  | Yes      | Application base URL (e.g., `https://finance.yourdomain.com`) |
 
 ## 🧑‍💻 Development
 
@@ -570,12 +758,19 @@ docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=dev postgres:16-alpine
 npm run db:migrate
 npm run db:seed
 
-# Start API (terminal 1)
+# Start API (terminal 1) - runs on port 3000
 npm run dev:api
 
-# Start Web (terminal 2)
+# Start Web (terminal 2) - runs on port 3001
 npm run dev:web
 ```
+
+**Access the application:**
+- Web UI: http://localhost:3001
+- API: http://localhost:3000
+- API Docs: http://localhost:3000/api-docs (OpenAPI/Swagger)
+
+**Default login:** Use any seeded user email with password `password123`
 
 ### Code Quality
 
@@ -601,6 +796,74 @@ npm run migrate:reset --workspace=apps/api
 
 # Open Prisma Studio (DB GUI)
 npm run studio --workspace=apps/api
+```
+
+## ❓ FAQ & Troubleshooting
+
+### Authentication
+
+**Q: Which authentication method should I use?**
+
+A: For quick start and self-hosting without email, use password authentication (enabled by default). For production with email capabilities, enable both password and magic links. For maximum security, use magic links + passkeys.
+
+**Q: Can I enable multiple authentication methods?**
+
+A: Yes! Users will be able to choose their preferred method at login. At least one method must be enabled.
+
+**Q: Do I need SMTP to use the application?**
+
+A: No! Password authentication is enabled by default and requires no SMTP configuration. SMTP is only needed if you enable magic link authentication.
+
+**Q: How do I change the default password?**
+
+A: After logging in, users can change their password in the settings. For seed data, edit `apps/api/prisma/seed.ts` before running `npm run db:seed`.
+
+**Q: Magic links aren't working, what should I check?**
+
+A:
+1. Verify `AUTH_MAGIC_LINK_ENABLED=true` in `.env`
+2. Check all SMTP environment variables are set correctly
+3. Look for emails in spam folder
+4. Check API logs for SMTP connection errors
+5. Test SMTP credentials with a simple mail client first
+
+**Q: WebAuthn/Passkeys require HTTPS, but I'm testing locally?**
+
+A: WebAuthn works with `http://localhost` for development. For other local IPs or domains, you'll need HTTPS (use a reverse proxy with self-signed cert or ngrok).
+
+### Deployment
+
+**Q: Do I need to use Docker?**
+
+A: No, Docker is optional. You can run the API and Web servers natively with Node.js and connect to any PostgreSQL instance.
+
+**Q: What happened to the Caddy reverse proxy?**
+
+A: The built-in reverse proxy was removed to provide flexibility. Use any external reverse proxy (Pangolin, Nginx, Caddy, Traefik, etc.) that fits your infrastructure.
+
+**Q: How do I set up HTTPS?**
+
+A: Configure your external reverse proxy to handle HTTPS/TLS. Point it to:
+- Web UI: `http://localhost:3001`
+- API: `http://localhost:3000`
+
+See the "Reverse Proxy & HTTPS" section for configuration examples.
+
+**Q: Can I change the port numbers?**
+
+A: Yes, set `PORT` environment variable for the API and configure Vite's port in `apps/web/vite.config.ts` for the web UI.
+
+### Database
+
+**Q: Can I use a managed PostgreSQL service?**
+
+A: Yes! Just set the `DATABASE_URL` environment variable to your managed PostgreSQL connection string.
+
+**Q: How do I backup my data?**
+
+A: Use `pg_dump` to create database backups:
+```bash
+docker-compose exec db pg_dump -U financeuser familyfinance > backup.sql
 ```
 
 ## 🤝 Contributing
@@ -629,6 +892,63 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Built with modern TypeScript, React, and NestJS
 - Security best practices from OWASP guidelines
 - PWA patterns from Google Workbox
+
+---
+
+## 📋 Quick Reference
+
+### Port Numbers
+
+| Service    | Port | URL (Development)            |
+|------------|------|------------------------------|
+| Web UI     | 3001 | http://localhost:3001        |
+| API        | 3000 | http://localhost:3000        |
+| API Docs   | 3000 | http://localhost:3000/api-docs |
+| PostgreSQL | 5432 | localhost:5432               |
+
+### Default Credentials
+
+- **Email:** admin@familyfinance.local (or ola@/lisa@familyfinance.local)
+- **Password:** password123
+
+### Authentication Methods
+
+| Method       | Requires SMTP | Requires HTTPS* | Environment Variable         | Default |
+|--------------|---------------|-----------------|------------------------------|---------|
+| Password     | No            | No              | `AUTH_PASSWORD_ENABLED`      | `true`  |
+| Magic Link   | Yes           | No              | `AUTH_MAGIC_LINK_ENABLED`    | `false` |
+| Passkey      | No            | Yes**           | `AUTH_PASSKEY_ENABLED`       | `false` |
+
+\* In production
+\*\* Works with HTTP on localhost for development
+
+### Common Commands
+
+```bash
+# Start all services
+npm run docker:up
+
+# Stop all services
+npm run docker:down
+
+# View logs
+npm run docker:logs
+
+# Run migrations
+npm run db:migrate
+
+# Seed database
+npm run db:seed
+
+# Reset database (⚠️ destructive)
+npm run migrate:reset --workspace=apps/api
+
+# Run tests
+npm run test --workspace=apps/api
+
+# Open Prisma Studio
+npm run studio --workspace=apps/api
+```
 
 ---
 
