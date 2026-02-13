@@ -66,7 +66,7 @@ registerRoute(
 );
 
 // Handle offline queue
-self.addEventListener('sync', (event) => {
+self.addEventListener('sync', (event: any) => {
   if (event.tag === 'sync-queue') {
     event.waitUntil(syncOfflineQueue());
   }
@@ -88,7 +88,6 @@ self.addEventListener('message', (event) => {
 });
 
 // Clean up old caches
-const CACHE_VERSION = 'v1';
 const CACHE_NAMES = [
   'api-cache',
   'images-cache',
