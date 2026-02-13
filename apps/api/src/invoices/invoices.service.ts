@@ -163,8 +163,8 @@ export class InvoicesService {
               ? {
                   create: {
                     method: distributionMethod,
-                    percentRules: distributionRules.percentRules || null,
-                    fixedRules: distributionRules.fixedRules || null,
+                    percentRules: distributionRules.percentRules ? JSON.parse(JSON.stringify(distributionRules.percentRules)) : null,
+                    fixedRules: distributionRules.fixedRules ? JSON.parse(JSON.stringify(distributionRules.fixedRules)) : null,
                     remainderMethod: distributionRules.remainderMethod || null,
                   },
                 }
@@ -393,7 +393,6 @@ export class InvoicesService {
         return this.allocationService.splitByPercent(
           totalCents,
           distributionRules.percentRules,
-          new Map(participants.map((p) => [p.userId, p.userName])),
         );
 
       case DistributionMethod.BY_INCOME:

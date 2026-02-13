@@ -17,7 +17,6 @@ export class AllocationService {
   splitByPercent(
     totalCents: number,
     percentRules: PercentRule[],
-    userNames: Map<string, string>,
   ): AllocationShare[] {
     // Validate: sum must be 10000 (100.00%)
     const sum = percentRules.reduce((acc, r) => acc + r.percentBasisPoints, 0);
@@ -117,8 +116,7 @@ export class AllocationService {
       percentRules[0].percentBasisPoints += diff;
     }
 
-    const userNames = new Map(withIncome.map((p) => [p.userId, p.userName]));
-    const shares = this.splitByPercent(totalCents, percentRules, userNames);
+    const shares = this.splitByPercent(totalCents, percentRules);
 
     // Update explanations to include income details
     return shares.map((share) => {

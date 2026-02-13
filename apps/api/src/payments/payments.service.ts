@@ -227,7 +227,7 @@ export class PaymentsService {
     return {
       periodId,
       users: summaries,
-      totalInvoicesCents: summaries.reduce((sum, s) => {
+      totalInvoicesCents: summaries.reduce((sum, _s) => {
         // Only count each user's owed amount once
         return sum;
       }, 0),
@@ -238,7 +238,7 @@ export class PaymentsService {
    * Delete a payment (Admin operation, typically not exposed)
    */
   async remove(id: string, familyId: string) {
-    const payment = await this.findOne(id, familyId);
+    await this.findOne(id, familyId);
 
     await this.prisma.payment.delete({
       where: { id },

@@ -2,7 +2,6 @@ import { IsString, IsNotEmpty, IsInt, Min, IsEnum, IsDateString, IsOptional, IsB
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DistributionMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { PercentRuleDto, FixedRuleDto } from '../../invoices/dto/create-invoice.dto';
 
 export class CreateSubscriptionDto {
   @ApiProperty({ example: 'Netflix Subscription' })
