@@ -77,7 +77,7 @@ Note: Use external reverse proxy (Pangolin, Nginx, Caddy, Traefik, etc.)
 - Workbox (Service Worker)
 
 **Backend:**
-- Node.js 20 + TypeScript
+- Node.js 18+ + TypeScript
 - NestJS (framework)
 - Prisma ORM
 - PostgreSQL 16
@@ -96,18 +96,32 @@ Get up and running in 5 minutes with **password authentication** (no SMTP requir
 
 ### Prerequisites
 
-- Node.js >= 20
-- Docker & Docker Compose
+- **Node.js >= 18** (18.19.1+ recommended, tested with Node 18.x)
+- **npm >= 9.0.0**
+- Docker & Docker Compose (for database)
 - PostgreSQL 16 (if running locally without Docker)
 - **No email/SMTP setup needed** for the quick start (password auth enabled by default)
+
+**Node Version Management:**
+If you use `nvm`, the project includes an `.nvmrc` file:
+```bash
+nvm use  # Uses Node 18.19.1 automatically
+```
 
 ### 1. Clone and Install
 
 ```bash
 git clone https://github.com/your-org/family-finance.git
 cd family-finance
+
+# If using nvm (recommended)
+nvm use
+
+# Install dependencies
 npm install
 ```
+
+**Note:** You may see deprecation warnings for some development dependencies during installation. These are expected and do not affect functionality. The project uses `legacy-peer-deps` (configured in `.npmrc`) to ensure compatibility.
 
 ### 2. Environment Configuration
 
