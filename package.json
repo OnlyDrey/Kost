@@ -19,7 +19,7 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "prepare": "husky install"
+    "prepare": "[ -d .git ] && husky install || true"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

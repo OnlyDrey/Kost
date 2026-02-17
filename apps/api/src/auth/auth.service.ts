@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomBytes } from 'crypto';
 import * as nodemailer from 'nodemailer';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
