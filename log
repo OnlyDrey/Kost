@@ -1,211 +1,33 @@
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ rm -rf node_modules package-lock.json && npm install
-npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
-npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
-npm warn deprecated @simplewebauthn/types@9.0.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
-npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
-npm warn deprecated glob@9.3.5: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-npm warn deprecated glob@11.1.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-
-> family-finance@1.0.0 prepare
-> [ -d .git ] && husky install || true
-
-
-added 1055 packages, removed 6 packages, and audited 1122 packages in 3m
-
-229 packages are looking for funding
-  run `npm fund` for details
-
-4 moderate severity vulnerabilities
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-Some issues need review, and may require choosing
-a different dependency.
-
-Run `npm audit` for details.
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ npm audit fix
-
-added 1 package, and audited 1123 packages in 2s
-
-229 packages are looking for funding
-  run `npm fund` for details
-
-# npm audit report
-
-ajv  <8.18.0
-Severity: moderate
-ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
-No fix available
-node_modules/ajv
-  @angular-devkit/core  >=0.0.24
-  Depends on vulnerable versions of ajv
-  node_modules/@angular-devkit/core
-    @angular-devkit/schematics  >=0.0.43
-    Depends on vulnerable versions of @angular-devkit/core
-    node_modules/@angular-devkit/schematics
-    @nestjs/schematics  *
-    Depends on vulnerable versions of @angular-devkit/core
-    Depends on vulnerable versions of @angular-devkit/schematics
-    node_modules/@nestjs/schematics
-
-4 moderate severity vulnerabilities
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-Some issues need review, and may require choosing
-a different dependency.
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ npm fund
-family-finance@1.0.0
-├── https://github.com/sponsors/typicode
-│   └── husky@8.0.3
-├─┬ https://opencollective.com/lint-staged
-│ │ └── lint-staged@15.5.2
-│ ├── https://github.com/chalk/chalk?sponsor=1
-│ │   └── chalk@5.6.2, chalk@4.1.2
-│ ├─┬ https://github.com/sindresorhus/execa?sponsor=1
-│ │ │ └── execa@8.0.1, execa@5.1.1
-│ │ └── https://github.com/sponsors/sindresorhus
-│ │     └── get-stream@8.0.1, is-stream@3.0.0, npm-run-path@5.3.0, path-key@4.0.0, onetime@6.0.0, mimic-fn@4.0.0, strip-final-newline@3.0.0, cli-truncate@4.0.0, is-fullwidth-code-point@4.0.0, string-width@7.2.0, get-east-asian-width@1.4.0, log-update@6.1.0, ansi-escapes@7.3.0, environment@1.1.0, cli-cursor@5.0.0, restore-cursor@5.1.0, onetime@7.0.0, mimic-function@5.0.1, is-fullwidth-code-point@5.1.0, uint8array-extras@1.5.0, merge-descriptors@1.0.3, boxen@5.1.2, camelcase@6.3.0, cli-boxes@2.2.1, type-fest@0.20.2, ora@5.4.1, cli-spinners@2.9.2, is-unicode-supported@0.1.0, log-symbols@4.1.0, onetime@5.1.2, defaults@1.0.4, import-local@3.2.0, ansi-escapes@4.3.2, type-fest@0.21.3, make-dir@4.0.0, p-limit@3.1.0, yocto-queue@0.1.0, get-stream@6.0.1, is-stream@2.0.1, parse-json@5.2.0, strip-json-comments@3.1.1, component-emitter@1.3.1, type-fest@4.41.0, globals@15.15.0, pretty-bytes@6.1.1, escape-string-regexp@4.0.0, import-fresh@3.3.1, pretty-bytes@5.6.0, tempy@0.6.0, type-fest@0.16.0
-│ ├── https://github.com/sponsors/antonk52
-│ │   └── lilconfig@3.1.3
-│ ├── https://github.com/sponsors/eemeli
-│ │   └── yaml@2.8.2
-│ └── https://github.com/chalk/wrap-ansi?sponsor=1
-│     └── wrap-ansi@9.0.2, wrap-ansi@7.0.0
-├── https://github.com/prettier/prettier?sponsor=1
-│   └── prettier@3.8.1
-├─┬ https://opencollective.com/nest
-│ │ └── @nestjs/common@10.4.22, @nestjs/core@10.4.22, @nestjs/platform-express@10.4.22, @nestjs/testing@10.4.22
-│ └─┬ https://github.com/sindresorhus/file-type?sponsor=1
-│   │ └── file-type@20.4.1
-│   └── https://github.com/sponsors/Borewit
-│       └── @tokenizer/inflate@0.2.7, strtok3@10.3.4, token-types@6.1.2, @borewit/text-codec@0.2.1
-├── https://github.com/sponsors/jaredhanson
-│   └── passport@0.7.0
-├── https://github.com/sponsors/broofa
-│   └── uuid@9.0.1
-├── https://github.com/sponsors/colinhacks
-│   └── zod@3.25.76
-├─┬ https://opencollective.com/eslint-plugin-prettier
-│ │ └── eslint-plugin-prettier@5.5.5
-│ └─┬ https://opencollective.com/synckit
-│   │ └── synckit@0.11.12
-│   └── https://opencollective.com/pkgr
-│       └── @pkgr/core@0.2.9
-├── https://github.com/sponsors/dubzzz
-│   └── fast-check@3.23.2, pure-rand@6.1.0
-├── https://github.com/sponsors/isaacs
-│   └── rimraf@4.4.1, glob@9.3.5, minimatch@8.0.4, path-scurry@1.11.1, minimatch@9.0.5, glob@11.1.0, foreground-child@3.3.1, signal-exit@4.1.0, jackspeak@4.2.3, minimatch@10.2.1, path-scurry@2.0.1
-├── https://opencollective.com/typescript-eslint
-│   └── typescript-eslint@8.56.0, @typescript-eslint/eslint-plugin@8.56.0, @typescript-eslint/scope-manager@8.56.0, @typescript-eslint/types@8.56.0, @typescript-eslint/type-utils@8.56.0, @typescript-eslint/visitor-keys@8.56.0, @typescript-eslint/parser@8.56.0, @typescript-eslint/typescript-estree@8.56.0, @typescript-eslint/project-service@8.56.0, @typescript-eslint/tsconfig-utils@8.56.0, @typescript-eslint/utils@8.56.0
-├── https://dotenvx.com
-│   └── dotenv@17.2.3, dotenv-expand@12.0.3, dotenv@16.6.1
-├─┬ https://github.com/sponsors/epoberezkin
-│ │ └── ajv@8.17.1
-│ └── https://github.com/sponsors/fastify
-│     └── fast-uri@3.1.0
-├── https://github.com/sponsors/sibiraj-s
-│   └── ci-info@3.9.0
-├─┬ https://opencollective.com/babel
-│ │ └── @babel/core@7.29.0
-│ └── https://opencollective.com/browserslist
-│     └── browserslist@4.28.1, caniuse-lite@1.0.30001770, update-browserslist-db@1.2.3
-├── https://github.com/chalk/supports-color?sponsor=1
-│   └── supports-color@8.1.1
-├── https://github.com/sindresorhus/emittery?sponsor=1
-│   └── emittery@0.13.1
-├─┬ https://ko-fi.com/tunnckoCore/commissions
-│ │ └── formidable@3.5.4
-│ └── https://paulmillr.com/funding/
-│     └── @noble/hashes@1.8.0
-├── https://opencollective.com/webpack
-│   └── tapable@2.3.0
-├── https://opencollective.com/mui-org
-│   └── @mui/icons-material@5.18.0, @mui/material@5.18.0, @mui/core-downloads-tracker@5.18.0, @mui/system@5.18.0, @mui/private-theming@5.17.1, @mui/styled-engine@5.18.0, @mui/utils@5.17.1
-├── https://github.com/sponsors/tannerlinsley
-│   └── @tanstack/react-query@5.90.21, @tanstack/query-core@5.90.20
-├── https://locize.com
-│   └── i18next@23.16.8
-├─┬ https://github.com/vitejs/vite?sponsor=1
-│ │ └── vite@7.3.1
-│ └─┬ https://opencollective.com/postcss/
-│   │ └── postcss@8.5.6
-│   └── https://github.com/sponsors/ai
-│       └── nanoid@3.3.11
-├── https://github.com/sponsors/antfu
-│   └── vite-plugin-pwa@1.2.0
-├── https://github.com/sponsors/RubenVerborgh
-│   └── follow-redirects@1.15.11
-└── https://opencollective.com/core-js
-    └── core-js-compat@3.48.0
-
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ npm audit fix
-
-up to date, audited 1123 packages in 2s
-
-229 packages are looking for funding
-  run `npm fund` for details
-
-# npm audit report
-
-ajv  <8.18.0
-Severity: moderate
-ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
-No fix available
-node_modules/ajv
-  @angular-devkit/core  >=0.0.24
-  Depends on vulnerable versions of ajv
-  node_modules/@angular-devkit/core
-    @angular-devkit/schematics  >=0.0.43
-    Depends on vulnerable versions of @angular-devkit/core
-    node_modules/@angular-devkit/schematics
-    @nestjs/schematics  *
-    Depends on vulnerable versions of @angular-devkit/core
-    Depends on vulnerable versions of @angular-devkit/schematics
-    node_modules/@nestjs/schematics
-
-4 moderate severity vulnerabilities
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-Some issues need review, and may require choosing
-a different dependency.
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ npm run docker:up
-
-> family-finance@1.0.0 docker:up
-> docker-compose up -d
-
-Traceback (most recent call last):
-  File "/usr/bin/docker-compose", line 33, in <module>
-    sys.exit(load_entry_point('docker-compose==1.29.2', 'console_scripts', 'docker-compose')())
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/bin/docker-compose", line 25, in importlib_load_entry_point
-    return next(matches).load()
-           ^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/importlib/metadata/__init__.py", line 205, in load
-    module = import_module(match.group('module'))
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "/usr/lib/python3/dist-packages/compose/cli/main.py", line 9, in <module>
-    from distutils.spawn import find_executable
-ModuleNotFoundError: No module named 'distutils'
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ docker compose up -d
-WARN[0000] The "MAGIC_LINK_SECRET" variable is not set. Defaulting to a blank string. 
-WARN[0000] The "SMTP_HOST" variable is not set. Defaulting to a blank string. 
-WARN[0000] The "SMTP_USER" variable is not set. Defaulting to a blank string. 
-WARN[0000] The "SMTP_PASSWORD" variable is not set. Defaulting to a blank string. 
-WARN[0000] /home/andreas/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
-unable to get image 'postgres:16-alpine': Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
-andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ 
+mvp-E8Cgc.6$ npm run check
+npm error Missing script: "check"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /home/andreas/.npm/_logs/2026-02-18T14_51_18_831Z-debug-0.log
+andreas@ubuntu:~/.local/share/Trash/files/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc.6$ npm run
+Lifecycle scripts included in family-finance@1.0.0:
+  test
+    npm run test --workspaces --if-present
+  prepare
+    [ -d .git ] && husky install || true
+available via `npm run-script`:
+  dev:api
+    npm run dev --workspace=apps/api
+  dev:web
+    npm run dev --workspace=apps/web
+  build
+    npm run build --workspaces --if-present
+  lint
+    npm run lint --workspaces --if-present
+  format
+    prettier --write "**/*.{ts,tsx,js,jsx,json,md}"
+  db:migrate
+    npm run migrate --workspace=apps/api
+  db:seed
+    npm run seed --workspace=apps/api
+  docker:up
+    docker-compose up -d
+  docker:down
+    docker-compose down
+  docker:logs
+    docker-compose logs -f
