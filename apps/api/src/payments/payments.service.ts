@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class PaymentsService {
@@ -44,7 +44,7 @@ export class PaymentsService {
           },
         },
       },
-      orderBy: { paidAt: 'desc' },
+      orderBy: { paidAt: "desc" },
     });
   }
 
@@ -83,7 +83,7 @@ export class PaymentsService {
           },
         },
       },
-      orderBy: { paidAt: 'desc' },
+      orderBy: { paidAt: "desc" },
     });
   }
 
@@ -135,7 +135,11 @@ export class PaymentsService {
   /**
    * Get payment summary for a user in a period
    */
-  async getUserPaymentSummary(userId: string, periodId: string, familyId: string) {
+  async getUserPaymentSummary(
+    userId: string,
+    periodId: string,
+    familyId: string,
+  ) {
     // Verify user belongs to family
     const user = await this.prisma.user.findFirst({
       where: { id: userId, familyId },
@@ -193,7 +197,7 @@ export class PaymentsService {
       totalPaidCents: paid,
       totalOwedCents: owed,
       balanceCents: balance,
-      status: balance >= 0 ? 'settled' : 'owing',
+      status: balance >= 0 ? "settled" : "owing",
     };
   }
 
@@ -244,6 +248,6 @@ export class PaymentsService {
       where: { id },
     });
 
-    return { message: 'Payment deleted successfully' };
+    return { message: "Payment deleted successfully" };
   }
 }

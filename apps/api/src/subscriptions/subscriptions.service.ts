@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateSubscriptionDto } from './dto/create-subscription.dto';
-import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateSubscriptionDto } from "./dto/create-subscription.dto";
+import { UpdateSubscriptionDto } from "./dto/update-subscription.dto";
 
 @Injectable()
 export class SubscriptionsService {
@@ -16,7 +20,7 @@ export class SubscriptionsService {
         familyId,
         ...(activeOnly && { active: true }),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -46,7 +50,8 @@ export class SubscriptionsService {
    * Create a new subscription
    */
   async create(createSubscriptionDto: CreateSubscriptionDto, familyId: string) {
-    const { startDate, endDate, distributionRules, ...subscriptionData } = createSubscriptionDto;
+    const { startDate, endDate, distributionRules, ...subscriptionData } =
+      createSubscriptionDto;
 
     return this.prisma.subscription.create({
       data: {
@@ -63,18 +68,27 @@ export class SubscriptionsService {
   /**
    * Update a subscription
    */
-  async update(id: string, updateSubscriptionDto: UpdateSubscriptionDto, familyId: string) {
+  async update(
+    id: string,
+    updateSubscriptionDto: UpdateSubscriptionDto,
+    familyId: string,
+  ) {
     await this.findOne(id, familyId);
 
-    const { startDate, endDate, distributionRules, ...updateData } = updateSubscriptionDto;
+    const { startDate, endDate, distributionRules, ...updateData } =
+      updateSubscriptionDto;
 
     return this.prisma.subscription.update({
       where: { id },
       data: {
         ...updateData,
         ...(startDate && { startDate: new Date(startDate) }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-        ...(distributionRules && { distributionRules: distributionRules as any }),
+        ...(endDate !== undefined && {
+          endDate: endDate ? new Date(endDate) : null,
+        }),
+        ...(distributionRules && {
+          distributionRules: distributionRules as any,
+        }),
       },
     });
   }
@@ -103,7 +117,7 @@ export class SubscriptionsService {
       where: { id },
     });
 
-    return { message: 'Subscription deleted successfully' };
+    return { message: "Subscription deleted successfully" };
   }
 
   /**
@@ -113,7 +127,7 @@ export class SubscriptionsService {
   async generateInvoicesForPeriod(periodId: string, familyId: string) {
     // Verify period exists and is open
     const period = await this.prisma.period.findFirst({
-      where: { id: periodId, familyId, status: 'OPEN' },
+      where: { id: periodId, familyId, status: "OPEN" },
     });
 
     if (!period) {
@@ -126,7 +140,7 @@ export class SubscriptionsService {
     });
 
     // Parse period ID to get year and month
-    const [year, month] = periodId.split('-').map(Number);
+    const [year, month] = periodId.split("-").map(Number);
     const periodDate = new Date(year, month - 1, 1);
 
     // Get incomes for the period
@@ -136,7 +150,9 @@ export class SubscriptionsService {
     });
 
     if (incomes.length === 0) {
-      throw new BadRequestException('No incomes found for period. Add incomes first.');
+      throw new BadRequestException(
+        "No incomes found for period. Add incomes first.",
+      );
     }
 
     const generatedInvoices = [];
@@ -145,7 +161,9 @@ export class SubscriptionsService {
     for (const subscription of subscriptions) {
       // Check if subscription is active during this period
       const startDate = new Date(subscription.startDate);
-      const endDate = subscription.endDate ? new Date(subscription.endDate) : null;
+      const endDate = subscription.endDate
+        ? new Date(subscription.endDate)
+        : null;
 
       if (startDate > periodDate) {
         continue; // Subscription hasn't started yet

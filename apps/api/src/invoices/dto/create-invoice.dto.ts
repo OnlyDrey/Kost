@@ -1,39 +1,52 @@
-import { IsString, IsNotEmpty, IsInt, Min, IsEnum, IsOptional, IsDateString, ValidateNested, IsArray } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DistributionMethod, RemainderMethod } from '@prisma/client';
-import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  Min,
+  IsEnum,
+  IsOptional,
+  IsDateString,
+  ValidateNested,
+  IsArray,
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { DistributionMethod, RemainderMethod } from "@prisma/client";
+import { Type } from "class-transformer";
 
 export class InvoiceLineDto {
-  @ApiProperty({ example: 'Line item description' })
+  @ApiProperty({ example: "Line item description" })
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: 10000, description: 'Amount in cents' })
+  @ApiProperty({ example: 10000, description: "Amount in cents" })
   @IsInt()
   @Min(0)
   amountCents: number;
 }
 
 export class PercentRuleDto {
-  @ApiProperty({ example: 'user123' })
+  @ApiProperty({ example: "user123" })
   @IsString()
   @IsNotEmpty()
   userId: string;
 
-  @ApiProperty({ example: 5000, description: 'Percentage in basis points (5000 = 50%)' })
+  @ApiProperty({
+    example: 5000,
+    description: "Percentage in basis points (5000 = 50%)",
+  })
   @IsInt()
   @Min(0)
   percentBasisPoints: number;
 }
 
 export class FixedRuleDto {
-  @ApiProperty({ example: 'user123' })
+  @ApiProperty({ example: "user123" })
   @IsString()
   @IsNotEmpty()
   userId: string;
 
-  @ApiProperty({ example: 10000, description: 'Fixed amount in cents' })
+  @ApiProperty({ example: 10000, description: "Fixed amount in cents" })
   @IsInt()
   @Min(0)
   fixedCents: number;
@@ -61,37 +74,40 @@ export class DistributionRulesDto {
 }
 
 export class CreateInvoiceDto {
-  @ApiProperty({ example: '2024-01' })
+  @ApiProperty({ example: "2024-01" })
   @IsString()
   @IsNotEmpty()
   periodId: string;
 
-  @ApiProperty({ example: 'Utilities' })
+  @ApiProperty({ example: "Utilities" })
   @IsString()
   @IsNotEmpty()
   category: string;
 
-  @ApiProperty({ example: 'Electric Company' })
+  @ApiProperty({ example: "Electric Company" })
   @IsString()
   @IsNotEmpty()
   vendor: string;
 
-  @ApiPropertyOptional({ example: 'January electricity bill' })
+  @ApiPropertyOptional({ example: "January electricity bill" })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ example: '2024-01-31' })
+  @ApiPropertyOptional({ example: "2024-01-31" })
   @IsDateString()
   @IsOptional()
   dueDate?: string;
 
-  @ApiProperty({ example: 50000, description: 'Total amount in cents' })
+  @ApiProperty({ example: 50000, description: "Total amount in cents" })
   @IsInt()
   @Min(0)
   totalCents: number;
 
-  @ApiProperty({ enum: DistributionMethod, example: DistributionMethod.BY_INCOME })
+  @ApiProperty({
+    enum: DistributionMethod,
+    example: DistributionMethod.BY_INCOME,
+  })
   @IsEnum(DistributionMethod)
   distributionMethod: DistributionMethod;
 

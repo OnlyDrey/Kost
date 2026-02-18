@@ -1,11 +1,18 @@
-import { Injectable, BadRequestException, UnauthorizedException, Logger, NotImplementedException, ConflictException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../prisma/prisma.service';
-import { randomBytes } from 'crypto';
-import * as nodemailer from 'nodemailer';
-import * as bcrypt from 'bcryptjs';
-import { JwtPayload } from './strategies/jwt.strategy';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+  Logger,
+  NotImplementedException,
+  ConflictException,
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../prisma/prisma.service";
+import { randomBytes } from "crypto";
+import * as nodemailer from "nodemailer";
+import * as bcrypt from "bcryptjs";
+import { JwtPayload } from "./strategies/jwt.strategy";
 
 @Injectable()
 export class AuthService {
@@ -18,9 +25,11 @@ export class AuthService {
     private configService: ConfigService,
   ) {
     // Initialize email transporter only if magic link is enabled
-    const isMagicLinkEnabled = this.configService.get<boolean>('auth.magicLinkEnabled');
+    const isMagicLinkEnabled = this.configService.get<boolean>(
+      "auth.magicLinkEnabled",
+    );
     if (isMagicLinkEnabled) {
-      const smtpConfig = this.configService.get('smtp');
+      const smtpConfig = this.configService.get("smtp");
       if (smtpConfig.host && smtpConfig.user) {
         this.transporter = nodemailer.createTransport({
           host: smtpConfig.host,
@@ -32,7 +41,9 @@ export class AuthService {
           },
         });
       } else {
-        this.logger.warn('SMTP not configured - magic link emails will be logged instead');
+        this.logger.warn(
+          "SMTP not configured - magic link emails will be logged instead",
+        );
       }
     }
   }
@@ -40,10 +51,18 @@ export class AuthService {
   /**
    * Register a new user with password
    */
-  async registerWithPassword(name: string, email: string, password: string): Promise<{ accessToken: string; user: any }> {
-    const isPasswordEnabled = this.configService.get<boolean>('auth.passwordEnabled');
+  async registerWithPassword(
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string; user: any }> {
+    const isPasswordEnabled = this.configService.get<boolean>(
+      "auth.passwordEnabled",
+    );
     if (!isPasswordEnabled) {
-      throw new NotImplementedException('Password authentication is not enabled');
+      throw new NotImplementedException(
+        "Password authentication is not enabled",
+      );
     }
 
     // Check if user already exists
@@ -52,7 +71,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
     }
 
     // Hash password with bcrypt (10 rounds)
@@ -72,7 +91,7 @@ export class AuthService {
         name,
         passwordHash,
         familyId: family.id,
-        role: 'ADMIN', // First user is admin
+        role: "ADMIN", // First user is admin
       },
       include: {
         family: true,
@@ -105,10 +124,17 @@ export class AuthService {
   /**
    * Login with email and password
    */
-  async loginWithPassword(email: string, password: string): Promise<{ accessToken: string; user: any }> {
-    const isPasswordEnabled = this.configService.get<boolean>('auth.passwordEnabled');
+  async loginWithPassword(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string; user: any }> {
+    const isPasswordEnabled = this.configService.get<boolean>(
+      "auth.passwordEnabled",
+    );
     if (!isPasswordEnabled) {
-      throw new NotImplementedException('Password authentication is not enabled');
+      throw new NotImplementedException(
+        "Password authentication is not enabled",
+      );
     }
 
     // Find user by email
@@ -120,13 +146,13 @@ export class AuthService {
     });
 
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException("Invalid email or password");
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException("Invalid email or password");
     }
 
     // Generate JWT
@@ -156,9 +182,13 @@ export class AuthService {
    * Request a magic link for authentication
    */
   async requestMagicLink(email: string): Promise<{ message: string }> {
-    const isMagicLinkEnabled = this.configService.get<boolean>('auth.magicLinkEnabled');
+    const isMagicLinkEnabled = this.configService.get<boolean>(
+      "auth.magicLinkEnabled",
+    );
     if (!isMagicLinkEnabled) {
-      throw new NotImplementedException('Magic link authentication is not enabled');
+      throw new NotImplementedException(
+        "Magic link authentication is not enabled",
+      );
     }
     // Find user by email
     const user = await this.prisma.user.findUnique({
@@ -167,13 +197,19 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if user exists or not for security
-      return { message: 'If an account exists with this email, a magic link has been sent.' };
+      return {
+        message:
+          "If an account exists with this email, a magic link has been sent.",
+      };
     }
 
     // Generate unique token
-    const token = randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString("hex");
     const expiresAt = new Date();
-    const expiresInSeconds = this.configService.get<number>('magicLink.expiresIn', 600);
+    const expiresInSeconds = this.configService.get<number>(
+      "magicLink.expiresIn",
+      600,
+    );
     expiresAt.setSeconds(expiresAt.getSeconds() + expiresInSeconds);
 
     // Store token in database
@@ -186,21 +222,30 @@ export class AuthService {
     });
 
     // Send email with magic link
-    const appUrl = this.configService.get<string>('app.url');
+    const appUrl = this.configService.get<string>("app.url");
     const magicLink = `${appUrl}/auth/verify?token=${token}`;
 
     await this.sendMagicLinkEmail(user.email, user.name, magicLink);
 
-    return { message: 'If an account exists with this email, a magic link has been sent.' };
+    return {
+      message:
+        "If an account exists with this email, a magic link has been sent.",
+    };
   }
 
   /**
    * Verify magic link token and return JWT
    */
-  async verifyMagicLink(token: string): Promise<{ accessToken: string; user: any }> {
-    const isMagicLinkEnabled = this.configService.get<boolean>('auth.magicLinkEnabled');
+  async verifyMagicLink(
+    token: string,
+  ): Promise<{ accessToken: string; user: any }> {
+    const isMagicLinkEnabled = this.configService.get<boolean>(
+      "auth.magicLinkEnabled",
+    );
     if (!isMagicLinkEnabled) {
-      throw new NotImplementedException('Magic link authentication is not enabled');
+      throw new NotImplementedException(
+        "Magic link authentication is not enabled",
+      );
     }
     // Find and validate token
     const magicLinkToken = await this.prisma.magicLinkToken.findUnique({
@@ -215,15 +260,15 @@ export class AuthService {
     });
 
     if (!magicLinkToken) {
-      throw new UnauthorizedException('Invalid or expired magic link');
+      throw new UnauthorizedException("Invalid or expired magic link");
     }
 
     if (magicLinkToken.usedAt) {
-      throw new UnauthorizedException('Magic link has already been used');
+      throw new UnauthorizedException("Magic link has already been used");
     }
 
     if (new Date() > magicLinkToken.expiresAt) {
-      throw new UnauthorizedException('Magic link has expired');
+      throw new UnauthorizedException("Magic link has expired");
     }
 
     // Mark token as used
@@ -267,7 +312,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
     return {
@@ -283,13 +328,17 @@ export class AuthService {
   /**
    * Send magic link email
    */
-  private async sendMagicLinkEmail(email: string, name: string, magicLink: string): Promise<void> {
-    const smtpFrom = this.configService.get<string>('smtp.from');
+  private async sendMagicLinkEmail(
+    email: string,
+    name: string,
+    magicLink: string,
+  ): Promise<void> {
+    const smtpFrom = this.configService.get<string>("smtp.from");
 
     const mailOptions = {
       from: smtpFrom,
       to: email,
-      subject: 'Your Magic Link - Family Finance',
+      subject: "Your Magic Link - Family Finance",
       html: `
         <h1>Hi ${name}!</h1>
         <p>Click the link below to sign in to Family Finance:</p>
@@ -305,8 +354,11 @@ export class AuthService {
         await this.transporter.sendMail(mailOptions);
         this.logger.log(`Magic link email sent to ${email}`);
       } catch (error) {
-        this.logger.error(`Failed to send magic link email to ${email}:`, error);
-        throw new BadRequestException('Failed to send magic link email');
+        this.logger.error(
+          `Failed to send magic link email to ${email}:`,
+          error,
+        );
+        throw new BadRequestException("Failed to send magic link email");
       }
     } else {
       // Development: log the magic link

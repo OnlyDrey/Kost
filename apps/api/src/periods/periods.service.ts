@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreatePeriodDto } from './dto/create-period.dto';
-import { PeriodStatus } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreatePeriodDto } from "./dto/create-period.dto";
+import { PeriodStatus } from "@prisma/client";
 
 @Injectable()
 export class PeriodsService {
@@ -13,7 +17,7 @@ export class PeriodsService {
   async findAll(familyId: string) {
     return this.prisma.period.findMany({
       where: { familyId },
-      orderBy: { id: 'desc' },
+      orderBy: { id: "desc" },
       include: {
         _count: {
           select: {
@@ -79,7 +83,7 @@ export class PeriodsService {
   async getCurrentPeriod(familyId: string) {
     const period = await this.prisma.period.findFirst({
       where: { familyId, status: PeriodStatus.OPEN },
-      orderBy: { id: 'desc' },
+      orderBy: { id: "desc" },
       include: {
         _count: {
           select: {
@@ -91,7 +95,7 @@ export class PeriodsService {
     });
 
     if (!period) {
-      throw new NotFoundException('No open period found');
+      throw new NotFoundException("No open period found");
     }
 
     return period;
@@ -104,7 +108,7 @@ export class PeriodsService {
     // Validate period ID format (YYYY-MM)
     const periodIdRegex = /^\d{4}-\d{2}$/;
     if (!periodIdRegex.test(createPeriodDto.id)) {
-      throw new ConflictException('Period ID must be in YYYY-MM format');
+      throw new ConflictException("Period ID must be in YYYY-MM format");
     }
 
     // Check if period already exists
@@ -113,7 +117,9 @@ export class PeriodsService {
     });
 
     if (existingPeriod) {
-      throw new ConflictException(`Period ${createPeriodDto.id} already exists`);
+      throw new ConflictException(
+        `Period ${createPeriodDto.id} already exists`,
+      );
     }
 
     return this.prisma.period.create({
@@ -140,10 +146,16 @@ export class PeriodsService {
     const period = await this.findOne(id, familyId);
 
     // Calculate totals
-    const totalInvoicesCents = period.invoices.reduce((sum, inv) => sum + inv.totalCents, 0);
+    const totalInvoicesCents = period.invoices.reduce(
+      (sum, inv) => sum + inv.totalCents,
+      0,
+    );
 
     const totalPaidCents = period.invoices.reduce((sum, inv) => {
-      const invoicePayments = inv.payments.reduce((pSum, p) => pSum + p.amountCents, 0);
+      const invoicePayments = inv.payments.reduce(
+        (pSum, p) => pSum + p.amountCents,
+        0,
+      );
       return sum + invoicePayments;
     }, 0);
 
@@ -223,7 +235,7 @@ export class PeriodsService {
     // Check if period has any invoices or incomes
     if (period._count.invoices > 0 || period._count.incomes > 0) {
       throw new ConflictException(
-        'Cannot delete period with invoices or incomes. Delete them first.',
+        "Cannot delete period with invoices or incomes. Delete them first.",
       );
     }
 
@@ -231,6 +243,6 @@ export class PeriodsService {
       where: { id },
     });
 
-    return { message: 'Period deleted successfully' };
+    return { message: "Period deleted successfully" };
   }
 }

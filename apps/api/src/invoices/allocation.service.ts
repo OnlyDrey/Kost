@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { AllocationShare, PercentRule, FixedRule, RemainderMethod } from '@family-finance/shared';
+import { Injectable } from "@nestjs/common";
+import {
+  AllocationShare,
+  PercentRule,
+  FixedRule,
+  RemainderMethod,
+} from "@family-finance/shared";
 
 interface ParticipantWithIncome {
   userId: string;
@@ -21,13 +26,17 @@ export class AllocationService {
     // Validate: sum must be 10000 (100.00%)
     const sum = percentRules.reduce((acc, r) => acc + r.percentBasisPoints, 0);
     if (sum !== 10000) {
-      throw new Error(`Percent rules must sum to 10000 basis points (100%), got ${sum}`);
+      throw new Error(
+        `Percent rules must sum to 10000 basis points (100%), got ${sum}`,
+      );
     }
 
     // Validate: no negative percentages
     percentRules.forEach((r) => {
       if (r.percentBasisPoints < 0) {
-        throw new Error(`Negative percentage not allowed: ${r.percentBasisPoints}`);
+        throw new Error(
+          `Negative percentage not allowed: ${r.percentBasisPoints}`,
+        );
       }
     });
 
@@ -46,8 +55,11 @@ export class AllocationService {
     });
 
     // Calculate remainder
-    const allocatedSoFar = preliminaryShares.reduce((acc, s) => acc + s.flooredShare, 0);
-    let remainder = totalCents - allocatedSoFar;
+    const allocatedSoFar = preliminaryShares.reduce(
+      (acc, s) => acc + s.flooredShare,
+      0,
+    );
+    const remainder = totalCents - allocatedSoFar;
 
     // Sort by fractional part DESC, then by userId ASC for deterministic tiebreak
     const sorted = [...preliminaryShares].sort((a, b) => {
@@ -90,17 +102,26 @@ export class AllocationService {
     participants: ParticipantWithIncome[],
   ): AllocationShare[] {
     // Filter out users with no income
-    const withIncome = participants.filter((p) => p.normalizedMonthlyGrossCents > 0);
+    const withIncome = participants.filter(
+      (p) => p.normalizedMonthlyGrossCents > 0,
+    );
 
     if (withIncome.length === 0) {
-      throw new Error('No participants with income found for BY_INCOME distribution');
+      throw new Error(
+        "No participants with income found for BY_INCOME distribution",
+      );
     }
 
-    const totalIncome = withIncome.reduce((acc, p) => acc + p.normalizedMonthlyGrossCents, 0);
+    const totalIncome = withIncome.reduce(
+      (acc, p) => acc + p.normalizedMonthlyGrossCents,
+      0,
+    );
 
     // Convert to percent rules
     const percentRules: PercentRule[] = withIncome.map((p) => {
-      const percentBasisPoints = Math.round((p.normalizedMonthlyGrossCents / totalIncome) * 10000);
+      const percentBasisPoints = Math.round(
+        (p.normalizedMonthlyGrossCents / totalIncome) * 10000,
+      );
       return {
         userId: p.userId,
         percentBasisPoints,
@@ -108,7 +129,10 @@ export class AllocationService {
     });
 
     // Adjust to ensure sum is exactly 10000
-    const currentSum = percentRules.reduce((acc, r) => acc + r.percentBasisPoints, 0);
+    const currentSum = percentRules.reduce(
+      (acc, r) => acc + r.percentBasisPoints,
+      0,
+    );
     const diff = 10000 - currentSum;
 
     if (diff !== 0) {
@@ -121,9 +145,14 @@ export class AllocationService {
     // Update explanations to include income details
     return shares.map((share) => {
       const participant = withIncome.find((p) => p.userId === share.userId)!;
-      const incomeFormatted = (participant.normalizedMonthlyGrossCents / 100).toFixed(2);
+      const incomeFormatted = (
+        participant.normalizedMonthlyGrossCents / 100
+      ).toFixed(2);
       const totalIncomeFormatted = (totalIncome / 100).toFixed(2);
-      const percentFormatted = ((participant.normalizedMonthlyGrossCents / totalIncome) * 100).toFixed(2);
+      const percentFormatted = (
+        (participant.normalizedMonthlyGrossCents / totalIncome) *
+        100
+      ).toFixed(2);
       const shareFormatted = (share.shareCents / 100).toFixed(2);
 
       return {
@@ -163,10 +192,13 @@ export class AllocationService {
     let remainderShares: AllocationShare[] = [];
 
     if (remainderCents > 0) {
-      if (remainderMethod === 'EQUAL') {
+      if (remainderMethod === "EQUAL") {
         // Equal split among ALL participants
-        const perPersonRemainder = Math.floor(remainderCents / allParticipants.length);
-        let remainderRest = remainderCents - perPersonRemainder * allParticipants.length;
+        const perPersonRemainder = Math.floor(
+          remainderCents / allParticipants.length,
+        );
+        const remainderRest =
+          remainderCents - perPersonRemainder * allParticipants.length;
 
         // Sort participants by userId for deterministic distribution of rest cents
         const sortedParticipants = [...allParticipants].sort((a, b) =>
@@ -199,7 +231,8 @@ export class AllocationService {
     // Build final results with combined explanations
     return allParticipants.map((p) => {
       const totalShareCents = finalShares.get(p.userId) || 0;
-      const fixedCents = fixedRules.find((r) => r.userId === p.userId)?.fixedCents || 0;
+      const fixedCents =
+        fixedRules.find((r) => r.userId === p.userId)?.fixedCents || 0;
       const remainderCents = totalShareCents - fixedCents;
 
       let explanation: string;
@@ -207,12 +240,12 @@ export class AllocationService {
         const fixedFormatted = (fixedCents / 100).toFixed(2);
         const remainderFormatted = (remainderCents / 100).toFixed(2);
         const totalFormatted = (totalShareCents / 100).toFixed(2);
-        const method = remainderMethod === 'EQUAL' ? 'equal split' : 'income';
+        const method = remainderMethod === "EQUAL" ? "equal split" : "income";
         explanation = `Your share is ${totalFormatted} kr (${fixedFormatted} kr fixed + ${remainderFormatted} kr from remainder based on ${method})`;
       } else if (fixedCents > 0) {
         explanation = `Your share is ${(fixedCents / 100).toFixed(2)} kr (fixed amount)`;
       } else if (remainderCents > 0) {
-        const method = remainderMethod === 'EQUAL' ? 'equal split' : 'income';
+        const method = remainderMethod === "EQUAL" ? "equal split" : "income";
         explanation = `Your share is ${(remainderCents / 100).toFixed(2)} kr (remainder based on ${method}, no fixed amount)`;
       } else {
         explanation = `Your share is 0.00 kr (no fixed amount or remainder allocation)`;

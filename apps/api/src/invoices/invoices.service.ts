@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AllocationService } from './allocation.service';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { AddPaymentDto } from './dto/add-payment.dto';
-import { DistributionMethod, PeriodStatus } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { AllocationService } from "./allocation.service";
+import { CreateInvoiceDto } from "./dto/create-invoice.dto";
+import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
+import { AddPaymentDto } from "./dto/add-payment.dto";
+import { DistributionMethod, PeriodStatus } from "@prisma/client";
 
 @Injectable()
 export class InvoicesService {
@@ -46,7 +50,7 @@ export class InvoicesService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -72,7 +76,7 @@ export class InvoicesService {
               select: { id: true, name: true, email: true },
             },
           },
-          orderBy: { paidAt: 'desc' },
+          orderBy: { paidAt: "desc" },
         },
         period: true,
       },
@@ -89,7 +93,13 @@ export class InvoicesService {
    * Create a new invoice and calculate shares using AllocationService
    */
   async create(createInvoiceDto: CreateInvoiceDto, familyId: string) {
-    const { periodId, distributionMethod, lines, distributionRules, ...invoiceData } = createInvoiceDto;
+    const {
+      periodId,
+      distributionMethod,
+      lines,
+      distributionRules,
+      ...invoiceData
+    } = createInvoiceDto;
 
     // Verify period belongs to family and is open
     const period = await this.prisma.period.findFirst({
@@ -101,7 +111,7 @@ export class InvoicesService {
     }
 
     if (period.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Cannot add invoice to a closed period');
+      throw new BadRequestException("Cannot add invoice to a closed period");
     }
 
     // Validate lines sum to total if provided
@@ -123,7 +133,9 @@ export class InvoicesService {
     });
 
     if (incomes.length === 0) {
-      throw new BadRequestException('No users with income found for this period. Add incomes first.');
+      throw new BadRequestException(
+        "No users with income found for this period. Add incomes first.",
+      );
     }
 
     // Calculate shares based on distribution method
@@ -159,12 +171,19 @@ export class InvoicesService {
               }
             : undefined,
           distribution:
-            distributionRules && (distributionRules.percentRules || distributionRules.fixedRules)
+            distributionRules &&
+            (distributionRules.percentRules || distributionRules.fixedRules)
               ? {
                   create: {
                     method: distributionMethod,
-                    percentRules: distributionRules.percentRules ? JSON.parse(JSON.stringify(distributionRules.percentRules)) : null,
-                    fixedRules: distributionRules.fixedRules ? JSON.parse(JSON.stringify(distributionRules.fixedRules)) : null,
+                    percentRules: distributionRules.percentRules
+                      ? JSON.parse(
+                          JSON.stringify(distributionRules.percentRules),
+                        )
+                      : null,
+                    fixedRules: distributionRules.fixedRules
+                      ? JSON.parse(JSON.stringify(distributionRules.fixedRules))
+                      : null,
                     remainderMethod: distributionRules.remainderMethod || null,
                   },
                 }
@@ -197,15 +216,20 @@ export class InvoicesService {
   /**
    * Update an invoice (recalculates shares if distribution changes)
    */
-  async update(id: string, updateInvoiceDto: UpdateInvoiceDto, familyId: string) {
+  async update(
+    id: string,
+    updateInvoiceDto: UpdateInvoiceDto,
+    familyId: string,
+  ) {
     const existingInvoice = await this.findOne(id, familyId);
 
     // Check if period is still open
     if (existingInvoice.period.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Cannot update invoice in a closed period');
+      throw new BadRequestException("Cannot update invoice in a closed period");
     }
 
-    const { lines, distributionRules, distributionMethod, ...updateData } = updateInvoiceDto;
+    const { lines, distributionRules, distributionMethod, ...updateData } =
+      updateInvoiceDto;
 
     // If distribution method or total changes, recalculate shares
     const shouldRecalculateShares =
@@ -214,8 +238,11 @@ export class InvoicesService {
       updateInvoiceDto.distributionRules !== undefined;
 
     if (shouldRecalculateShares) {
-      const totalCents = updateInvoiceDto.totalCents ?? existingInvoice.totalCents;
-      const method = updateInvoiceDto.distributionMethod ?? existingInvoice.distributionMethod;
+      const totalCents =
+        updateInvoiceDto.totalCents ?? existingInvoice.totalCents;
+      const method =
+        updateInvoiceDto.distributionMethod ??
+        existingInvoice.distributionMethod;
 
       // Get incomes for period
       const incomes = await this.prisma.income.findMany({
@@ -246,7 +273,9 @@ export class InvoicesService {
           where: { id },
           data: {
             ...updateData,
-            ...(updateInvoiceDto.totalCents !== undefined && { totalCents: updateInvoiceDto.totalCents }),
+            ...(updateInvoiceDto.totalCents !== undefined && {
+              totalCents: updateInvoiceDto.totalCents,
+            }),
             ...(updateInvoiceDto.distributionMethod !== undefined && {
               distributionMethod: updateInvoiceDto.distributionMethod,
             }),
@@ -313,20 +342,26 @@ export class InvoicesService {
 
     // Check if period is still open
     if (invoice.period.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Cannot delete invoice from a closed period');
+      throw new BadRequestException(
+        "Cannot delete invoice from a closed period",
+      );
     }
 
     await this.prisma.invoice.delete({
       where: { id },
     });
 
-    return { message: 'Invoice deleted successfully' };
+    return { message: "Invoice deleted successfully" };
   }
 
   /**
    * Add a payment to an invoice
    */
-  async addPayment(invoiceId: string, addPaymentDto: AddPaymentDto, familyId: string) {
+  async addPayment(
+    invoiceId: string,
+    addPaymentDto: AddPaymentDto,
+    familyId: string,
+  ) {
     const invoice = await this.findOne(invoiceId, familyId);
 
     // Verify payer belongs to family
@@ -359,7 +394,9 @@ export class InvoicesService {
         paidById: addPaymentDto.paidById,
         amountCents: addPaymentDto.amountCents,
         note: addPaymentDto.note,
-        paidAt: addPaymentDto.paidAt ? new Date(addPaymentDto.paidAt) : new Date(),
+        paidAt: addPaymentDto.paidAt
+          ? new Date(addPaymentDto.paidAt)
+          : new Date(),
       },
       include: {
         paidBy: {
@@ -383,12 +420,21 @@ export class InvoicesService {
     totalCents: number,
     distributionMethod: DistributionMethod,
     distributionRules: any,
-    participants: Array<{ userId: string; userName: string; normalizedMonthlyGrossCents: number }>,
+    participants: Array<{
+      userId: string;
+      userName: string;
+      normalizedMonthlyGrossCents: number;
+    }>,
   ) {
     switch (distributionMethod) {
       case DistributionMethod.BY_PERCENT:
-        if (!distributionRules?.percentRules || distributionRules.percentRules.length === 0) {
-          throw new BadRequestException('Percent rules required for BY_PERCENT distribution');
+        if (
+          !distributionRules?.percentRules ||
+          distributionRules.percentRules.length === 0
+        ) {
+          throw new BadRequestException(
+            "Percent rules required for BY_PERCENT distribution",
+          );
         }
         return this.allocationService.splitByPercent(
           totalCents,
@@ -399,11 +445,18 @@ export class InvoicesService {
         return this.allocationService.splitByIncome(totalCents, participants);
 
       case DistributionMethod.FIXED:
-        if (!distributionRules?.fixedRules || distributionRules.fixedRules.length === 0) {
-          throw new BadRequestException('Fixed rules required for FIXED distribution');
+        if (
+          !distributionRules?.fixedRules ||
+          distributionRules.fixedRules.length === 0
+        ) {
+          throw new BadRequestException(
+            "Fixed rules required for FIXED distribution",
+          );
         }
         if (!distributionRules.remainderMethod) {
-          throw new BadRequestException('Remainder method required for FIXED distribution');
+          throw new BadRequestException(
+            "Remainder method required for FIXED distribution",
+          );
         }
         return this.allocationService.splitFixed(
           totalCents,
@@ -413,7 +466,9 @@ export class InvoicesService {
         );
 
       default:
-        throw new BadRequestException(`Unsupported distribution method: ${distributionMethod}`);
+        throw new BadRequestException(
+          `Unsupported distribution method: ${distributionMethod}`,
+        );
     }
   }
 }

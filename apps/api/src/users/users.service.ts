@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UserRole } from "@prisma/client";
 
 @Injectable()
 export class UsersService {
@@ -14,7 +19,7 @@ export class UsersService {
   async findAll(familyId: string) {
     return this.prisma.user.findMany({
       where: { familyId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
       select: {
         id: true,
         email: true,
@@ -61,7 +66,7 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
     }
 
     return this.prisma.user.create({
@@ -86,7 +91,13 @@ export class UsersService {
   /**
    * Update a user
    */
-  async update(id: string, updateUserDto: UpdateUserDto, familyId: string, currentUserId: string, currentUserRole: UserRole) {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    familyId: string,
+    currentUserId: string,
+    currentUserRole: UserRole,
+  ) {
     // Verify user exists and belongs to family
     const user = await this.prisma.user.findFirst({
       where: { id, familyId },
@@ -98,28 +109,33 @@ export class UsersService {
 
     // Only admins can change roles or update other users
     if (id !== currentUserId && currentUserRole !== UserRole.ADMIN) {
-      throw new ForbiddenException('Only admins can update other users');
+      throw new ForbiddenException("Only admins can update other users");
     }
 
     if (updateUserDto.role && currentUserRole !== UserRole.ADMIN) {
-      throw new ForbiddenException('Only admins can change user roles');
+      throw new ForbiddenException("Only admins can change user roles");
     }
 
     // Check email uniqueness if changing email
-    if (updateUserDto.email && updateUserDto.email.toLowerCase() !== user.email) {
+    if (
+      updateUserDto.email &&
+      updateUserDto.email.toLowerCase() !== user.email
+    ) {
       const existingUser = await this.prisma.user.findUnique({
         where: { email: updateUserDto.email.toLowerCase() },
       });
 
       if (existingUser) {
-        throw new ConflictException('User with this email already exists');
+        throw new ConflictException("User with this email already exists");
       }
     }
 
     return this.prisma.user.update({
       where: { id },
       data: {
-        ...(updateUserDto.email && { email: updateUserDto.email.toLowerCase() }),
+        ...(updateUserDto.email && {
+          email: updateUserDto.email.toLowerCase(),
+        }),
         ...(updateUserDto.name && { name: updateUserDto.name }),
         ...(updateUserDto.role && { role: updateUserDto.role }),
       },
@@ -155,7 +171,7 @@ export class UsersService {
       });
 
       if (adminCount <= 1) {
-        throw new ForbiddenException('Cannot delete the last admin user');
+        throw new ForbiddenException("Cannot delete the last admin user");
       }
     }
 
@@ -163,6 +179,6 @@ export class UsersService {
       where: { id },
     });
 
-    return { message: 'User deleted successfully' };
+    return { message: "User deleted successfully" };
   }
 }

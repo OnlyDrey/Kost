@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AuditAction } from '@prisma/client';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { AuditAction } from "@prisma/client";
 
 @Injectable()
 export class AuditService {
@@ -51,7 +51,7 @@ export class AuditService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limit,
       skip: offset,
     });
@@ -88,7 +88,7 @@ export class AuditService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -110,7 +110,7 @@ export class AuditService {
         familyId,
         userId,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limit,
       skip: offset,
     });
@@ -130,7 +130,12 @@ export class AuditService {
   /**
    * Get audit logs by action type
    */
-  async findByAction(action: AuditAction, familyId: string, limit = 50, offset = 0) {
+  async findByAction(
+    action: AuditAction,
+    familyId: string,
+    limit = 50,
+    offset = 0,
+  ) {
     const logs = await this.prisma.auditLog.findMany({
       where: {
         familyId,
@@ -146,7 +151,7 @@ export class AuditService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limit,
       skip: offset,
     });

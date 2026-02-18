@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { PeriodStatus } from '@prisma/client';
+import { Injectable, BadRequestException, Logger } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { PeriodStatus } from "@prisma/client";
 
 interface SettlementData {
   totalInvoicesCents: number;
@@ -29,7 +29,11 @@ export class PeriodClosingService {
   /**
    * Close a period and calculate settlements
    */
-  async closePeriod(periodId: string, familyId: string, closedBy: string): Promise<any> {
+  async closePeriod(
+    periodId: string,
+    familyId: string,
+    closedBy: string,
+  ): Promise<any> {
     const period = await this.prisma.period.findFirst({
       where: { id: periodId, familyId },
       include: {
@@ -52,7 +56,7 @@ export class PeriodClosingService {
     }
 
     if (period.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Period is already closed');
+      throw new BadRequestException("Period is already closed");
     }
 
     // Calculate settlement data
@@ -117,7 +121,7 @@ export class PeriodClosingService {
     }
 
     if (period.status === PeriodStatus.OPEN) {
-      throw new BadRequestException('Period is already open');
+      throw new BadRequestException("Period is already open");
     }
 
     const updatedPeriod = await this.prisma.period.update({
@@ -184,13 +188,15 @@ export class PeriodClosingService {
     );
 
     // Create user balance array
-    const userBalanceArray = Array.from(userBalances.entries()).map(([userId, balance]) => ({
-      userId,
-      userName: balance.userName,
-      totalOwedCents: balance.totalOwed,
-      totalPaidCents: balance.totalPaid,
-      balanceCents: balance.totalPaid - balance.totalOwed,
-    }));
+    const userBalanceArray = Array.from(userBalances.entries()).map(
+      ([userId, balance]) => ({
+        userId,
+        userName: balance.userName,
+        totalOwedCents: balance.totalOwed,
+        totalPaidCents: balance.totalPaid,
+        balanceCents: balance.totalPaid - balance.totalOwed,
+      }),
+    );
 
     // Calculate settlements using greedy algorithm
     const settlements = this.calculateGreedySettlements(userBalanceArray);
@@ -250,7 +256,10 @@ export class PeriodClosingService {
       const creditor = creditors[0];
 
       // Calculate settlement amount
-      const settlementAmount = Math.min(Math.abs(debtor.balance), creditor.balance);
+      const settlementAmount = Math.min(
+        Math.abs(debtor.balance),
+        creditor.balance,
+      );
 
       settlements.push({
         fromUserId: debtor.userId,

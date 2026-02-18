@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateIncomeDto } from './dto/create-income.dto';
-import { UpdateIncomeDto } from './dto/update-income.dto';
-import { IncomeType, PeriodStatus } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateIncomeDto } from "./dto/create-income.dto";
+import { UpdateIncomeDto } from "./dto/update-income.dto";
+import { IncomeType, PeriodStatus } from "@prisma/client";
 
 @Injectable()
 export class IncomesService {
@@ -53,7 +57,7 @@ export class IncomesService {
           },
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
 
@@ -109,11 +113,14 @@ export class IncomesService {
     }
 
     if (period.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Cannot add income to a closed period');
+      throw new BadRequestException("Cannot add income to a closed period");
     }
 
     // Calculate normalized monthly gross
-    const normalizedMonthlyGrossCents = this.normalizeIncome(inputType, inputCents);
+    const normalizedMonthlyGrossCents = this.normalizeIncome(
+      inputType,
+      inputCents,
+    );
 
     // Check if income already exists for this user/period
     const existingIncome = await this.prisma.income.findUnique({
@@ -182,7 +189,7 @@ export class IncomesService {
     });
 
     if (period?.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Cannot update income in a closed period');
+      throw new BadRequestException("Cannot update income in a closed period");
     }
 
     // Determine new values
@@ -190,13 +197,20 @@ export class IncomesService {
     const inputCents = updateIncomeDto.inputCents ?? income.inputCents;
 
     // Recalculate normalized value if needed
-    const normalizedMonthlyGrossCents = this.normalizeIncome(inputType, inputCents);
+    const normalizedMonthlyGrossCents = this.normalizeIncome(
+      inputType,
+      inputCents,
+    );
 
     return this.prisma.income.update({
       where: { id },
       data: {
-        ...(updateIncomeDto.inputType && { inputType: updateIncomeDto.inputType }),
-        ...(updateIncomeDto.inputCents !== undefined && { inputCents: updateIncomeDto.inputCents }),
+        ...(updateIncomeDto.inputType && {
+          inputType: updateIncomeDto.inputType,
+        }),
+        ...(updateIncomeDto.inputCents !== undefined && {
+          inputCents: updateIncomeDto.inputCents,
+        }),
         normalizedMonthlyGrossCents,
       },
       include: {
@@ -224,13 +238,15 @@ export class IncomesService {
     });
 
     if (period?.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException('Cannot delete income from a closed period');
+      throw new BadRequestException(
+        "Cannot delete income from a closed period",
+      );
     }
 
     await this.prisma.income.delete({
       where: { id },
     });
 
-    return { message: 'Income deleted successfully' };
+    return { message: "Income deleted successfully" };
   }
 }
