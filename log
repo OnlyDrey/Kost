@@ -1,4 +1,4 @@
-npm install
+andreas@ubuntu:~/Downloads/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc$ npm install
 npm WARN EBADENGINE Unsupported engine {
 npm WARN EBADENGINE   package: 'vite@7.3.1',
 npm WARN EBADENGINE   required: { node: '^20.19.0 || >=22.12.0' },
@@ -76,3 +76,432 @@ Some issues need review, and may require choosing
 a different dependency.
 
 Run `npm audit` for details.
+andreas@ubuntu:~/Downloads/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc$ npm audit fix --force
+npm WARN using --force Recommended protections disabled.
+npm WARN audit No fix available for @nestjs/schematics@*
+npm WARN audit Updating @nestjs/cli to 1.8.0, which is a SemVer major change.
+npm WARN audit Updating @nestjs/cli to 1.8.0, which is a SemVer major change.
+npm WARN audit Updating eslint to 10.0.0, which is a SemVer major change.
+npm WARN audit Updating eslint to 10.0.0, which is a SemVer major change.
+npm WARN deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm WARN deprecated urix@0.1.0: Please see https://github.com/lydell/urix#deprecated
+npm WARN deprecated source-map-url@0.4.1: See https://github.com/lydell/source-map-url#deprecated
+npm WARN deprecated resolve-url@0.2.1: https://github.com/lydell/resolve-url#deprecated
+npm WARN deprecated source-map-resolve@0.5.3: See https://github.com/lydell/source-map-resolve#deprecated
+npm WARN deprecated npmlog@2.0.4: This package is no longer supported.
+npm WARN deprecated are-we-there-yet@1.1.7: This package is no longer supported.
+npm WARN deprecated gauge@1.2.7: This package is no longer supported.
+
+added 282 packages, removed 130 packages, and audited 1524 packages in 18s
+
+231 packages are looking for funding
+  run `npm fund` for details
+
+# npm audit report
+
+ajv  <8.18.0
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+No fix available
+node_modules/ajv
+node_modules/table/node_modules/ajv
+  @angular-devkit/core  >=0.0.24
+  Depends on vulnerable versions of ajv
+  node_modules/@angular-devkit/core
+    @angular-devkit/schematics  >=0.0.43
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    @nestjs/schematics  *
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@nestjs/schematics
+  table  3.7.10 - 6.0.7
+  Depends on vulnerable versions of ajv
+  node_modules/table
+    eslint  2.5.0 - 2.5.2 || 4.0.0-alpha.0 - 7.15.0
+    Depends on vulnerable versions of inquirer
+    Depends on vulnerable versions of table
+    apps/api/node_modules/eslint
+    apps/web/node_modules/eslint
+
+braces  <3.0.3
+Severity: high
+Uncontrolled resource consumption in braces - https://github.com/advisories/GHSA-grv7-fg5c-xmjg
+fix available via `npm audit fix`
+node_modules/nodemon/node_modules/braces
+  chokidar  1.3.0 - 2.1.8
+  Depends on vulnerable versions of anymatch
+  Depends on vulnerable versions of braces
+  Depends on vulnerable versions of readdirp
+  node_modules/nodemon/node_modules/chokidar
+    nodemon  1.3.5 - 2.0.16 || 2.0.18
+    Depends on vulnerable versions of chokidar
+    Depends on vulnerable versions of update-notifier
+    node_modules/nodemon
+  micromatch  <=4.0.7
+  Depends on vulnerable versions of braces
+  node_modules/nodemon/node_modules/micromatch
+    anymatch  1.2.0 - 2.0.0
+    Depends on vulnerable versions of micromatch
+    node_modules/nodemon/node_modules/anymatch
+    readdirp  2.2.0 - 2.2.1
+    Depends on vulnerable versions of micromatch
+    node_modules/nodemon/node_modules/readdirp
+
+cross-spawn  <6.0.6
+Severity: high
+Regular Expression Denial of Service (ReDoS) in cross-spawn - https://github.com/advisories/GHSA-3xgq-45jj-v275
+fix available via `npm audit fix`
+node_modules/term-size/node_modules/cross-spawn
+  execa  0.5.0 - 0.9.0
+  Depends on vulnerable versions of cross-spawn
+  node_modules/term-size/node_modules/execa
+    term-size  1.0.0 - 1.2.0
+    Depends on vulnerable versions of execa
+    node_modules/term-size
+      boxen  1.2.0 - 3.2.0
+      Depends on vulnerable versions of term-size
+      node_modules/update-notifier/node_modules/boxen
+        update-notifier  0.2.0 - 5.1.0
+        Depends on vulnerable versions of boxen
+        Depends on vulnerable versions of latest-version
+        node_modules/update-notifier
+
+got  <11.8.5
+Severity: moderate
+Got allows a redirect to a UNIX socket - https://github.com/advisories/GHSA-pfrx-2q88-qq97
+fix available via `npm audit fix`
+node_modules/got
+  package-json  <=6.5.0
+  Depends on vulnerable versions of got
+  node_modules/package-json
+    latest-version  0.2.0 - 5.1.0
+    Depends on vulnerable versions of package-json
+    node_modules/latest-version
+
+lodash  <=4.17.20
+Severity: critical
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-fvqr-27wr-82fm
+Command Injection in lodash - https://github.com/advisories/GHSA-35jh-r3h4-6jhm
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-4xc9-xhrj-v574
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-jf85-cpcp-j695
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-p6mc-m468-83gw
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/cli-table2/node_modules/lodash
+  cli-table2  *
+  Depends on vulnerable versions of lodash
+  node_modules/cli-table2
+    caporal  <=0.10.0
+    Depends on vulnerable versions of cli-table2
+    node_modules/caporal
+      @nestjs/cli  <=5.1.1
+      Depends on vulnerable versions of caporal
+      apps/api/node_modules/@nestjs/cli
+      apps/web/node_modules/@nestjs/cli
+
+
+tmp  <=0.2.3
+tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
+fix available via `npm audit fix`
+node_modules/tmp
+  external-editor  >=1.1.1
+  Depends on vulnerable versions of tmp
+  node_modules/external-editor
+    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
+    Depends on vulnerable versions of external-editor
+    node_modules/inquirer
+
+27 vulnerabilities (3 low, 14 moderate, 9 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+andreas@ubuntu:~/Downloads/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc$ npm audit fix --force
+npm WARN using --force Recommended protections disabled.
+npm WARN audit No fix available for @nestjs/schematics@*
+npm WARN audit Updating eslint to 10.0.0, which is a SemVer major change.
+npm WARN audit Updating eslint to 10.0.0, which is a SemVer major change.
+npm WARN audit Updating @nestjs/cli to 11.0.16, which is a SemVer major change.
+npm WARN audit Updating @nestjs/cli to 11.0.16, which is a SemVer major change.
+
+up to date, audited 1524 packages in 7s
+
+231 packages are looking for funding
+  run `npm fund` for details
+
+# npm audit report
+
+ajv  <8.18.0
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+fix available via `npm audit fix --force`
+Will install eslint@10.0.0, which is a breaking change
+node_modules/ajv
+node_modules/table/node_modules/ajv
+  @angular-devkit/core  >=0.0.24
+  Depends on vulnerable versions of ajv
+  node_modules/@angular-devkit/core
+    @angular-devkit/schematics  >=0.0.43
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    @nestjs/schematics  *
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@nestjs/schematics
+  table  3.7.10 - 6.0.7
+  Depends on vulnerable versions of ajv
+  node_modules/table
+    eslint  2.5.0 - 2.5.2 || 4.0.0-alpha.0 - 7.15.0
+    Depends on vulnerable versions of inquirer
+    Depends on vulnerable versions of table
+    apps/api/node_modules/eslint
+    apps/web/node_modules/eslint
+
+braces  <3.0.3
+Severity: high
+Uncontrolled resource consumption in braces - https://github.com/advisories/GHSA-grv7-fg5c-xmjg
+fix available via `npm audit fix`
+node_modules/nodemon/node_modules/braces
+  chokidar  1.3.0 - 2.1.8
+  Depends on vulnerable versions of anymatch
+  Depends on vulnerable versions of braces
+  Depends on vulnerable versions of readdirp
+  node_modules/nodemon/node_modules/chokidar
+    nodemon  1.3.5 - 2.0.16 || 2.0.18
+    Depends on vulnerable versions of chokidar
+    Depends on vulnerable versions of update-notifier
+    node_modules/nodemon
+  micromatch  <=4.0.7
+  Depends on vulnerable versions of braces
+  node_modules/nodemon/node_modules/micromatch
+    anymatch  1.2.0 - 2.0.0
+    Depends on vulnerable versions of micromatch
+    node_modules/nodemon/node_modules/anymatch
+    readdirp  2.2.0 - 2.2.1
+    Depends on vulnerable versions of micromatch
+    node_modules/nodemon/node_modules/readdirp
+
+cross-spawn  <6.0.6
+Severity: high
+Regular Expression Denial of Service (ReDoS) in cross-spawn - https://github.com/advisories/GHSA-3xgq-45jj-v275
+fix available via `npm audit fix`
+node_modules/term-size/node_modules/cross-spawn
+  execa  0.5.0 - 0.9.0
+  Depends on vulnerable versions of cross-spawn
+  node_modules/term-size/node_modules/execa
+    term-size  1.0.0 - 1.2.0
+    Depends on vulnerable versions of execa
+    node_modules/term-size
+      boxen  1.2.0 - 3.2.0
+      Depends on vulnerable versions of term-size
+      node_modules/update-notifier/node_modules/boxen
+        update-notifier  0.2.0 - 5.1.0
+        Depends on vulnerable versions of boxen
+        Depends on vulnerable versions of latest-version
+        node_modules/update-notifier
+
+got  <11.8.5
+Severity: moderate
+Got allows a redirect to a UNIX socket - https://github.com/advisories/GHSA-pfrx-2q88-qq97
+fix available via `npm audit fix`
+node_modules/got
+  package-json  <=6.5.0
+  Depends on vulnerable versions of got
+  node_modules/package-json
+    latest-version  0.2.0 - 5.1.0
+    Depends on vulnerable versions of package-json
+    node_modules/latest-version
+
+lodash  <=4.17.20
+Severity: critical
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-fvqr-27wr-82fm
+Command Injection in lodash - https://github.com/advisories/GHSA-35jh-r3h4-6jhm
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-4xc9-xhrj-v574
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-jf85-cpcp-j695
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-p6mc-m468-83gw
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/cli-table2/node_modules/lodash
+  cli-table2  *
+  Depends on vulnerable versions of lodash
+  node_modules/cli-table2
+    caporal  <=0.10.0
+    Depends on vulnerable versions of cli-table2
+    node_modules/caporal
+      @nestjs/cli  <=5.1.1
+      Depends on vulnerable versions of caporal
+      apps/api/node_modules/@nestjs/cli
+      apps/web/node_modules/@nestjs/cli
+
+
+tmp  <=0.2.3
+tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
+fix available via `npm audit fix --force`
+Will install eslint@10.0.0, which is a breaking change
+node_modules/tmp
+  external-editor  >=1.1.1
+  Depends on vulnerable versions of tmp
+  node_modules/external-editor
+    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
+    Depends on vulnerable versions of external-editor
+    node_modules/inquirer
+
+27 vulnerabilities (3 low, 14 moderate, 9 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+andreas@ubuntu:~/Downloads/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc$ npm audit fix --force
+npm WARN using --force Recommended protections disabled.
+npm WARN audit No fix available for @nestjs/schematics@*
+npm WARN audit Updating eslint to 10.0.0, which is a SemVer major change.
+npm WARN audit Updating eslint to 10.0.0, which is a SemVer major change.
+npm WARN audit Updating @nestjs/cli to 11.0.16, which is a SemVer major change.
+npm WARN audit Updating @nestjs/cli to 11.0.16, which is a SemVer major change.
+
+up to date, audited 1524 packages in 5s
+
+231 packages are looking for funding
+  run `npm fund` for details
+
+# npm audit report
+
+ajv  <8.18.0
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+fix available via `npm audit fix --force`
+Will install eslint@10.0.0, which is a breaking change
+node_modules/ajv
+node_modules/table/node_modules/ajv
+  @angular-devkit/core  >=0.0.24
+  Depends on vulnerable versions of ajv
+  node_modules/@angular-devkit/core
+    @angular-devkit/schematics  >=0.0.43
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    @nestjs/schematics  *
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@nestjs/schematics
+  table  3.7.10 - 6.0.7
+  Depends on vulnerable versions of ajv
+  node_modules/table
+    eslint  2.5.0 - 2.5.2 || 4.0.0-alpha.0 - 7.15.0
+    Depends on vulnerable versions of inquirer
+    Depends on vulnerable versions of table
+    apps/api/node_modules/eslint
+    apps/web/node_modules/eslint
+
+braces  <3.0.3
+Severity: high
+Uncontrolled resource consumption in braces - https://github.com/advisories/GHSA-grv7-fg5c-xmjg
+fix available via `npm audit fix`
+node_modules/nodemon/node_modules/braces
+  chokidar  1.3.0 - 2.1.8
+  Depends on vulnerable versions of anymatch
+  Depends on vulnerable versions of braces
+  Depends on vulnerable versions of readdirp
+  node_modules/nodemon/node_modules/chokidar
+    nodemon  1.3.5 - 2.0.16 || 2.0.18
+    Depends on vulnerable versions of chokidar
+    Depends on vulnerable versions of update-notifier
+    node_modules/nodemon
+  micromatch  <=4.0.7
+  Depends on vulnerable versions of braces
+  node_modules/nodemon/node_modules/micromatch
+    anymatch  1.2.0 - 2.0.0
+    Depends on vulnerable versions of micromatch
+    node_modules/nodemon/node_modules/anymatch
+    readdirp  2.2.0 - 2.2.1
+    Depends on vulnerable versions of micromatch
+    node_modules/nodemon/node_modules/readdirp
+
+cross-spawn  <6.0.6
+Severity: high
+Regular Expression Denial of Service (ReDoS) in cross-spawn - https://github.com/advisories/GHSA-3xgq-45jj-v275
+fix available via `npm audit fix`
+node_modules/term-size/node_modules/cross-spawn
+  execa  0.5.0 - 0.9.0
+  Depends on vulnerable versions of cross-spawn
+  node_modules/term-size/node_modules/execa
+    term-size  1.0.0 - 1.2.0
+    Depends on vulnerable versions of execa
+    node_modules/term-size
+      boxen  1.2.0 - 3.2.0
+      Depends on vulnerable versions of term-size
+      node_modules/update-notifier/node_modules/boxen
+        update-notifier  0.2.0 - 5.1.0
+        Depends on vulnerable versions of boxen
+        Depends on vulnerable versions of latest-version
+        node_modules/update-notifier
+
+got  <11.8.5
+Severity: moderate
+Got allows a redirect to a UNIX socket - https://github.com/advisories/GHSA-pfrx-2q88-qq97
+fix available via `npm audit fix`
+node_modules/got
+  package-json  <=6.5.0
+  Depends on vulnerable versions of got
+  node_modules/package-json
+    latest-version  0.2.0 - 5.1.0
+    Depends on vulnerable versions of package-json
+    node_modules/latest-version
+
+lodash  <=4.17.20
+Severity: critical
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-fvqr-27wr-82fm
+Command Injection in lodash - https://github.com/advisories/GHSA-35jh-r3h4-6jhm
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-4xc9-xhrj-v574
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-jf85-cpcp-j695
+Prototype Pollution in lodash - https://github.com/advisories/GHSA-p6mc-m468-83gw
+fix available via `npm audit fix --force`
+Will install @nestjs/cli@11.0.16, which is a breaking change
+node_modules/cli-table2/node_modules/lodash
+  cli-table2  *
+  Depends on vulnerable versions of lodash
+  node_modules/cli-table2
+    caporal  <=0.10.0
+    Depends on vulnerable versions of cli-table2
+    node_modules/caporal
+      @nestjs/cli  <=5.1.1
+      Depends on vulnerable versions of caporal
+      apps/api/node_modules/@nestjs/cli
+      apps/web/node_modules/@nestjs/cli
+
+
+tmp  <=0.2.3
+tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
+fix available via `npm audit fix --force`
+Will install eslint@10.0.0, which is a breaking change
+node_modules/tmp
+  external-editor  >=1.1.1
+  Depends on vulnerable versions of tmp
+  node_modules/external-editor
+    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
+    Depends on vulnerable versions of external-editor
+    node_modules/inquirer
+
+27 vulnerabilities (3 low, 14 moderate, 9 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+andreas@ubuntu:~/Downloads/PaycheckApp-claude-family-finance-pwa-mvp-E8Cgc$ 
+
