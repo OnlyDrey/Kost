@@ -20,6 +20,7 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "prepare": "[ -d .git ] && husky install || true",
+    "postinstall": "[ -z \"${CI}\" ] && bash check-system.sh || true",
     "audit": "npm audit --omit=dev",
     "check": "bash check-system.sh"
   },
