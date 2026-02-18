@@ -108,6 +108,10 @@ AUTH_PASSWORD_ENABLED=true
 ### 4. Start Services
 
 ```bash
+# Ensure Docker daemon is running first
+sudo systemctl start docker   # Linux
+# open -a Docker              # macOS — open Docker Desktop
+
 # Start PostgreSQL + API + Web
 npm run docker:up
 
@@ -248,11 +252,12 @@ npm run audit
    # Kill the process or change the port in docker-compose.yml
    ```
 
-2. **Docker not running:**
+2. **Docker not running** — `Cannot connect to the Docker daemon at unix:///var/run/docker.sock`:
    ```bash
    # Start Docker daemon
-   sudo systemctl start docker  # Linux
-   open -a Docker              # macOS
+   sudo systemctl start docker     # Linux (one-time)
+   sudo systemctl enable docker    # Linux (auto-start on boot)
+   open -a Docker                  # macOS — open Docker Desktop
    ```
 
 ### Database Migration Errors
