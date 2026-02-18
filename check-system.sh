@@ -76,11 +76,18 @@ if command -v docker &>/dev/null; then
   DOCKER_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
   ok "Docker v$DOCKER_VERSION"
 
-  # Check Docker daemon is running
+  # Check Docker daemon access
   if ! docker info &>/dev/null 2>&1; then
-    warn "Docker daemon is not running"
-    info "Start it:  sudo systemctl start docker"
-    info "Auto-start: sudo systemctl enable docker"
+    DOCKER_ERR=$(docker info 2>&1 || true)
+    if echo "$DOCKER_ERR" | grep -q "permission denied"; then
+      warn "Docker permission denied — your user is not in the 'docker' group"
+      info "Fix (apply without logout):  sudo usermod -aG docker \$USER && newgrp docker"
+      info "Or prefix commands with sudo: sudo docker compose up -d"
+    else
+      warn "Docker daemon is not running"
+      info "Start it:   sudo systemctl start docker"
+      info "Auto-start: sudo systemctl enable docker"
+    fi
     ERRORS=$((ERRORS+1))
   fi
 else

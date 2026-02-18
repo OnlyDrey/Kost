@@ -108,9 +108,13 @@ AUTH_PASSWORD_ENABLED=true
 ### 4. Start Services
 
 ```bash
-# Ensure Docker daemon is running first
-sudo systemctl start docker   # Linux
-# open -a Docker              # macOS — open Docker Desktop
+# Ensure Docker daemon is running
+sudo systemctl start docker        # Linux — start once
+sudo systemctl enable docker       # Linux — auto-start on boot
+# open -a Docker                   # macOS — open Docker Desktop
+
+# Allow running docker without sudo (Linux only, apply without re-login)
+sudo usermod -aG docker $USER && newgrp docker
 
 # Start PostgreSQL + API + Web
 npm run docker:up
@@ -254,10 +258,16 @@ npm run audit
 
 2. **Docker not running** — `Cannot connect to the Docker daemon at unix:///var/run/docker.sock`:
    ```bash
-   # Start Docker daemon
    sudo systemctl start docker     # Linux (one-time)
    sudo systemctl enable docker    # Linux (auto-start on boot)
    open -a Docker                  # macOS — open Docker Desktop
+   ```
+
+3. **Permission denied** — `dial unix /var/run/docker.sock: connect: permission denied`:
+   ```bash
+   # Add your user to the docker group (no sudo needed after this)
+   sudo usermod -aG docker $USER && newgrp docker
+   # Verify: docker ps  (should work without sudo)
    ```
 
 ### Database Migration Errors

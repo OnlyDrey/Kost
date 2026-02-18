@@ -12,6 +12,9 @@ COPY apps/api ./apps/api
 # Install dependencies
 RUN npm ci --workspace=apps/api --workspace=packages/shared
 
+# Build shared package so TypeScript can resolve @family-finance/shared
+RUN npm run build --workspace=packages/shared
+
 # Generate Prisma client
 WORKDIR /app/apps/api
 RUN npx prisma generate
