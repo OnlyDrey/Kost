@@ -108,22 +108,44 @@ If you use `nvm`, the project includes an `.nvmrc` file:
 nvm use  # Uses Node 22 automatically
 ```
 
-### 1. Clone and Install
+### 1. Clone and Check System Requirements
 
 ```bash
 git clone https://github.com/your-org/family-finance.git
 cd family-finance
 
-# If using nvm (recommended)
+# Verify Node 20+, npm 9+, Docker, and Docker Compose V2 are all ready
+npm run check
+```
+
+Fix any issues before continuing. Common fixes on Ubuntu/Debian:
+```bash
+# Install Docker Compose V2 (replaces broken legacy docker-compose)
+sudo apt-get install docker-compose-plugin
+
+# Upgrade Node via nvm
+nvm install 22 && nvm use 22
+```
+
+### 2. Install Dependencies
+
+```bash
+# If using nvm (auto-selects Node 22 from .nvmrc)
 nvm use
 
-# Install dependencies
 npm install
 ```
 
-**Note:** The project suppresses non-critical security audit warnings during install (configured in `.npmrc`). Run `npm run audit` at any time to check runtime-only vulnerabilities — it will show `found 0 vulnerabilities`.
+**Expected output:** Some deprecation warnings for old transitive dev dependencies are normal. No EBADENGINE warnings. No vulnerability count.
 
-### 2. Environment Configuration
+Run `npm run audit` to confirm `found 0 vulnerabilities` for runtime dependencies.
+
+> ⚠️ **If npm install shows vulnerability counts or `docker:up` runs `docker-compose` (with hyphen)**, your download is outdated. Re-download the latest zip from the branch, then:
+> ```bash
+> rm -rf node_modules package-lock.json && npm install
+> ```
+
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
@@ -157,7 +179,7 @@ WEBAUTHN_RP_ID=localhost        # or your.domain.com for production
 WEBAUTHN_ORIGIN=http://localhost:3001  # or https://your.domain.com
 ```
 
-### 3. Start with Docker Compose
+### 4. Start with Docker Compose
 
 ```bash
 # Start all services
@@ -177,7 +199,7 @@ This starts **3 services**:
 
 **Note:** No reverse proxy service is included. The application runs directly on these ports. For production, use an external reverse proxy (see "Reverse Proxy & HTTPS" section below).
 
-### 4. Database Setup
+### 5. Database Setup
 
 ```bash
 # Run migrations
@@ -187,7 +209,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-### 5. Access the Application
+### 6. Access the Application
 
 Open http://localhost:3001 in your browser.
 
