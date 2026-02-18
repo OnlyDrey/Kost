@@ -96,16 +96,66 @@ Get up and running in 5 minutes with **password authentication** (no SMTP requir
 
 ### Prerequisites
 
-- **Node.js >= 20** (Node 22 LTS recommended — Node 18 is EOL since April 2025)
-- **npm >= 9.0.0**
-- **Docker 20.10+** with Docker Compose V2 (the `docker compose` plugin, not legacy `docker-compose`)
-- PostgreSQL 16 (if running locally without Docker)
-- **No email/SMTP setup needed** for the quick start (password auth enabled by default)
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| **Node.js** | ≥ 20 (22 LTS recommended) | Node 18 is EOL since April 2025 |
+| **npm** | ≥ 9.0.0 | Included with Node.js |
+| **Docker Engine** | ≥ 20.10 | |
+| **Docker Compose V2** | any | The `docker compose` plugin — NOT legacy `docker-compose` |
+| **PostgreSQL 16** | 16 | Only needed if running without Docker |
+
+#### Install Node.js 22 LTS
+
+```bash
+# Using nvm (recommended — manages multiple Node versions)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc          # or restart terminal
+nvm install 22
+nvm use 22
+node --version            # should show v22.x.x
+```
+
+#### Install Docker Engine (Ubuntu/Debian)
+
+```bash
+# One-line install from Docker's official script
+curl -fsSL https://get.docker.com | sudo bash
+
+# Allow your user to run Docker without sudo
+sudo usermod -aG docker $USER
+newgrp docker             # apply group change without logout
+
+# Verify
+docker --version          # Docker version 24.x.x or newer
+```
+
+#### Install Docker Compose V2
+
+Docker Compose V2 is the `docker compose` (space, no hyphen) plugin. The old
+Python-based `docker-compose` (hyphen) is EOL and **crashes on Python 3.12+**.
+
+**Method A — apt (if Docker was installed from official Docker repo):**
+```bash
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+```
+
+**Method B — manual binary install (works with ANY Docker installation):**
+```bash
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+mkdir -p $DOCKER_CONFIG/cli-plugins
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+  -o $DOCKER_CONFIG/cli-plugins/docker-compose
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+docker compose version    # verify: Docker Compose version v2.x.x
+```
+
+> If `docker-compose-plugin` is not found by `apt-get`, use **Method B**.
 
 **Node Version Management:**
-If you use `nvm`, the project includes an `.nvmrc` file:
+The project includes an `.nvmrc` file for automatic version switching:
 ```bash
-nvm use  # Uses Node 22 automatically
+nvm use  # auto-selects Node 22 from .nvmrc
 ```
 
 ### 1. Clone and Check System Requirements

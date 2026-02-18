@@ -1,30 +1,77 @@
 # Setup Guide
 
-## Quick Setup (5 minutes)
+## Required Packages
 
-### 1. Prerequisites
+Install these before cloning the project.
 
-- **Node.js 20+** (Node 22 LTS recommended — `nvm install 22 && nvm use 22`)
-- npm 9.0.0+
-- **Docker 20.10+** with Docker Compose V2 (the `docker compose` plugin, not legacy `docker-compose`)
-
-### 2. Check Your Environment
+### Node.js 22 LTS
 
 ```bash
-# Check Node version (should be 20.x or 22.x)
-node --version
+# Install nvm (Node Version Manager)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc           # or open a new terminal
 
-# Check npm version (should be 9.x or higher)
-npm --version
+# Install and activate Node 22 LTS
+nvm install 22
+nvm use 22
 
-# Check Docker Compose V2 is available
-docker compose version
-
-# If using nvm (recommended)
-nvm use  # auto-selects Node 22 from .nvmrc
+# Verify
+node --version             # v22.x.x
+npm --version              # 10.x.x
 ```
 
-### 3. Install Dependencies
+### Docker Engine
+
+```bash
+# Install Docker from official script (Ubuntu/Debian)
+curl -fsSL https://get.docker.com | sudo bash
+
+# Allow running without sudo
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify
+docker --version           # Docker version 24.x.x or newer
+docker info                # should succeed (daemon running)
+```
+
+### Docker Compose V2
+
+> **Important:** The project uses `docker compose` (space, V2 plugin). The old
+> `docker-compose` (hyphen, V1 Python-based) is EOL and **crashes on Python 3.12+**
+> with `ModuleNotFoundError: No module named 'distutils'`.
+
+**Method A — apt** (only works if Docker was installed from Docker's official apt repo):
+```bash
+sudo apt-get update && sudo apt-get install docker-compose-plugin
+docker compose version     # verify
+```
+
+**Method B — manual install** (works with ANY Docker installation, use this if apt fails):
+```bash
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+mkdir -p $DOCKER_CONFIG/cli-plugins
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+  -o $DOCKER_CONFIG/cli-plugins/docker-compose
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+docker compose version     # verify: Docker Compose version v2.x.x
+```
+
+---
+
+## Quick Setup (5 minutes)
+
+### 1. Check Your Environment
+
+```bash
+# After cloning the project, run the built-in system checker:
+bash check-system.sh
+# or: npm run check  (after npm install)
+```
+
+It will detect and explain how to fix any missing requirements.
+
+### 2. Install Dependencies
 
 ```bash
 npm install
@@ -40,7 +87,7 @@ Run `npm run audit` to verify `found 0 vulnerabilities` for runtime dependencies
 
 **If you see errors**, check the Troubleshooting section below.
 
-### 4. Configure Environment
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
@@ -58,7 +105,7 @@ JWT_SECRET=your-jwt-secret-here
 AUTH_PASSWORD_ENABLED=true
 ```
 
-### 5. Start Services
+### 4. Start Services
 
 ```bash
 # Start PostgreSQL + API + Web
@@ -71,7 +118,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-### 6. Access the Application
+### 5. Access the Application
 
 - **Web UI:** http://localhost:3001
 - **API:** http://localhost:3000
