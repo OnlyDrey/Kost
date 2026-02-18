@@ -1,7 +1,57 @@
 npm install
 npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'vite@7.3.1',
+npm WARN EBADENGINE   required: { node: '^20.19.0 || >=22.12.0' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'vite@7.3.1',
+npm WARN EBADENGINE   required: { node: '^20.19.0 || >=22.12.0' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: '@nestjs/cli@11.0.16',
+npm WARN EBADENGINE   required: { node: '>= 20.11' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
 npm WARN EBADENGINE   package: 'eslint-visitor-keys@5.0.0',
 npm WARN EBADENGINE   required: { node: '^20.19.0 || ^22.13.0 || >=24' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'glob@13.0.0',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'balanced-match@4.0.2',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'brace-expansion@5.0.2',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'lru-cache@11.2.6',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'minimatch@10.2.1',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'path-scurry@2.0.1',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
+npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
+npm WARN EBADENGINE }
+npm WARN EBADENGINE Unsupported engine {
+npm WARN EBADENGINE   package: 'jackspeak@4.2.3',
+npm WARN EBADENGINE   required: { node: '20 || >=22' },
 npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
 npm WARN EBADENGINE }
 
@@ -9,12 +59,12 @@ npm WARN EBADENGINE }
 > [ -d .git ] && husky install || true
 
 
-up to date, audited 1282 packages in 5s
+up to date, audited 1372 packages in 4s
 
-250 packages are looking for funding
+246 packages are looking for funding
   run `npm fund` for details
 
-22 vulnerabilities (3 low, 16 moderate, 3 high)
+13 vulnerabilities (3 low, 10 moderate)
 
 To address issues that do not require attention, run:
   npm audit fix
@@ -26,262 +76,3 @@ Some issues need review, and may require choosing
 a different dependency.
 
 Run `npm audit` for details.
-
-
----
-
-npm audit fix
-npm WARN EBADENGINE Unsupported engine {
-npm WARN EBADENGINE   package: 'eslint-visitor-keys@5.0.0',
-npm WARN EBADENGINE   required: { node: '^20.19.0 || ^22.13.0 || >=24' },
-npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
-npm WARN EBADENGINE }
-
-up to date, audited 1282 packages in 4s
-
-250 packages are looking for funding
-  run `npm fund` for details
-
-# npm audit report
-
-ajv  <8.18.0
-Severity: moderate
-ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
-fix available via `npm audit fix --force`
-Will install @nestjs/cli@11.0.16, which is a breaking change
-node_modules/@eslint/eslintrc/node_modules/ajv
-node_modules/ajv
-node_modules/eslint/node_modules/ajv
-node_modules/schema-utils/node_modules/ajv
-  @angular-devkit/core  >=0.0.24
-  Depends on vulnerable versions of ajv
-  node_modules/@angular-devkit/core
-    @angular-devkit/schematics  >=0.0.43
-    Depends on vulnerable versions of @angular-devkit/core
-    node_modules/@angular-devkit/schematics
-      @nestjs/cli  >=2.0.0-rc.1
-      Depends on vulnerable versions of @angular-devkit/core
-      Depends on vulnerable versions of @angular-devkit/schematics
-      Depends on vulnerable versions of @angular-devkit/schematics-cli
-      Depends on vulnerable versions of @nestjs/schematics
-      Depends on vulnerable versions of fork-ts-checker-webpack-plugin
-      Depends on vulnerable versions of glob
-      Depends on vulnerable versions of inquirer
-      Depends on vulnerable versions of webpack
-      node_modules/@nestjs/cli
-    @angular-devkit/schematics-cli  *
-    Depends on vulnerable versions of @angular-devkit/core
-    Depends on vulnerable versions of @angular-devkit/schematics
-    Depends on vulnerable versions of inquirer
-    node_modules/@angular-devkit/schematics-cli
-    @nestjs/schematics  *
-    Depends on vulnerable versions of @angular-devkit/core
-    Depends on vulnerable versions of @angular-devkit/schematics
-    node_modules/@nestjs/schematics
-  @eslint/eslintrc  *
-  Depends on vulnerable versions of ajv
-  node_modules/@eslint/eslintrc
-    eslint  >=4.2.0
-    Depends on vulnerable versions of @eslint/eslintrc
-    Depends on vulnerable versions of ajv
-    node_modules/eslint
-  schema-utils  <=3.3.0
-  Depends on vulnerable versions of ajv
-  node_modules/schema-utils
-    fork-ts-checker-webpack-plugin  5.0.0-alpha.1 - 7.0.0-alpha.16 || >=7.2.2
-    Depends on vulnerable versions of schema-utils
-    node_modules/fork-ts-checker-webpack-plugin
-    webpack  4.0.0-alpha.0 - 5.104.0
-    Depends on vulnerable versions of schema-utils
-    node_modules/webpack
-
-esbuild  <=0.24.2
-Severity: moderate
-esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
-fix available via `npm audit fix --force`
-Will install vite@7.3.1, which is a breaking change
-node_modules/esbuild
-  vite  0.11.0 - 6.1.6
-  Depends on vulnerable versions of esbuild
-  node_modules/vite
-
-glob  10.2.0 - 10.4.5
-Severity: high
-glob CLI: Command injection via -c/--cmd executes matches with shell:true - https://github.com/advisories/GHSA-5j98-mcp5-4vw2
-fix available via `npm audit fix --force`
-Will install @nestjs/cli@11.0.16, which is a breaking change
-node_modules/glob
-
-js-yaml  4.0.0 - 4.1.0
-Severity: moderate
-js-yaml has prototype pollution in merge (<<) - https://github.com/advisories/GHSA-mh29-5h37-fv8m
-fix available via `npm audit fix --force`
-Will install @nestjs/swagger@11.2.6, which is a breaking change
-node_modules/js-yaml
-  @nestjs/swagger  1.1.0 - 1.1.4 || 3.0.1 - 11.2.5
-  Depends on vulnerable versions of js-yaml
-  Depends on vulnerable versions of lodash
-  node_modules/@nestjs/swagger
-
-lodash  4.0.0 - 4.17.21
-Severity: moderate
-Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions - https://github.com/advisories/GHSA-xxjr-mmjv-4gpg
-fix available via `npm audit fix --force`
-Will install @nestjs/config@4.0.3, which is a breaking change
-node_modules/lodash
-  @nestjs/config  1.1.6 - 4.0.2
-  Depends on vulnerable versions of lodash
-  node_modules/@nestjs/config
-
-nodemailer  <=7.0.10
-Severity: high
-Nodemailer: Email to an unintended domain can occur due to Interpretation Conflict - https://github.com/advisories/GHSA-mm7p-fcc7-pg87
-Nodemailer’s addressparser is vulnerable to DoS caused by recursive calls - https://github.com/advisories/GHSA-rcmh-qjqh-p98v
-fix available via `npm audit fix --force`
-Will install nodemailer@8.0.1, which is a breaking change
-node_modules/nodemailer
-
-tmp  <=0.2.3
-tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
-fix available via `npm audit fix --force`
-Will install @nestjs/cli@11.0.16, which is a breaking change
-node_modules/tmp
-  external-editor  >=1.1.1
-  Depends on vulnerable versions of tmp
-  node_modules/external-editor
-    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
-    Depends on vulnerable versions of external-editor
-    node_modules/@angular-devkit/schematics-cli/node_modules/inquirer
-    node_modules/inquirer
-
-
-22 vulnerabilities (3 low, 16 moderate, 3 high)
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues possible (including breaking changes), run:
-  npm audit fix --force
-
-Some issues need review, and may require choosing
-a different dependency.
-
-
----
-
-npm audit fix --force
-npm WARN using --force Recommended protections disabled.
-npm WARN audit Updating nodemailer to 8.0.1, which is a SemVer major change.
-npm WARN audit Updating eslint to 4.1.1, which is a SemVer major change.
-npm WARN audit Updating eslint to 4.1.1, which is a SemVer major change.
-npm WARN audit Updating @nestjs/swagger to 11.2.6, which is a SemVer major change.
-npm WARN audit Updating @nestjs/cli to 11.0.16, which is a SemVer major change.
-npm WARN audit Updating vite to 7.3.1, which is a SemVer major change.
-npm WARN audit Updating @nestjs/config to 4.0.3, which is a SemVer major change.
-npm WARN audit No fix available for @nestjs/schematics@*
-npm WARN deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-npm WARN deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-npm WARN deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
-npm WARN deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-npm WARN deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
-npm WARN deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
-npm WARN deprecated circular-json@0.3.3: CircularJSON is in maintenance only, flatted is its successor.
-npm WARN deprecated eslint@4.1.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
-npm WARN deprecated eslint@4.1.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
-
-added 302 packages, removed 140 packages, and audited 1444 packages in 18s
-
-246 packages are looking for funding
-  run `npm fund` for details
-
-# npm audit report
-
-ajv  <8.18.0
-Severity: moderate
-ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
-fix available via `npm audit fix --force`
-Will install @nestjs/cli@1.8.0, which is a breaking change
-apps/api/node_modules/ajv
-apps/web/node_modules/ajv
-node_modules/ajv
-node_modules/schema-utils/node_modules/ajv
-node_modules/table/node_modules/ajv
-  @angular-devkit/core  >=0.0.24
-  Depends on vulnerable versions of ajv
-  apps/api/node_modules/@angular-devkit/core
-  apps/api/node_modules/@nestjs/cli/node_modules/@nestjs/schematics/node_modules/@angular-devkit/core
-  apps/web/node_modules/@angular-devkit/core
-  apps/web/node_modules/@nestjs/schematics/node_modules/@angular-devkit/core
-  node_modules/@angular-devkit/core
-    @angular-devkit/schematics  >=0.0.43
-    Depends on vulnerable versions of @angular-devkit/core
-    apps/api/node_modules/@angular-devkit/schematics
-    apps/api/node_modules/@nestjs/cli/node_modules/@nestjs/schematics/node_modules/@angular-devkit/schematics
-    apps/web/node_modules/@angular-devkit/schematics
-    apps/web/node_modules/@nestjs/schematics/node_modules/@angular-devkit/schematics
-    node_modules/@angular-devkit/schematics
-      @nestjs/cli  >=2.0.0-rc.1
-      Depends on vulnerable versions of @angular-devkit/core
-      Depends on vulnerable versions of @angular-devkit/schematics
-      Depends on vulnerable versions of @angular-devkit/schematics-cli
-      Depends on vulnerable versions of @nestjs/schematics
-      Depends on vulnerable versions of fork-ts-checker-webpack-plugin
-      apps/api/node_modules/@nestjs/cli
-      apps/web/node_modules/@nestjs/cli
-    @angular-devkit/schematics-cli  *
-    Depends on vulnerable versions of @angular-devkit/core
-    Depends on vulnerable versions of @angular-devkit/schematics
-    apps/api/node_modules/@angular-devkit/schematics-cli
-    apps/web/node_modules/@angular-devkit/schematics-cli
-    @nestjs/schematics  *
-    Depends on vulnerable versions of @angular-devkit/core
-    Depends on vulnerable versions of @angular-devkit/schematics
-    apps/api/node_modules/@nestjs/cli/node_modules/@nestjs/schematics
-    apps/web/node_modules/@nestjs/schematics
-    node_modules/@nestjs/schematics
-  schema-utils  <=3.3.0
-  Depends on vulnerable versions of ajv
-  node_modules/schema-utils
-    fork-ts-checker-webpack-plugin  5.0.0-alpha.1 - 7.0.0-alpha.16 || >=7.2.2
-    Depends on vulnerable versions of schema-utils
-    apps/api/node_modules/fork-ts-checker-webpack-plugin
-    apps/web/node_modules/fork-ts-checker-webpack-plugin
-  table  3.7.10 - 6.0.7
-  Depends on vulnerable versions of ajv
-  node_modules/table
-    eslint  2.5.0 - 2.5.2 || 4.0.0-alpha.0 - 7.15.0
-    Depends on vulnerable versions of inquirer
-    Depends on vulnerable versions of table
-    apps/api/node_modules/eslint
-    apps/web/node_modules/eslint
-
-lodash  4.0.0 - 4.17.21
-Severity: moderate
-Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions - https://github.com/advisories/GHSA-xxjr-mmjv-4gpg
-fix available via `npm audit fix`
-node_modules/lodash
-
-tmp  <=0.2.3
-tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
-fix available via `npm audit fix --force`
-Will install eslint@10.0.0, which is a breaking change
-node_modules/tmp
-  external-editor  >=1.1.1
-  Depends on vulnerable versions of tmp
-  apps/api/node_modules/external-editor
-  apps/web/node_modules/external-editor
-    inquirer  3.0.0 - 8.2.6 || 9.0.0 - 9.3.7
-    Depends on vulnerable versions of external-editor
-    apps/api/node_modules/inquirer
-    apps/web/node_modules/inquirer
-
-14 vulnerabilities (3 low, 11 moderate)
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues possible (including breaking changes), run:
-  npm audit fix --force
-
-Some issues need review, and may require choosing
-a different dependency.
