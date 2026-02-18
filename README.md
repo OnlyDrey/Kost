@@ -77,7 +77,7 @@ Note: Use external reverse proxy (Pangolin, Nginx, Caddy, Traefik, etc.)
 - Workbox (Service Worker)
 
 **Backend:**
-- Node.js 18+ + TypeScript
+- Node.js 20+ + TypeScript
 - NestJS (framework)
 - Prisma ORM
 - PostgreSQL 16
@@ -96,7 +96,7 @@ Get up and running in 5 minutes with **password authentication** (no SMTP requir
 
 ### Prerequisites
 
-- **Node.js >= 18** (18.19.1+ recommended, tested with Node 18.x)
+- **Node.js >= 20** (Node 22 LTS recommended — Node 18 is EOL since April 2025)
 - **npm >= 9.0.0**
 - Docker & Docker Compose (for database)
 - PostgreSQL 16 (if running locally without Docker)
@@ -105,7 +105,7 @@ Get up and running in 5 minutes with **password authentication** (no SMTP requir
 **Node Version Management:**
 If you use `nvm`, the project includes an `.nvmrc` file:
 ```bash
-nvm use  # Uses Node 18.19.1 automatically
+nvm use  # Uses Node 22 automatically
 ```
 
 ### 1. Clone and Install
