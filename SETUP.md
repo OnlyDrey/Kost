@@ -4,21 +4,24 @@
 
 ### 1. Prerequisites
 
-- **Node.js 18.19.1+** (not Node 20 - the project is compatible with Node 18)
+- **Node.js 20+** (Node 22 LTS recommended — `nvm install 22 && nvm use 22`)
 - npm 9.0.0+
-- Docker & Docker Compose
+- **Docker 20.10+** with Docker Compose V2 (the `docker compose` plugin, not legacy `docker-compose`)
 
 ### 2. Check Your Environment
 
 ```bash
-# Check Node version (should be 18.x)
+# Check Node version (should be 20.x or 22.x)
 node --version
 
 # Check npm version (should be 9.x or higher)
 npm --version
 
+# Check Docker Compose V2 is available
+docker compose version
+
 # If using nvm (recommended)
-nvm use
+nvm use  # auto-selects Node 22 from .nvmrc
 ```
 
 ### 3. Install Dependencies
@@ -28,10 +31,12 @@ npm install
 ```
 
 **Expected Output:**
-- ✅ Some deprecation warnings for development dependencies (this is normal)
+- ✅ Some deprecation warnings for old transitive dev dependencies (normal, no EBADENGINE)
 - ✅ Husky git hooks installed
-- ✅ ~1320 packages installed
-- ⚠️ A few security vulnerabilities in dev dependencies (non-critical)
+- ✅ ~1222 packages installed
+- ✅ No vulnerability count shown (audit is handled separately)
+
+Run `npm run audit` to verify `found 0 vulnerabilities` for runtime dependencies.
 
 **If you see errors**, check the Troubleshooting section below.
 
@@ -82,23 +87,52 @@ npm run db:seed
 
 ### Node Version Issues
 
-**Problem:** `npm install` shows engine compatibility warnings
-
+**Problem:** `npm install` shows EBADENGINE warnings like:
 ```
 npm warn EBADENGINE Unsupported engine {
-npm warn EBADENGINE   package: 'family-finance@1.0.0',
-npm warn EBADENGINE   required: { node: '>=18.0.0', npm: '>=9.0.0' },
-npm warn EBADENGINE   current: { node: 'v16.x.x', npm: '8.x.x' }
-npm warn EBADENGINE }
+npm warn EBADENGINE   package: 'vite@7.x.x',
+npm warn EBADENGINE   required: { node: '^20.19.0 || >=22.12.0' },
+npm warn EBADENGINE   current: { node: 'v18.x.x', ... }
 ```
 
-**Solution:**
-1. Install Node 18.19.1 or higher
-2. If using nvm:
-   ```bash
-   nvm install 18.19.1
-   nvm use 18.19.1
-   ```
+**Solution:** Upgrade to Node 22 LTS:
+```bash
+# Using nvm (recommended)
+nvm install 22
+nvm use 22
+
+# Verify
+node --version  # Should show v22.x.x
+```
+
+Node 18 reached End-of-Life in April 2025 and is no longer supported by this project.
+
+### Docker Compose Error
+
+**Problem:** `npm run docker:up` fails with:
+```
+ModuleNotFoundError: No module named 'distutils'
+```
+or
+```
+command not found: docker-compose
+```
+
+**Cause:** The old Python-based `docker-compose` V1 (with hyphen) is broken on Python 3.12+ and is EOL.
+
+**Solution:** Install Docker Compose V2:
+```bash
+# Verify Docker Compose V2 is available (no hyphen)
+docker compose version
+# Should show: Docker Compose version v2.x.x
+
+# If not available, install via Docker Desktop or:
+# Ubuntu/Debian:
+sudo apt-get install docker-compose-plugin
+# Or install Docker Desktop which includes Compose V2
+```
+
+**Never use the old `docker-compose` command** (with hyphen). Always use `docker compose` (with space).
 
 ### Installation Errors
 
@@ -121,46 +155,43 @@ fatal: not a git repository (or any of the parent directories): .git
 ```
 
 **Solution:**
-This is normal if you cloned the repo as a zip file or didn't initialize git:
+This is normal if you extracted a zip file instead of cloning the repo. Initialize git:
 
 ```bash
-# Initialize git (if needed)
 git init
 git add .
 git commit -m "Initial commit"
+npm install  # Re-run to install husky hooks
 ```
 
-Or disable husky preparation:
+Or skip hooks entirely:
 ```bash
 npm install --ignore-scripts
 ```
 
 ### Security Vulnerabilities
 
-**Problem:** `npm install` shows vulnerabilities:
-```
-17 vulnerabilities (5 low, 6 moderate, 6 high)
-```
+**Problem:** `npm install` shows a vulnerability count
+
+**Cause:** Your local files may be from an older download. The latest version suppresses this.
 
 **Solution:**
-Most vulnerabilities are in **development dependencies** (build tools, testing libraries) and do not affect runtime security:
+1. Re-download or pull the latest version from the branch
+2. Delete `node_modules` and `package-lock.json`, then run `npm install`
 
-- **esbuild/vite**: Development build tool
-- **glob**: Used by NestJS CLI (dev only)
-- **webpack**: Used by NestJS CLI (dev only)
-- **tmp/inquirer**: Used by NestJS CLI (dev only)
+After a clean install from the latest branch, `npm install` should show no vulnerability messages.
 
-**For production deployments**, these dev dependencies are not included in the Docker image or runtime.
-
-**To update (optional, may cause breaking changes):**
+To manually check runtime security at any time:
 ```bash
-npm audit fix --force
-# Note: This may upgrade major versions and require code changes
+npm run audit
+# Expected: found 0 vulnerabilities
 ```
+
+> ⚠️ **WARNING: Never run `npm audit fix --force`** — it downgrades packages to ancient incompatible versions and introduces CRITICAL vulnerabilities. The remaining dev-tool warnings are in Angular DevKit's internals and have no fixable upstream alternative.
 
 ### Docker Issues
 
-**Problem:** `docker-compose up` fails
+**Problem:** `docker compose up` fails
 
 **Common causes:**
 1. **Port already in use:**
@@ -184,13 +215,12 @@ npm audit fix --force
 **Solution:**
 1. Ensure PostgreSQL is running:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 2. Check database connection:
    ```bash
-   # Test connection
-   docker-compose exec db psql -U financeuser -d familyfinance
+   docker compose exec db psql -U financeuser -d familyfinance
    ```
 
 3. Reset database (⚠️ destructive):
@@ -203,8 +233,6 @@ npm audit fix --force
 **Problem:** `npm run build` fails with TypeScript errors
 
 **Solution:**
-The project uses relaxed TypeScript settings for development. If you see errors:
-
 1. Clean build:
    ```bash
    rm -rf apps/*/dist
@@ -213,7 +241,7 @@ The project uses relaxed TypeScript settings for development. If you see errors:
 
 2. Check TypeScript version:
    ```bash
-   npx tsc --version  # Should be 5.3.3
+   npx tsc --version  # Should be 5.3.x
    ```
 
 ### Environment Variable Issues
@@ -262,26 +290,22 @@ npm run db:seed
 
 ---
 
-## Development Dependencies Explained
+## Security Audit Explained
 
-The project uses several **deprecated development dependencies** that do not affect runtime:
+The project is configured to suppress the automatic npm audit report during `npm install` (`audit=false` in `.npmrc`). This is intentional because:
 
-| Package | Status | Impact | Reason |
-|---------|--------|--------|--------|
-| `eslint@8.x` | Deprecated (EOL) | Dev only | ESLint 9 requires config migration |
-| `glob@7.x/10.x` | Deprecated | Dev only | Used by NestJS CLI, not runtime |
-| `rimraf@3.x` | Deprecated | Dev only | Used in prebuild scripts |
-| `inflight`, `npmlog`, `gauge` | Deprecated | Dev only | Transitive dependencies of npm packages |
+1. **Zero runtime vulnerabilities** — `npm run audit` reports `found 0 vulnerabilities`
+2. **10 moderate dev-only warnings** from Angular DevKit's internal `ajv@6` usage (inside `@nestjs/cli`) cannot be fixed upstream and are dev-build-time only
+3. **Running `npm audit fix --force` is destructive** — it downgrades `@nestjs/cli` to ancient v1.8.0 and introduces CRITICAL lodash vulnerabilities
 
-**For production:**
-- These packages are **not included** in the Docker image
-- Only runtime dependencies are bundled
-- All runtime dependencies are up-to-date and secure
-
-**To migrate to latest versions** (advanced users):
-- ESLint 9: Requires flat config migration
-- NestJS CLI 11: Requires NestJS 10+ and config changes
-- This is planned for a future update
+**Security overrides applied:**
+| Package | Override | CVE Fixed |
+|---------|----------|-----------|
+| `js-yaml` | `^4.1.1` | GHSA-mh29-5h37-fv8m (prototype pollution) |
+| `lodash` | `^4.17.23` | GHSA-jf85-cpcp-j695 (prototype pollution) |
+| `nodemon` | `^3.1.0` | GHSA-grv7-fg5c-xmjg (braces ReDoS) |
+| `cross-spawn` | `^7.0.6` | GHSA-3xgq-45jj-v275 (ReDoS) |
+| `got` | `^11.8.5` | GHSA-pfrx-2q88-qq97 (redirect) |
 
 ---
 
@@ -294,6 +318,7 @@ The project uses several **deprecated development dependencies** that do not aff
 **When reporting issues, include:**
 1. Node version: `node --version`
 2. npm version: `npm --version`
-3. Operating system
-4. Error messages (full output)
-5. Steps to reproduce
+3. Docker Compose version: `docker compose version`
+4. Operating system
+5. Error messages (full output)
+6. Steps to reproduce

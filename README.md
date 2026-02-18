@@ -86,7 +86,7 @@ Note: Use external reverse proxy (Pangolin, Nginx, Caddy, Traefik, etc.)
 - Nodemailer
 
 **Infrastructure:**
-- Docker + Docker Compose
+- Docker + Docker Compose V2
 - GitHub Actions (CI/CD)
 - External reverse proxy recommended for production (Pangolin, Nginx, Caddy, Traefik, etc.)
 
@@ -98,7 +98,7 @@ Get up and running in 5 minutes with **password authentication** (no SMTP requir
 
 - **Node.js >= 20** (Node 22 LTS recommended — Node 18 is EOL since April 2025)
 - **npm >= 9.0.0**
-- Docker & Docker Compose (for database)
+- **Docker 20.10+** with Docker Compose V2 (the `docker compose` plugin, not legacy `docker-compose`)
 - PostgreSQL 16 (if running locally without Docker)
 - **No email/SMTP setup needed** for the quick start (password auth enabled by default)
 
@@ -121,7 +121,7 @@ nvm use
 npm install
 ```
 
-**Note:** You may see deprecation warnings for some development dependencies during installation. These are expected and do not affect functionality. The project uses `legacy-peer-deps` (configured in `.npmrc`) to ensure compatibility.
+**Note:** The project suppresses non-critical security audit warnings during install (configured in `.npmrc`). Run `npm run audit` at any time to check runtime-only vulnerabilities — it will show `found 0 vulnerabilities`.
 
 ### 2. Environment Configuration
 
@@ -494,7 +494,7 @@ finance.yourdomain.com {
 }
 ```
 
-**Traefik (docker-compose labels):**
+**Traefik (docker compose labels):**
 ```yaml
 labels:
   - "traefik.enable=true"
@@ -714,17 +714,17 @@ formatDate('2026-03-15', 'en-US') // "March 15, 2026"
 
 6. **Deploy with Docker Compose:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 7. **Run migrations:**
    ```bash
-   docker-compose exec api npx prisma migrate deploy
+   docker compose exec api npx prisma migrate deploy
    ```
 
 8. **Backup PostgreSQL:**
    ```bash
-   docker-compose exec db pg_dump -U financeuser familyfinance > backup.sql
+   docker compose exec db pg_dump -U financeuser familyfinance > backup.sql
    ```
 
 ### Environment Variables Reference
@@ -877,7 +877,7 @@ A: Yes! Just set the `DATABASE_URL` environment variable to your managed Postgre
 
 A: Use `pg_dump` to create database backups:
 ```bash
-docker-compose exec db pg_dump -U financeuser familyfinance > backup.sql
+docker compose exec db pg_dump -U financeuser familyfinance > backup.sql
 ```
 
 ## 🤝 Contributing
