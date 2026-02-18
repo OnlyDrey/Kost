@@ -19,7 +19,8 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "prepare": "[ -d .git ] && husky install || true"
+    "prepare": "[ -d .git ] && husky install || true",
+    "audit": "npm audit --omit=dev"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
