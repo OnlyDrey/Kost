@@ -25,7 +25,7 @@ export default () => {
       expiresIn: process.env.JWT_EXPIRES_IN || "7d",
     },
     webauthn: {
-      rpName: process.env.WEBAUTHN_RP_NAME || "Family Finance",
+      rpName: process.env.WEBAUTHN_RP_NAME || "Kost",
       rpID: process.env.WEBAUTHN_RP_ID || "localhost",
       origin: process.env.WEBAUTHN_ORIGIN || "https://localhost",
     },
@@ -41,7 +41,7 @@ export default () => {
       password: authMagicLinkEnabled
         ? process.env.SMTP_PASSWORD
         : process.env.SMTP_PASSWORD,
-      from: process.env.SMTP_FROM || "noreply@familyfinance.local",
+      from: process.env.SMTP_FROM || "noreply@kost.local",
     },
     magicLink: {
       secret: process.env.MAGIC_LINK_SECRET || "change-me-in-production",

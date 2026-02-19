@@ -1,7 +1,7 @@
 {
-  "name": "@family-finance/api",
+  "name": "@kost/api",
   "version": "1.0.0",
-  "description": "Family Finance API - NestJS Backend",
+  "description": "Kost API - NestJS Backend",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -24,7 +24,7 @@
     "generate": "prisma generate"
   },
   "dependencies": {
-    "@family-finance/shared": "*",
+    "@kost/shared": "*",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^10.3.0",

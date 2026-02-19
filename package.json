@@ -1,8 +1,8 @@
 {
-  "name": "family-finance",
+  "name": "kost",
   "version": "1.0.0",
   "private": true,
-  "description": "Family Finance PWA - Self-hosted shared expense tracking",
+  "description": "Kost - Self-hosted shared expense tracking PWA",
   "workspaces": [
     "apps/*",
     "packages/*"

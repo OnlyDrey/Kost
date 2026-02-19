@@ -1,6 +1,6 @@
-# Family Finance - Web App
+# Kost - Web App
 
-A Progressive Web Application (PWA) for managing family finances and invoices.
+A Progressive Web Application (PWA) for managing shared expenses and invoices.
 
 ## Features
 
@@ -118,7 +118,7 @@ src/
 
 ```env
 VITE_API_URL=http://localhost:3000/api
-VITE_APP_NAME=Family Finance
+VITE_APP_NAME=Kost
 ```
 
 **Note:** In production, use your external reverse proxy's HTTPS URL (e.g., `https://finance.yourdomain.com/api`).

@@ -1,14 +1,14 @@
-# Family Finance PWA
+# Kost PWA
 
-> **A self-hosted, privacy-first Progressive Web App for shared family expense tracking with precise, auditable financial calculations.**
+> **A self-hosted, privacy-first Progressive Web App for shared expense tracking with precise, auditable financial calculations.**
 
-[![CI](https://github.com/your-org/family-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/family-finance/actions/workflows/ci.yml)
+[![CI](https://github.com/your-org/kost/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/kost/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 🎯 Overview
 
-Family Finance is a complete, production-ready PWA for managing shared household expenses among family members. It handles invoice registration, payment tracking, cost allocation (by percentage, income, or fixed amounts), period closing with automatic settlement calculations, and comprehensive audit logging.
+Kost is a complete, production-ready PWA for managing shared household expenses among family members. It handles invoice registration, payment tracking, cost allocation (by percentage, income, or fixed amounts), period closing with automatic settlement calculations, and comprehensive audit logging.
 
 **Key Deployment Features:**
 - 🔑 **Password authentication enabled by default** - No SMTP setup required to get started
@@ -161,8 +161,8 @@ nvm use  # auto-selects Node 22 from .nvmrc
 ### 1. Clone and Check System Requirements
 
 ```bash
-git clone https://github.com/your-org/family-finance.git
-cd family-finance
+git clone https://github.com/your-org/kost.git
+cd kost
 
 # Verify Node 20+, npm 9+, Docker, and Docker Compose V2 are all ready
 npm run check
@@ -220,11 +220,11 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-SMTP_FROM=noreply@familyfinance.local
+SMTP_FROM=noreply@kost.local
 MAGIC_LINK_SECRET=your-magic-link-secret-here
 
 # WebAuthn (only required if AUTH_PASSKEY_ENABLED=true)
-WEBAUTHN_RP_NAME="Family Finance"
+WEBAUTHN_RP_NAME="Kost"
 WEBAUTHN_RP_ID=localhost        # or your.domain.com for production
 WEBAUTHN_ORIGIN=http://localhost:3001  # or https://your.domain.com
 ```
@@ -265,11 +265,11 @@ Open http://localhost:3001 in your browser.
 
 **Default Login Credentials (from seed):**
 
-| Email                        | Password      | Role    | Description |
-|------------------------------|---------------|---------|-------------|
-| admin@familyfinance.local    | `password123` | `ADMIN` | Full administrative access |
-| ola@familyfinance.local      | `password123` | `ADULT` | Can create/edit invoices & payments |
-| lisa@familyfinance.local     | `password123` | `ADULT` | Can create/edit invoices & payments |
+| Email                 | Password      | Role    | Description |
+|-----------------------|---------------|---------|-------------|
+| admin@kost.local      | `password123` | `ADMIN` | Full administrative access |
+| ola@kost.local        | `password123` | `ADULT` | Can create/edit invoices & payments |
+| lisa@kost.local       | `password123` | `ADULT` | Can create/edit invoices & payments |
 
 **Authentication Notes:**
 - **Password authentication is enabled by default** (no SMTP configuration required)
@@ -281,7 +281,7 @@ Open http://localhost:3001 in your browser.
 ## 📦 Project Structure
 
 ```
-family-finance/
+kost/
 ├── apps/
 │   ├── api/                    # NestJS Backend
 │   │   ├── src/
@@ -796,7 +796,7 @@ formatDate('2026-03-15', 'en-US') // "March 15, 2026"
 
 8. **Backup PostgreSQL:**
    ```bash
-   docker compose exec db pg_dump -U financeuser familyfinance > backup.sql
+   docker compose exec db pg_dump -U kostuser kost > backup.sql
    ```
 
 ### Environment Variables Reference
@@ -823,7 +823,7 @@ formatDate('2026-03-15', 'en-US') // "March 15, 2026"
 | `SMTP_PASSWORD`            | Conditional | SMTP password                          |
 | `SMTP_FROM`                | Conditional | From address for emails                |
 | **WebAuthn (if enabled)**  |          |                                          |
-| `WEBAUTHN_RP_NAME`         | No       | Relying party name (default: `Family Finance`) |
+| `WEBAUTHN_RP_NAME`         | No       | Relying party name (default: `Kost`) |
 | `WEBAUTHN_RP_ID`           | Conditional | Relying party ID (must match domain, required if passkey enabled) |
 | `WEBAUTHN_ORIGIN`          | Conditional | Origin for WebAuthn (must match APP_URL, required if passkey enabled) |
 | **Application URLs**       |          |                                          |
@@ -949,7 +949,7 @@ A: Yes! Just set the `DATABASE_URL` environment variable to your managed Postgre
 
 A: Use `pg_dump` to create database backups:
 ```bash
-docker compose exec db pg_dump -U financeuser familyfinance > backup.sql
+docker compose exec db pg_dump -U kostuser kost > backup.sql
 ```
 
 ## 🤝 Contributing
@@ -994,7 +994,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ### Default Credentials
 
-- **Email:** admin@familyfinance.local (or ola@/lisa@familyfinance.local)
+- **Email:** admin@kost.local (or ola@/lisa@kost.local)
 - **Password:** password123
 
 ### Authentication Methods

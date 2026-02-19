@@ -4,7 +4,7 @@ import {
   PercentRule,
   FixedRule,
   RemainderMethod,
-} from "@family-finance/shared";
+} from "@kost/shared";
 
 interface ParticipantWithIncome {
   userId: string;

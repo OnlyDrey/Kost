@@ -13,13 +13,13 @@ export interface CachedUser extends User {
   cachedAt: number;
 }
 
-export class FamilyFinanceDB extends Dexie {
+export class KostDB extends Dexie {
   invoices!: Table<CachedInvoice>;
   periods!: Table<CachedPeriod>;
   users!: Table<CachedUser>;
 
   constructor() {
-    super('FamilyFinanceDB');
+    super('KostDB');
 
     this.version(1).stores({
       invoices: 'id, periodId, uploadedBy, status, cachedAt',
@@ -106,7 +106,7 @@ export class FamilyFinanceDB extends Dexie {
 }
 
 // Create and export database instance
-export const db = new FamilyFinanceDB();
+export const db = new KostDB();
 
 // Clear old cache on initialization
 db.clearOldCache();

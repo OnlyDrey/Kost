@@ -1,6 +1,6 @@
 # Rounding & Allocation Rules
 
-> **Detailed specification for money allocation algorithms in Family Finance**
+> **Detailed specification for money allocation algorithms in Kost**
 
 ## Core Principle
 

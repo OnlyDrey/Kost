@@ -338,15 +338,15 @@ export class AuthService {
     const mailOptions = {
       from: smtpFrom,
       to: email,
-      subject: "Your Magic Link - Family Finance",
+      subject: "Your Magic Link - Kost",
       html: `
         <h1>Hi ${name}!</h1>
-        <p>Click the link below to sign in to Family Finance:</p>
+        <p>Click the link below to sign in to Kost:</p>
         <p><a href="${magicLink}">${magicLink}</a></p>
         <p>This link will expire in 10 minutes.</p>
         <p>If you didn't request this link, you can safely ignore this email.</p>
       `,
-      text: `Hi ${name}!\n\nClick the link below to sign in to Family Finance:\n${magicLink}\n\nThis link will expire in 10 minutes.\n\nIf you didn't request this link, you can safely ignore this email.`,
+      text: `Hi ${name}!\n\nClick the link below to sign in to Kost:\n${magicLink}\n\nThis link will expire in 10 minutes.\n\nIf you didn't request this link, you can safely ignore this email.`,
     };
 
     if (this.transporter) {

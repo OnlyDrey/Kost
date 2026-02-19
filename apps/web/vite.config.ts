@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Family Finance',
-        short_name: 'FamFin',
-        description: 'Family finance and invoice management application',
+        name: 'Kost',
+        short_name: 'Kost',
+        description: 'Shared expense tracking application',
         theme_color: '#1976d2',
         background_color: '#ffffff',
         display: 'standalone',

@@ -133,7 +133,7 @@ npm run db:seed
 - **API Docs:** http://localhost:3000/api-docs
 
 **Default login:**
-- Email: `admin@familyfinance.local`
+- Email: `admin@kost.local`
 - Password: `password123`
 
 ---
@@ -282,7 +282,7 @@ npm run audit
 
 2. Check database connection:
    ```bash
-   docker compose exec db psql -U financeuser -d familyfinance
+   docker compose exec db psql -U kostuser -d kost
    ```
 
 3. Reset database (⚠️ destructive):
@@ -373,8 +373,8 @@ The project is configured to suppress the automatic npm audit report during `npm
 
 ## Getting Help
 
-- **GitHub Issues:** [Report a bug](https://github.com/your-org/family-finance/issues)
-- **Discussions:** [Ask questions](https://github.com/your-org/family-finance/discussions)
+- **GitHub Issues:** [Report a bug](https://github.com/your-org/kost/issues)
+- **Discussions:** [Ask questions](https://github.com/your-org/kost/discussions)
 - **Documentation:** See [README.md](./README.md) for full documentation
 
 **When reporting issues, include:**

@@ -1,4 +1,4 @@
-// Shared types and enums for Family Finance
+// Shared types and enums for Kost
 
 export enum UserRole {
   ADMIN = 'ADMIN',
