@@ -36,6 +36,12 @@ COPY apps/api/package.json ./apps/api/
 # Install production dependencies only (hoisted to /app/node_modules)
 RUN npm ci --workspace=apps/api --workspace=packages/shared --omit=dev
 
+# Copy the generated Prisma client from builder.
+# npm ci above installs @prisma/client but cannot run `prisma generate`
+# without the schema at install time, leaving UserRole and other generated
+# types undefined at runtime.
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
 # Copy built artifacts from builder
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
