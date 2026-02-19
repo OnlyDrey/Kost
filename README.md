@@ -233,13 +233,13 @@ WEBAUTHN_ORIGIN=http://localhost:3001  # or https://your.domain.com
 
 ```bash
 # Start all services
-npm run docker:up
+sudo npm run docker:up
 
 # View logs
-npm run docker:logs
+sudo npm run docker:logs
 
 # Stop services
-npm run docker:down
+sudo npm run docker:down
 ```
 
 This starts **3 services**:
