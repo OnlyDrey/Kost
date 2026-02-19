@@ -9,17 +9,15 @@ COPY tsconfig.base.json ./
 COPY packages ./packages
 COPY apps/api ./apps/api
 
-# Install dependencies
+# Install all dependencies (hoisted to /app/node_modules by npm workspaces)
 RUN npm ci --workspace=apps/api --workspace=packages/shared
 
 # Build shared package so TypeScript can resolve @kost/shared
 RUN npm run build --workspace=packages/shared
 
-# Generate Prisma client
+# Generate Prisma client and build API
 WORKDIR /app/apps/api
 RUN npx prisma generate
-
-# Build application
 RUN npm run build
 
 # Production stage
@@ -30,16 +28,18 @@ WORKDIR /app
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
 
-# Copy necessary files
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/api/package*.json ./apps/api/
+# Copy package files needed for npm ci
+COPY package*.json ./
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY apps/api/package.json ./apps/api/
+
+# Install production dependencies only (hoisted to /app/node_modules)
+RUN npm ci --workspace=apps/api --workspace=packages/shared --omit=dev
+
+# Copy built artifacts from builder
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-
-# Install production dependencies only
-RUN npm ci --workspace=apps/api --workspace=packages/shared --omit=dev
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
