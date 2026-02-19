@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Box,
@@ -17,81 +17,34 @@ import { useAuth } from '../stores/auth.context';
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { login, isAuthenticated } = useAuth();
 
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [verifying, setVerifying] = useState(false);
 
-  // Check for token in URL (from magic link)
-  useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      verifyToken(token);
-    }
-  }, [searchParams]);
-
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
-  const verifyToken = async (token: string) => {
-    setVerifying(true);
-    try {
-      const { user, token: authToken } = await authService.verifyToken(token);
-      login(authToken, user);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(t('auth.loginFailed'));
-    } finally {
-      setVerifying(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess(false);
 
     try {
-      await authService.requestMagicLink(email);
-      setSuccess(true);
-      setEmail('');
-    } catch (err) {
-      setError(t('errors.serverError'));
+      const user = await authService.loginWithPassword(email, password);
+      login(user);
+      navigate('/dashboard');
+    } catch {
+      setError(t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
   };
-
-  if (verifying) {
-    return (
-      <Container maxWidth="sm">
-        <Box
-          sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Box sx={{ textAlign: 'center' }}>
-            <CircularProgress size={60} />
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              {t('auth.verifying')}
-            </Typography>
-          </Box>
-        </Box>
-      </Container>
-    );
-  }
 
   return (
     <Container maxWidth="sm">
@@ -124,12 +77,6 @@ export default function Login() {
             </Alert>
           )}
 
-          {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {t('auth.checkEmail')}
-            </Alert>
-          )}
-
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
@@ -137,6 +84,16 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label={t('auth.password')}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
               sx={{ mb: 3 }}
@@ -149,7 +106,7 @@ export default function Login() {
               size="large"
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} /> : t('auth.sendMagicLink')}
+              {loading ? <CircularProgress size={24} /> : t('auth.loginButton')}
             </Button>
           </form>
         </Paper>

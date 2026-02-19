@@ -11,12 +11,11 @@
     "logout": "Logg ut"
   },
   "auth": {
-    "login": "Logg inn",
+    "login": "Logg inn på kontoen din",
     "email": "E-post",
-    "sendMagicLink": "Send magisk lenke",
-    "checkEmail": "Sjekk e-posten din for den magiske lenken!",
-    "verifying": "Verifiserer...",
-    "loginFailed": "Innlogging mislyktes. Vennligst prøv igjen."
+    "password": "Passord",
+    "loginButton": "Logg inn",
+    "loginFailed": "Ugyldig e-post eller passord. Vennligst prøv igjen."
   },
   "dashboard": {
     "title": "Oversikt",

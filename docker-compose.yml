@@ -33,25 +33,6 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-kostuser}:${DB_PASSWORD:-kostpass}@db:5432/${DB_NAME:-kost}?schema=public
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      # Authentication Methods (enable/disable)
-      AUTH_PASSWORD_ENABLED: ${AUTH_PASSWORD_ENABLED:-true}
-      AUTH_MAGIC_LINK_ENABLED: ${AUTH_MAGIC_LINK_ENABLED:-false}
-      AUTH_PASSKEY_ENABLED: ${AUTH_PASSKEY_ENABLED:-false}
-      # Magic Link Settings (only if AUTH_MAGIC_LINK_ENABLED=true)
-      MAGIC_LINK_SECRET: ${MAGIC_LINK_SECRET}
-      MAGIC_LINK_EXPIRES_IN: ${MAGIC_LINK_EXPIRES_IN:-600}
-      # SMTP Settings (only if AUTH_MAGIC_LINK_ENABLED=true)
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM:-noreply@kost.local}
-      # WebAuthn/Passkey Settings (only if AUTH_PASSKEY_ENABLED=true)
-      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-Kost}
-      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
-      WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-http://localhost:3001}
-      # Application Settings
       APP_URL: ${APP_URL:-http://localhost:3001}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}

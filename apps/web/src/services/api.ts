@@ -1,35 +1,20 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-// Request interceptor - Add auth token
-api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('auth_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor - Handle errors
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Clear auth token and redirect to login
-      localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
@@ -114,14 +99,17 @@ export interface PeriodStats {
 
 // API functions
 export const authApi = {
-  requestMagicLink: (email: string) =>
-    api.post('/auth/magic-link', { email }),
+  loginWithPassword: (email: string, password: string) =>
+    api.post<{ message: string; user: User }>('/auth/login/password', { email, password }),
 
-  verifyToken: (token: string) =>
-    api.post<{ token: string; user: User }>('/auth/verify', { token }),
+  registerWithPassword: (name: string, email: string, password: string) =>
+    api.post<{ message: string; user: User }>('/auth/register', { name, email, password }),
 
   getCurrentUser: () =>
     api.get<User>('/auth/me'),
+
+  logout: () =>
+    api.post('/auth/logout'),
 };
 
 export const invoiceApi = {

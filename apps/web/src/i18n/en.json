@@ -11,12 +11,11 @@
     "logout": "Logout"
   },
   "auth": {
-    "login": "Login",
+    "login": "Sign in to your account",
     "email": "Email",
-    "sendMagicLink": "Send Magic Link",
-    "checkEmail": "Check your email for the magic link!",
-    "verifying": "Verifying...",
-    "loginFailed": "Login failed. Please try again."
+    "password": "Password",
+    "loginButton": "Sign In",
+    "loginFailed": "Invalid email or password. Please try again."
   },
   "dashboard": {
     "title": "Dashboard",
