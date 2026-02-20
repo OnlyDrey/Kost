@@ -47,11 +47,11 @@ export class AuthController {
       dto.password,
     );
 
-    const isProduction = this.configService.get("nodeEnv") === "production";
+    const cookieSecure = this.configService.get<boolean>("cookieSecure");
     response.cookie("access_token", result.accessToken, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
+      secure: cookieSecure,
+      sameSite: cookieSecure ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -76,11 +76,11 @@ export class AuthController {
       dto.password,
     );
 
-    const isProduction = this.configService.get("nodeEnv") === "production";
+    const cookieSecure = this.configService.get<boolean>("cookieSecure");
     response.cookie("access_token", result.accessToken, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
+      secure: cookieSecure,
+      sameSite: cookieSecure ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 

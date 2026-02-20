@@ -50,7 +50,9 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
-RUN chown -R nestjs:nodejs /app/node_modules/.prisma
+# Give the non-root user write access to both the generated client (.prisma)
+# and the engine binaries (@prisma/engines) which Prisma writes to at runtime.
+RUN chown -R nestjs:nodejs /app/node_modules/.prisma /app/node_modules/@prisma
 
 USER nestjs
 
@@ -59,9 +61,9 @@ WORKDIR /app/apps/api
 # Expose port
 EXPOSE 3000
 
-# Health check
+# Health check — endpoint lives under the /api global prefix
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "dist/main.js"]

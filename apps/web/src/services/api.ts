@@ -27,7 +27,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'ADMIN' | 'USER';
+  role: 'ADMIN' | 'ADULT' | 'JUNIOR';
   familyId: string;
   createdAt: string;
   updatedAt: string;
