@@ -1,19 +1,11 @@
-import { Typography, TypographyProps } from '@mui/material';
 import { formatCurrency } from '../../utils/currency';
 
-interface CurrencyDisplayProps extends TypographyProps {
+interface CurrencyDisplayProps {
   cents: number;
   showCurrency?: boolean;
+  className?: string;
 }
 
-export default function CurrencyDisplay({
-  cents,
-  showCurrency = true,
-  ...typographyProps
-}: CurrencyDisplayProps) {
-  return (
-    <Typography {...typographyProps}>
-      {formatCurrency(cents, showCurrency)}
-    </Typography>
-  );
+export default function CurrencyDisplay({ cents, showCurrency = true, className }: CurrencyDisplayProps) {
+  return <span className={className}>{formatCurrency(cents, showCurrency)}</span>;
 }

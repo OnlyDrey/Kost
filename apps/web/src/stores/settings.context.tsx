@@ -17,14 +17,13 @@ interface SettingsContextType {
 
 const defaultSettings: Settings = {
   theme: 'light',
-  locale: 'nb', // Default to Norwegian
+  locale: 'nb',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(() => {
-    // Load settings from localStorage
     const stored = localStorage.getItem('settings');
     if (stored) {
       try {
@@ -33,55 +32,30 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return defaultSettings;
       }
     }
-
-    // Detect user's preferred language
     const browserLang = navigator.language.split('-')[0];
     const detectedLocale = browserLang === 'nb' || browserLang === 'no' ? 'nb' : 'en';
-
-    // Detect user's preferred theme
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const detectedTheme = prefersDark ? 'dark' : 'light';
-
-    return {
-      theme: detectedTheme,
-      locale: detectedLocale,
-    };
+    return { theme: prefersDark ? 'dark' : 'light', locale: detectedLocale };
   });
 
-  // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('settings', JSON.stringify(settings));
   }, [settings]);
 
-  const setTheme = (theme: Theme) => {
-    setSettings((prev) => ({ ...prev, theme }));
-  };
+  const setTheme = (theme: Theme) => setSettings((prev) => ({ ...prev, theme }));
+  const setLocale = (locale: Locale) => setSettings((prev) => ({ ...prev, locale }));
+  const toggleTheme = () =>
+    setSettings((prev) => ({ ...prev, theme: prev.theme === 'light' ? 'dark' : 'light' }));
 
-  const setLocale = (locale: Locale) => {
-    setSettings((prev) => ({ ...prev, locale }));
-  };
-
-  const toggleTheme = () => {
-    setSettings((prev) => ({
-      ...prev,
-      theme: prev.theme === 'light' ? 'dark' : 'light',
-    }));
-  };
-
-  const value: SettingsContextType = {
-    settings,
-    setTheme,
-    setLocale,
-    toggleTheme,
-  };
-
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+  return (
+    <SettingsContext.Provider value={{ settings, setTheme, setLocale, toggleTheme }}>
+      {children}
+    </SettingsContext.Provider>
+  );
 }
 
 export function useSettings() {
   const context = useContext(SettingsContext);
-  if (context === undefined) {
-    throw new Error('useSettings must be used within a SettingsProvider');
-  }
+  if (context === undefined) throw new Error('useSettings must be used within a SettingsProvider');
   return context;
 }

@@ -1,26 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  CircularProgress,
-  Chip,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-} from '@mui/material';
-import { Add, Lock } from '@mui/icons-material';
+import { Plus, Lock, AlertCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePeriods, useCreatePeriod, useClosePeriod } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatDate } from '../../utils/date';
+
+const inputCls =
+  'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
 
 export default function PeriodList() {
   const { t } = useTranslation();
@@ -31,185 +18,137 @@ export default function PeriodList() {
   const createPeriod = useCreatePeriod();
   const closePeriod = useClosePeriod();
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [error, setError] = useState('');
 
-  const handleCreatePeriod = async () => {
+  const handleCreate = async () => {
     setError('');
-
-    if (!name.trim() || !startDate || !endDate) {
-      setError(t('validation.required'));
-      return;
-    }
-
-    if (new Date(startDate) >= new Date(endDate)) {
-      setError('Start date must be before end date');
-      return;
-    }
-
+    if (!name.trim() || !startDate || !endDate) { setError(t('validation.required')); return; }
+    if (new Date(startDate) >= new Date(endDate)) { setError('Start date must be before end date'); return; }
     try {
       await createPeriod.mutateAsync({ name, startDate, endDate });
-      setCreateDialogOpen(false);
-      setName('');
-      setStartDate('');
-      setEndDate('');
-    } catch (err) {
-      setError(t('errors.serverError'));
-    }
+      setDialogOpen(false);
+      setName(''); setStartDate(''); setEndDate('');
+    } catch { setError(t('errors.serverError')); }
   };
 
-  const handleClosePeriod = async (id: string) => {
+  const handleClose = async (id: string) => {
     if (confirm(t('period.confirmClose'))) {
-      try {
-        await closePeriod.mutateAsync(id);
-      } catch (err) {
-        alert(t('errors.serverError'));
-      }
+      try { await closePeriod.mutateAsync(id); } catch { alert(t('errors.serverError')); }
     }
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">{t('period.periods')}</Typography>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('period.periods')}</h1>
         {isAdmin && (
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setCreateDialogOpen(true)}
-          >
+          <button onClick={() => setDialogOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+            <Plus size={16} />
             {t('period.createPeriod')}
-          </Button>
+          </button>
         )}
-      </Box>
+      </div>
 
       {!periods || periods.length === 0 ? (
-        <Card>
-          <CardContent>
-            <Typography color="text.secondary" align="center">
-              {t('common.noData')}
-            </Typography>
-          </CardContent>
-        </Card>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center shadow-sm">
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.noData')}</p>
+        </div>
       ) : (
-        <Grid container spacing={2}>
+        <div className="space-y-3">
           {periods.map((period) => (
-            <Grid item xs={12} key={period.id}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" gutterBottom>
-                        {period.name}
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                        <Chip
-                          label={period.status}
-                          color={period.status === 'OPEN' ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDate(period.startDate)} - {formatDate(period.endDate)}
-                      </Typography>
-                      {period.closedAt && (
-                        <Typography variant="caption" color="text.secondary">
-                          Closed: {formatDate(period.closedAt)}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => navigate(`/periods/${period.id}`)}
-                      >
-                        {t('period.stats')}
-                      </Button>
-                      {isAdmin && period.status === 'OPEN' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          startIcon={<Lock />}
-                          onClick={() => handleClosePeriod(period.id)}
-                        >
-                          {t('period.closePeriod')}
-                        </Button>
-                      )}
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            <div key={period.id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{period.name}</p>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                      period.status === 'OPEN'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                    }`}>
+                      {period.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {formatDate(period.startDate)} — {formatDate(period.endDate)}
+                  </p>
+                  {period.closedAt && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Closed: {formatDate(period.closedAt)}</p>
+                  )}
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => navigate(`/periods/${period.id}`)} className="text-sm border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                    {t('period.stats')}
+                  </button>
+                  {isAdmin && period.status === 'OPEN' && (
+                    <button onClick={() => handleClose(period.id)} className="flex items-center gap-1.5 text-sm border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                      <Lock size={14} />
+                      {t('period.closePeriod')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           ))}
-        </Grid>
+        </div>
       )}
 
-      {/* Create Period Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('period.createPeriod')}</DialogTitle>
-        <DialogContent>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                required
-                label={t('period.name')}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., January 2024"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label={t('period.startDate')}
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label={t('period.endDate')}
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>{t('common.cancel')}</Button>
-          <Button
-            onClick={handleCreatePeriod}
-            variant="contained"
-            disabled={createPeriod.isPending}
-          >
-            {t('common.add')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      {/* Create period modal */}
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('period.createPeriod')}</h2>
+              <button onClick={() => setDialogOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
+                  <AlertCircle size={15} className="flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('period.name')} *</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="e.g., January 2024" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('period.startDate')} *</label>
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('period.endDate')} *</label>
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputCls} />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+              <button onClick={() => setDialogOpen(false)} className="text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                {t('common.cancel')}
+              </button>
+              <button onClick={handleCreate} disabled={createPeriod.isPending} className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors">
+                {createPeriod.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {t('common.add')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
