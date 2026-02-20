@@ -5,7 +5,8 @@
 **Frontend (`apps/web`)**
 - React 18 + TypeScript
 - Vite (build tool)
-- Material-UI 5
+- Tailwind CSS 3
+- lucide-react (icons)
 - React Router 6
 - React Query (TanStack)
 - i18next (English + Norwegian)
@@ -36,7 +37,7 @@ kost/
 │   │   │   ├── auth/           # Authentication (password-based)
 │   │   │   ├── users/          # User management
 │   │   │   ├── periods/        # Period lifecycle
-│   │   │   ├── invoices/       # Invoice CRUD + allocation
+│   │   │   ├── invoices/       # Expense CRUD + allocation
 │   │   │   ├── payments/       # Payment tracking
 │   │   │   └── config/         # Configuration
 │   │   └── prisma/
@@ -66,16 +67,16 @@ kost/
 ## Service Communication
 
 ```
-Browser → React App (port 3001)
-React App → API (port 3000) via HTTP + cookie auth
+Browser → nginx / React App (port 3001)
+nginx → API (port 3000) for /api/* requests
 API → PostgreSQL (port 5432)
 ```
 
-In production, an external reverse proxy (Nginx, Caddy, Traefik, etc.) handles HTTPS and routes traffic to these services.
+The nginx container in the web service proxies all `/api/*` requests to the API container internally, so browsers only ever talk to port 3001. In production, an external reverse proxy (Nginx, Caddy, Traefik, etc.) only needs to expose port 3001 over HTTPS.
 
 ## Authentication
 
-- **Password-based** (email + password)
+- **Password-based** (username + password)
 - JWT issued after login, stored in **HTTP-only cookie** (not localStorage)
 - Frontend uses `withCredentials: true` on all API requests so the cookie is sent automatically
 - Cookie is `SameSite=Lax` in dev, `SameSite=Strict` in production

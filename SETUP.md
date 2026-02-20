@@ -130,11 +130,15 @@ npm run db:seed
 
 - **Web UI:** http://localhost:3001
 - **API:** http://localhost:3000
-- **API Docs:** http://localhost:3000/api-docs
+- **API Docs:** http://localhost:3000/api/docs
 
 **Default login:**
-- Email: `admin@kost.local`
-- Password: `password123`
+
+| Username | Password    | Role  |
+|----------|-------------|-------|
+| admin    | password123 | Admin |
+| ola      | password123 | Adult |
+| lisa     | password123 | Adult |
 
 ---
 
