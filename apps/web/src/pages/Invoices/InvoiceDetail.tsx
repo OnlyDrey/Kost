@@ -1,17 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  CircularProgress,
-  Chip,
-  Grid,
-  Divider,
-  IconButton,
-} from '@mui/material';
-import { ArrowBack, Delete, Edit } from '@mui/icons-material';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useInvoice, useDeleteInvoice } from '../../hooks/useApi';
 import { formatCurrency } from '../../utils/currency';
@@ -35,158 +23,125 @@ export default function InvoiceDetail() {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
     );
   }
 
   if (!invoice) {
-    return (
-      <Box>
-        <Typography variant="h6">{t('errors.notFound')}</Typography>
-      </Box>
-    );
+    return <p className="text-sm text-gray-500 dark:text-gray-400">{t('errors.notFound')}</p>;
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={() => navigate('/invoices')} sx={{ mr: 2 }}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant="h4" sx={{ flex: 1 }}>
-          {t('invoice.title')}
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<Edit />}
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/invoices')}
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex-1">{t('invoice.title')}</h1>
+        <button
           onClick={() => navigate(`/invoices/${id}/edit`)}
-          sx={{ mr: 1 }}
+          className="flex items-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
         >
+          <Pencil size={15} />
           {t('common.edit')}
-        </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<Delete />}
+        </button>
+        <button
           onClick={handleDelete}
+          className="flex items-center gap-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
         >
+          <Trash2 size={15} />
           {t('common.delete')}
-        </Button>
-      </Box>
+        </button>
+      </div>
 
-      <Grid container spacing={3}>
-        {/* Main Info */}
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                {invoice.description}
-              </Typography>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Main info */}
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{invoice.description}</h2>
 
-              <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                <Chip
-                  label={invoice.distributionMethod}
-                  color="primary"
-                  variant="outlined"
-                />
-                {invoice.category && <Chip label={invoice.category} variant="outlined" />}
-                <Chip
-                  label={invoice.status}
-                  color={invoice.status === 'APPROVED' ? 'success' : 'default'}
-                />
-              </Box>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+              {invoice.distributionMethod}
+            </span>
+            {invoice.category && (
+              <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                {invoice.category}
+              </span>
+            )}
+            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+              invoice.status === 'APPROVED'
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+            }`}>
+              {invoice.status}
+            </span>
+          </div>
 
-              <Divider sx={{ my: 2 }} />
+          <hr className="border-gray-100 dark:border-gray-800" />
 
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">
-                    {t('invoice.totalAmount')}
-                  </Typography>
-                  <Typography variant="h4" color="primary">
-                    {formatCurrency(invoice.totalAmountCents)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">
-                    {t('invoice.invoiceDate')}
-                  </Typography>
-                  <Typography variant="body1">
-                    {formatDate(invoice.invoiceDate)}
-                  </Typography>
-                </Grid>
-                {invoice.dueDate && (
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('invoice.dueDate')}
-                    </Typography>
-                    <Typography variant="body1">
-                      {formatDate(invoice.dueDate)}
-                    </Typography>
-                  </Grid>
-                )}
-                {invoice.uploader && (
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('invoice.paidBy')}
-                    </Typography>
-                    <Typography variant="body1">{invoice.uploader.name}</Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.totalAmount')}</p>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                {formatCurrency(invoice.totalAmountCents)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.invoiceDate')}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.invoiceDate)}</p>
+            </div>
+            {invoice.dueDate && (
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.dueDate')}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.dueDate)}</p>
+              </div>
+            )}
+            {invoice.uploader && (
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.paidBy')}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.uploader.name}</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-        {/* Allocation Explanation */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {t('invoice.allocationExplanation')}
-              </Typography>
-              <AllocationExplanation invoice={invoice} />
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* Allocation explanation */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('invoice.allocationExplanation')}</h3>
+          <AllocationExplanation invoice={invoice} />
+        </div>
 
         {/* Shares */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {t('invoice.shares')}
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              {invoice.shares && invoice.shares.length > 0 ? (
-                <Grid container spacing={2}>
-                  {invoice.shares.map((share) => (
-                    <Grid item xs={12} sm={6} md={4} key={share.id}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="body1" fontWeight="medium">
-                            {share.user?.name || 'Unknown'}
-                          </Typography>
-                          <Typography variant="h6" color="primary">
-                            {formatCurrency(share.shareCents)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {share.percentageShare.toFixed(2)}%
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Typography color="text.secondary">{t('common.noData')}</Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+        <div className="lg:col-span-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoice.shares')}</h3>
+          {invoice.shares && invoice.shares.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {invoice.shares.map((share) => (
+                <div
+                  key={share.id}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{share.user?.name || 'Unknown'}</p>
+                  <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+                    {formatCurrency(share.shareCents)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {share.percentageShare.toFixed(2)}%
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.noData')}</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
