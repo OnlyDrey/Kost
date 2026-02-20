@@ -22,7 +22,7 @@ export class UsersService {
       orderBy: { createdAt: "asc" },
       select: {
         id: true,
-        email: true,
+        username: true,
         name: true,
         role: true,
         familyId: true,
@@ -40,7 +40,7 @@ export class UsersService {
       where: { id, familyId },
       select: {
         id: true,
-        email: true,
+        username: true,
         name: true,
         role: true,
         familyId: true,
@@ -60,25 +60,25 @@ export class UsersService {
    * Create a new user (Admin only)
    */
   async create(createUserDto: CreateUserDto, familyId: string) {
-    // Check if user with email already exists
+    // Check if user with username already exists
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: createUserDto.email.toLowerCase() },
+      where: { username: createUserDto.username.toLowerCase() },
     });
 
     if (existingUser) {
-      throw new ConflictException("User with this email already exists");
+      throw new ConflictException("User with this username already exists");
     }
 
     return this.prisma.user.create({
       data: {
-        email: createUserDto.email.toLowerCase(),
+        username: createUserDto.username.toLowerCase(),
         name: createUserDto.name,
         role: createUserDto.role,
         familyId,
       },
       select: {
         id: true,
-        email: true,
+        username: true,
         name: true,
         role: true,
         familyId: true,
@@ -116,32 +116,32 @@ export class UsersService {
       throw new ForbiddenException("Only admins can change user roles");
     }
 
-    // Check email uniqueness if changing email
+    // Check username uniqueness if changing username
     if (
-      updateUserDto.email &&
-      updateUserDto.email.toLowerCase() !== user.email
+      updateUserDto.username &&
+      updateUserDto.username.toLowerCase() !== user.username
     ) {
       const existingUser = await this.prisma.user.findUnique({
-        where: { email: updateUserDto.email.toLowerCase() },
+        where: { username: updateUserDto.username.toLowerCase() },
       });
 
       if (existingUser) {
-        throw new ConflictException("User with this email already exists");
+        throw new ConflictException("User with this username already exists");
       }
     }
 
     return this.prisma.user.update({
       where: { id },
       data: {
-        ...(updateUserDto.email && {
-          email: updateUserDto.email.toLowerCase(),
+        ...(updateUserDto.username && {
+          username: updateUserDto.username.toLowerCase(),
         }),
         ...(updateUserDto.name && { name: updateUserDto.name }),
         ...(updateUserDto.role && { role: updateUserDto.role }),
       },
       select: {
         id: true,
-        email: true,
+        username: true,
         name: true,
         role: true,
         familyId: true,

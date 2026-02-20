@@ -53,7 +53,7 @@ export class UsersController {
   @ApiOperation({ summary: "Create a new user (Admin only)" })
   @ApiResponse({ status: 201, description: "User created successfully" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
-  @ApiResponse({ status: 409, description: "User with email already exists" })
+  @ApiResponse({ status: 409, description: "User with username already exists" })
   create(
     @Body() createUserDto: CreateUserDto,
     @CurrentUser("familyId") familyId: string,

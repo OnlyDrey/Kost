@@ -43,7 +43,7 @@ export class AuthController {
   ) {
     const result = await this.authService.registerWithPassword(
       dto.name,
-      dto.email,
+      dto.username,
       dto.password,
     );
 
@@ -64,7 +64,7 @@ export class AuthController {
   @Public()
   @Post("login/password")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Login with email and password" })
+  @ApiOperation({ summary: "Login with username and password" })
   @ApiResponse({ status: 200, description: "Login successful" })
   @ApiResponse({ status: 401, description: "Invalid credentials" })
   async loginWithPassword(
@@ -72,7 +72,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.authService.loginWithPassword(
-      dto.email,
+      dto.username,
       dto.password,
     );
 

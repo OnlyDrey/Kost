@@ -152,7 +152,7 @@ export default function AppLayout() {
             onClose={handleUserMenuClose}
           >
             <MenuItem disabled>
-              <Typography variant="body2">{user?.email}</Typography>
+              <Typography variant="body2">{user?.username}</Typography>
             </MenuItem>
             {isAdmin && (
               <MenuItem disabled>

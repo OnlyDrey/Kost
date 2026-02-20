@@ -58,11 +58,11 @@ npm run db:seed
 
 **Default login:**
 
-| Email            | Password     | Role  |
-|------------------|--------------|-------|
-| admin@kost.local | password123  | Admin |
-| ola@kost.local   | password123  | Adult |
-| lisa@kost.local  | password123  | Adult |
+| Username | Password    | Role  |
+|----------|-------------|-------|
+| admin    | password123 | Admin |
+| ola      | password123 | Adult |
+| lisa     | password123 | Adult |
 
 ---
 

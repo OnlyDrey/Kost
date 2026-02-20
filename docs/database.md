@@ -13,7 +13,7 @@ Schema file: `apps/api/prisma/schema.prisma`
 | `Family`                  | Top-level container for a household            |
 | `User`                    | Family members with roles (ADMIN, ADULT)       |
 | `Period`                  | Monthly billing periods (OPEN or CLOSED)       |
-| `UserIncome`              | User income per period (for income-based splits) |
+| `Income`                  | User income per period (for income-based splits) |
 | `Invoice`                 | Expenses to be split among family members      |
 | `InvoiceShare`            | Calculated share per user for each invoice     |
 | `MagicLinkToken`          | _(unused — kept in schema for migrations)_     |
@@ -48,11 +48,11 @@ npm run db:seed
 
 Seed users (all with password `password123`):
 
-| Email               | Role    |
-|---------------------|---------|
-| admin@kost.local    | ADMIN   |
-| ola@kost.local      | ADULT   |
-| lisa@kost.local     | ADULT   |
+| Username | Role  |
+|----------|-------|
+| admin    | ADMIN |
+| ola      | ADULT |
+| lisa     | ADULT |
 
 To customize seed data, edit `apps/api/prisma/seed.ts`.
 

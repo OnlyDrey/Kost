@@ -25,7 +25,7 @@ api.interceptors.response.use(
 // Type definitions for API responses
 export interface User {
   id: string;
-  email: string;
+  username: string;
   name: string;
   role: 'ADMIN' | 'USER';
   familyId: string;
@@ -99,11 +99,11 @@ export interface PeriodStats {
 
 // API functions
 export const authApi = {
-  loginWithPassword: (email: string, password: string) =>
-    api.post<{ message: string; user: User }>('/auth/login/password', { email, password }),
+  loginWithPassword: (username: string, password: string) =>
+    api.post<{ message: string; user: User }>('/auth/login/password', { username, password }),
 
-  registerWithPassword: (name: string, email: string, password: string) =>
-    api.post<{ message: string; user: User }>('/auth/register', { name, email, password }),
+  registerWithPassword: (name: string, username: string, password: string) =>
+    api.post<{ message: string; user: User }>('/auth/register', { name, username, password }),
 
   getCurrentUser: () =>
     api.get<User>('/auth/me'),

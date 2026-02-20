@@ -12,10 +12,10 @@
   },
   "auth": {
     "login": "Logg inn på kontoen din",
-    "email": "E-post",
+    "username": "Brukernavn",
     "password": "Passord",
     "loginButton": "Logg inn",
-    "loginFailed": "Ugyldig e-post eller passord. Vennligst prøv igjen."
+    "loginFailed": "Ugyldig brukernavn eller passord. Vennligst prøv igjen."
   },
   "dashboard": {
     "title": "Oversikt",

@@ -23,15 +23,15 @@ export class AuthService {
    */
   async registerWithPassword(
     name: string,
-    email: string,
+    username: string,
     password: string,
   ): Promise<{ accessToken: string; user: any }> {
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { username: username.toLowerCase() },
     });
 
     if (existingUser) {
-      throw new ConflictException("User with this email already exists");
+      throw new ConflictException("User with this username already exists");
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -44,7 +44,7 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        email: email.toLowerCase(),
+        username: username.toLowerCase(),
         name,
         passwordHash,
         familyId: family.id,
@@ -57,7 +57,7 @@ export class AuthService {
 
     const payload: JwtPayload = {
       sub: user.id,
-      email: user.email,
+      username: user.username,
       familyId: user.familyId,
       role: user.role,
     };
@@ -68,7 +68,7 @@ export class AuthService {
       accessToken,
       user: {
         id: user.id,
-        email: user.email,
+        username: user.username,
         name: user.name,
         role: user.role,
         familyId: user.familyId,
@@ -78,31 +78,31 @@ export class AuthService {
   }
 
   /**
-   * Login with email and password
+   * Login with username and password
    */
   async loginWithPassword(
-    email: string,
+    username: string,
     password: string,
   ): Promise<{ accessToken: string; user: any }> {
     const user = await this.prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { username: username.toLowerCase() },
       include: {
         family: true,
       },
     });
 
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException("Invalid email or password");
+      throw new UnauthorizedException("Invalid username or password");
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Invalid email or password");
+      throw new UnauthorizedException("Invalid username or password");
     }
 
     const payload: JwtPayload = {
       sub: user.id,
-      email: user.email,
+      username: user.username,
       familyId: user.familyId,
       role: user.role,
     };
@@ -113,7 +113,7 @@ export class AuthService {
       accessToken,
       user: {
         id: user.id,
-        email: user.email,
+        username: user.username,
         name: user.name,
         role: user.role,
         familyId: user.familyId,
@@ -139,7 +139,7 @@ export class AuthService {
 
     return {
       id: user.id,
-      email: user.email,
+      username: user.username,
       name: user.name,
       role: user.role,
       familyId: user.familyId,

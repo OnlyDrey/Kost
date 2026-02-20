@@ -24,7 +24,7 @@ export class KostDB extends Dexie {
     this.version(1).stores({
       invoices: 'id, periodId, uploadedBy, status, cachedAt',
       periods: 'id, familyId, status, cachedAt',
-      users: 'id, familyId, email, cachedAt',
+      users: 'id, familyId, username, cachedAt',
     });
   }
 

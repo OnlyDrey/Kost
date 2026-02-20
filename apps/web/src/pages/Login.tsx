@@ -19,7 +19,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +36,7 @@ export default function Login() {
     setError('');
 
     try {
-      const user = await authService.loginWithPassword(email, password);
+      const user = await authService.loginWithPassword(username, password);
       login(user);
       navigate('/dashboard');
     } catch {
@@ -80,10 +80,10 @@ export default function Login() {
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label={t('auth.email')}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              label={t('auth.username')}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
               sx={{ mb: 2 }}

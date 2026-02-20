@@ -52,7 +52,7 @@ export class IncomesService {
           select: {
             id: true,
             name: true,
-            email: true,
+            username: true,
             role: true,
           },
         },
@@ -72,7 +72,7 @@ export class IncomesService {
           select: {
             id: true,
             name: true,
-            email: true,
+            username: true,
             role: true,
             familyId: true,
           },
@@ -146,7 +146,7 @@ export class IncomesService {
             select: {
               id: true,
               name: true,
-              email: true,
+              username: true,
               role: true,
             },
           },
@@ -168,7 +168,7 @@ export class IncomesService {
           select: {
             id: true,
             name: true,
-            email: true,
+            username: true,
             role: true,
           },
         },
@@ -218,7 +218,7 @@ export class IncomesService {
           select: {
             id: true,
             name: true,
-            email: true,
+            username: true,
             role: true,
           },
         },

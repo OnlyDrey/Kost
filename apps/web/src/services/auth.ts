@@ -12,17 +12,17 @@ class AuthService {
     return AuthService.instance;
   }
 
-  // Login with email and password
-  async loginWithPassword(email: string, password: string): Promise<User> {
-    const response = await authApi.loginWithPassword(email, password);
+  // Login with username and password
+  async loginWithPassword(username: string, password: string): Promise<User> {
+    const response = await authApi.loginWithPassword(username, password);
     const user = response.data.user;
     localStorage.setItem('user', JSON.stringify(user));
     return user;
   }
 
-  // Register with name, email and password
-  async registerWithPassword(name: string, email: string, password: string): Promise<User> {
-    const response = await authApi.registerWithPassword(name, email, password);
+  // Register with name, username and password
+  async registerWithPassword(name: string, username: string, password: string): Promise<User> {
+    const response = await authApi.registerWithPassword(name, username, password);
     const user = response.data.user;
     localStorage.setItem('user', JSON.stringify(user));
     return user;

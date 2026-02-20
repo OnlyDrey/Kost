@@ -12,10 +12,10 @@
   },
   "auth": {
     "login": "Sign in to your account",
-    "email": "Email",
+    "username": "Username",
     "password": "Password",
     "loginButton": "Sign In",
-    "loginFailed": "Invalid email or password. Please try again."
+    "loginFailed": "Invalid username or password. Please try again."
   },
   "dashboard": {
     "title": "Dashboard",
