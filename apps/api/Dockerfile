@@ -25,8 +25,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for signal handling and openssl for Prisma query engine
+RUN apk add --no-cache dumb-init openssl
 
 # Create non-root user early so we can set ownership below
 RUN addgroup -g 1001 -S nodejs && \
@@ -42,9 +42,7 @@ COPY apps/api/package.json ./apps/api/
 RUN npm ci --workspace=apps/api --workspace=packages/shared --omit=dev
 
 # Copy the pre-built Prisma client from builder so UserRole and other
-# generated types are available immediately.  The CMD below also runs
-# `prisma generate` at startup (using the volume-mounted schema) to keep
-# the client in sync with any schema changes between image builds.
+# generated types are available immediately at runtime.
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy built artifacts from builder
@@ -52,7 +50,6 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
-# Allow the non-root user to overwrite the generated Prisma client at startup
 RUN chown -R nestjs:nodejs /app/node_modules/.prisma
 
 USER nestjs
@@ -63,10 +60,8 @@ WORKDIR /app/apps/api
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Generate the Prisma client from the current schema (volume-mounted at runtime)
-# then start the app.  Using exec so dumb-init receives signals from node.
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "/app/node_modules/.bin/prisma generate && exec node dist/main.js"]
+CMD ["node", "dist/main.js"]
