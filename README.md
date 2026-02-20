@@ -37,17 +37,20 @@ DB_PASSWORD=your-secure-password
 JWT_SECRET=your-jwt-secret   # openssl rand -base64 32
 ```
 
-### 3. Start services
+### 3. Build and start services
 
 ```bash
-npm run docker:up
+npm run docker:build   # build images (required on first run or after code changes)
+npm run docker:up      # start all services
 ```
 
 ### 4. Set up database
 
+Run these after the containers are healthy (`docker compose ps` to check):
+
 ```bash
-npm run db:migrate
-npm run db:seed
+npm run db:migrate     # apply migrations (runs inside the API container)
+npm run db:seed        # load sample data (runs inside the API container)
 ```
 
 ### 5. Open the app
@@ -68,14 +71,20 @@ npm run db:seed
 
 ## Development
 
-Run without Docker:
+Run the API and web locally (database still in Docker):
 
 ```bash
-# Start database
-docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=dev postgres:16-alpine
+# Start database only
+docker run -d -p 5432:5432 \
+  -e POSTGRES_USER=kostuser -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=kost \
+  postgres:16-alpine
 
-npm run db:migrate
-npm run db:seed
+# Generate Prisma client and apply migrations
+export DATABASE_URL=postgresql://kostuser:dev@localhost:5432/kost
+npm run generate --workspace=apps/api
+npm run migrate --workspace=apps/api
+npm run seed --workspace=apps/api
+
 npm run dev:api   # terminal 1 — API on port 3000
 npm run dev:web   # terminal 2 — Web on port 3001
 ```
@@ -83,11 +92,12 @@ npm run dev:web   # terminal 2 — Web on port 3001
 ### Useful commands
 
 ```bash
+npm run docker:build       # build images from source (required after code changes)
 npm run docker:up          # start all services
 npm run docker:down        # stop all services
 npm run docker:logs        # view logs
-npm run db:migrate         # run pending migrations
-npm run db:seed            # seed sample data
+npm run db:migrate         # apply migrations (API container must be running)
+npm run db:seed            # seed sample data (API container must be running)
 npm run test --workspace=apps/api          # run tests
 npm run studio --workspace=apps/api        # open Prisma Studio
 ```
