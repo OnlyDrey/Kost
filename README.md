@@ -18,13 +18,18 @@ A self-hosted app for tracking shared household expenses. Family members registe
 - Node.js 22 LTS ([install via nvm](SETUP.md))
 - Docker + Docker Compose V2 ([install guide](SETUP.md))
 
-### 1. Install dependencies
+### 1. Get repo files
+```bash
+git clone https://github.com/OnlyDrey/Kost.git
+```
+
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Configure environment
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
@@ -37,14 +42,14 @@ DB_PASSWORD=your-secure-password
 JWT_SECRET=your-jwt-secret   # openssl rand -base64 32
 ```
 
-### 3. Build and start services
+### 4. Build and start services
 
 ```bash
 npm run docker:build   # build images (required on first run or after code changes)
 npm run docker:up      # start all services
 ```
 
-### 4. Set up database
+### 5. Set up database
 
 Run these after the containers are healthy (`docker compose ps` to check):
 
@@ -53,7 +58,7 @@ npm run db:migrate     # apply migrations (runs inside the API container)
 npm run db:seed        # load sample data (runs inside the API container)
 ```
 
-### 5. Open the app
+### 6. Open the app
 
 - **Web UI:** http://localhost:3001
 - **API:** http://localhost:3000
