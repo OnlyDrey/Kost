@@ -1,7 +1,7 @@
 {
-  "name": "Family Finance",
-  "short_name": "FamFin",
-  "description": "Family finance and invoice management application",
+  "name": "Kost",
+  "short_name": "Kost",
+  "description": "Shared expense tracking application",
   "lang": "nb-NO",
   "dir": "ltr",
   "theme_color": "#1976d2",

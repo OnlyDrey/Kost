@@ -1,8 +1,8 @@
 {
-  "name": "family-finance",
+  "name": "kost",
   "version": "1.0.0",
   "private": true,
-  "description": "Family Finance PWA - Self-hosted shared expense tracking",
+  "description": "Kost - Self-hosted shared expense tracking PWA",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -14,10 +14,11 @@
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "db:migrate": "npm run migrate --workspace=apps/api",
-    "db:seed": "npm run seed --workspace=apps/api",
+    "db:migrate": "docker compose exec api /app/node_modules/.bin/prisma migrate deploy",
+    "db:seed": "docker compose exec api node dist/prisma/seed.js",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "docker:build": "docker compose build --no-cache",
     "docker:logs": "docker compose logs -f",
     "prepare": "[ -d .git ] && husky install || true",
     "postinstall": "[ -z \"${CI}\" ] && bash check-system.sh || true",

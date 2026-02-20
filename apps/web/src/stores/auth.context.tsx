@@ -4,10 +4,9 @@ import authService from '../services/auth';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, user: User) => void;
+  login: (user: User) => void;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -16,23 +15,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load auth state from storage
-    const storedAuth = authService.getStoredAuth();
-    if (storedAuth.isAuthenticated) {
-      setUser(storedAuth.user);
-      setToken(storedAuth.token);
-
-      // Verify token is still valid
+    // Load cached user and verify session via cookie
+    const storedUser = authService.getStoredUser();
+    if (storedUser) {
+      setUser(storedUser);
+      // Verify session is still valid
       authService.getCurrentUser().then((currentUser) => {
         if (currentUser) {
           setUser(currentUser);
         } else {
           setUser(null);
-          setToken(null);
         }
         setIsLoading(false);
       });
@@ -41,22 +36,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (newToken: string, newUser: User) => {
-    authService.setAuth(newToken, newUser);
-    setToken(newToken);
+  const login = (newUser: User) => {
+    localStorage.setItem('user', JSON.stringify(newUser));
     setUser(newUser);
   };
 
   const logout = () => {
     authService.logout();
-    setToken(null);
     setUser(null);
   };
 
   const value: AuthContextType = {
     user,
-    token,
-    isAuthenticated: !!(token && user),
+    isAuthenticated: !!user,
     isLoading,
     login,
     logout,

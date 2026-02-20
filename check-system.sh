@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Family Finance - System Requirements Check
+# Kost - System Requirements Check
 # Run: bash check-system.sh  OR  npm run check
 
 set -euo pipefail
@@ -19,7 +19,7 @@ bold() { echo -e "${BOLD}$1${NC}"; }
 
 echo ""
 bold "======================================"
-bold "  Family Finance - System Check"
+bold "  Kost - System Check"
 bold "======================================"
 echo ""
 

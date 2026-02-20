@@ -7,7 +7,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 
 export interface JwtPayload {
   sub: string; // userId
-  email: string;
+  username: string;
   familyId: string;
   role: string;
 }
@@ -34,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Verify user still exists and is active
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, familyId: true, role: true },
+      select: { id: true, username: true, familyId: true, role: true },
     });
 
     if (!user) {
@@ -43,7 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     return {
       sub: user.id,
-      email: user.email,
+      username: user.username,
       familyId: user.familyId,
       role: user.role,
     };

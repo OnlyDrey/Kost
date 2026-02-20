@@ -1,59 +1,41 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: family-finance-db
+    container_name: kost-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-financeuser}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-financepass}
-      POSTGRES_DB: ${DB_NAME:-familyfinance}
+      POSTGRES_USER: ${DB_USER:-kostuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kostpass}
+      POSTGRES_DB: ${DB_NAME:-kost}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-financeuser}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kostuser} -d ${DB_NAME:-kost}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - family-finance
+      - kost
 
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: family-finance-api
+    container_name: kost-api
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      DATABASE_URL: postgresql://${DB_USER:-financeuser}:${DB_PASSWORD:-financepass}@db:5432/${DB_NAME:-familyfinance}?schema=public
+      DATABASE_URL: postgresql://${DB_USER:-kostuser}:${DB_PASSWORD:-kostpass}@db:5432/${DB_NAME:-kost}?schema=public
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      # Authentication Methods (enable/disable)
-      AUTH_PASSWORD_ENABLED: ${AUTH_PASSWORD_ENABLED:-true}
-      AUTH_MAGIC_LINK_ENABLED: ${AUTH_MAGIC_LINK_ENABLED:-false}
-      AUTH_PASSKEY_ENABLED: ${AUTH_PASSKEY_ENABLED:-false}
-      # Magic Link Settings (only if AUTH_MAGIC_LINK_ENABLED=true)
-      MAGIC_LINK_SECRET: ${MAGIC_LINK_SECRET}
-      MAGIC_LINK_EXPIRES_IN: ${MAGIC_LINK_EXPIRES_IN:-600}
-      # SMTP Settings (only if AUTH_MAGIC_LINK_ENABLED=true)
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM:-noreply@familyfinance.local}
-      # WebAuthn/Passkey Settings (only if AUTH_PASSKEY_ENABLED=true)
-      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-Family Finance}
-      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
-      WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-http://localhost:3001}
-      # Application Settings
       APP_URL: ${APP_URL:-http://localhost:3001}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10}
     ports:
@@ -61,12 +43,12 @@ services:
     volumes:
       - ./apps/api/prisma:/app/apps/api/prisma
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     networks:
-      - family-finance
+      - kost
 
   web:
     build:
@@ -74,7 +56,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api}
-    container_name: family-finance-web
+    container_name: kost-web
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-3001}:80"
@@ -84,10 +66,10 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - family-finance
+      - kost
 
 networks:
-  family-finance:
+  kost:
     driver: bridge
 
 volumes:

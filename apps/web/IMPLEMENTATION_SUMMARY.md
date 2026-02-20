@@ -1,8 +1,8 @@
-# Family Finance Web App - Implementation Summary
+# Kost Web App - Implementation Summary
 
 ## Overview
 
-A complete React Progressive Web Application (PWA) for family finance and invoice management, built with modern technologies and best practices.
+A complete React Progressive Web Application (PWA) for shared expense and invoice management, built with modern technologies and best practices.
 
 ## Created Files (36 total)
 

@@ -77,14 +77,14 @@ export class PeriodClosingService {
             shares: {
               include: {
                 user: {
-                  select: { id: true, name: true, email: true },
+                  select: { id: true, name: true, username: true },
                 },
               },
             },
             payments: {
               include: {
                 paidBy: {
-                  select: { id: true, name: true, email: true },
+                  select: { id: true, name: true, username: true },
                 },
               },
             },
@@ -93,7 +93,7 @@ export class PeriodClosingService {
         incomes: {
           include: {
             user: {
-              select: { id: true, name: true, email: true },
+              select: { id: true, name: true, username: true },
             },
           },
         },

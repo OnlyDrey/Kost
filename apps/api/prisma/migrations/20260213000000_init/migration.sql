@@ -32,7 +32,7 @@ CREATE TABLE "families" (
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'ADULT',
     "familyId" TEXT NOT NULL,
@@ -206,13 +206,13 @@ CREATE TABLE "webauthn_credentials" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
 -- CreateIndex
 CREATE INDEX "users_familyId_idx" ON "users"("familyId");
 
 -- CreateIndex
-CREATE INDEX "users_email_idx" ON "users"("email");
+CREATE INDEX "users_username_idx" ON "users"("username");
 
 -- CreateIndex
 CREATE INDEX "periods_familyId_status_idx" ON "periods"("familyId", "status");

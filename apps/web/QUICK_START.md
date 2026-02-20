@@ -18,7 +18,7 @@ Edit `.env` file:
 
 ```env
 VITE_API_URL=http://localhost:3001/api
-VITE_APP_NAME=Family Finance
+VITE_APP_NAME=Kost
 ```
 
 ## Development
@@ -182,7 +182,7 @@ src/
 
 ### IndexedDB
 - Chrome DevTools > Application > IndexedDB
-- View FamilyFinanceDB database
+- View KostDB database
 - Inspect cached data and queue
 
 ## Environment Variables
@@ -194,7 +194,7 @@ Available variables:
 VITE_API_URL=http://localhost:3001/api
 
 # Optional
-VITE_APP_NAME=Family Finance
+VITE_APP_NAME=Kost
 ```
 
 ## Keyboard Shortcuts

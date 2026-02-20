@@ -16,7 +16,7 @@ COPY apps/web ./apps/web
 # Install dependencies
 RUN npm ci --workspace=apps/web --workspace=packages/shared
 
-# Build shared package so TypeScript can resolve @family-finance/shared
+# Build shared package so TypeScript can resolve @kost/shared
 RUN npm run build --workspace=packages/shared
 
 # Build application

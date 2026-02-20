@@ -37,8 +37,8 @@ async function bootstrap() {
 
   // OpenAPI/Swagger
   const config = new DocumentBuilder()
-    .setTitle("Family Finance API")
-    .setDescription("API for shared family expense tracking")
+    .setTitle("Kost API")
+    .setDescription("API for shared expense tracking")
     .setVersion("1.0")
     .addBearerAuth()
     .addCookieAuth("jwt")

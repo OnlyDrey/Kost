@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Familieøkonomi",
-    "title": "Familieøkonomi Manager"
+    "name": "Kost",
+    "title": "Kost"
   },
   "nav": {
     "dashboard": "Oversikt",
@@ -11,12 +11,11 @@
     "logout": "Logg ut"
   },
   "auth": {
-    "login": "Logg inn",
-    "email": "E-post",
-    "sendMagicLink": "Send magisk lenke",
-    "checkEmail": "Sjekk e-posten din for den magiske lenken!",
-    "verifying": "Verifiserer...",
-    "loginFailed": "Innlogging mislyktes. Vennligst prøv igjen."
+    "login": "Logg inn på kontoen din",
+    "username": "Brukernavn",
+    "password": "Passord",
+    "loginButton": "Logg inn",
+    "loginFailed": "Ugyldig brukernavn eller passord. Vennligst prøv igjen."
   },
   "dashboard": {
     "title": "Oversikt",

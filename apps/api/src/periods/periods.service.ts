@@ -41,14 +41,14 @@ export class PeriodsService {
             shares: {
               include: {
                 user: {
-                  select: { id: true, name: true, email: true },
+                  select: { id: true, name: true, username: true },
                 },
               },
             },
             payments: {
               include: {
                 paidBy: {
-                  select: { id: true, name: true, email: true },
+                  select: { id: true, name: true, username: true },
                 },
               },
             },
@@ -57,7 +57,7 @@ export class PeriodsService {
         incomes: {
           include: {
             user: {
-              select: { id: true, name: true, email: true, role: true },
+              select: { id: true, name: true, username: true, role: true },
             },
           },
         },

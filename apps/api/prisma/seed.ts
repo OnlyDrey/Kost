@@ -1,5 +1,5 @@
 import { PrismaClient, DistributionMethod, UserRole, PeriodStatus, IncomeType } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -34,7 +34,7 @@ async function main() {
   // Create users
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@familyfinance.local',
+      username: 'admin',
       name: 'Kari Hansen',
       passwordHash,
       role: UserRole.ADMIN,
@@ -44,7 +44,7 @@ async function main() {
 
   const adult1 = await prisma.user.create({
     data: {
-      email: 'ola@familyfinance.local',
+      username: 'ola',
       name: 'Ola Hansen',
       passwordHash,
       role: UserRole.ADULT,
@@ -54,7 +54,7 @@ async function main() {
 
   const adult2 = await prisma.user.create({
     data: {
-      email: 'lisa@familyfinance.local',
+      username: 'lisa',
       name: 'Lisa Hansen',
       passwordHash,
       role: UserRole.ADULT,
