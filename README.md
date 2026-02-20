@@ -21,6 +21,7 @@ A self-hosted app for tracking shared household expenses. Family members registe
 ### 1. Get repo files
 ```bash
 git clone https://github.com/OnlyDrey/Kost.git
+cd Kost
 ```
 
 ### 2. Install dependencies
