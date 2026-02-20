@@ -16,7 +16,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "db:migrate": "docker compose exec api /app/node_modules/.bin/prisma migrate deploy",
     "db:seed": "docker compose exec api node dist/prisma/seed.js",
-    "docker:up": "docker compose up -d",
+    "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build --no-cache",
     "docker:logs": "docker compose logs -f",
