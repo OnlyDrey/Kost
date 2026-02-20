@@ -1,29 +1,29 @@
-andreas@ubuntu:~/Downloads/PaycheckApp-claude-rename-to-kost-EvJUV$ sudo npm run docker:up
-
-> kost@1.0.0 docker:up
-> docker compose up -d
-
-[+] up 3/3
- ✔ Container kost-db  Healthy                                               0.7s
- ✔ Container kost-web Recreated                                             0.2s
- ✔ Container kost-api Recreated                                             0.1s
 andreas@ubuntu:~/Downloads/PaycheckApp-claude-rename-to-kost-EvJUV$ sudo npm run docker:logs
 
 > kost@1.0.0 docker:logs
 > docker compose logs -f
 
 kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-db   | 
-kost-db   | PostgreSQL Database directory appears to contain a database; Skipping initialization
-kost-db   | 
-kost-db   | 2026-02-20 14:47:11.458 UTC [1] LOG:  starting PostgreSQL 16.12 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-kost-db   | 2026-02-20 14:47:11.458 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-kost-db   | 2026-02-20 14:47:11.458 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-kost-db   | 2026-02-20 14:47:11.460 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-kost-db   | 2026-02-20 14:47:11.464 UTC [28] LOG:  database system was shut down at 2026-02-20 13:31:06 UTC
-kost-db   | 2026-02-20 14:47:11.469 UTC [1] LOG:  database system is ready to accept connections
-kost-db   | 2026-02-20 14:52:11.564 UTC [26] LOG:  checkpoint starting: time
-kost-db   | 2026-02-20 14:52:11.573 UTC [26] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.001 s, total=0.009 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/19602C0, redo lsn=0/1960288
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
 kost-web  | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
 kost-web  | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
 kost-web  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
@@ -33,38 +33,28 @@ kost-web  | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolv
 kost-web  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
 kost-web  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
 kost-web  | /docker-entrypoint.sh: Configuration complete; ready for start up
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: using the "epoll" event method
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: nginx/1.25.5
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: built by gcc 13.2.1 20231014 (Alpine 13.2.1_git20231014) 
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: OS: Linux 6.17.0-14-generic
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: start worker processes
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: start worker process 31
-kost-web  | 2026/02/20 14:56:31 [notice] 1#1: start worker process 32
-kost-web  | 172.19.0.1 - - [20/Feb/2026:14:56:36 +0000] "GET /sw.js HTTP/1.1" 200 911 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0" "-"
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: using the "epoll" event method
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: nginx/1.25.5
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: built by gcc 13.2.1 20231014 (Alpine 13.2.1_git20231014) 
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: OS: Linux 6.17.0-14-generic
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: start worker processes
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: start worker process 29
+kost-web  | 2026/02/20 14:58:50 [notice] 1#1: start worker process 30
+kost-web  | 172.19.0.1 - - [20/Feb/2026:14:59:07 +0000] "GET /sw.js HTTP/1.1" 304 0 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0" "-"
+kost-db   | 
+kost-db   | PostgreSQL Database directory appears to contain a database; Skipping initialization
+kost-db   | 
+kost-db   | 2026-02-20 14:58:50.948 UTC [1] LOG:  starting PostgreSQL 16.12 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+kost-db   | 2026-02-20 14:58:50.949 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+kost-db   | 2026-02-20 14:58:50.949 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+kost-db   | 2026-02-20 14:58:50.954 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+kost-db   | 2026-02-20 14:58:50.958 UTC [28] LOG:  database system was shut down at 2026-02-20 14:58:42 UTC
+kost-db   | 2026-02-20 14:58:50.963 UTC [1] LOG:  database system is ready to accept connections
 kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
 kost-api  | Please manually install OpenSSL and try installing Prisma again.
 kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
-kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
-kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
-kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
-kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
-kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
-kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
-kost-api  | Please manually install OpenSSL and try installing Prisma again.
-kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api exited with code 1 (restarting)
 kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
 kost-api  | Please manually install OpenSSL and try installing Prisma again.
 kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
