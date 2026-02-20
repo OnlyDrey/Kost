@@ -1,129 +1,66 @@
-andreas@ubuntu:~/Downloads/PaycheckApp-claude-rename-to-kost-EvJUV$ npm install
+andreas@ubuntu:~/Downloads/PaycheckApp-claude-rename-to-kost-EvJUV$ sudo npm run docker:logs
 
-> kost@1.0.0 postinstall
-> [ -z "${CI}" ] && bash check-system.sh || true
+> kost@1.0.0 docker:logs
+> docker compose logs -f
 
-
-======================================
-  Kost - System Check
-======================================
-
-Node.js  (required: >=20, recommended: 22 LTS)
-  ✓ Node.js v22.22.0
-
-npm  (required: >=9)
-  ✓ npm v10.9.4
-
-Docker  (required: >=20.10)
-  ✓ Docker v29.2.1
-  ! Docker permission denied — your user is not in the 'docker' group
-  → Fix (apply without logout):  sudo usermod -aG docker $USER && newgrp docker
-  → Or prefix commands with sudo: sudo docker compose up -d
-
-Docker Compose V2  (required: the 'docker compose' plugin, NOT legacy 'docker-compose')
-  ✓ Docker Compose V2 5.0.2  (via 'docker compose' plugin)
-
-======================================
-  ✗ 1 requirement(s) not met — fix the issues above first
-======================================
-
-
-> kost@1.0.0 prepare
-> [ -d .git ] && husky install || true
-
-
-up to date in 2s
-
-253 packages are looking for funding
-  run `npm fund` for details
-andreas@ubuntu:~/Downloads/PaycheckApp-claude-rename-to-kost-EvJUV$ npm run docker:build
-npm run docker:up 
-sleep 15
-sudo npm run db:migrate
-sudo npm run db:seed
-npm error Missing script: "docker:build"
-npm error
-npm error Did you mean this?
-npm error   npm run docker:up # run the "docker:up" package script
-npm error
-npm error To see a list of scripts, run:
-npm error   npm run
-npm error A complete log of this run can be found in: /home/andreas/.npm/_logs/2026-02-20T14_16_53_987Z-debug-0.log
-
-> kost@1.0.0 docker:up
-> docker compose up -d
-
-unable to get image 'paycheckapp-claude-rename-to-kost-evjuv5-api': permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.51/images/paycheckapp-claude-rename-to-kost-evjuv5-api/json": dial unix /var/run/docker.sock: connect: permission denied
-
-> kost@1.0.0 db:migrate
-> npm run migrate --workspace=apps/api
-
-
-> @kost/api@1.0.0 migrate
-> prisma migrate dev
-
-Prisma schema loaded from prisma/schema.prisma
-Datasource "db": PostgreSQL database
-
-Error: Prisma schema validation - (get-config wasm)
-Error code: P1012
-error: Environment variable not found: DATABASE_URL.
-  -->  prisma/schema.prisma:7
-   | 
- 6 |   provider = "postgresql"
- 7 |   url      = env("DATABASE_URL")
-   | 
-
-Validation Error Count: 1
-[Context: getConfig]
-
-Prisma CLI Version : 5.22.0
-npm ERR! Lifecycle script `migrate` failed with error: 
-npm ERR! Error: command failed 
-npm ERR!   in workspace: @kost/api@1.0.0 
-npm ERR!   at location: /home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/apps/api 
-
-> kost@1.0.0 db:seed
-> npm run seed --workspace=apps/api
-
-
-> @kost/api@1.0.0 seed
-> ts-node prisma/seed.ts
-
-/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:859
-    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
-           ^
-TSError: ⨯ Unable to compile TypeScript:
-prisma/seed.ts:1:24 - error TS2305: Module '"@prisma/client"' has no exported member 'DistributionMethod'.
-
-1 import { PrismaClient, DistributionMethod, UserRole, PeriodStatus, IncomeType } from '@prisma/client';
-                         ~~~~~~~~~~~~~~~~~~
-prisma/seed.ts:1:44 - error TS2305: Module '"@prisma/client"' has no exported member 'UserRole'.
-
-1 import { PrismaClient, DistributionMethod, UserRole, PeriodStatus, IncomeType } from '@prisma/client';
-                                             ~~~~~~~~
-prisma/seed.ts:1:54 - error TS2305: Module '"@prisma/client"' has no exported member 'PeriodStatus'.
-
-1 import { PrismaClient, DistributionMethod, UserRole, PeriodStatus, IncomeType } from '@prisma/client';
-                                                       ~~~~~~~~~~~~
-prisma/seed.ts:1:68 - error TS2305: Module '"@prisma/client"' has no exported member 'IncomeType'.
-
-1 import { PrismaClient, DistributionMethod, UserRole, PeriodStatus, IncomeType } from '@prisma/client';
-                                                                     ~~~~~~~~~~
-
-    at createTSError (/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:859:12)
-    at reportTSError (/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:863:19)
-    at getOutput (/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:1077:36)
-    at Object.compile (/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:1433:41)
-    at Module.m._compile (/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:1617:30)
-    at Module._extensions..js (node:internal/modules/cjs/loader:1414:10)
-    at Object.require.extensions.<computed> [as .ts] (/home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/node_modules/ts-node/src/index.ts:1621:12)
-    at Module.load (node:internal/modules/cjs/loader:1197:32)
-    at Function.Module._load (node:internal/modules/cjs/loader:1013:12)
-    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12) {
-  diagnosticCodes: [ 2305, 2305, 2305, 2305 ]
-}
-npm ERR! Lifecycle script `seed` failed with error: 
-npm ERR! Error: command failed 
-npm ERR!   in workspace: @kost/api@1.0.0 
-npm ERR!   at location: /home/andreas/.local/share/Trash/files/PaycheckApp-claude-rename-to-kost-EvJUV.5/apps/api 
+kost-db  | 
+kost-db  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+kost-db  | 
+kost-db  | 2026-02-20 14:47:11.458 UTC [1] LOG:  starting PostgreSQL 16.12 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+kost-db  | 2026-02-20 14:47:11.458 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+kost-db  | 2026-02-20 14:47:11.458 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+kost-db  | 2026-02-20 14:47:11.460 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+kost-db  | 2026-02-20 14:47:11.464 UTC [28] LOG:  database system was shut down at 2026-02-20 13:31:06 UTC
+kost-db  | 2026-02-20 14:47:11.469 UTC [1] LOG:  database system is ready to accept connections
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-web  | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+kost-web  | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+kost-web  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+kost-web  | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+kost-web  | 10-listen-on-ipv6-by-default.sh: info: /etc/nginx/conf.d/default.conf differs from the packaged version
+kost-web  | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+kost-web  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+kost-web  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+kost-web  | /docker-entrypoint.sh: Configuration complete; ready for start up
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: using the "epoll" event method
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: nginx/1.25.5
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: built by gcc 13.2.1 20231014 (Alpine 13.2.1_git20231014) 
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: OS: Linux 6.17.0-14-generic
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: start worker processes
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: start worker process 29
+kost-web  | 2026/02/20 14:47:11 [notice] 1#1: start worker process 30
+kost-web  | 172.19.0.1 - - [20/Feb/2026:14:47:31 +0000] "GET /sw.js HTTP/1.1" 200 911 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0" "-"
+kost-web  | 172.19.0.1 - - [20/Feb/2026:14:47:31 +0000] "GET /index.html HTTP/1.1" 200 973 "http://localhost:3001/sw.js" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0" "-"
+kost-web  | 172.19.0.1 - - [20/Feb/2026:14:47:31 +0000] "GET /assets/index-E81v3ChQ.js HTTP/1.1" 200 243225 "http://localhost:3001/sw.js" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0" "-"
+kost-web  | 172.19.0.1 - - [20/Feb/2026:14:47:35 +0000] "GET /sw.js HTTP/1.1" 304 0 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0" "-"
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+kost-api  | Please manually install OpenSSL and try installing Prisma again.
+kost-api  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+kost-api exited with code 1 (restarting)
