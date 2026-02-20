@@ -1,10 +1,10 @@
 # Kost
 
-A self-hosted app for tracking shared household expenses. Family members register invoices, and Kost splits the costs — equally, by custom percentage, or proportional to each person's income.
+A self-hosted app for tracking shared household expenses. Family members register expenses, and Kost splits the costs — equally, by custom percentage, or proportional to each person's income.
 
 ## Features
 
-- **Invoice management** — create, categorize, and allocate invoices among family members
+- **Expense management** — create, categorize, and allocate expenses among family members
 - **Flexible cost splitting** — equal, custom percentage, or income-proportional
 - **Period management** — monthly billing periods with close and settlement calculation
 - **Offline support** — works without internet; mutations sync when reconnected
@@ -45,8 +45,7 @@ JWT_SECRET=your-jwt-secret   # openssl rand -base64 32
 ### 4. Build and start services
 
 ```bash
-npm run docker:build   # build images (required on first run or after code changes)
-npm run docker:up      # start all services
+npm run docker:up      # builds images and starts all services
 ```
 
 ### 5. Set up database
@@ -62,7 +61,7 @@ npm run db:seed        # load sample data (runs inside the API container)
 
 - **Web UI:** http://localhost:3001
 - **API:** http://localhost:3000
-- **API docs:** http://localhost:3000/api-docs
+- **API docs:** http://localhost:3000/api/docs
 
 **Default login:**
 
@@ -97,8 +96,8 @@ npm run dev:web   # terminal 2 — Web on port 3001
 ### Useful commands
 
 ```bash
-npm run docker:build       # build images from source (required after code changes)
-npm run docker:up          # start all services
+npm run docker:up          # build images and start all services
+npm run docker:build       # force rebuild images without cache
 npm run docker:down        # stop all services
 npm run docker:logs        # view logs
 npm run db:migrate         # apply migrations (API container must be running)

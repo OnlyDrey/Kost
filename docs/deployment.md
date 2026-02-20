@@ -39,24 +39,23 @@ docker compose exec api npx prisma migrate deploy
 ### 4. (Optional) Seed initial data
 
 ```bash
-docker compose exec api npx ts-node prisma/seed.ts
+npm run db:seed
 ```
 
 ---
 
 ## Reverse Proxy
 
-The app runs on two ports:
-- **Web UI** → port `3001`
-- **API** → port `3000`
+The nginx container in the web service handles all traffic on port `3001`:
+- `/api/*` — proxied internally to the API container
+- everything else — served as the React SPA
 
-Use any reverse proxy to expose them over HTTPS.
+An external reverse proxy only needs to forward to **port 3001**. No split routing required.
 
 ### Caddy
 
 ```caddy
 finance.yourdomain.com {
-    reverse_proxy /api* localhost:3000
     reverse_proxy localhost:3001
 }
 ```
@@ -71,16 +70,11 @@ server {
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
 
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
     location / {
         proxy_pass http://localhost:3001;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
@@ -112,9 +106,10 @@ labels:
 | `CORS_ORIGIN`     | No       | `http://localhost:3001` | Allowed CORS origin         |
 | `RATE_LIMIT_TTL`  | No       | `60`              | Rate limit window (seconds)        |
 | `RATE_LIMIT_MAX`  | No       | `10`              | Max requests per window            |
+| `COOKIE_SECURE`   | No       | `false`           | Set to `true` behind HTTPS         |
 | `API_PORT`        | No       | `3000`            | API server port                    |
 | `WEB_PORT`        | No       | `3001`            | Web server port                    |
-| `VITE_API_URL`    | No       | `http://localhost:3000/api` | API URL for frontend  |
+| `VITE_API_URL`    | No       | `/api`            | API base URL baked into the frontend at build time |
 
 ---
 
@@ -134,7 +129,7 @@ docker compose exec -T db psql -U kostuser kost < backup.sql
 
 ```bash
 git pull
-docker compose build
-docker compose up -d
-docker compose exec api npx prisma migrate deploy
+npm run docker:build
+npm run docker:up
+npm run db:migrate
 ```
