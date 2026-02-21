@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes, useCategories } from '../../hooks/useApi';
+import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes, useCategories, usePaymentMethods } from '../../hooks/useApi';
 import { amountToCents, centsToAmount } from '../../utils/currency';
 
 const inputCls =
@@ -23,10 +23,12 @@ export default function AddInvoice() {
   const { data: existingInvoice } = useInvoice(isEditing ? id! : '');
   const { data: periodIncomes } = useUserIncomes(currentPeriod?.id ?? '');
   const { data: categories = [] } = useCategories();
+  const { data: paymentMethods = [] } = usePaymentMethods();
 
   const [vendor, setVendor] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [amount, setAmount] = useState('');
   const [distributionMethod, setDistributionMethod] = useState<'BY_INCOME' | 'BY_PERCENT' | 'FIXED'>('BY_INCOME');
   const [dueDate, setDueDate] = useState('');
@@ -57,10 +59,7 @@ export default function AddInvoice() {
 
   // Calculate income percentages for BY_INCOME display
   const activeIncomes = periodIncomes
-    ? (incomeUserIds.size === 0
-        ? periodIncomes
-        : periodIncomes.filter(i => incomeUserIds.has(i.userId))
-      ).filter(i => i.normalizedMonthlyGrossCents > 0)
+    ? periodIncomes.filter(i => incomeUserIds.has(i.userId) && i.normalizedMonthlyGrossCents > 0)
     : [];
   const totalIncome = activeIncomes.reduce((sum, i) => sum + i.normalizedMonthlyGrossCents, 0);
   const incomePercent = (userId: string) => {
@@ -68,6 +67,12 @@ export default function AddInvoice() {
     if (!inc || totalIncome === 0) return null;
     return ((inc.normalizedMonthlyGrossCents / totalIncome) * 100).toFixed(1);
   };
+
+  // Equal % per user for FIXED
+  const selectedForFixed = users ? users.filter(u => incomeUserIds.has(u.id)) : [];
+  const equalPercent = selectedForFixed.length > 0
+    ? (100 / selectedForFixed.length).toFixed(1)
+    : null;
 
   const handleToggleIncomeUser = (userId: string) => {
     setIncomeUserIds(prev => {
@@ -99,25 +104,31 @@ export default function AddInvoice() {
       distributionRules = { percentRules };
     }
 
-    if (distributionMethod === 'BY_INCOME' && incomeUserIds.size > 0 && users && incomeUserIds.size < users.length) {
-      distributionRules = { userIds: Array.from(incomeUserIds) };
+    if ((distributionMethod === 'BY_INCOME' || distributionMethod === 'FIXED') && incomeUserIds.size > 0) {
+      distributionRules = { ...(distributionRules ?? {}), userIds: Array.from(incomeUserIds) };
     }
+
+    if (distributionMethod === 'FIXED' && selectedForFixed.length === 0) {
+      setError('Velg minst én bruker for lik fordeling'); return;
+    }
+
+    const sharedData = {
+      vendor: vendor.trim(),
+      category: category.trim(),
+      description: description.trim() || undefined,
+      totalCents,
+      distributionMethod,
+      dueDate: dueDate || undefined,
+      paymentMethod: paymentMethod || undefined,
+    };
 
     try {
       if (isEditing) {
-        await updateInvoice.mutateAsync({
-          id: id!,
-          data: { vendor: vendor.trim(), category: category.trim(), description: description.trim() || undefined, totalCents, distributionMethod, dueDate: dueDate || undefined },
-        });
+        await updateInvoice.mutateAsync({ id: id!, data: sharedData });
       } else {
         await createInvoice.mutateAsync({
           periodId: currentPeriod!.id,
-          vendor: vendor.trim(),
-          category: category.trim(),
-          description: description.trim() || undefined,
-          totalCents,
-          distributionMethod,
-          dueDate: dueDate || undefined,
+          ...sharedData,
           distributionRules,
         });
       }
@@ -180,16 +191,27 @@ export default function AddInvoice() {
             <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="e.g., January electricity bill" />
           </div>
 
-          <div>
-            <label className={labelCls}>{t('invoice.amount')} *</label>
-            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Amount in kr</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>{t('invoice.amount')} *</label>
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beløp i kr</p>
+            </div>
+            <div>
+              <label className={labelCls}>{t('invoice.dueDate')}</label>
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
+            </div>
           </div>
 
-          <div>
-            <label className={labelCls}>{t('invoice.dueDate')}</label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
-          </div>
+          {paymentMethods.length > 0 && (
+            <div>
+              <label className={labelCls}>Betalingsmåte</label>
+              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={inputCls}>
+                <option value="">Velg betalingsmåte...</option>
+                {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className={labelCls}>{t('invoice.distributionMethod')} *</label>
@@ -279,6 +301,50 @@ export default function AddInvoice() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* FIXED: equal split with user selection */}
+          {distributionMethod === 'FIXED' && users && users.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className={labelCls + ' mb-0'}>Velg brukere som deler likt</label>
+                {equalPercent && (
+                  <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{equalPercent}% hver</span>
+                )}
+              </div>
+              <div className="space-y-2">
+                {users.map((u) => {
+                  const checked = incomeUserIds.has(u.id);
+                  const isJunior = u.role === 'JUNIOR';
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => handleToggleIncomeUser(u.id)}
+                      className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 border transition-colors text-left ${
+                        checked
+                          ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20'
+                          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? 'bg-indigo-600' : 'bg-gray-400'}`}>
+                        {u.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
+                      {isJunior && (
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">Barn</span>
+                      )}
+                      {checked && equalPercent && (
+                        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{equalPercent}%</span>
+                      )}
+                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
+                        {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

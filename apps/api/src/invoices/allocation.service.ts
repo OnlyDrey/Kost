@@ -260,6 +260,30 @@ export class AllocationService {
   }
 
   /**
+   * Split amount equally among participants (FIXED / equal distribution)
+   */
+  splitEqual(
+    totalCents: number,
+    participants: Array<{ userId: string; userName: string }>,
+  ): AllocationShare[] {
+    if (participants.length === 0) {
+      throw new Error("No participants for equal split");
+    }
+    const n = participants.length;
+    const base = Math.floor(totalCents / n);
+    const remainder = totalCents - base * n;
+
+    return participants.map((p, i) => {
+      const shareCents = i < remainder ? base + 1 : base;
+      return {
+        userId: p.userId,
+        shareCents,
+        explanation: `Equal share: ${(shareCents / 100).toFixed(2)} kr (1/${n} of total)`,
+      };
+    });
+  }
+
+  /**
    * Validate that sum of shares equals total (used in tests and assertions)
    */
   validateSumEquals(shares: AllocationShare[], expectedTotal: number): boolean {

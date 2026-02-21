@@ -132,4 +132,9 @@ export class CreateInvoiceDto {
   @Type(() => DistributionRulesDto)
   @IsOptional()
   distributionRules?: DistributionRulesDto;
+
+  @ApiPropertyOptional({ example: "Faktura" })
+  @IsString()
+  @IsOptional()
+  paymentMethod?: string;
 }

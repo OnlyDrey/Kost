@@ -170,6 +170,7 @@ export class InvoicesService {
           dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : null,
           totalCents: createInvoiceDto.totalCents,
           distributionMethod,
+          paymentMethod: invoiceData.paymentMethod ?? null,
           lines: lines
             ? {
                 create: lines.map((line) => ({
@@ -402,7 +403,6 @@ export class InvoicesService {
         paidById: addPaymentDto.paidById,
         amountCents: addPaymentDto.amountCents,
         note: addPaymentDto.note,
-        paymentMethod: addPaymentDto.paymentMethod,
         paidAt: addPaymentDto.paidAt
           ? new Date(addPaymentDto.paidAt)
           : new Date(),
@@ -454,17 +454,21 @@ export class InvoicesService {
         return this.allocationService.splitByIncome(totalCents, participants);
 
       case DistributionMethod.FIXED:
+        // No fixedRules → equal split among participants (selected via userIds)
         if (
           !distributionRules?.fixedRules ||
           distributionRules.fixedRules.length === 0
         ) {
-          throw new BadRequestException(
-            "Fixed rules required for FIXED distribution",
-          );
+          if (participants.length === 0) {
+            throw new BadRequestException(
+              "No participants for equal split. Select at least one user.",
+            );
+          }
+          return this.allocationService.splitEqual(totalCents, participants);
         }
         if (!distributionRules.remainderMethod) {
           throw new BadRequestException(
-            "Remainder method required for FIXED distribution",
+            "Remainder method required for FIXED distribution with fixed rules",
           );
         }
         return this.allocationService.splitFixed(

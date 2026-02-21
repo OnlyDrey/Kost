@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pencil, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoice, useDeleteInvoice, useAddPayment, usePaymentMethods } from '../../hooks/useApi';
+import { useInvoice, useDeleteInvoice, useAddPayment } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatCurrency, amountToCents } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
@@ -23,12 +23,10 @@ export default function InvoiceDetail() {
   const { data: invoice, isLoading } = useInvoice(id!);
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
-  const { data: paymentMethods = [] } = usePaymentMethods();
 
   const [showPayForm, setShowPayForm] = useState(false);
   const [payAmount, setPayAmount] = useState('');
   const [payNote, setPayNote] = useState('');
-  const [payMethod, setPayMethod] = useState('');
   const [payError, setPayError] = useState('');
 
   const handleDelete = async () => {
@@ -47,12 +45,11 @@ export default function InvoiceDetail() {
     try {
       await addPayment.mutateAsync({
         invoiceId: id!,
-        data: { paidById: user!.id, amountCents, note: payNote || undefined, paymentMethod: payMethod || undefined },
+        data: { paidById: user!.id, amountCents, note: payNote || undefined },
       });
       setShowPayForm(false);
       setPayAmount('');
       setPayNote('');
-      setPayMethod('');
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setPayError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
@@ -139,6 +136,12 @@ export default function InvoiceDetail() {
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.dueDate)}</p>
               </div>
             )}
+            {invoice.paymentMethod && (
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Betalingsmåte</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.paymentMethod}</p>
+              </div>
+            )}
             {totalPaid > 0 && (
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Betalt</p>
@@ -205,7 +208,7 @@ export default function InvoiceDetail() {
                 <div key={payment.id} className="flex items-center justify-between text-sm border border-gray-100 dark:border-gray-800 rounded-lg px-3 py-2">
                   <div>
                     <p className="font-medium text-gray-900 dark:text-gray-100">{payment.paidBy?.name ?? 'Ukjent'}</p>
-                    <p className="text-xs text-gray-400">{formatDate(payment.paidAt)}{payment.paymentMethod ? ` · ${payment.paymentMethod}` : ''}{payment.note ? ` · ${payment.note}` : ''}</p>
+                    <p className="text-xs text-gray-400">{formatDate(payment.paidAt)}{payment.note ? ` · ${payment.note}` : ''}</p>
                   </div>
                   <p className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(payment.amountCents)}</p>
                 </div>
@@ -227,15 +230,6 @@ export default function InvoiceDetail() {
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Beløp (kr)</label>
                 <input type="number" step="0.01" min="0.01" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} className={inputCls} required placeholder="0.00" />
               </div>
-              {paymentMethods.length > 0 && (
-                <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Betalingsmåte</label>
-                  <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={inputCls}>
-                    <option value="">Velg betalingsmåte...</option>
-                    {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-              )}
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Notat (valgfritt)</label>
                 <input type="text" value={payNote} onChange={(e) => setPayNote(e.target.value)} className={inputCls} placeholder="f.eks. bankoverføring" />
