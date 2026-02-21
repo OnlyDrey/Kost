@@ -5,12 +5,13 @@ A self-hosted app for tracking shared household expenses. Family members registe
 ## Features
 
 - **Expense management** — create, categorize, and allocate expenses among family members
-- **Flexible cost splitting** — income-proportional, custom percentage per user, or fixed amount
-- **BY_INCOME user selection** — choose which users to include in income-based splits
-- **Period management** — monthly billing periods with stats, income registration, and settlement
-- **Income registration** — register monthly/annual gross or net income per user per period
+- **Flexible cost splitting** — income-proportional, custom percentage per user, or equal split
+- **BY_INCOME user selection** — choose which users to include in income-based splits; live income percentages shown per user
+- **Payment tracking** — mark invoices as paid, record partial payments, see paid/remaining amounts
+- **Period management** — monthly billing periods with stats and settlement summaries
+- **Income registration** — each user registers their own monthly/annual gross or net income from their profile settings; used for income-proportional splits
 - **User management** — admins can add, edit, and delete family members (including password reset)
-- **Settings page** — users can update their profile and change their own password
+- **Settings page** — users can update their profile, register their income, and change their password
 - **Offline support** — works without internet; mutations sync when reconnected
 - **Multi-language** — English and Norwegian (Bokmål)
 - **Precise money math** — all calculations in integer cents, no floating-point errors

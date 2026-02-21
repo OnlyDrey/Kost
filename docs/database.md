@@ -16,6 +16,7 @@ Schema file: `apps/api/prisma/schema.prisma`
 | `Income`                  | User income per period (for income-based splits) |
 | `Invoice`                 | Expenses to be split among family members      |
 | `InvoiceShare`            | Calculated share per user for each invoice     |
+| `Payment`                 | Payments recorded against an invoice (mark as paid) |
 | `MagicLinkToken`          | _(unused — kept in schema for migrations)_     |
 | `WebAuthnCredential`      | _(unused — kept in schema for migrations)_     |
 
@@ -46,7 +47,7 @@ The seed script creates sample data for development:
 npm run db:seed
 ```
 
-Seed users (all with password `password123`):
+Seed users (all with password `kostpass`):
 
 | Username | Role  |
 |----------|-------|
