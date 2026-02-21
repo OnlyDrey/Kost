@@ -33,6 +33,13 @@ export default function AddInvoice() {
   const [userPercents, setUserPercents] = useState<Record<string, string>>({});
   const [incomeUserIds, setIncomeUserIds] = useState<Set<string>>(new Set());
 
+  // Default: exclude JUNIOR users from BY_INCOME selection
+  useEffect(() => {
+    if (users && users.length > 0 && !isEditing) {
+      setIncomeUserIds(new Set(users.filter(u => u.role !== 'JUNIOR').map(u => u.id)));
+    }
+  }, [users?.length, isEditing]);
+
   // Pre-fill form when editing
   useEffect(() => {
     if (isEditing && existingInvoice) {
@@ -196,22 +203,15 @@ export default function AddInvoice() {
               </div>
               <div className="space-y-2">
                 {users.map((u) => {
-                  const checked = incomeUserIds.size === 0 || incomeUserIds.has(u.id);
+                  const checked = incomeUserIds.has(u.id);
+                  const isJunior = u.role === 'JUNIOR';
                   const pct = incomePercent(u.id);
                   const hasIncome = activeIncomes.some(i => i.userId === u.id);
                   return (
                     <button
                       key={u.id}
                       type="button"
-                      onClick={() => {
-                        if (incomeUserIds.size === 0) {
-                          const all = new Set(users.map(x => x.id));
-                          all.delete(u.id);
-                          setIncomeUserIds(all);
-                        } else {
-                          handleToggleIncomeUser(u.id);
-                        }
-                      }}
+                      onClick={() => handleToggleIncomeUser(u.id)}
                       className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 border transition-colors text-left ${
                         checked
                           ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20'
@@ -222,6 +222,9 @@ export default function AddInvoice() {
                         {u.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
+                      {isJunior && (
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">Barn</span>
+                      )}
                       {checked && pct !== null ? (
                         <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{pct}%</span>
                       ) : checked && !hasIncome ? (
@@ -253,6 +256,9 @@ export default function AddInvoice() {
                       {u.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
+                    {u.role === 'JUNIOR' && (
+                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">Barn</span>
+                    )}
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <input
                         type="number" min="0" max="100" step="0.1"

@@ -138,17 +138,17 @@ export class InvoicesService {
       );
     }
 
-    // Build participants; optionally filter to selected userIds for BY_INCOME
+    // Build participants; JUNIOR users are excluded by default unless explicitly opted in via userIds
     const allParticipants = incomes.map((inc) => ({
       userId: inc.userId,
       userName: inc.user.name,
+      role: inc.user.role,
       normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
     }));
     const selectedUserIds = distributionRules?.userIds;
-    const participants =
-      selectedUserIds && selectedUserIds.length > 0
-        ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
-        : allParticipants;
+    const participants = selectedUserIds && selectedUserIds.length > 0
+      ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
+      : allParticipants.filter((p) => p.role !== "JUNIOR");
 
     // Calculate shares based on distribution method
     const shares = await this.calculateShares(

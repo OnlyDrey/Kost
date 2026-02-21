@@ -101,6 +101,7 @@
     "password": "Passord",
     "admin": "Admin",
     "adult": "Voksen",
+    "junior": "Barn",
     "noPassword": "Ingen passord satt"
   },
   "common": {

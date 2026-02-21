@@ -137,10 +137,10 @@ export const userApi = {
   getById: (id: string) =>
     api.get<User>(`/users/${id}`),
 
-  create: (data: { username: string; name: string; role: 'ADMIN' | 'ADULT'; password?: string }) =>
+  create: (data: { username: string; name: string; role: 'ADMIN' | 'ADULT' | 'JUNIOR'; password?: string }) =>
     api.post<User>('/users', data),
 
-  update: (id: string, data: { username?: string; name?: string; role?: 'ADMIN' | 'ADULT'; password?: string }) =>
+  update: (id: string, data: { username?: string; name?: string; role?: 'ADMIN' | 'ADULT' | 'JUNIOR'; password?: string }) =>
     api.patch<User>(`/users/${id}`, data),
 
   delete: (id: string) =>
