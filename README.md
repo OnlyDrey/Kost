@@ -7,15 +7,15 @@ A self-hosted app for tracking shared household expenses. Family members registe
 - **Expense management** — create, categorize, and allocate expenses among family members
 - **Flexible cost splitting** — income-proportional, custom percentage per user, or equal split
 - **BY_INCOME user selection** — choose which users to include in income-based splits; live income percentages shown per user; JUNIOR (child) users excluded by default
-- **Payment tracking** — mark invoices as paid, record partial payments with payment method, see paid/remaining amounts
+- **Payment tracking** — mark invoices as paid, record partial payments with payment method, see paid/remaining amounts; the invoice list shows a green **Betalt** badge for fully paid invoices and an amber badge with the remaining amount for partially paid ones
 - **Recurring expenses (subscriptions)** — define recurring fees (monthly, quarterly, annual, etc.) with vendor, category, amount, and split rules; generate invoices for the current period with one click; toggle active/inactive to suspend without deleting
-- **Vendor management** — store reusable vendors with optional logo URLs (e.g. via Clearbit); vendor names appear as a searchable dropdown when creating expenses or subscriptions
+- **Vendor management** — store reusable vendors with optional logo URLs (e.g. via Clearbit); vendor logos are displayed in the invoice list and as a searchable dropdown when creating expenses or subscriptions
 - **Managed categories** — admins/adults maintain a per-family category list used as a dropdown when creating invoices
 - **Managed payment methods** — admins/adults maintain a list of payment methods (e.g. bank transfer, cash) used as a dropdown when registering payments
 - **Currency setting** — admins set the family's display currency (NOK, SEK, DKK, EUR, USD, GBP); all amounts are shown in the selected currency throughout the app
 - **User roles** — ADMIN (full access), ADULT (create/pay invoices), JUNIOR (child; excluded from cost splits by default, must be opted in per invoice)
 - **Period management** — monthly billing periods with stats and settlement summaries
-- **Income registration** — each user registers their own monthly/annual gross income from their profile settings; used for income-proportional splits
+- **Income registration** — each user registers their own monthly/annual gross income from their profile settings (with a confirmation prompt before saving); used for income-proportional splits; admins can view and override any family member's income directly from the Users admin page
 - **User management** — admins can add, edit, and delete family members (including password reset)
 - **Settings page** — users can update their profile, register their income, and change their password
 - **Family settings** — admins can manage currency, categories, payment methods, and vendors

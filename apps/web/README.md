@@ -92,6 +92,7 @@ src/
   - **Equal Split**: Divide equally among family members
   - **Custom Split**: Manually specify each person's share
   - **Income-Based Split**: Automatically calculate based on income ratios
+- Invoice list shows vendor logos, payment status badges (green **Betalt** for fully paid, amber with remaining amount for partial), and a direct **edit button** per row
 - View invoice details with allocation explanations
 - Filter and search invoices
 
@@ -113,6 +114,8 @@ src/
 - Toggle between light and dark themes
 - Switch between Norwegian and English
 - Preferences saved to localStorage
+- Users confirm income changes before saving (affects cost split calculations)
+- Admins can override any user's income from the Users admin page
 
 ## Environment Variables
 
