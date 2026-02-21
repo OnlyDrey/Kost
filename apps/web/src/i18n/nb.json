@@ -8,6 +8,7 @@
     "invoices": "Utgifter",
     "periods": "Perioder",
     "settings": "Innstillinger",
+    "subscriptions": "Faste utgifter",
     "logout": "Logg ut"
   },
   "auth": {

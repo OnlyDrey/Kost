@@ -13,6 +13,7 @@ import {
   Globe,
   Users,
   SlidersHorizontal,
+  RefreshCw,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../stores/auth.context';
@@ -21,6 +22,7 @@ import { useSettings } from '../../stores/settings.context';
 const NAV_ITEMS = [
   { key: 'nav.dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { key: 'nav.invoices', icon: Receipt, path: '/invoices' },
+  { key: 'nav.subscriptions', icon: RefreshCw, path: '/subscriptions' },
   { key: 'nav.periods', icon: Calendar, path: '/periods' },
   { key: 'nav.settings', icon: Settings, path: '/settings' },
 ];

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Receipt, DollarSign, TrendingUp, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { usePeriod, usePeriodStats, useInvoices, useUserIncomes } from '../../hooks/useApi';
+import { usePeriod, usePeriodStats, useInvoices, useUserIncomes, useCurrency } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
@@ -19,6 +19,7 @@ export default function PeriodDetail() {
   const isLoading = periodLoading || statsLoading || invoicesLoading;
 
   const getIncomeForUser = (userId: string) => incomes?.find(i => i.userId === userId);
+  const { data: currency = 'NOK' } = useCurrency();
 
   if (isLoading) {
     return (
@@ -62,8 +63,8 @@ export default function PeriodDetail() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { icon: Receipt, label: t('dashboard.totalInvoices'), value: stats?.totalInvoices ?? 0, color: 'bg-indigo-500' },
-          { icon: DollarSign, label: t('dashboard.totalAmount'), value: formatCurrency(stats?.totalAmountCents ?? 0), color: 'bg-emerald-500' },
-          { icon: TrendingUp, label: t('dashboard.yourShare'), value: formatCurrency(userShare?.totalShareCents ?? 0), color: 'bg-amber-500' },
+          { icon: DollarSign, label: t('dashboard.totalAmount'), value: formatCurrency(stats?.totalAmountCents ?? 0, currency), color: 'bg-emerald-500' },
+          { icon: TrendingUp, label: t('dashboard.yourShare'), value: formatCurrency(userShare?.totalShareCents ?? 0, currency), color: 'bg-amber-500' },
           { icon: Users, label: t('period.userShares'), value: stats?.userShares?.length ?? 0, color: 'bg-sky-500' },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
@@ -87,7 +88,7 @@ export default function PeriodDetail() {
               <div key={share.userId} className="border border-gray-100 dark:border-gray-800 rounded-lg p-3">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{share.userName}</p>
                 <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
-                  {formatCurrency(share.totalShareCents)}
+                  {formatCurrency(share.totalShareCents, currency)}
                 </p>
                 {stats.totalAmountCents > 0 && (
                   <p className="text-xs text-gray-400 mt-0.5">
@@ -122,7 +123,7 @@ export default function PeriodDetail() {
                   </p>
                 </div>
                 <div className="text-right ml-4">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.totalCents)}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.totalCents, currency)}</p>
                   <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(invoice.createdAt)}</span>
                 </div>
               </div>

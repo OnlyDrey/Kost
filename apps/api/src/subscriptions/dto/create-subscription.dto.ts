@@ -24,10 +24,10 @@ export class CreateSubscriptionDto {
   @IsNotEmpty()
   vendor: string;
 
-  @ApiProperty({ example: "Entertainment" })
+  @ApiPropertyOptional({ example: "Entertainment" })
   @IsString()
-  @IsNotEmpty()
-  category: string;
+  @IsOptional()
+  category?: string;
 
   @ApiProperty({ example: 9900, description: "Amount in cents" })
   @IsInt()
@@ -67,13 +67,14 @@ export class CreateSubscriptionDto {
   @IsEnum(DistributionMethod)
   distributionMethod: DistributionMethod;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description:
-      "Distribution rules (percentRules, fixedRules, remainderMethod)",
+      "Distribution rules (percentRules, fixedRules, remainderMethod, userIds)",
   })
   @ValidateNested()
   @Type(() => Object)
-  distributionRules: any;
+  @IsOptional()
+  distributionRules?: any;
 
   @ApiPropertyOptional({ example: true })
   @IsBoolean()

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes, useCategories, usePaymentMethods } from '../../hooks/useApi';
+import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes, useCategories, usePaymentMethods, useVendors, useCurrency } from '../../hooks/useApi';
 import { amountToCents, centsToAmount } from '../../utils/currency';
 
 const inputCls =
@@ -24,8 +24,11 @@ export default function AddInvoice() {
   const { data: periodIncomes } = useUserIncomes(currentPeriod?.id ?? '');
   const { data: categories = [] } = useCategories();
   const { data: paymentMethods = [] } = usePaymentMethods();
+  const { data: vendors = [] } = useVendors();
+  const { data: currency = 'NOK' } = useCurrency();
 
   const [vendor, setVendor] = useState('');
+  const [showVendorList, setShowVendorList] = useState(false);
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -52,8 +55,12 @@ export default function AddInvoice() {
       setAmount(String(centsToAmount(existingInvoice.totalCents)));
       setDistributionMethod(existingInvoice.distributionMethod);
       if (existingInvoice.dueDate) setDueDate(existingInvoice.dueDate.slice(0, 10));
+      // Initialize selected users from existing shares
+      if (existingInvoice.shares && existingInvoice.shares.length > 0) {
+        setIncomeUserIds(new Set(existingInvoice.shares.map((s: any) => s.userId)));
+      }
     }
-  }, [isEditing, existingInvoice]);
+  }, [isEditing, existingInvoice?.id]);
 
   const totalPercent = Object.values(userPercents).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
 
@@ -88,7 +95,6 @@ export default function AddInvoice() {
 
     if (!isEditing && !currentPeriod) { setError('No active period found'); return; }
     if (!vendor.trim()) { setError(t('validation.required')); return; }
-    if (!category.trim()) { setError(t('validation.required')); return; }
 
     const totalCents = amountToCents(parseFloat(amount));
     if (isNaN(totalCents) || totalCents <= 0) { setError(t('validation.invalidAmount')); return; }
@@ -114,7 +120,7 @@ export default function AddInvoice() {
 
     const sharedData = {
       vendor: vendor.trim(),
-      category: category.trim(),
+      category: category.trim() || undefined,
       description: description.trim() || undefined,
       totalCents,
       distributionMethod,
@@ -124,7 +130,7 @@ export default function AddInvoice() {
 
     try {
       if (isEditing) {
-        await updateInvoice.mutateAsync({ id: id!, data: sharedData });
+        await updateInvoice.mutateAsync({ id: id!, data: { ...sharedData, distributionRules } });
       } else {
         await createInvoice.mutateAsync({
           periodId: currentPeriod!.id,
@@ -169,41 +175,66 @@ export default function AddInvoice() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Vendor *</label>
-              <input type="text" value={vendor} onChange={(e) => setVendor(e.target.value)} required className={inputCls} placeholder="e.g., Electric Company" />
+            <div className="relative">
+              <label className={labelCls}>Leverandør *</label>
+              <input
+                type="text"
+                value={vendor}
+                onChange={(e) => { setVendor(e.target.value); setShowVendorList(true); }}
+                onFocus={() => setShowVendorList(true)}
+                onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
+                required
+                className={inputCls}
+                placeholder="f.eks. Sparebank 1"
+              />
+              {showVendorList && vendors.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                  {vendors
+                    .filter(v => v.name.toLowerCase().includes(vendor.toLowerCase()))
+                    .map(v => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onMouseDown={() => { setVendor(v.name); setShowVendorList(false); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
+                      >
+                        {v.logoUrl && (
+                          <img src={v.logoUrl} alt="" className="w-5 h-5 rounded object-contain flex-shrink-0"
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        )}
+                        <span>{v.name}</span>
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
             <div>
-              <label className={labelCls}>{t('invoice.category')} *</label>
-              {categories.length > 0 ? (
-                <select value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls}>
-                  <option value="">Velg kategori...</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              ) : (
-                <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls} placeholder="e.g., Utilities" />
-              )}
+              <label className={labelCls}>{t('invoice.category')}</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
+                <option value="">Velg kategori...</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
           </div>
 
           <div>
             <label className={labelCls}>{t('invoice.description')}</label>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="e.g., January electricity bill" />
+            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="f.eks. Januar strømregning" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t('invoice.amount')} *</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beløp i kr</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beløp i {currency}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <label className={labelCls}>{t('invoice.dueDate')}</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls + ' max-w-full'} />
             </div>
           </div>
 
-          {paymentMethods.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Betalingsmåte</label>
               <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={inputCls}>
@@ -211,7 +242,7 @@ export default function AddInvoice() {
                 {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-          )}
+          </div>
 
           <div>
             <label className={labelCls}>{t('invoice.distributionMethod')} *</label>

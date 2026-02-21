@@ -16,7 +16,7 @@ const INCOME_TYPES = [
 
 export default function Profile() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
   const { data: currentPeriod } = useCurrentPeriod();
@@ -77,7 +77,8 @@ export default function Profile() {
     if (!user) return;
 
     try {
-      await updateUser.mutateAsync({ id: user.id, data: { name: name.trim(), username: username.trim() } });
+      const updatedUser = await updateUser.mutateAsync({ id: user.id, data: { name: name.trim(), username: username.trim() } });
+      login(updatedUser);
       setProfileSuccess(t('settings.profileUpdated'));
     } catch (err: any) {
       const msg = err?.response?.data?.message;

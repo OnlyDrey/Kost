@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, paymentApi, familyApi, Invoice, Period, UserIncome, PeriodStats, User } from '../services/api';
+import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, paymentApi, familyApi, subscriptionApi, Invoice, Period, UserIncome, PeriodStats, User, Subscription } from '../services/api';
 import { addToOfflineQueue } from '../idb/queue';
 
 // Query keys
@@ -15,6 +15,10 @@ export const queryKeys = {
   user: (id: string) => ['user', id] as const,
   categories: () => ['categories'] as const,
   paymentMethods: () => ['paymentMethods'] as const,
+  currency: () => ['currency'] as const,
+  vendors: () => ['vendors'] as const,
+  subscriptions: () => ['subscriptions'] as const,
+  subscription: (id: string) => ['subscription', id] as const,
 };
 
 // Invoice hooks
@@ -281,5 +285,108 @@ export function useRemovePaymentMethod() {
   return useMutation({
     mutationFn: (name: string) => familyApi.removePaymentMethod(name).then(res => res.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
+  });
+}
+
+// Currency hooks
+export function useCurrency() {
+  return useQuery({
+    queryKey: queryKeys.currency(),
+    queryFn: () => familyApi.getCurrency().then(res => res.data),
+  });
+}
+
+export function useUpdateCurrency() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (currency: string) => familyApi.updateCurrency(currency).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.currency() }),
+  });
+}
+
+// Vendor hooks
+export function useVendors() {
+  return useQuery({
+    queryKey: queryKeys.vendors(),
+    queryFn: () => familyApi.getVendors().then(res => res.data),
+  });
+}
+
+export function useAddVendor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, logoUrl }: { name: string; logoUrl?: string }) =>
+      familyApi.addVendor(name, logoUrl).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+  });
+}
+
+export function useUpdateVendor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; logoUrl?: string | null } }) =>
+      familyApi.updateVendor(id, data).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+  });
+}
+
+export function useRemoveVendor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => familyApi.removeVendor(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+  });
+}
+
+// Subscription hooks
+export function useSubscriptions(activeOnly?: boolean) {
+  return useQuery({
+    queryKey: queryKeys.subscriptions(),
+    queryFn: () => subscriptionApi.getAll(activeOnly).then(res => res.data),
+  });
+}
+
+export function useCreateSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof subscriptionApi.create>[0]) =>
+      subscriptionApi.create(data).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+  });
+}
+
+export function useUpdateSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Subscription> }) =>
+      subscriptionApi.update(id, data).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+  });
+}
+
+export function useToggleSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => subscriptionApi.toggleActive(id).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+  });
+}
+
+export function useDeleteSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => subscriptionApi.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+  });
+}
+
+export function useGenerateSubscriptionInvoices() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (periodId: string) => subscriptionApi.generateForPeriod(periodId).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+    },
   });
 }

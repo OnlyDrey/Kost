@@ -8,6 +8,7 @@
     "invoices": "Expenses",
     "periods": "Periods",
     "settings": "Settings",
+    "subscriptions": "Recurring Expenses",
     "logout": "Logout"
   },
   "auth": {
