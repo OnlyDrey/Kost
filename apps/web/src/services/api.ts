@@ -36,55 +36,70 @@ export interface User {
 export interface Period {
   id: string;
   familyId: string;
-  name: string;
-  startDate: string;
-  endDate: string;
   status: 'OPEN' | 'CLOSED';
   closedAt?: string;
   closedBy?: string;
   createdAt: string;
   updatedAt: string;
+  settlementData?: unknown;
+  _count?: { invoices: number; incomes: number };
+}
+
+export interface InvoiceLine {
+  id: string;
+  invoiceId: string;
+  description: string;
+  amountCents: number;
+}
+
+export interface InvoiceShare {
+  id: string;
+  invoiceId: string;
+  userId: string;
+  shareCents: number;
+  explanation: string;
+  user?: { id: string; name: string; username: string };
+}
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  paidById: string;
+  amountCents: number;
+  paidAt: string;
+  note?: string;
+  paidBy?: { id: string; name: string; username: string };
 }
 
 export interface Invoice {
   id: string;
   familyId: string;
   periodId: string;
-  uploadedBy: string;
-  description: string;
-  totalAmountCents: number;
-  distributionMethod: 'EQUAL' | 'CUSTOM' | 'INCOME_BASED';
-  category?: string;
-  paidBy?: string;
-  invoiceDate: string;
+  category: string;
+  vendor: string;
+  description?: string;
   dueDate?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  attachmentUrl?: string;
+  totalCents: number;
+  distributionMethod: 'BY_PERCENT' | 'BY_INCOME' | 'FIXED';
   createdAt: string;
   updatedAt: string;
-  uploader?: User;
+  lines?: InvoiceLine[];
+  distribution?: unknown;
+  shares?: InvoiceShare[];
+  payments?: Payment[];
   period?: Period;
-  shares?: Share[];
-}
-
-export interface Share {
-  id: string;
-  invoiceId: string;
-  userId: string;
-  shareCents: number;
-  percentageShare: number;
-  createdAt: string;
-  user?: User;
 }
 
 export interface UserIncome {
   id: string;
   userId: string;
   periodId: string;
-  incomeCents: number;
+  inputType: string;
+  inputCents: number;
+  normalizedMonthlyGrossCents: number;
   createdAt: string;
   updatedAt: string;
-  user?: User;
+  user?: { id: string; name: string; username: string; role: string };
 }
 
 export interface PeriodStats {
@@ -120,19 +135,24 @@ export const invoiceApi = {
     api.get<Invoice>(`/invoices/${id}`),
 
   create: (data: {
-    description: string;
-    totalAmountCents: number;
-    distributionMethod: 'EQUAL' | 'CUSTOM' | 'INCOME_BASED';
-    category?: string;
-    paidBy?: string;
-    invoiceDate: string;
+    periodId: string;
+    category: string;
+    vendor: string;
+    description?: string;
     dueDate?: string;
-    customShares?: Array<{ userId: string; shareCents: number }>;
+    totalCents: number;
+    distributionMethod: 'BY_PERCENT' | 'BY_INCOME' | 'FIXED';
+    lines?: Array<{ description: string; amountCents: number }>;
+    distributionRules?: {
+      percentRules?: Array<{ userId: string; percentBasisPoints: number }>;
+      fixedRules?: Array<{ userId: string; fixedCents: number }>;
+      remainderMethod?: 'EQUAL' | 'BY_INCOME';
+    };
   }) =>
     api.post<Invoice>('/invoices', data),
 
   update: (id: string, data: Partial<Invoice>) =>
-    api.put<Invoice>(`/invoices/${id}`, data),
+    api.patch<Invoice>(`/invoices/${id}`, data),
 
   delete: (id: string) =>
     api.delete(`/invoices/${id}`),
@@ -148,7 +168,7 @@ export const periodApi = {
   getCurrent: () =>
     api.get<Period>('/periods/current'),
 
-  create: (data: { name: string; startDate: string; endDate: string }) =>
+  create: (data: { id: string }) =>
     api.post<Period>('/periods', data),
 
   close: (id: string) =>
@@ -160,10 +180,10 @@ export const periodApi = {
 
 export const userIncomeApi = {
   getByPeriod: (periodId: string) =>
-    api.get<UserIncome[]>(`/user-incomes/period/${periodId}`),
+    api.get<UserIncome[]>('/incomes', { params: { periodId } }),
 
-  upsert: (data: { userId: string; periodId: string; incomeCents: number }) =>
-    api.post<UserIncome>('/user-incomes', data),
+  upsert: (data: { userId: string; periodId: string; inputType: string; inputCents: number }) =>
+    api.post<UserIncome>('/incomes', data),
 };
 
 export default api;

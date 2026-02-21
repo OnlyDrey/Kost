@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCreateInvoice } from '../../hooks/useApi';
-import { useAuth } from '../../stores/auth.context';
-import { centsToAmount, amountToCents } from '../../utils/currency';
-
-interface CustomShare {
-  userId: string;
-  amount: string;
-}
+import { useCreateInvoice, useCurrentPeriod } from '../../hooks/useApi';
+import { amountToCents } from '../../utils/currency';
 
 const inputCls =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
@@ -19,57 +13,42 @@ const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-
 export default function AddInvoice() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const createInvoice = useCreateInvoice();
+  const { data: currentPeriod } = useCurrentPeriod();
 
+  const [vendor, setVendor] = useState('');
   const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [distributionMethod, setDistributionMethod] = useState<'EQUAL' | 'CUSTOM' | 'INCOME_BASED'>('EQUAL');
   const [category, setCategory] = useState('');
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [amount, setAmount] = useState('');
+  const [distributionMethod, setDistributionMethod] = useState<'BY_INCOME' | 'BY_PERCENT' | 'FIXED'>('BY_INCOME');
   const [dueDate, setDueDate] = useState('');
-  const [customShares, setCustomShares] = useState<CustomShare[]>([]);
   const [error, setError] = useState('');
-
-  const familyMembers = [{ id: user?.id || '1', name: user?.name || 'You' }, { id: '2', name: 'Partner' }];
-
-  const handleAddShare = () => setCustomShares([...customShares, { userId: '', amount: '' }]);
-  const handleRemoveShare = (i: number) => setCustomShares(customShares.filter((_, idx) => idx !== i));
-  const handleShareChange = (i: number, field: 'userId' | 'amount', value: string) => {
-    const next = [...customShares];
-    next[i] = { ...next[i], [field]: value };
-    setCustomShares(next);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!description.trim()) { setError(t('validation.required')); return; }
+    if (!currentPeriod) { setError('No active period found'); return; }
+    if (!vendor.trim()) { setError(t('validation.required')); return; }
+    if (!category.trim()) { setError(t('validation.required')); return; }
 
-    const totalAmountCents = amountToCents(parseFloat(amount));
-    if (isNaN(totalAmountCents) || totalAmountCents <= 0) { setError(t('validation.invalidAmount')); return; }
-
-    let customSharesData: Array<{ userId: string; shareCents: number }> | undefined;
-    if (distributionMethod === 'CUSTOM') {
-      if (customShares.length === 0) { setError('Please add at least one custom share'); return; }
-      customSharesData = customShares.map((s) => ({ userId: s.userId, shareCents: amountToCents(parseFloat(s.amount)) }));
-      const total = customSharesData.reduce((sum, s) => sum + s.shareCents, 0);
-      if (total !== totalAmountCents) {
-        setError(`Custom shares (${centsToAmount(total)} kr) must equal total amount (${centsToAmount(totalAmountCents)} kr)`);
-        return;
-      }
-    }
+    const totalCents = amountToCents(parseFloat(amount));
+    if (isNaN(totalCents) || totalCents <= 0) { setError(t('validation.invalidAmount')); return; }
 
     try {
       await createInvoice.mutateAsync({
-        description, totalAmountCents, distributionMethod,
-        category: category || undefined, paidBy: user?.id, invoiceDate,
-        dueDate: dueDate || undefined, customShares: customSharesData,
+        periodId: currentPeriod.id,
+        vendor: vendor.trim(),
+        category: category.trim(),
+        description: description.trim() || undefined,
+        totalCents,
+        distributionMethod,
+        dueDate: dueDate || undefined,
       });
       navigate('/invoices');
-    } catch {
-      setError(t('errors.serverError'));
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
     }
   };
 
@@ -82,6 +61,13 @@ export default function AddInvoice() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('invoice.addInvoice')}</h1>
       </div>
 
+      {!currentPeriod && (
+        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 rounded-lg px-4 py-3 text-sm">
+          <AlertCircle size={16} className="flex-shrink-0" />
+          <span>No active period. Please create a period first.</span>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
@@ -91,9 +77,20 @@ export default function AddInvoice() {
             </div>
           )}
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Vendor *</label>
+              <input type="text" value={vendor} onChange={(e) => setVendor(e.target.value)} required className={inputCls} placeholder="e.g., Electric Company" />
+            </div>
+            <div>
+              <label className={labelCls}>{t('invoice.category')} *</label>
+              <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls} placeholder="e.g., Utilities" />
+            </div>
+          </div>
+
           <div>
-            <label className={labelCls}>{t('invoice.description')} *</label>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} required className={inputCls} placeholder="e.g., Electricity bill" />
+            <label className={labelCls}>{t('invoice.description')}</label>
+            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="e.g., January electricity bill" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -103,14 +100,6 @@ export default function AddInvoice() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Amount in kr</p>
             </div>
             <div>
-              <label className={labelCls}>{t('invoice.category')}</label>
-              <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls} placeholder="e.g., Utilities" />
-            </div>
-            <div>
-              <label className={labelCls}>{t('invoice.invoiceDate')} *</label>
-              <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} required className={inputCls} />
-            </div>
-            <div>
               <label className={labelCls}>{t('invoice.dueDate')}</label>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
             </div>
@@ -118,44 +107,23 @@ export default function AddInvoice() {
 
           <div>
             <label className={labelCls}>{t('invoice.distributionMethod')} *</label>
-            <select value={distributionMethod} onChange={(e) => setDistributionMethod(e.target.value as any)} className={inputCls}>
-              <option value="EQUAL">{t('invoice.equal')}</option>
-              <option value="CUSTOM">{t('invoice.custom')}</option>
-              <option value="INCOME_BASED">{t('invoice.incomeBased')}</option>
+            <select value={distributionMethod} onChange={(e) => setDistributionMethod(e.target.value as 'BY_INCOME' | 'BY_PERCENT' | 'FIXED')} className={inputCls}>
+              <option value="BY_INCOME">{t('invoice.incomeBased')}</option>
+              <option value="BY_PERCENT">{t('invoice.custom')}</option>
+              <option value="FIXED">{t('invoice.equal')}</option>
             </select>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {distributionMethod === 'BY_INCOME' && 'Automatically splits based on each member\'s income.'}
+              {distributionMethod === 'BY_PERCENT' && 'Splits by percentage rules configured in the system.'}
+              {distributionMethod === 'FIXED' && 'Uses fixed amount rules per member.'}
+            </p>
           </div>
-
-          {distributionMethod === 'CUSTOM' && (
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('invoice.customShares')}</p>
-                <button type="button" onClick={handleAddShare} className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
-                  <Plus size={14} />
-                  {t('invoice.addShare')}
-                </button>
-              </div>
-              <div className="space-y-2">
-                {customShares.map((share, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <select value={share.userId} onChange={(e) => handleShareChange(i, 'userId', e.target.value)} required className={`flex-1 ${inputCls}`}>
-                      <option value="">{t('invoice.selectUser')}</option>
-                      {familyMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                    </select>
-                    <input type="number" value={share.amount} onChange={(e) => handleShareChange(i, 'amount', e.target.value)} required step="0.01" min="0" placeholder="0.00" className={`flex-1 ${inputCls}`} />
-                    <button type="button" onClick={() => handleRemoveShare(i)} className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors flex-shrink-0">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => navigate('/invoices')} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               {t('common.cancel')}
             </button>
-            <button type="submit" disabled={createInvoice.isPending} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
+            <button type="submit" disabled={createInvoice.isPending || !currentPeriod} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
               {createInvoice.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {t('invoice.save')}
             </button>

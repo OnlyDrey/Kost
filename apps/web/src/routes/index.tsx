@@ -19,14 +19,15 @@ function Spinner() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <Spinner />;
+  // Only block with spinner on initial load when not yet authenticated
+  if (isLoading && !isAuthenticated) return <Spinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
-  if (isLoading) return <Spinner />;
+  if (isLoading && !isAuthenticated) return <Spinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;

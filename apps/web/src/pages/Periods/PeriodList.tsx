@@ -19,20 +19,21 @@ export default function PeriodList() {
   const closePeriod = useClosePeriod();
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [periodId, setPeriodId] = useState('');
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
     setError('');
-    if (!name.trim() || !startDate || !endDate) { setError(t('validation.required')); return; }
-    if (new Date(startDate) >= new Date(endDate)) { setError('Start date must be before end date'); return; }
+    if (!periodId.trim()) { setError(t('validation.required')); return; }
+    if (!/^\d{4}-\d{2}$/.test(periodId.trim())) { setError('Period ID must be in YYYY-MM format (e.g. 2025-03)'); return; }
     try {
-      await createPeriod.mutateAsync({ name, startDate, endDate });
+      await createPeriod.mutateAsync({ id: periodId.trim() });
       setDialogOpen(false);
-      setName(''); setStartDate(''); setEndDate('');
-    } catch { setError(t('errors.serverError')); }
+      setPeriodId('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+    }
   };
 
   const handleClose = async (id: string) => {
@@ -72,7 +73,7 @@ export default function PeriodList() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-gray-900 dark:text-gray-100">{period.name}</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{period.id}</p>
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                       period.status === 'OPEN'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -82,7 +83,7 @@ export default function PeriodList() {
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {formatDate(period.startDate)} — {formatDate(period.endDate)}
+                    Created: {formatDate(period.createdAt)}
                   </p>
                   {period.closedAt && (
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Closed: {formatDate(period.closedAt)}</p>
@@ -123,18 +124,9 @@ export default function PeriodList() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('period.name')} *</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="e.g., January 2024" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('period.startDate')} *</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('period.endDate')} *</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputCls} />
-                </div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Period ID (YYYY-MM) *</label>
+                <input type="text" value={periodId} onChange={(e) => setPeriodId(e.target.value)} className={inputCls} placeholder="e.g., 2025-03" maxLength={7} />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Format: year-month, e.g. 2025-03 for March 2025</p>
               </div>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">

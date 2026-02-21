@@ -63,7 +63,7 @@ export default function InvoiceDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main info */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{invoice.description}</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{invoice.vendor}{invoice.description && ` – ${invoice.description}`}</h2>
 
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
@@ -74,13 +74,6 @@ export default function InvoiceDetail() {
                 {invoice.category}
               </span>
             )}
-            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-              invoice.status === 'APPROVED'
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-            }`}>
-              {invoice.status}
-            </span>
           </div>
 
           <hr className="border-gray-100 dark:border-gray-800" />
@@ -89,23 +82,17 @@ export default function InvoiceDetail() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.totalAmount')}</p>
               <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                {formatCurrency(invoice.totalAmountCents)}
+                {formatCurrency(invoice.totalCents)}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.invoiceDate')}</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.invoiceDate)}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.createdAt)}</p>
             </div>
             {invoice.dueDate && (
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.dueDate')}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.dueDate)}</p>
-              </div>
-            )}
-            {invoice.uploader && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.paidBy')}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.uploader.name}</p>
               </div>
             )}
           </div>
@@ -131,9 +118,11 @@ export default function InvoiceDetail() {
                   <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
                     {formatCurrency(share.shareCents)}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {share.percentageShare.toFixed(2)}%
-                  </p>
+                  {invoice.totalCents > 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {((share.shareCents / invoice.totalCents) * 100).toFixed(1)}%
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
