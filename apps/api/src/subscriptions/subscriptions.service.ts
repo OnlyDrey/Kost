@@ -52,7 +52,7 @@ export class SubscriptionsService {
         endDate: endDate ? new Date(endDate) : null,
         distributionRules: (distributionRules ?? {}) as any,
         active: createSubscriptionDto.active ?? true,
-      },
+      } as any,
     });
   }
 
