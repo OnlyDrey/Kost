@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, Invoice, Period, UserIncome, PeriodStats, User } from '../services/api';
+import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, paymentApi, Invoice, Period, UserIncome, PeriodStats, User } from '../services/api';
 import { addToOfflineQueue } from '../idb/queue';
 
 // Query keys
@@ -220,5 +220,17 @@ export function useChangePassword() {
   return useMutation({
     mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
       authApi.changePassword(currentPassword, newPassword).then(res => res.data),
+  });
+}
+
+export function useAddPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ invoiceId, data }: { invoiceId: string; data: Parameters<typeof paymentApi.create>[1] }) =>
+      paymentApi.create(invoiceId, data).then(res => res.data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
+    },
   });
 }

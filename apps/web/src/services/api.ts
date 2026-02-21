@@ -207,4 +207,9 @@ export const userIncomeApi = {
     api.post<UserIncome>('/incomes', data),
 };
 
+export const paymentApi = {
+  create: (invoiceId: string, data: { paidById: string; amountCents: number; note?: string; paidAt?: string }) =>
+    api.post<Payment>(`/invoices/${invoiceId}/payments`, data),
+};
+
 export default api;
