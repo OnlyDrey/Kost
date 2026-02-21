@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Receipt, DollarSign, TrendingUp, Clock } from 'lucide-react';
-import { useCurrentPeriod, useInvoices, usePeriodStats } from '../hooks/useApi';
+import { useCurrentPeriod, useInvoices, usePeriodStats, useCurrency } from '../hooks/useApi';
 import { useAuth } from '../stores/auth.context';
 import { formatCurrency } from '../utils/currency';
 import { formatDate } from '../utils/date';
@@ -41,6 +41,7 @@ export default function Dashboard() {
 
   const userShare = stats?.userShares?.find((share) => share.userId === user?.id);
   const isLoading = periodLoading || invoicesLoading || statsLoading;
+  const { data: currency = 'NOK' } = useCurrency();
 
   if (isLoading) {
     return (
@@ -71,8 +72,8 @@ export default function Dashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Receipt} label={t('dashboard.totalInvoices')} value={stats?.totalInvoices ?? 0} color="bg-indigo-500" />
-        <StatCard icon={DollarSign} label={t('dashboard.totalAmount')} value={formatCurrency(stats?.totalAmountCents ?? 0)} color="bg-emerald-500" />
-        <StatCard icon={TrendingUp} label={t('dashboard.yourShare')} value={formatCurrency(userShare?.totalShareCents ?? 0)} color="bg-amber-500" />
+        <StatCard icon={DollarSign} label={t('dashboard.totalAmount')} value={formatCurrency(stats?.totalAmountCents ?? 0, currency)} color="bg-emerald-500" />
+        <StatCard icon={TrendingUp} label={t('dashboard.yourShare')} value={formatCurrency(userShare?.totalShareCents ?? 0, currency)} color="bg-amber-500" />
         <StatCard icon={Clock} label={t('dashboard.periodStatus')} value={currentPeriod?.status === 'OPEN' ? t('period.open') : t('period.closed')} color="bg-sky-500" />
       </div>
 
@@ -105,7 +106,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="text-right ml-4">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.totalCents)}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.totalCents, currency)}</p>
                   <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(invoice.createdAt)}</span>
                 </div>
               </div>

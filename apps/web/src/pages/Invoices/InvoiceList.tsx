@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Eye, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoices, useCurrentPeriod } from '../../hooks/useApi';
+import { useInvoices, useCurrentPeriod, useCurrency } from '../../hooks/useApi';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import { distributionLabel } from '../../utils/distribution';
@@ -17,6 +17,7 @@ export default function InvoiceList() {
 
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: invoices, isLoading } = useInvoices(currentPeriod?.id);
+  const { data: currency = 'NOK' } = useCurrency();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMethod, setFilterMethod] = useState('ALL');
@@ -82,13 +83,17 @@ export default function InvoiceList() {
       ) : (
         <div className="space-y-3">
           {filteredInvoices.map((invoice) => (
-            <div
+            <button
               key={invoice.id}
-              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+              onClick={() => navigate(`/invoices/${invoice.id}`)}
+              className="w-full text-left bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{invoice.vendor}</p>
+                  {invoice.description && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{invoice.description}</p>
+                  )}
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                       {distributionLabel(invoice.distributionMethod, settings.locale)}
@@ -99,23 +104,13 @@ export default function InvoiceList() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {invoice.description && `${invoice.description} · `}{formatDate(invoice.createdAt)}
-                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{formatDate(invoice.createdAt)}</p>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                    {formatCurrency(invoice.totalCents)}
-                  </p>
-                  <button
-                    onClick={() => navigate(`/invoices/${invoice.id}`)}
-                    className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                  >
-                    <Eye size={18} />
-                  </button>
-                </div>
+                <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                  {formatCurrency(invoice.totalCents, currency)}
+                </p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

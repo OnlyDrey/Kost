@@ -36,10 +36,11 @@ kost/
 │   │   ├── src/
 │   │   │   ├── auth/           # Authentication (password-based)
 │   │   │   ├── users/          # User management
-│   │   │   ├── family/         # Family settings (categories, payment methods)
+│   │   │   ├── family/         # Family settings (categories, payment methods, currency, vendors)
 │   │   │   ├── periods/        # Period lifecycle
 │   │   │   ├── invoices/       # Expense CRUD + allocation
 │   │   │   ├── payments/       # Payment tracking
+│   │   │   ├── subscriptions/  # Recurring expenses; invoice generation per period
 │   │   │   └── config/         # Configuration
 │   │   └── prisma/
 │   │       ├── schema.prisma   # Database schema
@@ -48,7 +49,7 @@ kost/
 │   │
 │   └── web/                    # React Frontend
 │       └── src/
-│           ├── pages/          # Route pages
+│           ├── pages/          # Route pages (Dashboard, Invoices, Subscriptions, Periods, Settings, Admin)
 │           ├── components/     # Reusable components
 │           ├── services/       # API client (axios, cookie-based auth)
 │           ├── stores/         # Context providers (auth, settings)

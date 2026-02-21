@@ -1,17 +1,33 @@
 /**
  * Convert cents to formatted currency string
  * @param cents Amount in cents
+ * @param currency ISO 4217 currency code (default: "NOK")
  * @param showCurrency Whether to show currency symbol (default: true)
  * @returns Formatted currency string (e.g., "1 234,56 kr")
  */
-export function formatCurrency(cents: number, showCurrency = true): string {
+export function formatCurrency(cents: number, currency = 'NOK', showCurrency = true): string {
   const amount = cents / 100;
-  const formatted = new Intl.NumberFormat('nb-NO', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-
-  return showCurrency ? `${formatted} kr` : formatted;
+  if (!showCurrency) {
+    return new Intl.NumberFormat('nb-NO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }
+  try {
+    return new Intl.NumberFormat('nb-NO', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    // Fallback if currency code is invalid
+    const formatted = new Intl.NumberFormat('nb-NO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return `${formatted} ${currency}`;
+  }
 }
 
 /**

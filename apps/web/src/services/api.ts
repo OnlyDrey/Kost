@@ -113,6 +113,34 @@ export interface PeriodStats {
   }>;
 }
 
+export interface Vendor {
+  id: string;
+  familyId: string;
+  name: string;
+  logoUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  familyId: string;
+  name: string;
+  vendor: string;
+  category?: string;
+  amountCents: number;
+  frequency: string;
+  dayOfMonth?: number;
+  startDate: string;
+  endDate?: string;
+  distributionMethod: 'BY_PERCENT' | 'BY_INCOME' | 'FIXED';
+  distributionRules: any;
+  active: boolean;
+  lastGenerated?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // API functions
 export const authApi = {
   loginWithPassword: (username: string, password: string) =>
@@ -231,6 +259,59 @@ export const familyApi = {
 
   removePaymentMethod: (name: string) =>
     api.delete<string[]>(`/family/payment-methods/${encodeURIComponent(name)}`),
+
+  getCurrency: () =>
+    api.get<string>('/family/currency'),
+
+  updateCurrency: (currency: string) =>
+    api.patch<string>('/family/currency', { currency }),
+
+  getVendors: () =>
+    api.get<Vendor[]>('/family/vendors'),
+
+  addVendor: (name: string, logoUrl?: string) =>
+    api.post<Vendor>('/family/vendors', { name, logoUrl }),
+
+  updateVendor: (id: string, data: { name?: string; logoUrl?: string | null }) =>
+    api.patch<Vendor>(`/family/vendors/${id}`, data),
+
+  removeVendor: (id: string) =>
+    api.delete(`/family/vendors/${id}`),
+};
+
+export const subscriptionApi = {
+  getAll: (activeOnly?: boolean) =>
+    api.get<Subscription[]>('/subscriptions', { params: activeOnly !== undefined ? { active: activeOnly } : {} }),
+
+  getById: (id: string) =>
+    api.get<Subscription>(`/subscriptions/${id}`),
+
+  create: (data: {
+    name: string;
+    vendor: string;
+    category?: string;
+    amountCents: number;
+    frequency: string;
+    dayOfMonth?: number;
+    startDate: string;
+    endDate?: string;
+    distributionMethod: 'BY_PERCENT' | 'BY_INCOME' | 'FIXED';
+    distributionRules?: any;
+    active?: boolean;
+  }) =>
+    api.post<Subscription>('/subscriptions', data),
+
+  update: (id: string, data: Partial<Subscription>) =>
+    api.patch<Subscription>(`/subscriptions/${id}`, data),
+
+  toggleActive: (id: string) =>
+    api.patch<Subscription>(`/subscriptions/${id}/toggle`),
+
+  delete: (id: string) =>
+    api.delete(`/subscriptions/${id}`),
+
+  generateForPeriod: (periodId: string) =>
+    api.post<{ message: string; invoices: any[] }>(`/subscriptions/generate/${periodId}`),
 };
 
 export default api;

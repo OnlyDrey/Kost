@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pencil, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoice, useDeleteInvoice, useAddPayment } from '../../hooks/useApi';
+import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatCurrency, amountToCents } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
@@ -21,6 +21,7 @@ export default function InvoiceDetail() {
   const { settings } = useSettings();
 
   const { data: invoice, isLoading } = useInvoice(id!);
+  const { data: currency = 'NOK' } = useCurrency();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
 
@@ -123,7 +124,7 @@ export default function InvoiceDetail() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.totalAmount')}</p>
               <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                {formatCurrency(invoice.totalCents)}
+                {formatCurrency(invoice.totalCents, currency)}
               </p>
             </div>
             <div>
@@ -145,13 +146,13 @@ export default function InvoiceDetail() {
             {totalPaid > 0 && (
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Betalt</p>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">{formatCurrency(totalPaid)}</p>
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">{formatCurrency(totalPaid, currency)}</p>
               </div>
             )}
             {!isPaid && totalPaid > 0 && (
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gjenstående</p>
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{formatCurrency(remaining)}</p>
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">{formatCurrency(remaining, currency)}</p>
               </div>
             )}
           </div>
@@ -172,7 +173,7 @@ export default function InvoiceDetail() {
                 <div key={share.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                   <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{share.user?.name || 'Unknown'}</p>
                   <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-                    {formatCurrency(share.shareCents)}
+                    {formatCurrency(share.shareCents, currency)}
                   </p>
                   {invoice.totalCents > 0 && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -210,7 +211,7 @@ export default function InvoiceDetail() {
                     <p className="font-medium text-gray-900 dark:text-gray-100">{payment.paidBy?.name ?? 'Ukjent'}</p>
                     <p className="text-xs text-gray-400">{formatDate(payment.paidAt)}{payment.note ? ` · ${payment.note}` : ''}</p>
                   </div>
-                  <p className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(payment.amountCents)}</p>
+                  <p className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(payment.amountCents, currency)}</p>
                 </div>
               ))}
             </div>

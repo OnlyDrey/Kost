@@ -12,6 +12,7 @@ import PeriodDetail from '../pages/Periods/PeriodDetail';
 import Profile from '../pages/Settings/Profile';
 import AdminUsers from '../pages/Admin/Users';
 import FamilySettings from '../pages/Admin/FamilySettings';
+import SubscriptionList from '../pages/Subscriptions/SubscriptionList';
 
 function Spinner() {
   return (
@@ -54,6 +55,7 @@ export default function AppRoutes() {
         <Route path="/invoices/add" element={<AddInvoice />} />
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/invoices/:id/edit" element={<AddInvoice />} />
+        <Route path="/subscriptions" element={<SubscriptionList />} />
         <Route path="/periods" element={<PeriodList />} />
         <Route path="/periods/:id" element={<PeriodDetail />} />
         <Route path="/settings" element={<Profile />} />

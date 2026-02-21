@@ -10,13 +10,15 @@ Schema file: `apps/api/prisma/schema.prisma`
 
 | Table                     | Description                                    |
 |---------------------------|------------------------------------------------|
-| `Family`                  | Top-level container; stores `categories[]` and `paymentMethods[]` |
+| `Family`                  | Top-level container; stores `categories[]`, `paymentMethods[]`, and `currency` |
 | `User`                    | Family members with roles (ADMIN, ADULT, JUNIOR) |
 | `Period`                  | Monthly billing periods (OPEN or CLOSED)       |
 | `Income`                  | User income per period (for income-based splits) |
 | `Invoice`                 | Expenses to be split among family members      |
 | `InvoiceShare`            | Calculated share per user for each invoice     |
 | `Payment`                 | Payments recorded against an invoice; includes optional `paymentMethod` |
+| `Vendor`                  | Reusable vendors per family; optional logo URL for display |
+| `Subscription`            | Recurring expense definitions; generates invoices on demand per period |
 | `MagicLinkToken`          | _(unused — kept in schema for migrations)_     |
 | `WebAuthnCredential`      | _(unused — kept in schema for migrations)_     |
 
@@ -49,11 +51,17 @@ npm run db:seed
 
 Seed users (all with password `kostpass`):
 
-| Username | Role  |
-|----------|-------|
-| admin    | ADMIN |
-| ola      | ADULT |
-| lisa     | ADULT |
+| Username | Name    | Role  |
+|----------|---------|-------|
+| andreas  | Andreas | ADMIN |
+| marta    | Marta   | ADULT |
+
+The seed also creates:
+- A family with Norwegian categories (Bolig, Forsikring, Bil), payment methods, and currency `NOK`
+- An open period `2026-02` with realistic income entries for both users
+- 10 sample invoices across Bolig, Forsikring, and Bil categories with real Norwegian vendor names
+- 5 recurring subscriptions (streaming, gym, etc.)
+- Vendor entries with Clearbit logo URLs
 
 To customize seed data, edit `apps/api/prisma/seed.ts`.
 
