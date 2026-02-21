@@ -61,6 +61,7 @@ export default function Profile() {
       setIncomeError(t('validation.invalidAmount'));
       return;
     }
+    if (!confirm('Er du sikker på at du vil lagre denne inntekten? Dette påvirker fordelingen av utgifter.')) return;
     try {
       await upsertIncome.mutateAsync({ userId: user.id, periodId: currentPeriod.id, inputType: incomeType, inputCents });
       setIncomeSuccess(true);
