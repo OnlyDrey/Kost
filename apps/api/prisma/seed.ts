@@ -21,6 +21,7 @@ async function main() {
   await prisma.webAuthnCredential.deleteMany();
   await prisma.magicLinkToken.deleteMany();
   await prisma.user.deleteMany();
+  await (prisma as any).vendor.deleteMany();
   await prisma.family.deleteMany();
 
   // Create family (required as parent for all records)
