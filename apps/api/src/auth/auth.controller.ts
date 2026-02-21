@@ -109,4 +109,22 @@ export class AuthController {
     response.clearCookie("access_token");
     return { message: "Logout successful" };
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("change-password")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Change current user password" })
+  @ApiResponse({ status: 200, description: "Password changed successfully" })
+  @ApiResponse({ status: 400, description: "Current password is incorrect" })
+  async changePassword(
+    @CurrentUser("sub") userId: string,
+    @Body() body: { currentPassword: string; newPassword: string },
+  ) {
+    return this.authService.changePassword(
+      userId,
+      body.currentPassword,
+      body.newPassword,
+    );
+  }
 }

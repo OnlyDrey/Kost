@@ -8,6 +8,8 @@ import InvoiceList from '../pages/Invoices/InvoiceList';
 import InvoiceDetail from '../pages/Invoices/InvoiceDetail';
 import AddInvoice from '../pages/Invoices/AddInvoice';
 import PeriodList from '../pages/Periods/PeriodList';
+import Profile from '../pages/Settings/Profile';
+import AdminUsers from '../pages/Admin/Users';
 
 function Spinner() {
   return (
@@ -52,7 +54,18 @@ export default function AppRoutes() {
         <Route path="/invoices/:id/edit" element={<AddInvoice />} />
         <Route path="/periods" element={<PeriodList />} />
         <Route path="/periods/:id" element={<Dashboard />} />
+        <Route path="/settings" element={<Profile />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Route>
+
+      <Route
+        element={
+          <AdminRoute>
+            <AppLayout />
+          </AdminRoute>
+        }
+      >
+        <Route path="/admin/users" element={<AdminUsers />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

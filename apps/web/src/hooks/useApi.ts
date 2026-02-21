@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoiceApi, periodApi, userIncomeApi, Invoice, Period, UserIncome, PeriodStats } from '../services/api';
+import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, Invoice, Period, UserIncome, PeriodStats, User } from '../services/api';
 import { addToOfflineQueue } from '../idb/queue';
 
 // Query keys
@@ -11,6 +11,8 @@ export const queryKeys = {
   currentPeriod: () => ['currentPeriod'] as const,
   periodStats: (id: string) => ['periodStats', id] as const,
   userIncomes: (periodId: string) => ['userIncomes', periodId] as const,
+  users: () => ['users'] as const,
+  user: (id: string) => ['user', id] as const,
 };
 
 // Invoice hooks
@@ -167,5 +169,56 @@ export function useUpsertUserIncome() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.userIncomes(data.periodId) });
     },
+  });
+}
+
+// User hooks
+export function useUsers() {
+  return useQuery({
+    queryKey: queryKeys.users(),
+    queryFn: () => userApi.getAll().then(res => res.data),
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof userApi.create>[0]) =>
+      userApi.create(data).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof userApi.update>[1] }) =>
+      userApi.update(id, data).then(res => res.data),
+    onSuccess: (user: User) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => userApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
+      authApi.changePassword(currentPassword, newPassword).then(res => res.data),
   });
 }

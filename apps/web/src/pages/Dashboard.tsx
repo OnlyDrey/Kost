@@ -69,7 +69,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Receipt} label={t('dashboard.totalInvoices')} value={stats?.totalInvoices ?? 0} color="bg-indigo-500" />
         <StatCard icon={DollarSign} label={t('dashboard.totalAmount')} value={formatCurrency(stats?.totalAmountCents ?? 0)} color="bg-emerald-500" />
         <StatCard icon={TrendingUp} label={t('dashboard.yourShare')} value={formatCurrency(userShare?.totalShareCents ?? 0)} color="bg-amber-500" />

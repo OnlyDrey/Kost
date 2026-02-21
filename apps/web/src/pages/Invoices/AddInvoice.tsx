@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCreateInvoice, useCurrentPeriod } from '../../hooks/useApi';
+import { useCreateInvoice, useCurrentPeriod, useUsers } from '../../hooks/useApi';
 import { amountToCents } from '../../utils/currency';
 
 const inputCls =
@@ -15,6 +15,7 @@ export default function AddInvoice() {
   const navigate = useNavigate();
   const createInvoice = useCreateInvoice();
   const { data: currentPeriod } = useCurrentPeriod();
+  const { data: users } = useUsers();
 
   const [vendor, setVendor] = useState('');
   const [description, setDescription] = useState('');
@@ -23,6 +24,10 @@ export default function AddInvoice() {
   const [distributionMethod, setDistributionMethod] = useState<'BY_INCOME' | 'BY_PERCENT' | 'FIXED'>('BY_INCOME');
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
+  // BY_PERCENT: user percentages (stored as 0-100)
+  const [userPercents, setUserPercents] = useState<Record<string, string>>({});
+
+  const totalPercent = Object.values(userPercents).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +40,26 @@ export default function AddInvoice() {
     const totalCents = amountToCents(parseFloat(amount));
     if (isNaN(totalCents) || totalCents <= 0) { setError(t('validation.invalidAmount')); return; }
 
+    let distributionRules: Parameters<typeof createInvoice.mutateAsync>[0]['distributionRules'] | undefined;
+
+    if (distributionMethod === 'BY_PERCENT') {
+      if (Math.abs(totalPercent - 100) > 0.01) {
+        setError('Percentages must sum to 100%');
+        return;
+      }
+      const percentRules = Object.entries(userPercents)
+        .filter(([, v]) => parseFloat(v) > 0)
+        .map(([userId, v]) => ({
+          userId,
+          percentBasisPoints: Math.round(parseFloat(v) * 100),
+        }));
+      if (percentRules.length === 0) {
+        setError('Specify at least one user percentage');
+        return;
+      }
+      distributionRules = { percentRules };
+    }
+
     try {
       await createInvoice.mutateAsync({
         periodId: currentPeriod.id,
@@ -44,6 +69,7 @@ export default function AddInvoice() {
         totalCents,
         distributionMethod,
         dueDate: dueDate || undefined,
+        distributionRules,
       });
       navigate('/invoices');
     } catch (err: any) {
@@ -114,10 +140,44 @@ export default function AddInvoice() {
             </select>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {distributionMethod === 'BY_INCOME' && 'Automatically splits based on each member\'s income.'}
-              {distributionMethod === 'BY_PERCENT' && 'Splits by percentage rules configured in the system.'}
+              {distributionMethod === 'BY_PERCENT' && 'Enter a percentage for each user. Must sum to 100%.'}
               {distributionMethod === 'FIXED' && 'Uses fixed amount rules per member.'}
             </p>
           </div>
+
+          {distributionMethod === 'BY_PERCENT' && users && users.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className={labelCls + ' mb-0'}>Percentage per user *</label>
+                <span className={`text-sm font-medium ${Math.abs(totalPercent - 100) < 0.01 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                  Total: {totalPercent.toFixed(1)}%
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {users.map((u) => (
+                  <div key={u.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
+                    <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                      {u.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">{u.name}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={userPercents[u.id] ?? ''}
+                        onChange={(e) => setUserPercents(prev => ({ ...prev, [u.id]: e.target.value }))}
+                        className="w-16 px-2 py-1 text-sm text-right rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="0"
+                      />
+                      <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => navigate('/invoices')} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">

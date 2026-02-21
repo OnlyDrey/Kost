@@ -5,6 +5,8 @@ import { useInvoice, useDeleteInvoice } from '../../hooks/useApi';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import AllocationExplanation from '../../components/Invoice/AllocationExplanation';
+import { distributionLabel } from '../../utils/distribution';
+import { useSettings } from '../../stores/settings.context';
 
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +15,7 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id!);
   const deleteInvoice = useDeleteInvoice();
+  const { settings } = useSettings();
 
   const handleDelete = async () => {
     if (confirm(t('invoice.confirmDelete'))) {
@@ -67,7 +70,7 @@ export default function InvoiceDetail() {
 
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-              {invoice.distributionMethod}
+              {distributionLabel(invoice.distributionMethod, settings.locale)}
             </span>
             {invoice.category && (
               <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
