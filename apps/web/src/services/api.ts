@@ -201,7 +201,7 @@ export const invoiceApi = {
   }) =>
     api.post<Invoice>('/invoices', data),
 
-  update: (id: string, data: Partial<Invoice>) =>
+  update: (id: string, data: Partial<Invoice> & { distributionRules?: any }) =>
     api.patch<Invoice>(`/invoices/${id}`, data),
 
   delete: (id: string) =>
