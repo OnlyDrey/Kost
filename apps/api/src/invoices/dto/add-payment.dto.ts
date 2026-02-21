@@ -24,6 +24,11 @@ export class AddPaymentDto {
   @IsOptional()
   note?: string;
 
+  @ApiPropertyOptional({ example: "Bank transfer" })
+  @IsString()
+  @IsOptional()
+  paymentMethod?: string;
+
   @ApiPropertyOptional({ example: "2024-01-15T10:00:00Z" })
   @IsDateString()
   @IsOptional()

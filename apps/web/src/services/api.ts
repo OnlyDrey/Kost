@@ -68,6 +68,7 @@ export interface Payment {
   amountCents: number;
   paidAt: string;
   note?: string;
+  paymentMethod?: string;
   paidBy?: { id: string; name: string; username: string };
 }
 
@@ -208,8 +209,28 @@ export const userIncomeApi = {
 };
 
 export const paymentApi = {
-  create: (invoiceId: string, data: { paidById: string; amountCents: number; note?: string; paidAt?: string }) =>
+  create: (invoiceId: string, data: { paidById: string; amountCents: number; note?: string; paymentMethod?: string; paidAt?: string }) =>
     api.post<Payment>(`/invoices/${invoiceId}/payments`, data),
+};
+
+export const familyApi = {
+  getCategories: () =>
+    api.get<string[]>('/family/categories'),
+
+  addCategory: (name: string) =>
+    api.post<string[]>('/family/categories', { name }),
+
+  removeCategory: (name: string) =>
+    api.delete<string[]>(`/family/categories/${encodeURIComponent(name)}`),
+
+  getPaymentMethods: () =>
+    api.get<string[]>('/family/payment-methods'),
+
+  addPaymentMethod: (name: string) =>
+    api.post<string[]>('/family/payment-methods', { name }),
+
+  removePaymentMethod: (name: string) =>
+    api.delete<string[]>(`/family/payment-methods/${encodeURIComponent(name)}`),
 };
 
 export default api;

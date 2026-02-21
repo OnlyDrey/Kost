@@ -36,6 +36,7 @@ kost/
 │   │   ├── src/
 │   │   │   ├── auth/           # Authentication (password-based)
 │   │   │   ├── users/          # User management
+│   │   │   ├── family/         # Family settings (categories, payment methods)
 │   │   │   ├── periods/        # Period lifecycle
 │   │   │   ├── invoices/       # Expense CRUD + allocation
 │   │   │   ├── payments/       # Payment tracking
@@ -94,7 +95,8 @@ All monetary amounts are stored and calculated as **integers in cents (øre)**. 
 
 ## Roles
 
-| Role    | Permissions                                            |
-|---------|--------------------------------------------------------|
-| `ADMIN` | Full access: manage users, close periods, delete data  |
-| `ADULT` | Create and edit invoices and payments in open periods  |
+| Role     | Permissions                                                                |
+|----------|----------------------------------------------------------------------------|
+| `ADMIN`  | Full access: manage users, family settings, close periods, delete data     |
+| `ADULT`  | Create and edit invoices and payments in open periods                      |
+| `JUNIOR` | Child role; excluded from cost splits by default, must be opted in per invoice |

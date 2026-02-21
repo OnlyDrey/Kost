@@ -402,6 +402,7 @@ export class InvoicesService {
         paidById: addPaymentDto.paidById,
         amountCents: addPaymentDto.amountCents,
         note: addPaymentDto.note,
+        paymentMethod: addPaymentDto.paymentMethod,
         paidAt: addPaymentDto.paidAt
           ? new Date(addPaymentDto.paidAt)
           : new Date(),

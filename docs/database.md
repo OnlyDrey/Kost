@@ -10,13 +10,13 @@ Schema file: `apps/api/prisma/schema.prisma`
 
 | Table                     | Description                                    |
 |---------------------------|------------------------------------------------|
-| `Family`                  | Top-level container for a household            |
-| `User`                    | Family members with roles (ADMIN, ADULT)       |
+| `Family`                  | Top-level container; stores `categories[]` and `paymentMethods[]` |
+| `User`                    | Family members with roles (ADMIN, ADULT, JUNIOR) |
 | `Period`                  | Monthly billing periods (OPEN or CLOSED)       |
 | `Income`                  | User income per period (for income-based splits) |
 | `Invoice`                 | Expenses to be split among family members      |
 | `InvoiceShare`            | Calculated share per user for each invoice     |
-| `Payment`                 | Payments recorded against an invoice (mark as paid) |
+| `Payment`                 | Payments recorded against an invoice; includes optional `paymentMethod` |
 | `MagicLinkToken`          | _(unused — kept in schema for migrations)_     |
 | `WebAuthnCredential`      | _(unused — kept in schema for migrations)_     |
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, paymentApi, Invoice, Period, UserIncome, PeriodStats, User } from '../services/api';
+import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, paymentApi, familyApi, Invoice, Period, UserIncome, PeriodStats, User } from '../services/api';
 import { addToOfflineQueue } from '../idb/queue';
 
 // Query keys
@@ -13,6 +13,8 @@ export const queryKeys = {
   userIncomes: (periodId: string) => ['userIncomes', periodId] as const,
   users: () => ['users'] as const,
   user: (id: string) => ['user', id] as const,
+  categories: () => ['categories'] as const,
+  paymentMethods: () => ['paymentMethods'] as const,
 };
 
 // Invoice hooks
@@ -232,5 +234,52 @@ export function useAddPayment() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
     },
+  });
+}
+
+// Family settings hooks
+export function useCategories() {
+  return useQuery({
+    queryKey: queryKeys.categories(),
+    queryFn: () => familyApi.getCategories().then(res => res.data),
+  });
+}
+
+export function useAddCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => familyApi.addCategory(name).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
+  });
+}
+
+export function useRemoveCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => familyApi.removeCategory(name).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
+  });
+}
+
+export function usePaymentMethods() {
+  return useQuery({
+    queryKey: queryKeys.paymentMethods(),
+    queryFn: () => familyApi.getPaymentMethods().then(res => res.data),
+  });
+}
+
+export function useAddPaymentMethod() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => familyApi.addPaymentMethod(name).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
+  });
+}
+
+export function useRemovePaymentMethod() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => familyApi.removePaymentMethod(name).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
   });
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes } from '../../hooks/useApi';
+import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes, useCategories } from '../../hooks/useApi';
 import { amountToCents, centsToAmount } from '../../utils/currency';
 
 const inputCls =
@@ -22,6 +22,7 @@ export default function AddInvoice() {
   const { data: users } = useUsers();
   const { data: existingInvoice } = useInvoice(isEditing ? id! : '');
   const { data: periodIncomes } = useUserIncomes(currentPeriod?.id ?? '');
+  const { data: categories = [] } = useCategories();
 
   const [vendor, setVendor] = useState('');
   const [description, setDescription] = useState('');
@@ -163,7 +164,14 @@ export default function AddInvoice() {
             </div>
             <div>
               <label className={labelCls}>{t('invoice.category')} *</label>
-              <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls} placeholder="e.g., Utilities" />
+              {categories.length > 0 ? (
+                <select value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls}>
+                  <option value="">Velg kategori...</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              ) : (
+                <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls} placeholder="e.g., Utilities" />
+              )}
             </div>
           </div>
 
