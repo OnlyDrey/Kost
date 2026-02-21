@@ -5,8 +5,12 @@ A self-hosted app for tracking shared household expenses. Family members registe
 ## Features
 
 - **Expense management** — create, categorize, and allocate expenses among family members
-- **Flexible cost splitting** — equal, custom percentage, or income-proportional
-- **Period management** — monthly billing periods with close and settlement calculation
+- **Flexible cost splitting** — income-proportional, custom percentage per user, or fixed amount
+- **BY_INCOME user selection** — choose which users to include in income-based splits
+- **Period management** — monthly billing periods with stats, income registration, and settlement
+- **Income registration** — register monthly/annual gross or net income per user per period
+- **User management** — admins can add, edit, and delete family members (including password reset)
+- **Settings page** — users can update their profile and change their own password
 - **Offline support** — works without internet; mutations sync when reconnected
 - **Multi-language** — English and Norwegian (Bokmål)
 - **Precise money math** — all calculations in integer cents, no floating-point errors
@@ -67,9 +71,9 @@ npm run db:seed        # load sample data (runs inside the API container)
 
 | Username | Password    | Role  |
 |----------|-------------|-------|
-| admin    | password123 | Admin |
-| ola      | password123 | Adult |
-| lisa     | password123 | Adult |
+| admin    | kostpass | Admin |
+| ola      | kostpass | Adult |
+| lisa     | kostpass | Adult |
 
 ---
 

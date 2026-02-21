@@ -26,8 +26,19 @@ export default function AddInvoice() {
   const [error, setError] = useState('');
   // BY_PERCENT: user percentages (stored as 0-100)
   const [userPercents, setUserPercents] = useState<Record<string, string>>({});
+  // BY_INCOME: selected users (all selected by default when users load)
+  const [incomeUserIds, setIncomeUserIds] = useState<Set<string>>(new Set());
 
   const totalPercent = Object.values(userPercents).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
+
+  // Initialize income user selection when users load
+  const handleToggleIncomeUser = (userId: string) => {
+    setIncomeUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) { next.delete(userId); } else { next.add(userId); }
+      return next;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +69,10 @@ export default function AddInvoice() {
         return;
       }
       distributionRules = { percentRules };
+    }
+
+    if (distributionMethod === 'BY_INCOME' && incomeUserIds.size > 0 && users && incomeUserIds.size < users.length) {
+      distributionRules = { userIds: Array.from(incomeUserIds) };
     }
 
     try {
@@ -119,7 +134,7 @@ export default function AddInvoice() {
             <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="e.g., January electricity bill" />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t('invoice.amount')} *</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
@@ -144,6 +159,46 @@ export default function AddInvoice() {
               {distributionMethod === 'FIXED' && 'Uses fixed amount rules per member.'}
             </p>
           </div>
+
+          {distributionMethod === 'BY_INCOME' && users && users.length > 0 && (
+            <div className="space-y-3">
+              <label className={labelCls + ' mb-0'}>Select users to include *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {users.map((u) => {
+                  const checked = incomeUserIds.size === 0 || incomeUserIds.has(u.id);
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => {
+                        if (incomeUserIds.size === 0) {
+                          // first deselect: initialize all selected then remove this one
+                          const all = new Set(users.map(x => x.id));
+                          all.delete(u.id);
+                          setIncomeUserIds(all);
+                        } else {
+                          handleToggleIncomeUser(u.id);
+                        }
+                      }}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2 border transition-colors text-left ${
+                        checked
+                          ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20'
+                          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50'
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? 'bg-indigo-600' : 'bg-gray-400'}`}>
+                        {u.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">{u.name}</span>
+                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
+                        {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {distributionMethod === 'BY_PERCENT' && users && users.length > 0 && (
             <div className="space-y-3">

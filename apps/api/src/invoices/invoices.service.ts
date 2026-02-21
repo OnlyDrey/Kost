@@ -138,16 +138,24 @@ export class InvoicesService {
       );
     }
 
+    // Build participants; optionally filter to selected userIds for BY_INCOME
+    const allParticipants = incomes.map((inc) => ({
+      userId: inc.userId,
+      userName: inc.user.name,
+      normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
+    }));
+    const selectedUserIds = distributionRules?.userIds;
+    const participants =
+      selectedUserIds && selectedUserIds.length > 0
+        ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
+        : allParticipants;
+
     // Calculate shares based on distribution method
     const shares = await this.calculateShares(
       createInvoiceDto.totalCents,
       distributionMethod,
       distributionRules,
-      incomes.map((inc) => ({
-        userId: inc.userId,
-        userName: inc.user.name,
-        normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-      })),
+      participants,
     );
 
     // Create invoice with lines, distribution rules, and shares in a transaction

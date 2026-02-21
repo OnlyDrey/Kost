@@ -167,6 +167,7 @@ export const invoiceApi = {
       percentRules?: Array<{ userId: string; percentBasisPoints: number }>;
       fixedRules?: Array<{ userId: string; fixedCents: number }>;
       remainderMethod?: 'EQUAL' | 'BY_INCOME';
+      userIds?: string[];
     };
   }) =>
     api.post<Invoice>('/invoices', data),
