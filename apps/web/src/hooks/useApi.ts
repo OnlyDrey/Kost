@@ -18,6 +18,7 @@ export function useInvoices(periodId?: string) {
   return useQuery({
     queryKey: queryKeys.invoices(periodId),
     queryFn: () => invoiceApi.getAll({ periodId }).then(res => res.data),
+    enabled: !!periodId,
   });
 }
 
@@ -33,16 +34,8 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: {
-      description: string;
-      totalAmountCents: number;
-      distributionMethod: 'EQUAL' | 'CUSTOM' | 'INCOME_BASED';
-      category?: string;
-      paidBy?: string;
-      invoiceDate: string;
-      dueDate?: string;
-      customShares?: Array<{ userId: string; shareCents: number }>;
-    }) => invoiceApi.create(data).then(res => res.data),
+    mutationFn: (data: Parameters<typeof invoiceApi.create>[0]) =>
+      invoiceApi.create(data).then(res => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['currentPeriod'] });
@@ -73,7 +66,7 @@ export function useUpdateInvoice() {
     onError: async (error, variables) => {
       if (!navigator.onLine) {
         await addToOfflineQueue({
-          method: 'PUT',
+          method: 'PATCH',
           url: `/invoices/${variables.id}`,
           data: variables.data,
         });
@@ -128,7 +121,7 @@ export function useCreatePeriod() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string; startDate: string; endDate: string }) =>
+    mutationFn: (data: { id: string }) =>
       periodApi.create(data).then(res => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
@@ -169,7 +162,7 @@ export function useUpsertUserIncome() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { userId: string; periodId: string; incomeCents: number }) =>
+    mutationFn: (data: Parameters<typeof userIncomeApi.upsert>[0]) =>
       userIncomeApi.upsert(data).then(res => res.data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.userIncomes(data.periodId) });

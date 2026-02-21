@@ -11,44 +11,49 @@ export default function AllocationExplanation({ invoice }: AllocationExplanation
 
   const renderExplanation = () => {
     switch (invoice.distributionMethod) {
-      case 'EQUAL': {
-        const shareCount = invoice.shares?.length || 1;
-        const equalShare = Math.floor(invoice.totalAmountCents / shareCount);
-        return (
-          <div className="space-y-2 text-sm">
-            <p className="text-gray-500 dark:text-gray-400">{t('invoice.equal')}</p>
-            <p className="text-gray-700 dark:text-gray-300">Total: {formatCurrency(invoice.totalAmountCents)}</p>
-            <p className="text-gray-700 dark:text-gray-300">Divided by: {shareCount} {shareCount === 1 ? 'person' : 'people'}</p>
-            <hr className="border-gray-200 dark:border-gray-700" />
-            <p className="font-semibold text-gray-900 dark:text-gray-100">Per person: {formatCurrency(equalShare)}</p>
-          </div>
-        );
-      }
-      case 'CUSTOM':
-        return (
-          <div className="space-y-2 text-sm">
-            <p className="text-gray-500 dark:text-gray-400">{t('invoice.custom')}</p>
-            <p className="text-gray-700 dark:text-gray-300">Custom shares assigned to each person based on specific amounts.</p>
-            <hr className="border-gray-200 dark:border-gray-700" />
-            <p className="text-gray-700 dark:text-gray-300">Total: {formatCurrency(invoice.totalAmountCents)}</p>
-          </div>
-        );
-      case 'INCOME_BASED':
+      case 'BY_INCOME':
         return (
           <div className="space-y-2 text-sm">
             <p className="text-gray-500 dark:text-gray-400">{t('invoice.incomeBased')}</p>
             <p className="text-gray-700 dark:text-gray-300">Shares calculated proportionally based on each person's income.</p>
             <hr className="border-gray-200 dark:border-gray-700" />
-            <p className="text-gray-700 dark:text-gray-300">Total: {formatCurrency(invoice.totalAmountCents)}</p>
+            <p className="text-gray-700 dark:text-gray-300">Total: {formatCurrency(invoice.totalCents)}</p>
             {invoice.shares && invoice.shares.length > 0 && (
               <div className="mt-2 space-y-1">
                 {invoice.shares.map((share) => (
                   <p key={share.id} className="text-xs text-gray-600 dark:text-gray-400">
-                    {share.user?.name}: {share.percentageShare.toFixed(1)}% = {formatCurrency(share.shareCents)}
+                    {share.user?.name}: {invoice.totalCents > 0 ? ((share.shareCents / invoice.totalCents) * 100).toFixed(1) : '0'}% = {formatCurrency(share.shareCents)}
                   </p>
                 ))}
               </div>
             )}
+          </div>
+        );
+      case 'BY_PERCENT':
+        return (
+          <div className="space-y-2 text-sm">
+            <p className="text-gray-500 dark:text-gray-400">{t('invoice.custom')}</p>
+            <p className="text-gray-700 dark:text-gray-300">Shares split by percentage rules.</p>
+            <hr className="border-gray-200 dark:border-gray-700" />
+            <p className="text-gray-700 dark:text-gray-300">Total: {formatCurrency(invoice.totalCents)}</p>
+            {invoice.shares && invoice.shares.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {invoice.shares.map((share) => (
+                  <p key={share.id} className="text-xs text-gray-600 dark:text-gray-400">
+                    {share.user?.name}: {invoice.totalCents > 0 ? ((share.shareCents / invoice.totalCents) * 100).toFixed(1) : '0'}% = {formatCurrency(share.shareCents)}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case 'FIXED':
+        return (
+          <div className="space-y-2 text-sm">
+            <p className="text-gray-500 dark:text-gray-400">{t('invoice.equal')}</p>
+            <p className="text-gray-700 dark:text-gray-300">Fixed amounts assigned per person.</p>
+            <hr className="border-gray-200 dark:border-gray-700" />
+            <p className="text-gray-700 dark:text-gray-300">Total: {formatCurrency(invoice.totalCents)}</p>
           </div>
         );
       default:

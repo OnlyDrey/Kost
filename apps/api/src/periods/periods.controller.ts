@@ -61,6 +61,17 @@ export class PeriodsController {
     return this.periodsService.findOne(id, familyId);
   }
 
+  @Get(":id/stats")
+  @ApiOperation({ summary: "Get period stats summary" })
+  @ApiResponse({ status: 200, description: "Period stats" })
+  @ApiResponse({ status: 404, description: "Period not found" })
+  getPeriodStats(
+    @Param("id") id: string,
+    @CurrentUser("familyId") familyId: string,
+  ) {
+    return this.periodsService.getPeriodStats(id, familyId);
+  }
+
   @Get(":id/status")
   @ApiOperation({ summary: "Get period status and statistics" })
   @ApiResponse({

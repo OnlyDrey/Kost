@@ -6,7 +6,7 @@ import { useInvoices, useCurrentPeriod } from '../../hooks/useApi';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 
-const METHOD_OPTIONS = ['ALL', 'EQUAL', 'CUSTOM', 'INCOME_BASED'];
+const METHOD_OPTIONS = ['ALL', 'BY_INCOME', 'BY_PERCENT', 'FIXED'];
 
 export default function InvoiceList() {
   const { t } = useTranslation();
@@ -19,7 +19,8 @@ export default function InvoiceList() {
   const [filterMethod, setFilterMethod] = useState('ALL');
 
   const filteredInvoices = invoices?.filter((invoice) => {
-    const matchesSearch = invoice.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchText = `${invoice.vendor} ${invoice.description || ''} ${invoice.category}`.toLowerCase();
+    const matchesSearch = searchText.includes(searchQuery.toLowerCase());
     const matchesMethod = filterMethod === 'ALL' || invoice.distributionMethod === filterMethod;
     return matchesSearch && matchesMethod;
   });
@@ -84,7 +85,7 @@ export default function InvoiceList() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{invoice.description}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{invoice.vendor}</p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                       {invoice.distributionMethod}
@@ -94,22 +95,14 @@ export default function InvoiceList() {
                         {invoice.category}
                       </span>
                     )}
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                      invoice.status === 'APPROVED'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                    }`}>
-                      {invoice.status}
-                    </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {formatDate(invoice.invoiceDate)}
-                    {invoice.uploader && ` · ${invoice.uploader.name}`}
+                    {invoice.description && `${invoice.description} · `}{formatDate(invoice.createdAt)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                    {formatCurrency(invoice.totalAmountCents)}
+                    {formatCurrency(invoice.totalCents)}
                   </p>
                   <button
                     onClick={() => navigate(`/invoices/${invoice.id}`)}

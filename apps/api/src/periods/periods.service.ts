@@ -227,6 +227,41 @@ export class PeriodsService {
   }
 
   /**
+   * Get period stats in the shape the frontend PeriodStats interface expects
+   */
+  async getPeriodStats(id: string, familyId: string) {
+    const period = await this.findOne(id, familyId);
+
+    const totalAmountCents = period.invoices.reduce(
+      (sum, inv) => sum + inv.totalCents,
+      0,
+    );
+
+    const userShareMap = new Map<string, { userId: string; userName: string; totalShareCents: number }>();
+
+    period.invoices.forEach((invoice) => {
+      invoice.shares.forEach((share) => {
+        const existing = userShareMap.get(share.userId);
+        if (existing) {
+          existing.totalShareCents += share.shareCents;
+        } else {
+          userShareMap.set(share.userId, {
+            userId: share.userId,
+            userName: share.user.name,
+            totalShareCents: share.shareCents,
+          });
+        }
+      });
+    });
+
+    return {
+      totalInvoices: period.invoices.length,
+      totalAmountCents,
+      userShares: Array.from(userShareMap.values()),
+    };
+  }
+
+  /**
    * Delete a period (must be empty)
    */
   async remove(id: string, familyId: string) {

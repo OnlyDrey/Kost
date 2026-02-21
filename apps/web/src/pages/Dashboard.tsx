@@ -39,7 +39,7 @@ export default function Dashboard() {
   const { data: invoices, isLoading: invoicesLoading } = useInvoices(currentPeriod?.id);
   const { data: stats, isLoading: statsLoading } = usePeriodStats(currentPeriod?.id || '');
 
-  const userShare = stats?.userShares.find((share) => share.userId === user?.id);
+  const userShare = stats?.userShares?.find((share) => share.userId === user?.id);
   const isLoading = periodLoading || invoicesLoading || statsLoading;
 
   if (isLoading) {
@@ -55,7 +55,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('dashboard.title')}</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {t('dashboard.currentPeriod')}: <span className="font-medium">{currentPeriod?.name || t('common.noData')}</span>
+          {t('dashboard.currentPeriod')}: <span className="font-medium">{currentPeriod?.id || t('common.noData')}</span>
           {currentPeriod && (
             <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
               currentPeriod.status === 'OPEN'
@@ -70,9 +70,9 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Receipt} label={t('dashboard.totalInvoices')} value={stats?.totalInvoices || 0} color="bg-indigo-500" />
-        <StatCard icon={DollarSign} label={t('dashboard.totalAmount')} value={formatCurrency(stats?.totalAmountCents || 0)} color="bg-emerald-500" />
-        <StatCard icon={TrendingUp} label={t('dashboard.yourShare')} value={formatCurrency(userShare?.totalShareCents || 0)} color="bg-amber-500" />
+        <StatCard icon={Receipt} label={t('dashboard.totalInvoices')} value={stats?.totalInvoices ?? 0} color="bg-indigo-500" />
+        <StatCard icon={DollarSign} label={t('dashboard.totalAmount')} value={formatCurrency(stats?.totalAmountCents ?? 0)} color="bg-emerald-500" />
+        <StatCard icon={TrendingUp} label={t('dashboard.yourShare')} value={formatCurrency(userShare?.totalShareCents ?? 0)} color="bg-amber-500" />
         <StatCard icon={Clock} label={t('dashboard.periodStatus')} value={currentPeriod?.status === 'OPEN' ? t('period.open') : t('period.closed')} color="bg-sky-500" />
       </div>
 
@@ -99,14 +99,14 @@ export default function Dashboard() {
                 className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.description}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.vendor}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {formatDate(invoice.invoiceDate)} · {invoice.category}
+                    {invoice.description ? `${invoice.description} · ` : ''}{invoice.category}
                   </p>
                 </div>
                 <div className="text-right ml-4">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.totalAmountCents)}</p>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{invoice.distributionMethod}</span>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.totalCents)}</p>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(invoice.createdAt)}</span>
                 </div>
               </div>
             ))}
