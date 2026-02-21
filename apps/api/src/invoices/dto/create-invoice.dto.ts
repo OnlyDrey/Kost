@@ -71,6 +71,15 @@ export class DistributionRulesDto {
   @IsEnum(RemainderMethod)
   @IsOptional()
   remainderMethod?: RemainderMethod;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: "Limit BY_INCOME distribution to these user IDs only",
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  userIds?: string[];
 }
 
 export class CreateInvoiceDto {

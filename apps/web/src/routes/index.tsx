@@ -8,6 +8,7 @@ import InvoiceList from '../pages/Invoices/InvoiceList';
 import InvoiceDetail from '../pages/Invoices/InvoiceDetail';
 import AddInvoice from '../pages/Invoices/AddInvoice';
 import PeriodList from '../pages/Periods/PeriodList';
+import PeriodDetail from '../pages/Periods/PeriodDetail';
 import Profile from '../pages/Settings/Profile';
 import AdminUsers from '../pages/Admin/Users';
 
@@ -53,7 +54,7 @@ export default function AppRoutes() {
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/invoices/:id/edit" element={<AddInvoice />} />
         <Route path="/periods" element={<PeriodList />} />
-        <Route path="/periods/:id" element={<Dashboard />} />
+        <Route path="/periods/:id" element={<PeriodDetail />} />
         <Route path="/settings" element={<Profile />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>

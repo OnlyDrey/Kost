@@ -89,15 +89,15 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
           onClick={toggleTheme}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
         >
-          {settings.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          <span>{settings.theme === 'dark' ? t('settings.light') : t('settings.dark')}</span>
+          {settings.theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+          <span>{settings.theme === 'dark' ? t('settings.dark') : t('settings.light')}</span>
         </button>
         <button
           onClick={() => setLocale(settings.locale === 'en' ? 'nb' : 'en')}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
         >
           <Globe size={18} />
-          <span>{settings.locale === 'en' ? 'NB' : 'EN'} — {settings.locale === 'en' ? 'Norsk' : 'English'}</span>
+          <span>{settings.locale === 'en' ? 'EN — English' : 'NB — Norsk'}</span>
         </button>
 
         <div className="flex items-center gap-3 px-3 py-2.5 mt-1">
