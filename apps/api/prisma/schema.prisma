@@ -53,10 +53,12 @@ enum AuditAction {
 }
 
 model Family {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  categories     String[] @default([])
+  paymentMethods String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   users         User[]
   periods       Period[]
@@ -208,12 +210,13 @@ model InvoiceShare {
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  paidById    String
-  amountCents Int
-  paidAt      DateTime @default(now())
-  note        String?
+  id            String   @id @default(cuid())
+  invoiceId     String
+  paidById      String
+  amountCents   Int
+  paidAt        DateTime @default(now())
+  note          String?
+  paymentMethod String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

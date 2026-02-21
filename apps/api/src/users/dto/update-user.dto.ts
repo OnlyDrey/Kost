@@ -4,6 +4,7 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 enum UserRole {
   ADMIN = "ADMIN",
   ADULT = "ADULT",
+  JUNIOR = "JUNIOR",
 }
 
 export class UpdateUserDto {

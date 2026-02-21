@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Globe,
   Users,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../stores/auth.context';
@@ -75,12 +76,20 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
           />
         ))}
         {isAdmin && (
-          <NavLink
-            icon={Users}
-            label={t('users.title')}
-            active={location.pathname.startsWith('/admin/users')}
-            onClick={() => onNavigate('/admin/users')}
-          />
+          <>
+            <NavLink
+              icon={Users}
+              label={t('users.title')}
+              active={location.pathname.startsWith('/admin/users')}
+              onClick={() => onNavigate('/admin/users')}
+            />
+            <NavLink
+              icon={SlidersHorizontal}
+              label="Familieinnstillinger"
+              active={location.pathname.startsWith('/admin/settings')}
+              onClick={() => onNavigate('/admin/settings')}
+            />
+          </>
         )}
       </nav>
 

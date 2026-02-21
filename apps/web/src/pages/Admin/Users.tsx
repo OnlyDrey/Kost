@@ -11,7 +11,7 @@ const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-
 interface UserFormData {
   username: string;
   name: string;
-  role: 'ADMIN' | 'ADULT';
+  role: 'ADMIN' | 'ADULT' | 'JUNIOR';
   password: string;
 }
 
@@ -31,7 +31,9 @@ function UserModal({
   const { t } = useTranslation();
   const [username, setUsername] = useState(user?.username ?? '');
   const [name, setName] = useState(user?.name ?? '');
-  const [role, setRole] = useState<'ADMIN' | 'ADULT'>(user?.role === 'ADMIN' ? 'ADMIN' : 'ADULT');
+  const [role, setRole] = useState<'ADMIN' | 'ADULT' | 'JUNIOR'>(
+    user?.role === 'ADMIN' ? 'ADMIN' : user?.role === 'JUNIOR' ? 'JUNIOR' : 'ADULT'
+  );
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,9 +70,10 @@ function UserModal({
             </div>
             <div>
               <label className={labelCls}>{t('users.role')}</label>
-              <select value={role} onChange={(e) => setRole(e.target.value as 'ADMIN' | 'ADULT')} className={inputCls}>
+              <select value={role} onChange={(e) => setRole(e.target.value as 'ADMIN' | 'ADULT' | 'JUNIOR')} className={inputCls}>
                 <option value="ADULT">{t('users.adult')}</option>
                 <option value="ADMIN">{t('users.admin')}</option>
+                <option value="JUNIOR">{t('users.junior')}</option>
               </select>
             </div>
             <div>
@@ -181,9 +184,11 @@ export default function Users() {
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                     u.role === 'ADMIN'
                       ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                      : u.role === 'JUNIOR'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                   }`}>
-                    {u.role === 'ADMIN' ? t('users.admin') : t('users.adult')}
+                    {u.role === 'ADMIN' ? t('users.admin') : u.role === 'JUNIOR' ? t('users.junior') : t('users.adult')}
                   </span>
                   <button onClick={() => openEdit(u)} className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     <Pencil size={16} />

@@ -5,12 +5,17 @@ A self-hosted app for tracking shared household expenses. Family members registe
 ## Features
 
 - **Expense management** — create, categorize, and allocate expenses among family members
-- **Flexible cost splitting** — income-proportional, custom percentage per user, or fixed amount
-- **BY_INCOME user selection** — choose which users to include in income-based splits
-- **Period management** — monthly billing periods with stats, income registration, and settlement
-- **Income registration** — register monthly/annual gross or net income per user per period
+- **Flexible cost splitting** — income-proportional, custom percentage per user, or equal split
+- **BY_INCOME user selection** — choose which users to include in income-based splits; live income percentages shown per user; JUNIOR (child) users excluded by default
+- **Payment tracking** — mark invoices as paid, record partial payments with payment method, see paid/remaining amounts
+- **Managed categories** — admins/adults maintain a per-family category list used as a dropdown when creating invoices
+- **Managed payment methods** — admins/adults maintain a list of payment methods (e.g. bank transfer, cash) used as a dropdown when registering payments
+- **User roles** — ADMIN (full access), ADULT (create/pay invoices), JUNIOR (child; excluded from cost splits by default, must be opted in per invoice)
+- **Period management** — monthly billing periods with stats and settlement summaries
+- **Income registration** — each user registers their own monthly/annual gross or net income from their profile settings; used for income-proportional splits
 - **User management** — admins can add, edit, and delete family members (including password reset)
-- **Settings page** — users can update their profile and change their own password
+- **Settings page** — users can update their profile, register their income, and change their password
+- **Family settings** — admins can manage shared categories and payment methods
 - **Offline support** — works without internet; mutations sync when reconnected
 - **Multi-language** — English and Norwegian (Bokmål)
 - **Precise money math** — all calculations in integer cents, no floating-point errors

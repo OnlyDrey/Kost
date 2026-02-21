@@ -11,6 +11,7 @@ import PeriodList from '../pages/Periods/PeriodList';
 import PeriodDetail from '../pages/Periods/PeriodDetail';
 import Profile from '../pages/Settings/Profile';
 import AdminUsers from '../pages/Admin/Users';
+import FamilySettings from '../pages/Admin/FamilySettings';
 
 function Spinner() {
   return (
@@ -67,6 +68,7 @@ export default function AppRoutes() {
         }
       >
         <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/settings" element={<FamilySettings />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
