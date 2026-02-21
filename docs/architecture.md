@@ -98,6 +98,6 @@ All monetary amounts are stored and calculated as **integers in cents (øre)**. 
 
 | Role     | Permissions                                                                |
 |----------|----------------------------------------------------------------------------|
-| `ADMIN`  | Full access: manage users, family settings, close periods, delete data     |
-| `ADULT`  | Create and edit invoices and payments in open periods                      |
+| `ADMIN`  | Full access: manage users, family settings, close periods, delete data; can view and override any user's income for the current period |
+| `ADULT`  | Create and edit invoices and payments in open periods; register own income (requires confirmation) |
 | `JUNIOR` | Child role; excluded from cost splits by default, must be opted in per invoice |
