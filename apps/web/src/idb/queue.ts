@@ -3,7 +3,7 @@ import { api } from '../services/api';
 
 export interface QueuedRequest {
   id?: number;
-  method: 'POST' | 'PUT' | 'DELETE';
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   url: string;
   data?: any;
   timestamp: number;
@@ -62,6 +62,9 @@ export async function processOfflineQueue(): Promise<void> {
           break;
         case 'PUT':
           await api.put(request.url, request.data);
+          break;
+        case 'PATCH':
+          await api.patch(request.url, request.data);
           break;
         case 'DELETE':
           await api.delete(request.url);
