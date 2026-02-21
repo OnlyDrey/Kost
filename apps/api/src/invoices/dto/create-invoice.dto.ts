@@ -88,10 +88,10 @@ export class CreateInvoiceDto {
   @IsNotEmpty()
   periodId: string;
 
-  @ApiProperty({ example: "Utilities" })
+  @ApiPropertyOptional({ example: "Utilities" })
   @IsString()
-  @IsNotEmpty()
-  category: string;
+  @IsOptional()
+  category?: string;
 
   @ApiProperty({ example: "Electric Company" })
   @IsString()

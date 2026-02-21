@@ -52,8 +52,12 @@ export default function AddInvoice() {
       setAmount(String(centsToAmount(existingInvoice.totalCents)));
       setDistributionMethod(existingInvoice.distributionMethod);
       if (existingInvoice.dueDate) setDueDate(existingInvoice.dueDate.slice(0, 10));
+      // Initialize selected users from existing shares
+      if (existingInvoice.shares && existingInvoice.shares.length > 0) {
+        setIncomeUserIds(new Set(existingInvoice.shares.map((s: any) => s.userId)));
+      }
     }
-  }, [isEditing, existingInvoice]);
+  }, [isEditing, existingInvoice?.id]);
 
   const totalPercent = Object.values(userPercents).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
 
@@ -88,7 +92,6 @@ export default function AddInvoice() {
 
     if (!isEditing && !currentPeriod) { setError('No active period found'); return; }
     if (!vendor.trim()) { setError(t('validation.required')); return; }
-    if (!category.trim()) { setError(t('validation.required')); return; }
 
     const totalCents = amountToCents(parseFloat(amount));
     if (isNaN(totalCents) || totalCents <= 0) { setError(t('validation.invalidAmount')); return; }
@@ -114,7 +117,7 @@ export default function AddInvoice() {
 
     const sharedData = {
       vendor: vendor.trim(),
-      category: category.trim(),
+      category: category.trim() || undefined,
       description: description.trim() || undefined,
       totalCents,
       distributionMethod,
@@ -124,7 +127,7 @@ export default function AddInvoice() {
 
     try {
       if (isEditing) {
-        await updateInvoice.mutateAsync({ id: id!, data: sharedData });
+        await updateInvoice.mutateAsync({ id: id!, data: { ...sharedData, distributionRules } });
       } else {
         await createInvoice.mutateAsync({
           periodId: currentPeriod!.id,
@@ -174,15 +177,11 @@ export default function AddInvoice() {
               <input type="text" value={vendor} onChange={(e) => setVendor(e.target.value)} required className={inputCls} placeholder="e.g., Electric Company" />
             </div>
             <div>
-              <label className={labelCls}>{t('invoice.category')} *</label>
-              {categories.length > 0 ? (
-                <select value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls}>
-                  <option value="">Velg kategori...</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              ) : (
-                <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required className={inputCls} placeholder="e.g., Utilities" />
-              )}
+              <label className={labelCls}>{t('invoice.category')}</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
+                <option value="">Velg kategori...</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
           </div>
 
@@ -197,13 +196,13 @@ export default function AddInvoice() {
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beløp i kr</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <label className={labelCls}>{t('invoice.dueDate')}</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls + ' max-w-full'} />
             </div>
           </div>
 
-          {paymentMethods.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Betalingsmåte</label>
               <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={inputCls}>
@@ -211,7 +210,7 @@ export default function AddInvoice() {
                 {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-          )}
+          </div>
 
           <div>
             <label className={labelCls}>{t('invoice.distributionMethod')} *</label>

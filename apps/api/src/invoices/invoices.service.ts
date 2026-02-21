@@ -164,7 +164,7 @@ export class InvoicesService {
         data: {
           familyId,
           periodId,
-          category: invoiceData.category,
+          category: invoiceData.category ?? '',
           vendor: invoiceData.vendor,
           description: invoiceData.description,
           dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : null,
@@ -237,8 +237,19 @@ export class InvoicesService {
       throw new BadRequestException("Cannot update invoice in a closed period");
     }
 
-    const { lines, distributionRules, distributionMethod, ...updateData } =
-      updateInvoiceDto;
+    const {
+      lines,
+      distributionRules,
+      distributionMethod,
+      dueDate,
+      ...restUpdateData
+    } = updateInvoiceDto;
+
+    // Convert dueDate string to Date object (Prisma requires ISO-8601 DateTime)
+    const updateData = {
+      ...restUpdateData,
+      ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+    };
 
     // If distribution method or total changes, recalculate shares
     const shouldRecalculateShares =
@@ -259,15 +270,24 @@ export class InvoicesService {
         include: { user: true },
       });
 
+      // Filter participants by selected userIds (same logic as create)
+      const allParticipants = incomes.map((inc) => ({
+        userId: inc.userId,
+        userName: inc.user.name,
+        role: inc.user.role,
+        normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
+      }));
+      const selectedUserIds = distributionRules?.userIds;
+      const participants =
+        selectedUserIds && selectedUserIds.length > 0
+          ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
+          : allParticipants.filter((p) => p.role !== "JUNIOR");
+
       const shares = await this.calculateShares(
         totalCents,
         method,
         distributionRules,
-        incomes.map((inc) => ({
-          userId: inc.userId,
-          userName: inc.user.name,
-          normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-        })),
+        participants,
       );
 
       // Update in transaction
