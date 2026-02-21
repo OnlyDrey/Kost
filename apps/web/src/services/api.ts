@@ -68,7 +68,6 @@ export interface Payment {
   amountCents: number;
   paidAt: string;
   note?: string;
-  paymentMethod?: string;
   paidBy?: { id: string; name: string; username: string };
 }
 
@@ -82,6 +81,7 @@ export interface Invoice {
   dueDate?: string;
   totalCents: number;
   distributionMethod: 'BY_PERCENT' | 'BY_INCOME' | 'FIXED';
+  paymentMethod?: string;
   createdAt: string;
   updatedAt: string;
   lines?: InvoiceLine[];
@@ -209,7 +209,7 @@ export const userIncomeApi = {
 };
 
 export const paymentApi = {
-  create: (invoiceId: string, data: { paidById: string; amountCents: number; note?: string; paymentMethod?: string; paidAt?: string }) =>
+  create: (invoiceId: string, data: { paidById: string; amountCents: number; note?: string; paidAt?: string }) =>
     api.post<Payment>(`/invoices/${invoiceId}/payments`, data),
 };
 

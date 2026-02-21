@@ -133,15 +133,16 @@ model Income {
 }
 
 model Invoice {
-  id                String             @id @default(cuid())
-  familyId          String
-  periodId          String
-  category          String
-  vendor            String
-  description       String?
-  dueDate           DateTime?
-  totalCents        Int
+  id                 String             @id @default(cuid())
+  familyId           String
+  periodId           String
+  category           String
+  vendor             String
+  description        String?
+  dueDate            DateTime?
+  totalCents         Int
   distributionMethod DistributionMethod
+  paymentMethod      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -210,13 +211,12 @@ model InvoiceShare {
 }
 
 model Payment {
-  id            String   @id @default(cuid())
-  invoiceId     String
-  paidById      String
-  amountCents   Int
-  paidAt        DateTime @default(now())
-  note          String?
-  paymentMethod String?
+  id          String   @id @default(cuid())
+  invoiceId   String
+  paidById    String
+  amountCents Int
+  paidAt      DateTime @default(now())
+  note        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

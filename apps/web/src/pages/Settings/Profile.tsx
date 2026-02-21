@@ -10,10 +10,8 @@ const inputCls =
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
 const INCOME_TYPES = [
-  { value: 'MONTHLY_GROSS', label: 'Månedlig brutto' },
-  { value: 'MONTHLY_NET', label: 'Månedlig netto' },
   { value: 'ANNUAL_GROSS', label: 'Årlig brutto' },
-  { value: 'ANNUAL_NET', label: 'Årlig netto' },
+  { value: 'MONTHLY_GROSS', label: 'Månedlig brutto' },
 ];
 
 export default function Profile() {
@@ -41,7 +39,7 @@ export default function Profile() {
   // Income form
   const myIncome = incomes?.find(i => i.userId === user?.id);
   const [incomeAmount, setIncomeAmount] = useState('');
-  const [incomeType, setIncomeType] = useState('MONTHLY_GROSS');
+  const [incomeType, setIncomeType] = useState('ANNUAL_GROSS');
   const [incomeError, setIncomeError] = useState('');
   const [incomeSuccess, setIncomeSuccess] = useState(false);
 
@@ -207,7 +205,7 @@ export default function Profile() {
                   required
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Angi brutto lønn. Beregnes automatisk til månedlig brutto for fordeling.
+                  Beregnes automatisk til månedlig brutto for fordeling.
                 </p>
               </div>
               <div className="flex justify-end">
