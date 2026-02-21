@@ -1,0 +1,212 @@
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, AlertCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '../../hooks/useApi';
+import { User } from '../../services/api';
+
+const inputCls =
+  'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
+const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
+
+interface UserFormData {
+  username: string;
+  name: string;
+  role: 'ADMIN' | 'ADULT';
+  password: string;
+}
+
+function UserModal({
+  user,
+  onClose,
+  onSave,
+  isPending,
+  error,
+}: {
+  user: User | null;
+  onClose: () => void;
+  onSave: (data: UserFormData) => void;
+  isPending: boolean;
+  error: string;
+}) {
+  const { t } = useTranslation();
+  const [username, setUsername] = useState(user?.username ?? '');
+  const [name, setName] = useState(user?.name ?? '');
+  const [role, setRole] = useState<'ADMIN' | 'ADULT'>(user?.role === 'ADMIN' ? 'ADMIN' : 'ADULT');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ username, name, role, password });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            {user ? t('users.editUser') : t('users.addUser')}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="px-6 py-5 space-y-4">
+            {error && (
+              <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
+                <AlertCircle size={15} className="flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+            <div>
+              <label className={labelCls}>{t('users.name')} *</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
+            </div>
+            <div>
+              <label className={labelCls}>{t('users.username')} *</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className={inputCls} required />
+            </div>
+            <div>
+              <label className={labelCls}>{t('users.role')}</label>
+              <select value={role} onChange={(e) => setRole(e.target.value as 'ADMIN' | 'ADULT')} className={inputCls}>
+                <option value="ADULT">{t('users.adult')}</option>
+                <option value="ADMIN">{t('users.admin')}</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>
+                {t('users.password')} {user && <span className="text-gray-400 font-normal">(leave blank to keep current)</span>}
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputCls}
+                minLength={6}
+                required={!user}
+                placeholder={user ? '••••••' : ''}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+            <button type="button" onClick={onClose} className="text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              {t('common.cancel')}
+            </button>
+            <button type="submit" disabled={isPending} className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors">
+              {isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              {t('common.save')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default function Users() {
+  const { t } = useTranslation();
+  const { data: users, isLoading } = useUsers();
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [modalError, setModalError] = useState('');
+
+  const openCreate = () => { setEditingUser(null); setModalError(''); setModalOpen(true); };
+  const openEdit = (u: User) => { setEditingUser(u); setModalError(''); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); setEditingUser(null); setModalError(''); };
+
+  const handleSave = async (data: UserFormData) => {
+    setModalError('');
+    try {
+      if (editingUser) {
+        const updateData: Record<string, string> = { name: data.name, username: data.username, role: data.role };
+        if (data.password) updateData.password = data.password;
+        await updateUser.mutateAsync({ id: editingUser.id, data: updateData });
+      } else {
+        await createUser.mutateAsync({ ...data });
+      }
+      closeModal();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setModalError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+    }
+  };
+
+  const handleDelete = async (u: User) => {
+    if (confirm(t('users.confirmDelete'))) {
+      try { await deleteUser.mutateAsync(u.id); } catch { alert(t('errors.serverError')); }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('users.title')}</h1>
+        <button onClick={openCreate} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <Plus size={16} />
+          {t('users.addUser')}
+        </button>
+      </div>
+
+      {!users || users.length === 0 ? (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center shadow-sm">
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.noData')}</p>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            {users.map((u) => (
+              <div key={u.id} className="flex items-center justify-between px-5 py-4 gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                    {u.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{u.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">@{u.username}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                    u.role === 'ADMIN'
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                  }`}>
+                    {u.role === 'ADMIN' ? t('users.admin') : t('users.adult')}
+                  </span>
+                  <button onClick={() => openEdit(u)} className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    <Pencil size={16} />
+                  </button>
+                  <button onClick={() => handleDelete(u)} className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {modalOpen && (
+        <UserModal
+          user={editingUser}
+          onClose={closeModal}
+          onSave={handleSave}
+          isPending={createUser.isPending || updateUser.isPending}
+          error={modalError}
+        />
+      )}
+    </div>
+  );
+}

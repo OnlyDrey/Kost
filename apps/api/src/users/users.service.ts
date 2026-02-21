@@ -8,6 +8,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserRole } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class UsersService {
@@ -69,12 +70,17 @@ export class UsersService {
       throw new ConflictException("User with this username already exists");
     }
 
+    const passwordHash = createUserDto.password
+      ? await bcrypt.hash(createUserDto.password, 10)
+      : undefined;
+
     return this.prisma.user.create({
       data: {
         username: createUserDto.username.toLowerCase(),
         name: createUserDto.name,
         role: createUserDto.role,
         familyId,
+        ...(passwordHash && { passwordHash }),
       },
       select: {
         id: true,
@@ -130,6 +136,10 @@ export class UsersService {
       }
     }
 
+    const passwordHash = updateUserDto.password
+      ? await bcrypt.hash(updateUserDto.password, 10)
+      : undefined;
+
     return this.prisma.user.update({
       where: { id },
       data: {
@@ -138,6 +148,7 @@ export class UsersService {
         }),
         ...(updateUserDto.name && { name: updateUserDto.name }),
         ...(updateUserDto.role && { role: updateUserDto.role }),
+        ...(passwordHash && { passwordHash }),
       },
       select: {
         id: true,

@@ -79,7 +79,29 @@
     "light": "Lys",
     "dark": "Mørk",
     "english": "Engelsk",
-    "norwegian": "Norsk"
+    "norwegian": "Norsk",
+    "profile": "Profil",
+    "changePassword": "Endre passord",
+    "currentPassword": "Nåværende passord",
+    "newPassword": "Nytt passord",
+    "confirmPassword": "Bekreft passord",
+    "passwordMismatch": "Passordene stemmer ikke overens",
+    "passwordChanged": "Passordet ble endret",
+    "profileUpdated": "Profilen ble oppdatert"
+  },
+  "users": {
+    "title": "Brukere",
+    "addUser": "Legg til bruker",
+    "editUser": "Rediger bruker",
+    "deleteUser": "Slett bruker",
+    "confirmDelete": "Er du sikker på at du vil slette denne brukeren?",
+    "username": "Brukernavn",
+    "name": "Navn",
+    "role": "Rolle",
+    "password": "Passord",
+    "admin": "Admin",
+    "adult": "Voksen",
+    "noPassword": "Ingen passord satt"
   },
   "common": {
     "loading": "Laster...",

@@ -5,12 +5,15 @@ import { useTranslation } from 'react-i18next';
 import { useInvoices, useCurrentPeriod } from '../../hooks/useApi';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
+import { distributionLabel } from '../../utils/distribution';
+import { useSettings } from '../../stores/settings.context';
 
 const METHOD_OPTIONS = ['ALL', 'BY_INCOME', 'BY_PERCENT', 'FIXED'];
 
 export default function InvoiceList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { settings } = useSettings();
 
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: invoices, isLoading } = useInvoices(currentPeriod?.id);
@@ -65,7 +68,7 @@ export default function InvoiceList() {
         >
           {METHOD_OPTIONS.map((m) => (
             <option key={m} value={m}>
-              {m === 'ALL' ? t('common.filter') : t(`invoice.${m.toLowerCase().replace('_', '')}`, m)}
+              {m === 'ALL' ? t('common.filter') : distributionLabel(m, settings.locale)}
             </option>
           ))}
         </select>
@@ -88,7 +91,7 @@ export default function InvoiceList() {
                   <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{invoice.vendor}</p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                      {invoice.distributionMethod}
+                      {distributionLabel(invoice.distributionMethod, settings.locale)}
                     </span>
                     {invoice.category && (
                       <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">

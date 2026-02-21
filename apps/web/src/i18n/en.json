@@ -79,7 +79,29 @@
     "light": "Light",
     "dark": "Dark",
     "english": "English",
-    "norwegian": "Norwegian"
+    "norwegian": "Norwegian",
+    "profile": "Profile",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordChanged": "Password changed successfully",
+    "profileUpdated": "Profile updated successfully"
+  },
+  "users": {
+    "title": "Users",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "confirmDelete": "Are you sure you want to delete this user?",
+    "username": "Username",
+    "name": "Name",
+    "role": "Role",
+    "password": "Password",
+    "admin": "Admin",
+    "adult": "Adult",
+    "noPassword": "No password set"
   },
   "common": {
     "loading": "Loading...",

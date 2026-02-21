@@ -6,8 +6,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Hash password for test users (password: "password123")
-  const passwordHash = await bcrypt.hash('password123', 10);
+  // Hash password for test users (password: "kostpass")
+  const passwordHash = await bcrypt.hash('kostpass', 10);
 
   // Clean existing data
   await prisma.auditLog.deleteMany();
@@ -370,7 +370,7 @@ async function main() {
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📊 Summary:');
   console.log(`   - Family: ${family.name}`);
-  console.log(`   - Users: 3 (1 Admin, 2 Adults) - password: "password123"`);
+  console.log(`   - Users: 3 (1 Admin, 2 Adults) - password: "kostpass"`);
   console.log(`   - Periods: 2 (Feb closed, Mar open)`);
   console.log(`   - Invoices: 3 (various distribution methods)`);
   console.log(`   - Payments: 2 (1 full, 1 partial)`);

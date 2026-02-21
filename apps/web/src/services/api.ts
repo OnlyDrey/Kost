@@ -125,6 +125,26 @@ export const authApi = {
 
   logout: () =>
     api.post('/auth/logout'),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.post<{ message: string }>('/auth/change-password', { currentPassword, newPassword }),
+};
+
+export const userApi = {
+  getAll: () =>
+    api.get<User[]>('/users'),
+
+  getById: (id: string) =>
+    api.get<User>(`/users/${id}`),
+
+  create: (data: { username: string; name: string; role: 'ADMIN' | 'ADULT'; password?: string }) =>
+    api.post<User>('/users', data),
+
+  update: (id: string, data: { username?: string; name?: string; role?: 'ADMIN' | 'ADULT'; password?: string }) =>
+    api.patch<User>(`/users/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete(`/users/${id}`),
 };
 
 export const invoiceApi = {
