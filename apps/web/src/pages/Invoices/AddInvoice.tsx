@@ -44,7 +44,7 @@ export default function AddInvoice() {
     if (users && users.length > 0 && !isEditing) {
       setIncomeUserIds(new Set(users.filter(u => u.role !== 'JUNIOR').map(u => u.id)));
     }
-  }, [users?.length, isEditing]);
+  }, [users, isEditing]);
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -54,10 +54,22 @@ export default function AddInvoice() {
       setCategory(existingInvoice.category);
       setAmount(String(centsToAmount(existingInvoice.totalCents)));
       setDistributionMethod(existingInvoice.distributionMethod);
+      setPaymentMethod(existingInvoice.paymentMethod ?? '');
       if (existingInvoice.dueDate) setDueDate(existingInvoice.dueDate.slice(0, 10));
       // Initialize selected users from existing shares
       if (existingInvoice.shares && existingInvoice.shares.length > 0) {
         setIncomeUserIds(new Set(existingInvoice.shares.map((s: any) => s.userId)));
+        // For BY_PERCENT, populate userPercents from shares
+        if (existingInvoice.distributionMethod === 'BY_PERCENT') {
+          const percents: Record<string, string> = {};
+          existingInvoice.shares.forEach((share: any) => {
+            if (existingInvoice.totalCents > 0) {
+              const percentage = ((share.shareCents / existingInvoice.totalCents) * 100).toFixed(1);
+              percents[share.userId] = percentage;
+            }
+          });
+          setUserPercents(percents);
+        }
       }
     }
   }, [isEditing, existingInvoice?.id]);
