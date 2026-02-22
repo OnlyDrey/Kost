@@ -178,7 +178,7 @@ function SubscriptionForm({
           <label className={labelCls + ' mb-0'}>{t('subscription.selectUsers')}</label>
           <div className="space-y-1.5">
             {users.map(u => {
-              const checked = form.selectedUserIds.size === 0 || form.selectedUserIds.has(u.id);
+              const checked = form.selectedUserIds.has(u.id);
               return (
                 <button
                   key={u.id}

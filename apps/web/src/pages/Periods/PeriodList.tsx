@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Lock, AlertCircle, X } from 'lucide-react';
+import { Plus, Lock, AlertCircle, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { usePeriods, useCreatePeriod, useClosePeriod } from '../../hooks/useApi';
+import { usePeriods, useCreatePeriod, useClosePeriod, useDeletePeriod } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatDate } from '../../utils/date';
 
@@ -17,6 +17,7 @@ export default function PeriodList() {
   const { data: periods, isLoading } = usePeriods();
   const createPeriod = useCreatePeriod();
   const closePeriod = useClosePeriod();
+  const deletePeriod = useDeletePeriod();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [periodId, setPeriodId] = useState('');
@@ -58,6 +59,15 @@ export default function PeriodList() {
   const handleClose = async (id: string) => {
     if (confirm(t('period.confirmClose'))) {
       try { await closePeriod.mutateAsync(id); } catch { alert(t('errors.serverError')); }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm(t('period.confirmDelete') || 'Are you sure you want to delete this period?')) {
+      try { await deletePeriod.mutateAsync(id); } catch (err: any) {
+        const msg = err?.response?.data?.message;
+        alert(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+      }
     }
   };
 
@@ -116,6 +126,12 @@ export default function PeriodList() {
                     <button onClick={() => handleClose(period.id)} className="flex items-center gap-1.5 text-sm border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors font-medium">
                       <Lock size={14} />
                       {t('period.closePeriod')}
+                    </button>
+                  )}
+                  {isAdmin && period.status === 'CLOSED' && (
+                    <button onClick={() => handleDelete(period.id)} disabled={deletePeriod.isPending} className="flex items-center gap-1.5 text-sm border border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-60 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                      <Trash2 size={14} />
+                      {t('common.delete')}
                     </button>
                   )}
                 </div>

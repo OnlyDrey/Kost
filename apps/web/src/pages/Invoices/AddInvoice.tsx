@@ -199,7 +199,7 @@ export default function AddInvoice() {
                         className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
                       >
                         {v.logoUrl && (
-                          <img src={v.logoUrl} alt="" className="w-5 h-5 rounded object-contain flex-shrink-0"
+                          <img src={v.logoUrl} alt="" className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
                             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         )}
                         <span>{v.name}</span>

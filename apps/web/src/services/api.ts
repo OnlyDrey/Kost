@@ -243,6 +243,9 @@ export const periodApi = {
   close: (id: string) =>
     api.post<Period>(`/periods/${id}/close`),
 
+  delete: (id: string) =>
+    api.delete(`/periods/${id}`),
+
   getStats: (id: string) =>
     api.get<PeriodStats>(`/periods/${id}/stats`),
 };
