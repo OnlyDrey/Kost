@@ -70,7 +70,7 @@ export default function SubscriptionList() {
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Plus size={16} />
-              {t('subscription.new')}
+              {t('subscription.add', { default: 'Add Recurring Expense' })}
             </button>
           </div>
         </div>
