@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, CheckCircle2, AlertCircle, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency } from '../../hooks/useApi';
+import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useVendors } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatCurrency, amountToCents } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
@@ -22,6 +22,7 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id!);
   const { data: currency = 'NOK' } = useCurrency();
+  const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
 
@@ -100,7 +101,27 @@ export default function InvoiceDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main info */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{invoice.vendor}{invoice.description && ` – ${invoice.description}`}</h2>
+          <div className="flex items-center gap-3">
+            {(() => {
+              const vendorLogo = vendors.find(v => v.name.toLowerCase() === invoice.vendor.toLowerCase())?.logoUrl;
+              return vendorLogo ? (
+                <img
+                  src={vendorLogo}
+                  alt=""
+                  className="w-12 h-12 rounded-lg object-contain bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0">
+                  <Store size={20} className="text-gray-400" />
+                </div>
+              );
+            })()}
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{invoice.vendor}</h2>
+              {invoice.description && <p className="text-sm text-gray-500 dark:text-gray-400">{invoice.description}</p>}
+            </div>
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">

@@ -141,7 +141,7 @@ export default function InvoiceList() {
                       <img
                         src={logoUrl}
                         alt=""
-                        className="w-10 h-10 rounded-lg object-contain bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex-shrink-0 mt-0.5"
+                        className="w-10 h-10 rounded-lg object-contain bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0 mt-0.5"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     ) : (
