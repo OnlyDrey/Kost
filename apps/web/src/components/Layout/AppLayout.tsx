@@ -54,6 +54,17 @@ function NavLink({
   );
 }
 
+function UserAvatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl?: string | null; size?: number }) {
+  const sizeClass = `w-${size} h-${size}`;
+  return (
+    <div className={`${sizeClass} rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}>
+      {avatarUrl
+        ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+        : name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -112,9 +123,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
         </button>
 
         <div className="flex items-center gap-3 px-3 py-2.5 mt-1">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-            {user?.name.charAt(0).toUpperCase()}
-          </div>
+          <UserAvatar name={user?.name ?? ''} avatarUrl={user?.avatarUrl} size={8} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
             {isAdmin && <p className="text-xs text-indigo-600 dark:text-indigo-400">Admin</p>}
@@ -162,7 +171,7 @@ export default function AppLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <header className="sticky top-0 z-30 md:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

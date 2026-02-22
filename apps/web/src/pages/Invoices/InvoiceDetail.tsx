@@ -121,7 +121,7 @@ export default function InvoiceDetail() {
           <hr className="border-gray-100 dark:border-gray-800" />
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="col-span-2">
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.totalAmount')}</p>
               <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
                 {formatCurrency(invoice.totalCents, currency)}

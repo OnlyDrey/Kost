@@ -92,6 +92,7 @@ model User {
   username     String   @unique
   name         String
   passwordHash String?
+  avatarUrl    String?
   role         UserRole @default(ADULT)
   familyId     String
   createdAt    DateTime @default(now())
