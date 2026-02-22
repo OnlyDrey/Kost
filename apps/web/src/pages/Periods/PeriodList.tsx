@@ -111,11 +111,11 @@ export default function PeriodList() {
                       {period.status === 'OPEN' ? t('period.open') : t('period.closed')}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {t('period.createdAt', { date: formatDate(period.createdAt) })}
                   </div>
                   {period.closedAt && (
-                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{t('period.closedAt', { date: formatDate(period.closedAt) })}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('period.closedAt', { date: formatDate(period.closedAt) })}</div>
                   )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
