@@ -306,7 +306,7 @@ export default function AddExpense() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="relative">
-              <label className={labelCls}>{isSubscription ? t('subscription.name') : t('invoice.vendor')} *</label>
+              <label className={labelCls}>{t('invoice.vendor')} *</label>
               <input
                 type="text"
                 value={vendor}
@@ -315,7 +315,7 @@ export default function AddExpense() {
                 onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
                 required
                 className={inputCls}
-                placeholder={isSubscription ? 'e.g. Mortgage' : t('invoice.vendorPlaceholder')}
+                placeholder={t('invoice.vendorPlaceholder')}
               />
               {showVendorList && vendors.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
@@ -347,18 +347,10 @@ export default function AddExpense() {
             </div>
           </div>
 
-          {!isSubscription && (
-            <div>
-              <label className={labelCls}>{t('invoice.description')}</label>
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder={t('invoice.descriptionPlaceholder')} />
-            </div>
-          )}
-          {isSubscription && (
-            <div>
-              <label className={labelCls}>{t('invoice.description')}</label>
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="e.g., Monthly payment for home loan" />
-            </div>
-          )}
+          <div>
+            <label className={labelCls}>{t('invoice.description')}</label>
+            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder={isSubscription ? "e.g., Monthly payment for home loan" : t('invoice.descriptionPlaceholder')} />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -376,23 +368,25 @@ export default function AddExpense() {
 
           {isSubscription && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className={labelCls}>{t('subscription.frequency')}</label>
-                  <input type="number" value={frequencyQuantity} onChange={(e) => setFrequencyQuantity(e.target.value)} className={inputCls} min="1" placeholder="e.g., 1" />
-                </div>
-                <div>
-                  <label className={labelCls} style={{ visibility: 'hidden' }}>Unit</label>
-                  <select value={frequencyUnit} onChange={(e) => setFrequencyUnit(e.target.value)} className={inputCls}>
-                    <option value="DAY">{t('subscription.day', { default: 'Day' })}</option>
-                    <option value="WEEK">{t('subscription.week', { default: 'Week' })}</option>
-                    <option value="MONTH">{t('subscription.month', { default: 'Month' })}</option>
-                    <option value="YEAR">{t('subscription.year', { default: 'Year' })}</option>
-                  </select>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>Every</label>
+                    <input type="number" value={frequencyQuantity} onChange={(e) => setFrequencyQuantity(e.target.value)} className={inputCls} min="1" placeholder="1" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Unit</label>
+                    <select value={frequencyUnit} onChange={(e) => setFrequencyUnit(e.target.value)} className={inputCls}>
+                      <option value="DAY">Day</option>
+                      <option value="WEEK">Week</option>
+                      <option value="MONTH">Month</option>
+                      <option value="YEAR">Year</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className={labelCls}>{t('subscription.dayOfMonth')}</label>
-                  <input type="number" value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className={inputCls} min="1" max="31" />
+                  <input type="number" value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className={inputCls} min="1" max="31" placeholder="1" />
                 </div>
               </div>
 
