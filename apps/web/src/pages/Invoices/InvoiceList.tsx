@@ -97,7 +97,7 @@ export default function InvoiceList() {
           >
             {METHOD_OPTIONS.map((m) => (
               <option key={m} value={m}>
-                {m === 'ALL' ? t('invoice.distributionMethod') : distributionLabel(m, settings.locale)}
+                {m === 'ALL' ? 'Type' : distributionLabel(m, settings.locale)}
               </option>
             ))}
           </select>

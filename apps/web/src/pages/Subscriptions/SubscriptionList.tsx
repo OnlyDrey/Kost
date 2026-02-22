@@ -174,8 +174,8 @@ function SubscriptionCard({
     <div className={`bg-white dark:bg-gray-900 rounded-xl border p-4 shadow-sm transition-all ${
       sub.active ? 'border-gray-200 dark:border-gray-800' : 'border-gray-100 dark:border-gray-800/50 opacity-60'
     }`}>
-      <div className="flex items-center gap-4">
-        <div className="flex-1 min-w-0">
+      <div className="space-y-4">
+        <div>
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-semibold text-gray-900 dark:text-gray-100">{sub.name}</p>
             <span className="text-xs text-gray-500 dark:text-gray-400">{sub.vendor}</span>
@@ -201,23 +201,25 @@ function SubscriptionCard({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center justify-between">
           <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
             {formatCurrency(sub.amountCents, currency)}
           </p>
-          <button onClick={onEdit} className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <Pencil size={16} />
-          </button>
-          <button
-            onClick={onToggle}
-            title={sub.active ? t('subscription.deactivate') : t('subscription.activate')}
-            className={`transition-colors ${sub.active ? 'text-green-600 dark:text-green-400 hover:text-gray-400' : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'}`}
-          >
-            <Power size={16} />
-          </button>
-          <button onClick={onDelete} className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
-            <Trash2 size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onEdit} className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 transition-colors">
+              <Pencil size={18} />
+            </button>
+            <button
+              onClick={onToggle}
+              title={sub.active ? t('subscription.deactivate') : t('subscription.activate')}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${sub.active ? 'bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500'}`}
+            >
+              <Power size={18} />
+            </button>
+            <button onClick={onDelete} className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors">
+              <Trash2 size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
