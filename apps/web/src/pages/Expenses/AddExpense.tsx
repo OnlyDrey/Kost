@@ -136,18 +136,32 @@ export default function AddExpense() {
 
       // Initialize distribution rules from subscription
       const rules = existingSubscription.distributionRules as any;
-      if (rules?.userIds) {
-        setIncomeUserIds(new Set(rules.userIds));
-      }
-      if (rules?.percentRules) {
-        const percents: Record<string, string> = {};
-        rules.percentRules.forEach((rule: any) => {
-          percents[rule.userId] = (rule.percentBasisPoints / 100).toFixed(1);
-        });
-        setUserPercents(percents);
+      if (rules) {
+        // Load user IDs if present
+        if (rules.userIds && Array.isArray(rules.userIds) && rules.userIds.length > 0) {
+          setIncomeUserIds(new Set(rules.userIds));
+        } else {
+          // Clear if no users
+          setIncomeUserIds(new Set());
+        }
+
+        // Load percentage rules if present
+        if (rules.percentRules && Array.isArray(rules.percentRules)) {
+          const percents: Record<string, string> = {};
+          rules.percentRules.forEach((rule: any) => {
+            percents[rule.userId] = (rule.percentBasisPoints / 100).toFixed(1);
+          });
+          setUserPercents(percents);
+        } else {
+          setUserPercents({});
+        }
+      } else {
+        // No distribution rules - reset to defaults
+        setIncomeUserIds(new Set());
+        setUserPercents({});
       }
     }
-  }, [isEditing, existingSubscription?.id, isSubscription]);
+  }, [isEditing, isSubscription, existingSubscription]);
 
   const totalPercent = Object.values(userPercents).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
 
@@ -200,8 +214,10 @@ export default function AddExpense() {
       distributionRules = { percentRules };
     }
 
-    if ((distributionMethod === 'BY_INCOME' || distributionMethod === 'FIXED') && incomeUserIds.size > 0) {
-      distributionRules = { ...(distributionRules ?? {}), userIds: Array.from(incomeUserIds) };
+    // Always include userIds for BY_INCOME and FIXED, even if empty (will be validated)
+    if (distributionMethod === 'BY_INCOME' || distributionMethod === 'FIXED') {
+      const userIds = Array.from(incomeUserIds);
+      distributionRules = { ...(distributionRules ?? {}), userIds };
     }
 
     if (distributionMethod === 'FIXED' && selectedForFixed.length === 0) {
