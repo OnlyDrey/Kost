@@ -365,7 +365,7 @@ export class PeriodsService {
     // Delete all related data in transaction
     await this.prisma.$transaction([
       // Delete payments associated with invoices
-      this.prisma.invoicePayment.deleteMany({
+      this.prisma.payment.deleteMany({
         where: {
           invoice: {
             periodId: id,
