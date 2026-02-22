@@ -96,7 +96,7 @@ export default function PeriodDetail() {
       {stats?.userShares && stats.userShares.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
           <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('period.userShares')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {stats.userShares.map((share) => (
               <div key={share.userId} className="border border-gray-100 dark:border-gray-800 rounded-lg p-3">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{share.userName}</p>
