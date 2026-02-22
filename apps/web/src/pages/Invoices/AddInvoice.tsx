@@ -228,9 +228,9 @@ export default function AddInvoice() {
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('invoice.amountInCurrency', { currency })}</p>
             </div>
-            <div className="min-w-0">
+            <div>
               <label className={labelCls}>{t('invoice.dueDate')}</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls + ' max-w-full'} />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
             </div>
           </div>
 

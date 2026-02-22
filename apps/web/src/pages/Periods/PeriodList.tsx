@@ -22,6 +22,25 @@ export default function PeriodList() {
   const [periodId, setPeriodId] = useState('');
   const [error, setError] = useState('');
 
+  // Calculate next period suggestion
+  const getNextPeriodSuggestion = () => {
+    if (!periods || periods.length === 0) {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    const sorted = [...periods].sort((a, b) => b.id.localeCompare(a.id));
+    const latest = sorted[0].id;
+    const [year, month] = latest.split('-').map(Number);
+    const next = new Date(year, month); // month is 0-indexed, so this gives us the next month
+    return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const handleOpenDialog = () => {
+    setPeriodId(getNextPeriodSuggestion());
+    setError('');
+    setDialogOpen(true);
+  };
+
   const handleCreate = async () => {
     setError('');
     if (!periodId.trim()) { setError(t('validation.required')); return; }
@@ -55,7 +74,7 @@ export default function PeriodList() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('period.periods')}</h1>
         {isAdmin && (
-          <button onClick={() => setDialogOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <button onClick={handleOpenDialog} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             <Plus size={16} />
             {t('period.createPeriod')}
           </button>
@@ -82,11 +101,11 @@ export default function PeriodList() {
                       {period.status === 'OPEN' ? t('period.open') : t('period.closed')}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
                     {t('period.createdAt', { date: formatDate(period.createdAt) })}
-                  </p>
+                  </div>
                   {period.closedAt && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('period.closedAt', { date: formatDate(period.closedAt) })}</p>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{t('period.closedAt', { date: formatDate(period.closedAt) })}</div>
                   )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
