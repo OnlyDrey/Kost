@@ -26,6 +26,7 @@ export default function Profile() {
   // Profile form
   const [name, setName] = useState(user?.name ?? '');
   const [username, setUsername] = useState(user?.username ?? '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
 
@@ -78,7 +79,10 @@ export default function Profile() {
     if (!user) return;
 
     try {
-      const updatedUser = await updateUser.mutateAsync({ id: user.id, data: { name: name.trim(), username: username.trim() } });
+      const updatedUser = await updateUser.mutateAsync({
+        id: user.id,
+        data: { name: name.trim(), username: username.trim(), avatarUrl: avatarUrl.trim() || null },
+      });
       login(updatedUser);
       setProfileSuccess(t('settings.profileUpdated'));
     } catch (err: any) {
@@ -138,6 +142,23 @@ export default function Profile() {
         )}
 
         <form onSubmit={handleProfileSubmit} className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0 overflow-hidden">
+              {avatarUrl
+                ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                : name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <label className={labelCls}>Profilbilde (URL)</label>
+              <input
+                type="url"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                className={inputCls}
+                placeholder="https://example.com/avatar.jpg"
+              />
+            </div>
+          </div>
           <div>
             <label className={labelCls}>{t('users.name')}</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />

@@ -19,6 +19,17 @@ interface UserFormData {
   name: string;
   role: 'ADMIN' | 'ADULT' | 'JUNIOR';
   password: string;
+  avatarUrl: string;
+}
+
+function UserAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+  return (
+    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden">
+      {avatarUrl
+        ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+        : name.charAt(0).toUpperCase()}
+    </div>
+  );
 }
 
 function UserModal({
@@ -37,6 +48,7 @@ function UserModal({
   const { t } = useTranslation();
   const [username, setUsername] = useState(user?.username ?? '');
   const [name, setName] = useState(user?.name ?? '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [role, setRole] = useState<'ADMIN' | 'ADULT' | 'JUNIOR'>(
     user?.role === 'ADMIN' ? 'ADMIN' : user?.role === 'JUNIOR' ? 'JUNIOR' : 'ADULT'
   );
@@ -44,7 +56,7 @@ function UserModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ username, name, role, password });
+    onSave({ username, name, role, password, avatarUrl });
   };
 
   return (
@@ -66,6 +78,23 @@ function UserModal({
                 <span>{error}</span>
               </div>
             )}
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
+                {avatarUrl
+                  ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  : (name || '?').charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <label className={labelCls}>Profilbilde (URL)</label>
+                <input
+                  type="url"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  className={inputCls}
+                  placeholder="https://example.com/avatar.jpg"
+                />
+              </div>
+            </div>
             <div>
               <label className={labelCls}>{t('users.name')} *</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
@@ -235,11 +264,11 @@ export default function Users() {
     setModalError('');
     try {
       if (editingUser) {
-        const updateData: Record<string, string> = { name: data.name, username: data.username, role: data.role };
+        const updateData: Record<string, any> = { name: data.name, username: data.username, role: data.role, avatarUrl: data.avatarUrl || null };
         if (data.password) updateData.password = data.password;
         await updateUser.mutateAsync({ id: editingUser.id, data: updateData });
       } else {
-        await createUser.mutateAsync({ ...data });
+        await createUser.mutateAsync({ name: data.name, username: data.username, role: data.role, password: data.password });
       }
       closeModal();
     } catch (err: any) {
@@ -284,9 +313,7 @@ export default function Users() {
               return (
                 <div key={u.id} className="flex items-center justify-between px-5 py-4 gap-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                      {u.name.charAt(0).toUpperCase()}
-                    </div>
+                    <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{u.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">@{u.username}</p>

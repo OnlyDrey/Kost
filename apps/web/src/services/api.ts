@@ -27,6 +27,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
+  avatarUrl?: string | null;
   role: 'ADMIN' | 'ADULT' | 'JUNIOR';
   familyId: string;
   createdAt: string;
@@ -169,7 +170,7 @@ export const userApi = {
   create: (data: { username: string; name: string; role: 'ADMIN' | 'ADULT' | 'JUNIOR'; password?: string }) =>
     api.post<User>('/users', data),
 
-  update: (id: string, data: { username?: string; name?: string; role?: 'ADMIN' | 'ADULT' | 'JUNIOR'; password?: string }) =>
+  update: (id: string, data: { username?: string; name?: string; role?: 'ADMIN' | 'ADULT' | 'JUNIOR'; password?: string; avatarUrl?: string | null }) =>
     api.patch<User>(`/users/${id}`, data),
 
   delete: (id: string) =>

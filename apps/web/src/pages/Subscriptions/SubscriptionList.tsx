@@ -298,29 +298,43 @@ export default function SubscriptionList() {
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Fast utgifter</h1>
-        <div className="flex items-center gap-2">
-          {currentPeriod && (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Fast utgifter</h1>
+          <div className="flex items-center gap-2">
+            {currentPeriod && (
+              <button
+                onClick={handleGenerate}
+                disabled={generateInvoices.isPending}
+                className="hidden sm:flex items-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                {generateInvoices.isPending
+                  ? <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  : <RefreshCw size={15} />}
+                Generer for {currentPeriod.id}
+              </button>
+            )}
             <button
-              onClick={handleGenerate}
-              disabled={generateInvoices.isPending}
-              className="flex items-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              onClick={() => { setShowForm(true); setEditingSub(null); }}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
-              {generateInvoices.isPending
-                ? <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                : <RefreshCw size={15} />}
-              Generer for {currentPeriod.id}
+              <Plus size={16} />
+              Ny fast utgift
             </button>
-          )}
-          <button
-            onClick={() => { setShowForm(true); setEditingSub(null); }}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            <Plus size={16} />
-            Ny fast utgift
-          </button>
+          </div>
         </div>
+        {currentPeriod && (
+          <button
+            onClick={handleGenerate}
+            disabled={generateInvoices.isPending}
+            className="sm:hidden w-full flex items-center justify-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            {generateInvoices.isPending
+              ? <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+              : <RefreshCw size={15} />}
+            Generer for {currentPeriod.id}
+          </button>
+        )}
       </div>
 
       {generateResult && (

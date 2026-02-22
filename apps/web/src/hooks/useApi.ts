@@ -237,6 +237,7 @@ export function useAddPayment() {
       paymentApi.create(invoiceId, data).then(res => res.data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
   });
 }
