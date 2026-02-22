@@ -13,9 +13,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Ensure upload directories exist
+  // Ensure upload directories exist (pre-created in Docker; this is a no-op if they already exist)
   for (const dir of ["avatars", "vendors"]) {
-    mkdirSync(join(process.cwd(), "uploads", dir), { recursive: true });
+    try {
+      mkdirSync(join(process.cwd(), "uploads", dir), { recursive: true });
+    } catch {
+      // Directory may already exist or be managed externally — not fatal
+    }
   }
 
   // Serve uploaded files at /uploads (before global prefix and helmet)
