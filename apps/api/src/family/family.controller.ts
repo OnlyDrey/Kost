@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from "@nestjs/common";
+import {
+  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards,
+  UseInterceptors, UploadedFile, BadRequestException,
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import { extname, join } from "path";
+
+type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
+import { mkdirSync } from "fs";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { FamilyService } from "./family.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
@@ -107,6 +116,40 @@ export class FamilyController {
     @Body() data: { name?: string; logoUrl?: string | null },
   ) {
     return this.familyService.updateVendor(id, familyId, data);
+  }
+
+  @Post("vendors/:id/logo")
+  @ApiOperation({ summary: "Upload logo image for a vendor" })
+  @UseInterceptors(
+    FileInterceptor("logo", {
+      storage: diskStorage({
+        destination: (_req, _file, cb) => {
+          const dir = join(process.cwd(), "uploads", "vendors");
+          mkdirSync(dir, { recursive: true });
+          cb(null, dir);
+        },
+        filename: (req, file, cb) => {
+          const ext = extname(file.originalname).toLowerCase() || ".jpg";
+          cb(null, `${req.params.id}${ext}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith("image/")) {
+          cb(new BadRequestException("Only image files are allowed"), false);
+        } else {
+          cb(null, true);
+        }
+      },
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  uploadVendorLogo(
+    @Param("id") id: string,
+    @UploadedFile() file: MulterFile,
+    @CurrentUser("familyId") familyId: string,
+  ) {
+    if (!file) throw new BadRequestException("No file uploaded");
+    return this.familyService.uploadVendorLogo(id, familyId, file);
   }
 
   @Delete("vendors/:id")

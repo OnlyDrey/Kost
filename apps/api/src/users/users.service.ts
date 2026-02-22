@@ -9,6 +9,19 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
+import { existsSync, unlinkSync } from "fs";
+import { join } from "path";
+
+const userSelect = {
+  id: true,
+  username: true,
+  name: true,
+  avatarUrl: true,
+  role: true,
+  familyId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 @Injectable()
 export class UsersService {
@@ -198,5 +211,57 @@ export class UsersService {
     });
 
     return { message: "User deleted successfully" };
+  }
+
+  private deleteLocalFile(urlPath: string | null | undefined) {
+    if (!urlPath?.startsWith("/uploads/")) return;
+    const filePath = join(process.cwd(), urlPath.slice(1));
+    if (existsSync(filePath)) unlinkSync(filePath);
+  }
+
+  async uploadAvatar(
+    id: string,
+    file: { filename: string },
+    familyId: string,
+    currentUserId: string,
+    currentUserRole: UserRole,
+  ) {
+    const user = await this.prisma.user.findFirst({ where: { id, familyId } });
+    if (!user) throw new NotFoundException(`User ${id} not found`);
+    if (id !== currentUserId && currentUserRole !== UserRole.ADMIN) {
+      throw new ForbiddenException("Only admins can update other users");
+    }
+
+    const newUrl = `/uploads/avatars/${file.filename}`;
+    if (user.avatarUrl && user.avatarUrl !== newUrl) {
+      this.deleteLocalFile(user.avatarUrl);
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { avatarUrl: newUrl },
+      select: userSelect,
+    });
+  }
+
+  async removeAvatar(
+    id: string,
+    familyId: string,
+    currentUserId: string,
+    currentUserRole: UserRole,
+  ) {
+    const user = await this.prisma.user.findFirst({ where: { id, familyId } });
+    if (!user) throw new NotFoundException(`User ${id} not found`);
+    if (id !== currentUserId && currentUserRole !== UserRole.ADMIN) {
+      throw new ForbiddenException("Only admins can update other users");
+    }
+
+    this.deleteLocalFile(user.avatarUrl);
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { avatarUrl: null },
+      select: userSelect,
+    });
   }
 }

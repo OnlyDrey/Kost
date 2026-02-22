@@ -151,7 +151,7 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div className="flex overflow-hidden bg-gray-50 dark:bg-gray-950" style={{ height: '100dvh' }}>
       <aside className="hidden md:flex md:flex-shrink-0 w-64">
         <Sidebar onNavigate={handleNavigate} />
       </aside>

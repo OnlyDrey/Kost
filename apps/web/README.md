@@ -86,6 +86,12 @@ src/
 
 ## Key Features
 
+### Dashboard
+
+- Personal share shown first, period total second, with adaptive font sizing for large amounts
+- Category breakdown card: each expense category with its share of your total, shown as a progress bar and percentage
+- Recent invoices list with quick navigation to details
+
 ### Invoice Management
 
 - Create invoices with three distribution methods:
@@ -93,8 +99,8 @@ src/
   - **Custom Split**: Manually specify each person's share
   - **Income-Based Split**: Automatically calculate based on income ratios
 - Invoice list shows vendor logos, payment status badges (green **Betalt** for fully paid, amber with remaining amount for partial), and a direct **edit button** per row
+- Filter invoices by search text, distribution method, and **payment status** (paid / partially paid / unpaid)
 - View invoice details with allocation explanations
-- Filter and search invoices
 
 ### Period Management
 
@@ -108,6 +114,13 @@ src/
 - Offline queue for mutations (create, update, delete)
 - Automatic sync when connection is restored
 - IndexedDB cache for data persistence
+
+### User Avatars
+
+- Users upload a profile photo from the Settings page (file upload, stored on the server)
+- Admins can upload or remove avatars for any family member from the Users admin page
+- Old avatar files are automatically deleted when replaced or removed
+- Avatars appear in the sidebar and throughout the app
 
 ### Settings
 

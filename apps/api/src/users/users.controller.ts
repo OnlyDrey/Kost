@@ -7,7 +7,16 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import { extname, join } from "path";
+
+type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
+import { mkdirSync } from "fs";
 import {
   ApiTags,
   ApiOperation,
@@ -77,6 +86,60 @@ export class UsersController {
       user.familyId,
       user.sub,
       user.role as UserRole,
+    );
+  }
+
+  @Post(":id/avatar")
+  @ApiOperation({ summary: "Upload avatar image for a user" })
+  @UseInterceptors(
+    FileInterceptor("avatar", {
+      storage: diskStorage({
+        destination: (_req, _file, cb) => {
+          const dir = join(process.cwd(), "uploads", "avatars");
+          mkdirSync(dir, { recursive: true });
+          cb(null, dir);
+        },
+        filename: (req, file, cb) => {
+          const ext = extname(file.originalname).toLowerCase() || ".jpg";
+          cb(null, `${req.params.id}${ext}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith("image/")) {
+          cb(new BadRequestException("Only image files are allowed"), false);
+        } else {
+          cb(null, true);
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  uploadAvatar(
+    @Param("id") id: string,
+    @UploadedFile() file: MulterFile,
+    @CurrentUser() currentUser: JwtPayload,
+  ) {
+    if (!file) throw new BadRequestException("No file uploaded");
+    return this.usersService.uploadAvatar(
+      id,
+      file,
+      currentUser.familyId,
+      currentUser.sub,
+      currentUser.role as UserRole,
+    );
+  }
+
+  @Delete(":id/avatar")
+  @ApiOperation({ summary: "Remove avatar for a user" })
+  removeAvatar(
+    @Param("id") id: string,
+    @CurrentUser() currentUser: JwtPayload,
+  ) {
+    return this.usersService.removeAvatar(
+      id,
+      currentUser.familyId,
+      currentUser.sub,
+      currentUser.role as UserRole,
     );
   }
 

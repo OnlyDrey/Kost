@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Tag, CreditCard, Plus, Trash2, AlertCircle, Globe, Store, Pencil, Check, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Tag, CreditCard, Plus, Trash2, AlertCircle, Globe, Store, Pencil, Check, X, Upload, Link } from 'lucide-react';
 import {
   useCategories, useAddCategory, useRemoveCategory,
   usePaymentMethods, useAddPaymentMethod, useRemovePaymentMethod,
   useCurrency, useUpdateCurrency,
-  useVendors, useAddVendor, useUpdateVendor, useRemoveVendor,
+  useVendors, useAddVendor, useUpdateVendor, useRemoveVendor, useUploadVendorLogo,
 } from '../../hooks/useApi';
 
 const inputCls =
@@ -71,22 +71,9 @@ function ManagedList({
       )}
 
       <form onSubmit={handleAdd} className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={newItem}
-          onChange={(e) => { setNewItem(e.target.value); setError(''); }}
-          className={inputCls}
-          placeholder={`Legg til ${title.toLowerCase()}...`}
-        />
-        <button
-          type="submit"
-          disabled={isPendingAdd}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-        >
-          {isPendingAdd
-            ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            : <Plus size={15} />
-          }
+        <input type="text" value={newItem} onChange={(e) => { setNewItem(e.target.value); setError(''); }} className={inputCls} placeholder={`Legg til ${title.toLowerCase()}...`} />
+        <button type="submit" disabled={isPendingAdd} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
+          {isPendingAdd ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Plus size={15} />}
           Legg til
         </button>
       </form>
@@ -102,15 +89,99 @@ function ManagedList({
           {items.map((item) => (
             <div key={item} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
               <span className="text-sm text-gray-900 dark:text-gray-100">{item}</span>
-              <button
-                onClick={() => onRemove(item)}
-                disabled={isPendingRemove}
-                className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-              >
+              <button onClick={() => onRemove(item)} disabled={isPendingRemove} className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50">
                 <Trash2 size={15} />
               </button>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LogoPicker({
+  vendorId,
+  currentLogoUrl,
+  onUrlSave,
+  isPending,
+}: {
+  vendorId: string;
+  currentLogoUrl: string;
+  onUrlSave: (url: string) => void;
+  isPending: boolean;
+}) {
+  const uploadVendorLogo = useUploadVendorLogo();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<'url' | 'upload'>('url');
+  const [urlValue, setUrlValue] = useState(currentLogoUrl);
+  const [uploadErr, setUploadErr] = useState('');
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadErr('');
+    try {
+      await uploadVendorLogo.mutateAsync({ id: vendorId, file });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setUploadErr(Array.isArray(msg) ? msg.join(', ') : msg || 'Opplasting feilet');
+    }
+    e.target.value = '';
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1 text-xs">
+        <button
+          type="button"
+          onClick={() => setMode('url')}
+          className={`flex items-center gap-1 px-2 py-1 rounded ${mode === 'url' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+        >
+          <Link size={11} /> Via URL
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('upload')}
+          className={`flex items-center gap-1 px-2 py-1 rounded ${mode === 'upload' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+        >
+          <Upload size={11} /> Last opp
+        </button>
+      </div>
+
+      {mode === 'url' ? (
+        <div className="flex gap-1.5">
+          <input
+            type="url"
+            value={urlValue}
+            onChange={(e) => setUrlValue(e.target.value)}
+            placeholder="https://logo.clearbit.com/example.com"
+            className={inputSmCls}
+          />
+          <button
+            type="button"
+            onClick={() => onUrlSave(urlValue.trim())}
+            disabled={isPending}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+          >
+            <Check size={12} />
+          </button>
+        </div>
+      ) : (
+        <div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadVendorLogo.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
+          >
+            {uploadVendorLogo.isPending
+              ? <span className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              : <Upload size={12} />}
+            Velg bildefil
+          </button>
+          {uploadErr && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{uploadErr}</p>}
         </div>
       )}
     </div>
@@ -130,19 +201,14 @@ function VendorRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(vendor.name);
-  const [logoUrl, setLogoUrl] = useState(vendor.logoUrl ?? '');
 
   const handleSave = () => {
-    onUpdate(vendor.id, {
-      name: name.trim() || vendor.name,
-      logoUrl: logoUrl.trim() || null,
-    });
+    onUpdate(vendor.id, { name: name.trim() || vendor.name });
     setEditing(false);
   };
 
   const handleCancel = () => {
     setName(vendor.name);
-    setLogoUrl(vendor.logoUrl ?? '');
     setEditing(false);
   };
 
@@ -150,33 +216,21 @@ function VendorRow({
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
       {editing ? (
         <div className="space-y-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Navn"
-            className={inputSmCls}
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Navn" className={inputSmCls} />
+
+          <LogoPicker
+            vendorId={vendor.id}
+            currentLogoUrl={vendor.logoUrl ?? ''}
+            onUrlSave={(url) => onUpdate(vendor.id, { logoUrl: url || null })}
+            isPending={isPending}
           />
-          <input
-            type="url"
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="Logo URL (valgfri)"
-            className={inputSmCls}
-          />
+
           <div className="flex gap-2 justify-end">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-            >
+            <button onClick={handleCancel} className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors">
               <X size={13} /> Avbryt
             </button>
-            <button
-              onClick={handleSave}
-              disabled={isPending}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
-            >
-              <Check size={13} /> Lagre
+            <button onClick={handleSave} disabled={isPending} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60">
+              <Check size={13} /> Lagre navn
             </button>
           </div>
         </div>
@@ -184,12 +238,7 @@ function VendorRow({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
             {vendor.logoUrl ? (
-              <img
-                src={vendor.logoUrl}
-                alt={vendor.name}
-                className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-600 flex-shrink-0"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
+              <img src={vendor.logoUrl} alt={vendor.name} className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-600 flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             ) : (
               <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                 <Store size={12} className="text-gray-500" />
@@ -198,17 +247,10 @@ function VendorRow({
             <span className="text-sm text-gray-900 dark:text-gray-100 truncate">{vendor.name}</span>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            <button
-              onClick={() => setEditing(true)}
-              className="p-1 text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-            >
+            <button onClick={() => setEditing(true)} className="p-1 text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
               <Pencil size={14} />
             </button>
-            <button
-              onClick={() => onRemove(vendor.id)}
-              disabled={isPending}
-              className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-            >
+            <button onClick={() => onRemove(vendor.id)} disabled={isPending} className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50">
               <Trash2 size={14} />
             </button>
           </div>
@@ -225,23 +267,16 @@ function VendorManager() {
   const removeVendor = useRemoveVendor();
 
   const [newName, setNewName] = useState('');
-  const [newLogoUrl, setNewLogoUrl] = useState('');
   const [error, setError] = useState('');
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newName.trim();
     if (!trimmed) { setError('Navn er påkrevd'); return; }
-    if (vendors.some(v => v.name.toLowerCase() === trimmed.toLowerCase())) {
-      setError('Leverandør finnes allerede');
-      return;
-    }
+    if (vendors.some(v => v.name.toLowerCase() === trimmed.toLowerCase())) { setError('Leverandør finnes allerede'); return; }
     setError('');
-    addVendor.mutate({ name: trimmed, logoUrl: newLogoUrl.trim() || undefined }, {
-      onSuccess: () => {
-        setNewName('');
-        setNewLogoUrl('');
-      },
+    addVendor.mutate({ name: trimmed }, {
+      onSuccess: () => setNewName(''),
       onError: (err: any) => {
         const msg = err?.response?.data?.message;
         setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Noe gikk galt');
@@ -256,7 +291,7 @@ function VendorManager() {
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">Leverandører</h2>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-        Administrer leverandører som vises i rullegardinmenyen ved opprettelse av utgifter. Legg til logo-URL for å vise ikon.
+        Administrer leverandører. Trykk på blyant-ikonet for å redigere navn og logo (via URL eller bildeopplasting).
       </p>
 
       {error && (
@@ -266,34 +301,12 @@ function VendorManager() {
         </div>
       )}
 
-      <form onSubmit={handleAdd} className="space-y-2 mb-5">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => { setNewName(e.target.value); setError(''); }}
-            className={inputCls}
-            placeholder="Leverandørnavn..."
-          />
-          <button
-            type="submit"
-            disabled={addVendor.isPending}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
-          >
-            {addVendor.isPending
-              ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              : <Plus size={15} />
-            }
-            Legg til
-          </button>
-        </div>
-        <input
-          type="url"
-          value={newLogoUrl}
-          onChange={(e) => setNewLogoUrl(e.target.value)}
-          className={inputSmCls}
-          placeholder="Logo URL (valgfri, f.eks. https://logo.clearbit.com/example.com)"
-        />
+      <form onSubmit={handleAdd} className="flex gap-2 mb-5">
+        <input type="text" value={newName} onChange={(e) => { setNewName(e.target.value); setError(''); }} className={inputCls} placeholder="Leverandørnavn..." />
+        <button type="submit" disabled={addVendor.isPending} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap">
+          {addVendor.isPending ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Plus size={15} />}
+          Legg til
+        </button>
       </form>
 
       {isLoading ? (
@@ -325,14 +338,11 @@ function CurrencySettings() {
   const [selected, setSelected] = useState<string>('');
   const [success, setSuccess] = useState(false);
 
-  // Use fetched value as default once loaded
   const value = selected || currentCurrency;
 
   const handleSave = () => {
     setSuccess(false);
-    updateCurrency.mutate(value, {
-      onSuccess: () => setSuccess(true),
-    });
+    updateCurrency.mutate(value, { onSuccess: () => setSuccess(true) });
   };
 
   return (
@@ -341,9 +351,7 @@ function CurrencySettings() {
         <Globe size={18} className="text-indigo-600 dark:text-indigo-400" />
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">Valuta</h2>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-        Velg familiens standardvaluta. Brukes i alle beløpsvisninger og beregninger.
-      </p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">Velg familiens standardvaluta. Brukes i alle beløpsvisninger og beregninger.</p>
 
       {success && (
         <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-3 py-2 text-sm mb-4">
@@ -357,20 +365,10 @@ function CurrencySettings() {
         </div>
       ) : (
         <div className="flex gap-2">
-          <select
-            value={value}
-            onChange={(e) => { setSelected(e.target.value); setSuccess(false); }}
-            className="flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-          >
-            {SUPPORTED_CURRENCIES.map((c) => (
-              <option key={c.code} value={c.code}>{c.label}</option>
-            ))}
+          <select value={value} onChange={(e) => { setSelected(e.target.value); setSuccess(false); }} className="flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            {SUPPORTED_CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
           </select>
-          <button
-            onClick={handleSave}
-            disabled={updateCurrency.isPending || value === currentCurrency}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-          >
+          <button onClick={handleSave} disabled={updateCurrency.isPending || value === currentCurrency} className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
             {updateCurrency.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             Lagre
           </button>

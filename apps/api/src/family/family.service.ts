@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { existsSync, unlinkSync } from "fs";
+import { join } from "path";
 
 @Injectable()
 export class FamilyService {
@@ -116,7 +118,29 @@ export class FamilyService {
   async removeVendor(id: string, familyId: string) {
     const vendor = await (this.prisma as any).vendor.findFirst({ where: { id, familyId } });
     if (!vendor) throw new NotFoundException(`Vendor ${id} not found`);
+    this.deleteLocalFile(vendor.logoUrl);
     await (this.prisma as any).vendor.delete({ where: { id } });
     return { message: "Vendor deleted" };
+  }
+
+  private deleteLocalFile(urlPath: string | null | undefined) {
+    if (!urlPath?.startsWith("/uploads/")) return;
+    const filePath = join(process.cwd(), urlPath.slice(1));
+    if (existsSync(filePath)) unlinkSync(filePath);
+  }
+
+  async uploadVendorLogo(id: string, familyId: string, file: { filename: string }) {
+    const vendor = await (this.prisma as any).vendor.findFirst({ where: { id, familyId } });
+    if (!vendor) throw new NotFoundException(`Vendor ${id} not found`);
+
+    const newUrl = `/uploads/vendors/${file.filename}`;
+    if (vendor.logoUrl && vendor.logoUrl !== newUrl) {
+      this.deleteLocalFile(vendor.logoUrl);
+    }
+
+    return (this.prisma as any).vendor.update({
+      where: { id },
+      data: { logoUrl: newUrl },
+    });
   }
 }

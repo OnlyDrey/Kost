@@ -222,6 +222,44 @@ export function useDeleteUser() {
   });
 }
 
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData();
+      fd.append('avatar', file);
+      return userApi.uploadAvatar(id, fd).then(r => r.data);
+    },
+    onSuccess: (user: User) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
+    },
+  });
+}
+
+export function useRemoveAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => userApi.removeAvatar(id).then(r => r.data),
+    onSuccess: (user: User) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
+    },
+  });
+}
+
+export function useUploadVendorLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData();
+      fd.append('logo', file);
+      return familyApi.uploadVendorLogo(id, fd).then(r => r.data);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+  });
+}
+
 export function useChangePassword() {
   return useMutation({
     mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>

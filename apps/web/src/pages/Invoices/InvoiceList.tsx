@@ -9,6 +9,15 @@ import { distributionLabel } from '../../utils/distribution';
 import { useSettings } from '../../stores/settings.context';
 
 const METHOD_OPTIONS = ['ALL', 'BY_INCOME', 'BY_PERCENT', 'FIXED'];
+const STATUS_OPTIONS = ['ALL', 'PAID', 'PARTIALLY_PAID', 'UNPAID'] as const;
+type StatusFilter = typeof STATUS_OPTIONS[number];
+
+const STATUS_LABELS: Record<StatusFilter, string> = {
+  ALL: 'Status',
+  PAID: 'Betalt',
+  PARTIALLY_PAID: 'Delvis betalt',
+  UNPAID: 'Ubetalt',
+};
 
 export default function InvoiceList() {
   const { t } = useTranslation();
@@ -22,12 +31,23 @@ export default function InvoiceList() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMethod, setFilterMethod] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('ALL');
 
   const filteredInvoices = invoices?.filter((invoice) => {
     const searchText = `${invoice.vendor} ${invoice.description || ''} ${invoice.category}`.toLowerCase();
     const matchesSearch = searchText.includes(searchQuery.toLowerCase());
     const matchesMethod = filterMethod === 'ALL' || invoice.distributionMethod === filterMethod;
-    return matchesSearch && matchesMethod;
+
+    let matchesStatus = true;
+    if (filterStatus !== 'ALL') {
+      const totalPaid = (invoice.payments ?? []).reduce((s, p) => s + p.amountCents, 0);
+      const remaining = invoice.totalCents - totalPaid;
+      if (filterStatus === 'PAID') matchesStatus = remaining <= 0;
+      else if (filterStatus === 'PARTIALLY_PAID') matchesStatus = totalPaid > 0 && remaining > 0;
+      else if (filterStatus === 'UNPAID') matchesStatus = totalPaid === 0;
+    }
+
+    return matchesSearch && matchesMethod && matchesStatus;
   });
 
   function getVendorLogo(vendorName: string) {
@@ -76,6 +96,15 @@ export default function InvoiceList() {
             <option key={m} value={m}>
               {m === 'ALL' ? t('common.filter') : distributionLabel(m, settings.locale)}
             </option>
+          ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
+          className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        >
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
           ))}
         </select>
       </div>
