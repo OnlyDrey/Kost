@@ -218,11 +218,12 @@ export default function AddExpense() {
     if (distributionMethod === 'BY_INCOME' || distributionMethod === 'FIXED') {
       const userIds = Array.from(incomeUserIds);
       distributionRules = { ...(distributionRules ?? {}), userIds };
-    }
 
-    if (distributionMethod === 'FIXED' && selectedForFixed.length === 0) {
-      setError(t('invoice.atLeastOneUser'));
-      return;
+      // Validate that at least one user is selected
+      if (userIds.length === 0) {
+        setError(t('invoice.atLeastOneUser'));
+        return;
+      }
     }
 
     try {
@@ -314,9 +315,9 @@ export default function AddExpense() {
 
           {/* Active checkbox for subscriptions */}
           {isSubscription && (
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="active" checked={active} onChange={(e) => setActive(e.target.checked)} className="rounded border-gray-300" />
-              <label htmlFor="active" className="text-sm text-gray-700 dark:text-gray-300">{t('subscription.activeLabel')}</label>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <input type="checkbox" id="active" checked={active} onChange={(e) => setActive(e.target.checked)} disabled={false} className="w-4 h-4 rounded border-gray-300 cursor-pointer" />
+              <label htmlFor="active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">{t('subscription.activeLabel')}</label>
             </div>
           )}
 
