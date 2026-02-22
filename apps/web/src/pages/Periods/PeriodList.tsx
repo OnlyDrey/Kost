@@ -27,7 +27,6 @@ export default function PeriodList() {
   const [deletionPassword, setDeletionPassword] = useState('');
   const [deletionError, setDeletionError] = useState('');
   const { data: deletionInfo } = useGetPeriodDeletionInfo(deletionModalOpen ? deletionPeriodId : '');
-  const { user } = useAuth();
 
   // Calculate next period suggestion
   const getNextPeriodSuggestion = () => {
@@ -79,12 +78,6 @@ export default function PeriodList() {
     setDeletionError('');
     if (!deletionPassword.trim()) {
       setDeletionError('Password is required');
-      return;
-    }
-    if (deletionPassword !== user?.password) {
-      // Note: We can't validate password on frontend, so we'll just require ANY password
-      // The backend will handle actual validation if needed
-      setDeletionError('Please enter a password to confirm');
       return;
     }
     try {
