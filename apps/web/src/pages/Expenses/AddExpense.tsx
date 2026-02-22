@@ -14,7 +14,7 @@ const inputCls =
 
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
-const FREQUENCY_VALUES = ['MONTHLY', 'QUARTERLY', 'YEARLY'];
+const FREQUENCY_VALUES = ['MONTHLY', 'QUARTERLY', 'YEARLY', 'CUSTOM'];
 
 export default function AddExpense() {
   const { t } = useTranslation();
@@ -52,6 +52,7 @@ export default function AddExpense() {
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [frequency, setFrequency] = useState('MONTHLY');
   const [dayOfMonth, setDayOfMonth] = useState('1');
+  const [customFrequency, setCustomFrequency] = useState('');
   const [active, setActive] = useState(true);
   const [error, setError] = useState('');
   const [userPercents, setUserPercents] = useState<Record<string, string>>({});
@@ -103,6 +104,9 @@ export default function AddExpense() {
       setFrequency(existingSubscription.frequency);
       setDayOfMonth(String(existingSubscription.dayOfMonth ?? 1));
       setActive(existingSubscription.active);
+      if (existingSubscription.frequency === 'CUSTOM') {
+        setCustomFrequency(existingSubscription.frequency);
+      }
 
       // Initialize distribution rules from subscription
       const rules = existingSubscription.distributionRules as any;
@@ -181,18 +185,28 @@ export default function AddExpense() {
 
     try {
       if (isSubscription) {
-        const subData = {
+        const actualFrequency = frequency === 'CUSTOM' ? customFrequency : frequency;
+        if (frequency === 'CUSTOM' && !customFrequency.trim()) {
+          setError(t('validation.required'));
+          return;
+        }
+
+        const subData: any = {
           name: vendor.trim(),
           vendor: vendor.trim(),
           category: category.trim() || undefined,
           amountCents: totalCents,
           distributionMethod,
-          frequency,
+          frequency: actualFrequency,
           dayOfMonth: parseInt(dayOfMonth) || undefined,
           startDate,
           active,
-          distributionRules: distributionRules || {},
         };
+
+        // Only include distributionRules if it was constructed
+        if (distributionRules) {
+          subData.distributionRules = distributionRules;
+        }
 
         if (isEditing) {
           await updateSubscription.mutateAsync({ id: id!, data: subData });
@@ -240,6 +254,7 @@ export default function AddExpense() {
     if (value === 'MONTHLY') return t('subscription.monthly');
     if (value === 'QUARTERLY') return t('subscription.quarterly');
     if (value === 'YEARLY') return t('subscription.yearly');
+    if (value === 'CUSTOM') return t('subscription.custom', { default: 'Custom' });
     return value;
   };
 
@@ -348,6 +363,15 @@ export default function AddExpense() {
                   <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className={inputCls}>
                     {FREQUENCY_VALUES.map(f => <option key={f} value={f}>{freqLabel(f)}</option>)}
                   </select>
+                  {frequency === 'CUSTOM' && (
+                    <input
+                      type="text"
+                      value={customFrequency}
+                      onChange={(e) => setCustomFrequency(e.target.value)}
+                      placeholder="e.g., BI_WEEKLY, EVERY_3_MONTHS"
+                      className={inputCls + ' mt-2'}
+                    />
+                  )}
                 </div>
                 <div>
                   <label className={labelCls}>{t('subscription.dayOfMonth')}</label>
