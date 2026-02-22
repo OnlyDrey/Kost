@@ -9,11 +9,6 @@ const inputCls =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
-const INCOME_TYPES = [
-  { value: 'ANNUAL_GROSS', label: 'Årlig brutto' },
-  { value: 'MONTHLY_GROSS', label: 'Månedlig brutto' },
-];
-
 interface UserFormData {
   username: string;
   name: string;
@@ -134,7 +129,7 @@ function UserModal({
                     disabled={uploadAvatar.isPending}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
                   >
-                    <Camera size={12} /> Velg bilde
+                    <Camera size={12} /> {t('users.selectPhoto')}
                   </button>
                   {localAvatarUrl && (
                     <button
@@ -143,7 +138,7 @@ function UserModal({
                       disabled={removeAvatar.isPending}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
                     >
-                      <Trash2 size={12} /> Fjern bilde
+                      <Trash2 size={12} /> {t('users.removePhoto')}
                     </button>
                   )}
                   {avatarErr && <p className="text-xs text-red-600 dark:text-red-400">{avatarErr}</p>}
@@ -200,6 +195,7 @@ function IncomeModal({
   periodId: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const upsertIncome = useUpsertUserIncome();
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeType, setIncomeType] = useState('ANNUAL_GROSS');
@@ -216,13 +212,13 @@ function IncomeModal({
     e.preventDefault();
     setError('');
     const inputCents = amountToCents(parseFloat(incomeAmount));
-    if (isNaN(inputCents) || inputCents <= 0) { setError('Ugyldig beløp'); return; }
+    if (isNaN(inputCents) || inputCents <= 0) { setError(t('income.invalidAmount')); return; }
     try {
       await upsertIncome.mutateAsync({ userId: user.id, periodId, inputType: incomeType, inputCents });
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message;
-      setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Serverfeil');
+      setError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
     }
   };
 
@@ -231,7 +227,7 @@ function IncomeModal({
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-sm">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rediger inntekt</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('users.editIncome')}</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user.name}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
@@ -247,24 +243,25 @@ function IncomeModal({
               </div>
             )}
             <div>
-              <label className={labelCls}>Inntektstype</label>
+              <label className={labelCls}>{t('income.type')}</label>
               <select value={incomeType} onChange={(e) => setIncomeType(e.target.value)} className={inputCls}>
-                {INCOME_TYPES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                <option value="ANNUAL_GROSS">{t('income.annual')}</option>
+                <option value="MONTHLY_GROSS">{t('income.monthly')}</option>
               </select>
             </div>
             <div>
-              <label className={labelCls}>Beløp (kr)</label>
+              <label className={labelCls}>{t('income.amount')}</label>
               <input type="number" step="0.01" min="0" value={incomeAmount} onChange={(e) => setIncomeAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beregnes automatisk til månedlig brutto for fordeling.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('income.autoConverted')}</p>
             </div>
           </div>
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
             <button type="button" onClick={onClose} className="text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              Avbryt
+              {t('common.cancel')}
             </button>
             <button type="submit" disabled={upsertIncome.isPending} className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors">
               {upsertIncome.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              Lagre inntekt
+              {t('income.saveButton')}
             </button>
           </div>
         </form>
@@ -350,11 +347,11 @@ export default function Users() {
                       <p className="text-xs text-gray-500 dark:text-gray-400">@{u.username}</p>
                       {userIncome && (
                         <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
-                          {userIncome.inputType === 'ANNUAL_GROSS' ? 'Årlig' : 'Månedlig'}: {formatCurrency(userIncome.inputCents, 'NOK')}
+                          {userIncome.inputType === 'ANNUAL_GROSS' ? t('users.incomeAnnual') : t('users.incomeMonthly')}: {formatCurrency(userIncome.inputCents, 'NOK')}
                         </p>
                       )}
                       {!userIncome && currentPeriod && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Ingen inntekt registrert</p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">{t('income.noneRecorded')}</p>
                       )}
                     </div>
                   </div>
@@ -367,7 +364,7 @@ export default function Users() {
                       {u.role === 'ADMIN' ? t('users.admin') : u.role === 'JUNIOR' ? t('users.junior') : t('users.adult')}
                     </span>
                     {currentPeriod && (
-                      <button onClick={() => setIncomeModalUser(u)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors" title="Rediger inntekt">
+                      <button onClick={() => setIncomeModalUser(u)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors" title={t('users.editIncome')}>
                         <TrendingUp size={16} />
                       </button>
                     )}

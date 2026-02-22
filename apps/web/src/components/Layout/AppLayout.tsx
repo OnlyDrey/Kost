@@ -22,8 +22,8 @@ import { useSettings } from '../../stores/settings.context';
 const NAV_ITEMS = [
   { key: 'nav.dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { key: 'nav.invoices', icon: Receipt, path: '/invoices' },
-  { key: 'nav.subscriptions', icon: RefreshCw, path: '/subscriptions' },
   { key: 'nav.periods', icon: Calendar, path: '/periods' },
+  { key: 'nav.subscriptions', icon: RefreshCw, path: '/subscriptions' },
   { key: 'nav.settings', icon: Settings, path: '/settings' },
 ];
 
@@ -78,30 +78,38 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('app.tagline', 'Expense tracking')}</p>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ key, icon, path }) => (
-          <NavLink
-            key={path}
-            icon={icon}
-            label={t(key)}
-            active={location.pathname.startsWith(path)}
-            onClick={() => onNavigate(path)}
-          />
-        ))}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <div className="space-y-0.5">
+          {NAV_ITEMS.map(({ key, icon, path }) => (
+            <NavLink
+              key={path}
+              icon={icon}
+              label={t(key)}
+              active={location.pathname.startsWith(path)}
+              onClick={() => onNavigate(path)}
+            />
+          ))}
+        </div>
         {isAdmin && (
           <>
-            <NavLink
-              icon={Users}
-              label={t('users.title')}
-              active={location.pathname.startsWith('/admin/users')}
-              onClick={() => onNavigate('/admin/users')}
-            />
-            <NavLink
-              icon={SlidersHorizontal}
-              label="Familieinnstillinger"
-              active={location.pathname.startsWith('/admin/settings')}
-              onClick={() => onNavigate('/admin/settings')}
-            />
+            <div className="my-3 border-t border-gray-100 dark:border-gray-800" />
+            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              Admin
+            </p>
+            <div className="space-y-0.5">
+              <NavLink
+                icon={Users}
+                label={t('users.title')}
+                active={location.pathname.startsWith('/admin/users')}
+                onClick={() => onNavigate('/admin/users')}
+              />
+              <NavLink
+                icon={SlidersHorizontal}
+                label={t('familySettings.title')}
+                active={location.pathname.startsWith('/admin/settings')}
+                onClick={() => onNavigate('/admin/settings')}
+              />
+            </div>
           </>
         )}
       </nav>

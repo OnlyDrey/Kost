@@ -7,7 +7,7 @@ A self-hosted app for tracking shared household expenses. Family members registe
 - **Expense management** — create, categorize, and allocate expenses among family members
 - **Flexible cost splitting** — income-proportional, custom percentage per user, or equal split
 - **BY_INCOME user selection** — choose which users to include in income-based splits; live income percentages shown per user; JUNIOR (child) users excluded by default
-- **Payment tracking** — mark invoices as paid, record partial payments with payment method, see paid/remaining amounts; the invoice list shows a green **Betalt** badge for fully paid invoices and an amber badge with the remaining amount for partially paid ones; filter by payment status (paid / partially paid / unpaid)
+- **Payment tracking** — mark invoices as paid, record partial payments with payment method, see paid/remaining amounts; the invoice list shows a green **Paid** badge for fully paid invoices and an amber badge with the remaining amount for partially paid ones; filter by payment status (paid / partially paid / unpaid)
 - **Recurring expenses (subscriptions)** — define recurring fees (monthly, quarterly, annual, etc.) with vendor, category, amount, and split rules; generate invoices for the current period with one click; toggle active/inactive to suspend without deleting
 - **Vendor management** — store reusable vendors with optional logos (upload a local file or enter a URL); vendor logos are displayed in the invoice list and as a searchable dropdown when creating expenses or subscriptions
 - **Managed categories** — admins/adults maintain a per-family category list used as a dropdown when creating invoices
@@ -127,6 +127,7 @@ npm run studio --workspace=apps/api        # open Prisma Studio
 - [Deployment](docs/deployment.md) — production setup, reverse proxy, environment variables
 - [Database](docs/database.md) — schema, migrations, seed data
 - [Allocation Rules](docs/allocation-rules.md) — how cost splits are calculated with exact rounding
+- [Contributing](docs/contributing.md) — branching strategy, PR guidelines, code style, development workflow
 - [Setup & Troubleshooting](SETUP.md) — installing Node, Docker, fixing common errors
 
 ---

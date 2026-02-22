@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Receipt, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, Receipt, DollarSign, TrendingUp, Users, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePeriod, usePeriodStats, useInvoices, useUserIncomes, useCurrency } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
@@ -20,6 +21,18 @@ export default function PeriodDetail() {
 
   const getIncomeForUser = (userId: string) => incomes?.find(i => i.userId === userId);
   const { data: currency = 'NOK' } = useCurrency();
+
+  const categoryBreakdown = useMemo(() => {
+    if (!invoices || invoices.length === 0) return [];
+    const map: Record<string, number> = {};
+    for (const inv of invoices) {
+      const cat = inv.category || '—';
+      map[cat] = (map[cat] || 0) + inv.totalCents;
+    }
+    return Object.entries(map)
+      .map(([category, totalCents]) => ({ category, totalCents }))
+      .sort((a, b) => b.totalCents - a.totalCents);
+  }, [invoices]);
 
   if (isLoading) {
     return (
@@ -54,7 +67,7 @@ export default function PeriodDetail() {
             </span>
           </div>
           {period.closedAt && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Lukket: {formatDate(period.closedAt)}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('period.closedAt', { date: formatDate(period.closedAt) })}</p>
           )}
         </div>
       </div>
@@ -97,6 +110,38 @@ export default function PeriodDetail() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Category breakdown */}
+      {categoryBreakdown.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Tag size={16} className="text-indigo-600 dark:text-indigo-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('period.categoryBreakdown')}</h2>
+          </div>
+          <div className="space-y-2">
+            {categoryBreakdown.map(({ category, totalCents }) => {
+              const pct = stats?.totalAmountCents ? (totalCents / stats.totalAmountCents) * 100 : 0;
+              return (
+                <div key={category}>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">{category}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{pct.toFixed(1)}%</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(totalCents, currency)}</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
