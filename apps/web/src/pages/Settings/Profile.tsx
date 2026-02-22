@@ -9,11 +9,6 @@ const inputCls =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
-const INCOME_TYPES = [
-  { value: 'ANNUAL_GROSS', label: 'Årlig brutto' },
-  { value: 'MONTHLY_GROSS', label: 'Månedlig brutto' },
-];
-
 export default function Profile() {
   const { t } = useTranslation();
   const { user, login } = useAuth();
@@ -90,7 +85,7 @@ export default function Profile() {
       setIncomeError(t('validation.invalidAmount'));
       return;
     }
-    if (!confirm('Er du sikker på at du vil lagre denne inntekten? Dette påvirker fordelingen av utgifter.')) return;
+    if (!confirm(t('income.confirmSave'))) return;
     try {
       await upsertIncome.mutateAsync({ userId: user.id, periodId: currentPeriod.id, inputType: incomeType, inputCents });
       setIncomeSuccess(true);
@@ -123,7 +118,7 @@ export default function Profile() {
     setPwError('');
     setPwSuccess('');
     if (newPassword !== confirmPassword) { setPwError(t('settings.passwordMismatch')); return; }
-    if (newPassword.length < 6) { setPwError('Password must be at least 6 characters'); return; }
+    if (newPassword.length < 6) { setPwError(t('settings.passwordMinLength')); return; }
     try {
       await changePassword.mutateAsync({ currentPassword, newPassword });
       setPwSuccess(t('settings.passwordChanged'));
@@ -159,7 +154,7 @@ export default function Profile() {
               type="button"
               onClick={() => avatarInputRef.current?.click()}
               className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-              title="Bytt profilbilde"
+              title={t('settings.changePhoto')}
             >
               <Camera size={20} className="text-white" />
             </button>
@@ -175,7 +170,7 @@ export default function Profile() {
               {uploadAvatar.isPending
                 ? <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                 : <Camera size={14} />}
-              Velg bilde
+              {t('settings.choosePhoto')}
             </button>
             {user?.avatarUrl && (
               <button
@@ -187,11 +182,11 @@ export default function Profile() {
                 {removeAvatar.isPending
                   ? <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
                   : <Trash2 size={14} />}
-                Fjern bilde
+                {t('settings.removePhoto')}
               </button>
             )}
             {avatarError && <p className="text-xs text-red-600 dark:text-red-400">{avatarError}</p>}
-            <p className="text-xs text-gray-400 dark:text-gray-500">Maks 5 MB · JPG, PNG, WebP</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{t('settings.photoHint')}</p>
           </div>
         </div>
 
@@ -234,11 +229,11 @@ export default function Profile() {
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-5">
           <TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100">Min inntekt</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('settings.myIncome')}</h2>
         </div>
 
         {!currentPeriod && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ingen aktiv periode funnet.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('income.noPeriod')}</p>
         )}
 
         {currentPeriod && (
@@ -252,27 +247,26 @@ export default function Profile() {
             {incomeSuccess && (
               <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-4 py-3 text-sm mb-4">
                 <CheckCircle2 size={15} className="flex-shrink-0" />
-                <span>Inntekt lagret</span>
+                <span>{t('income.saved')}</span>
               </div>
             )}
             <form onSubmit={handleSaveIncome} className="space-y-4">
               <div>
-                <label className={labelCls}>Inntektstype</label>
+                <label className={labelCls}>{t('income.type')}</label>
                 <select value={incomeType} onChange={(e) => setIncomeType(e.target.value)} className={inputCls}>
-                  {INCOME_TYPES.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
+                  <option value="ANNUAL_GROSS">{t('income.annual')}</option>
+                  <option value="MONTHLY_GROSS">{t('income.monthly')}</option>
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Beløp (kr)</label>
+                <label className={labelCls}>{t('income.amount')}</label>
                 <input type="number" step="0.01" min="0" value={incomeAmount} onChange={(e) => setIncomeAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beregnes automatisk til månedlig brutto for fordeling.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('income.autoConverted')}</p>
               </div>
               <div className="flex justify-end">
                 <button type="submit" disabled={upsertIncome.isPending || !currentPeriod} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
                   {upsertIncome.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  {t('common.save')}
+                  {t('income.saveButton')}
                 </button>
               </div>
             </form>

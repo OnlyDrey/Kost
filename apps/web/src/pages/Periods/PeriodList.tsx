@@ -79,14 +79,14 @@ export default function PeriodList() {
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                         : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                     }`}>
-                      {period.status}
+                      {period.status === 'OPEN' ? t('period.open') : t('period.closed')}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Created: {formatDate(period.createdAt)}
+                    {t('period.createdAt', { date: formatDate(period.createdAt) })}
                   </p>
                   {period.closedAt && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Closed: {formatDate(period.closedAt)}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('period.closedAt', { date: formatDate(period.closedAt) })}</p>
                   )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">

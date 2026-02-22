@@ -8,16 +8,13 @@ import {
 } from '../../hooks/useApi';
 import { formatCurrency, amountToCents, centsToAmount } from '../../utils/currency';
 import { Subscription } from '../../services/api';
+import { formatDate } from '../../utils/date';
 
 const inputCls =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
-const FREQUENCIES = [
-  { value: 'MONTHLY', label: 'Månedlig' },
-  { value: 'QUARTERLY', label: 'Kvartalsvis' },
-  { value: 'YEARLY', label: 'Årlig' },
-];
+const FREQUENCY_VALUES = ['MONTHLY', 'QUARTERLY', 'YEARLY'];
 
 interface FormState {
   name: string;
@@ -56,6 +53,7 @@ function SubscriptionForm({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation();
   const { data: users = [] } = useUsers();
   const { data: categories = [] } = useCategories();
   const { data: vendors = [] } = useVendors();
@@ -69,10 +67,10 @@ function SubscriptionForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.name.trim()) { setError('Navn er påkrevd'); return; }
-    if (!form.vendor.trim()) { setError('Leverandør er påkrevd'); return; }
+    if (!form.name.trim()) { setError(t('subscription.nameRequired')); return; }
+    if (!form.vendor.trim()) { setError(t('subscription.vendorRequired')); return; }
     const cents = amountToCents(parseFloat(form.amount));
-    if (isNaN(cents) || cents <= 0) { setError('Ugyldig beløp'); return; }
+    if (isNaN(cents) || cents <= 0) { setError(t('income.invalidAmount')); return; }
     onSave({ ...form, amount: String(centsToAmount(cents)) });
   };
 
@@ -80,6 +78,13 @@ function SubscriptionForm({
     const next = new Set(form.selectedUserIds);
     if (next.has(userId)) { next.delete(userId); } else { next.add(userId); }
     set('selectedUserIds', next);
+  };
+
+  const freqLabel = (value: string) => {
+    if (value === 'MONTHLY') return t('subscription.monthly');
+    if (value === 'QUARTERLY') return t('subscription.quarterly');
+    if (value === 'YEARLY') return t('subscription.yearly');
+    return value;
   };
 
   return (
@@ -92,11 +97,11 @@ function SubscriptionForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>Navn *</label>
+          <label className={labelCls}>{t('subscription.name')} *</label>
           <input type="text" value={form.name} onChange={e => set('name', e.target.value)} className={inputCls} placeholder="f.eks. Boliglån" required />
         </div>
         <div className="relative">
-          <label className={labelCls}>Leverandør *</label>
+          <label className={labelCls}>{t('invoice.vendor')} *</label>
           <input
             type="text"
             value={form.vendor}
@@ -104,7 +109,7 @@ function SubscriptionForm({
             onFocus={() => setShowVendorList(true)}
             onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
             className={inputCls}
-            placeholder="f.eks. Sparebank 1"
+            placeholder={t('invoice.vendorPlaceholder')}
             required
           />
           {showVendorList && vendors.length > 0 && (
@@ -129,48 +134,48 @@ function SubscriptionForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>Kategori</label>
+          <label className={labelCls}>{t('invoice.category')}</label>
           <select value={form.category} onChange={e => set('category', e.target.value)} className={inputCls}>
-            <option value="">Velg kategori...</option>
+            <option value="">{t('invoice.categoryPlaceholder')}</option>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label className={labelCls}>Beløp ({currency}) *</label>
+          <label className={labelCls}>{t('invoice.amountInCurrency', { currency })} *</label>
           <input type="number" value={form.amount} onChange={e => set('amount', e.target.value)} className={inputCls} placeholder="0.00" step="0.01" min="0" required />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>Frekvens</label>
+          <label className={labelCls}>{t('subscription.frequency')}</label>
           <select value={form.frequency} onChange={e => set('frequency', e.target.value)} className={inputCls}>
-            {FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+            {FREQUENCY_VALUES.map(f => <option key={f} value={f}>{freqLabel(f)}</option>)}
           </select>
         </div>
         <div>
-          <label className={labelCls}>Dag i måneden</label>
+          <label className={labelCls}>{t('subscription.dayOfMonth')}</label>
           <input type="number" value={form.dayOfMonth} onChange={e => set('dayOfMonth', e.target.value)} className={inputCls} min="1" max="31" />
         </div>
       </div>
 
       <div>
-        <label className={labelCls}>Startdato</label>
+        <label className={labelCls}>{t('subscription.startDate')}</label>
         <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls + ' max-w-full'} />
       </div>
 
       <div>
-        <label className={labelCls}>Fordelingsmetode</label>
+        <label className={labelCls}>{t('invoice.distributionMethod')}</label>
         <select value={form.distributionMethod} onChange={e => set('distributionMethod', e.target.value as any)} className={inputCls}>
-          <option value="BY_INCOME">Inntektsbasert</option>
-          <option value="FIXED">Lik fordeling</option>
-          <option value="BY_PERCENT">Egendefinert prosent</option>
+          <option value="BY_INCOME">{t('invoice.incomeBased')}</option>
+          <option value="FIXED">{t('invoice.equal')}</option>
+          <option value="BY_PERCENT">{t('subscription.customPct')}</option>
         </select>
       </div>
 
       {(form.distributionMethod === 'BY_INCOME' || form.distributionMethod === 'FIXED') && users.length > 0 && (
         <div className="space-y-2">
-          <label className={labelCls + ' mb-0'}>Velg brukere</label>
+          <label className={labelCls + ' mb-0'}>{t('subscription.selectUsers')}</label>
           <div className="space-y-1.5">
             {users.map(u => {
               const checked = form.selectedUserIds.size === 0 || form.selectedUserIds.has(u.id);
@@ -199,16 +204,16 @@ function SubscriptionForm({
 
       <div className="flex items-center gap-2">
         <input type="checkbox" id="active" checked={form.active} onChange={e => set('active', e.target.checked)} className="rounded border-gray-300" />
-        <label htmlFor="active" className="text-sm text-gray-700 dark:text-gray-300">Aktiv</label>
+        <label htmlFor="active" className="text-sm text-gray-700 dark:text-gray-300">{t('subscription.activeLabel')}</label>
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
         <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-          Avbryt
+          {t('common.cancel')}
         </button>
         <button type="submit" disabled={isPending} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
           {isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-          Lagre
+          {t('common.save')}
         </button>
       </div>
     </form>
@@ -281,7 +286,7 @@ export default function SubscriptionList() {
       const result = await generateInvoices.mutateAsync(currentPeriod.id);
       setGenerateResult(result.message);
     } catch (err: any) {
-      setGenerateError(err?.response?.data?.message || 'Feil ved generering');
+      setGenerateError(err?.response?.data?.message || t('subscription.generateError'));
     }
   };
 
@@ -300,7 +305,7 @@ export default function SubscriptionList() {
     <div className="space-y-5 max-w-3xl">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Fast utgifter</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('subscription.title')}</h1>
           <div className="flex items-center gap-2">
             {currentPeriod && (
               <button
@@ -311,7 +316,7 @@ export default function SubscriptionList() {
                 {generateInvoices.isPending
                   ? <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
                   : <RefreshCw size={15} />}
-                Generer for {currentPeriod.id}
+                {t('subscription.generate', { period: currentPeriod.id })}
               </button>
             )}
             <button
@@ -319,7 +324,7 @@ export default function SubscriptionList() {
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Plus size={16} />
-              Ny fast utgift
+              {t('subscription.new')}
             </button>
           </div>
         </div>
@@ -332,7 +337,7 @@ export default function SubscriptionList() {
             {generateInvoices.isPending
               ? <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
               : <RefreshCw size={15} />}
-            Generer for {currentPeriod.id}
+            {t('subscription.generate', { period: currentPeriod.id })}
           </button>
         )}
       </div>
@@ -351,7 +356,7 @@ export default function SubscriptionList() {
       {(showForm || editingSub) && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-indigo-200 dark:border-indigo-800 p-6 shadow-sm">
           <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-5">
-            {editingSub ? 'Rediger fast utgift' : 'Ny fast utgift'}
+            {editingSub ? t('subscription.edit') : t('subscription.new')}
           </h2>
           <SubscriptionForm
             initial={editingSub ? subToForm(editingSub) : undefined}
@@ -364,10 +369,10 @@ export default function SubscriptionList() {
 
       {/* Active subscriptions */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Aktive ({active.length})</h2>
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('subscription.activeSection', { count: active.length })}</h2>
         {active.length === 0 ? (
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Ingen aktive faste utgifter</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('subscription.noActive')}</p>
           </div>
         ) : (
           active.map(sub => (
@@ -377,7 +382,7 @@ export default function SubscriptionList() {
               currency={currency}
               onEdit={() => { setEditingSub(sub); setShowForm(false); }}
               onToggle={() => toggleSub.mutate(sub.id)}
-              onDelete={() => { if (confirm(`Slett "${sub.name}"?`)) deleteSub.mutate(sub.id); }}
+              onDelete={() => { if (confirm(t('subscription.confirmDelete', { name: sub.name }))) deleteSub.mutate(sub.id); }}
             />
           ))
         )}
@@ -386,7 +391,7 @@ export default function SubscriptionList() {
       {/* Inactive subscriptions */}
       {inactive.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Inaktive ({inactive.length})</h2>
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('subscription.inactiveSection', { count: inactive.length })}</h2>
           {inactive.map(sub => (
             <SubscriptionCard
               key={sub.id}
@@ -394,7 +399,7 @@ export default function SubscriptionList() {
               currency={currency}
               onEdit={() => { setEditingSub(sub); setShowForm(false); }}
               onToggle={() => toggleSub.mutate(sub.id)}
-              onDelete={() => { if (confirm(`Slett "${sub.name}"?`)) deleteSub.mutate(sub.id); }}
+              onDelete={() => { if (confirm(t('subscription.confirmDelete', { name: sub.name }))) deleteSub.mutate(sub.id); }}
             />
           ))}
         </div>
@@ -416,9 +421,17 @@ function SubscriptionCard({
   onToggle: () => void;
   onDelete: () => void;
 }) {
-  const freqLabel = FREQUENCIES.find(f => f.value === sub.frequency)?.label ?? sub.frequency;
-  const methodLabel = sub.distributionMethod === 'BY_INCOME' ? 'Inntektsbasert'
-    : sub.distributionMethod === 'FIXED' ? 'Lik fordeling' : 'Egendefinert';
+  const { t } = useTranslation();
+
+  const freqLabel = (value: string) => {
+    if (value === 'MONTHLY') return t('subscription.monthly');
+    if (value === 'QUARTERLY') return t('subscription.quarterly');
+    if (value === 'YEARLY') return t('subscription.yearly');
+    return value;
+  };
+
+  const methodLabel = sub.distributionMethod === 'BY_INCOME' ? t('invoice.incomeBased')
+    : sub.distributionMethod === 'FIXED' ? t('invoice.equal') : t('subscription.customPct');
 
   return (
     <div className={`bg-white dark:bg-gray-900 rounded-xl border p-4 shadow-sm transition-all ${
@@ -436,12 +449,12 @@ function SubscriptionCard({
             )}
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-xs text-indigo-600 dark:text-indigo-400">{freqLabel}</span>
-            {sub.dayOfMonth && <span className="text-xs text-gray-500 dark:text-gray-400">dag {sub.dayOfMonth}</span>}
+            <span className="text-xs text-indigo-600 dark:text-indigo-400">{freqLabel(sub.frequency)}</span>
+            {sub.dayOfMonth && <span className="text-xs text-gray-500 dark:text-gray-400">{t('subscription.day', { day: sub.dayOfMonth })}</span>}
             <span className="text-xs text-gray-500 dark:text-gray-400">{methodLabel}</span>
             {sub.lastGenerated && (
               <span className="text-xs text-gray-400 dark:text-gray-500">
-                Sist: {new Date(sub.lastGenerated).toLocaleDateString('nb-NO')}
+                {t('subscription.lastGenerated', { date: formatDate(sub.lastGenerated) })}
               </span>
             )}
           </div>
@@ -455,7 +468,7 @@ function SubscriptionCard({
           </button>
           <button
             onClick={onToggle}
-            title={sub.active ? 'Deaktiver' : 'Aktiver'}
+            title={sub.active ? t('subscription.deactivate') : t('subscription.activate')}
             className={`transition-colors ${sub.active ? 'text-green-600 dark:text-green-400 hover:text-gray-400' : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'}`}
           >
             <Power size={16} />

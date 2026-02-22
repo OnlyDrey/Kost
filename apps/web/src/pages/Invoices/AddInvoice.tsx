@@ -93,7 +93,7 @@ export default function AddInvoice() {
     e.preventDefault();
     setError('');
 
-    if (!isEditing && !currentPeriod) { setError('No active period found'); return; }
+    if (!isEditing && !currentPeriod) { setError(t('invoice.noPeriodWarning')); return; }
     if (!vendor.trim()) { setError(t('validation.required')); return; }
 
     const totalCents = amountToCents(parseFloat(amount));
@@ -102,11 +102,11 @@ export default function AddInvoice() {
     let distributionRules: { percentRules?: Array<{userId:string;percentBasisPoints:number}>; userIds?: string[] } | undefined;
 
     if (distributionMethod === 'BY_PERCENT') {
-      if (Math.abs(totalPercent - 100) > 0.01) { setError('Percentages must sum to 100%'); return; }
+      if (Math.abs(totalPercent - 100) > 0.01) { setError(t('invoice.percentsMustSum')); return; }
       const percentRules = Object.entries(userPercents)
         .filter(([, v]) => parseFloat(v) > 0)
         .map(([userId, v]) => ({ userId, percentBasisPoints: Math.round(parseFloat(v) * 100) }));
-      if (percentRules.length === 0) { setError('Specify at least one user percentage'); return; }
+      if (percentRules.length === 0) { setError(t('invoice.specifyPercent')); return; }
       distributionRules = { percentRules };
     }
 
@@ -115,7 +115,7 @@ export default function AddInvoice() {
     }
 
     if (distributionMethod === 'FIXED' && selectedForFixed.length === 0) {
-      setError('Velg minst én bruker for lik fordeling'); return;
+      setError(t('invoice.atLeastOneUser')); return;
     }
 
     const sharedData = {
@@ -161,7 +161,7 @@ export default function AddInvoice() {
       {!isEditing && !currentPeriod && (
         <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 rounded-lg px-4 py-3 text-sm">
           <AlertCircle size={16} className="flex-shrink-0" />
-          <span>No active period. Please create a period first.</span>
+          <span>{t('invoice.noPeriodWarning')}</span>
         </div>
       )}
 
@@ -176,7 +176,7 @@ export default function AddInvoice() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="relative">
-              <label className={labelCls}>Leverandør *</label>
+              <label className={labelCls}>{t('invoice.vendor')} *</label>
               <input
                 type="text"
                 value={vendor}
@@ -185,7 +185,7 @@ export default function AddInvoice() {
                 onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
                 required
                 className={inputCls}
-                placeholder="f.eks. Sparebank 1"
+                placeholder={t('invoice.vendorPlaceholder')}
               />
               {showVendorList && vendors.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
@@ -211,7 +211,7 @@ export default function AddInvoice() {
             <div>
               <label className={labelCls}>{t('invoice.category')}</label>
               <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
-                <option value="">Velg kategori...</option>
+                <option value="">{t('invoice.categoryPlaceholder')}</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
@@ -219,14 +219,14 @@ export default function AddInvoice() {
 
           <div>
             <label className={labelCls}>{t('invoice.description')}</label>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="f.eks. Januar strømregning" />
+            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder={t('invoice.descriptionPlaceholder')} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t('invoice.amount')} *</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beløp i {currency}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('invoice.amountInCurrency', { currency })}</p>
             </div>
             <div className="min-w-0">
               <label className={labelCls}>{t('invoice.dueDate')}</label>
@@ -236,9 +236,9 @@ export default function AddInvoice() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Betalingsmåte</label>
+              <label className={labelCls}>{t('invoice.paymentMethod')}</label>
               <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={inputCls}>
-                <option value="">Velg betalingsmåte...</option>
+                <option value="">{t('invoice.paymentMethodPlaceholder')}</option>
                 {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
@@ -257,9 +257,9 @@ export default function AddInvoice() {
           {distributionMethod === 'BY_INCOME' && users && users.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className={labelCls + ' mb-0'}>Velg brukere som inkluderes</label>
+                <label className={labelCls + ' mb-0'}>{t('invoice.selectUsers')}</label>
                 {totalIncome === 0 && (
-                  <span className="text-xs text-amber-600 dark:text-amber-400">Ingen inntekt registrert</span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400">{t('invoice.noIncome')}</span>
                 )}
               </div>
               <div className="space-y-2">
@@ -284,12 +284,12 @@ export default function AddInvoice() {
                       </div>
                       <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
                       {isJunior && (
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">Barn</span>
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
                       )}
                       {checked && pct !== null ? (
                         <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{pct}%</span>
                       ) : checked && !hasIncome ? (
-                        <span className="text-xs text-amber-500 flex-shrink-0">ingen inntekt</span>
+                        <span className="text-xs text-amber-500 flex-shrink-0">{t('invoice.noIncomeShort')}</span>
                       ) : null}
                       <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
                         {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
@@ -305,9 +305,9 @@ export default function AddInvoice() {
           {distributionMethod === 'BY_PERCENT' && users && users.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className={labelCls + ' mb-0'}>Prosentandel per bruker *</label>
+                <label className={labelCls + ' mb-0'}>{t('invoice.percentPerUser')} *</label>
                 <span className={`text-sm font-medium ${Math.abs(totalPercent - 100) < 0.01 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                  Totalt: {totalPercent.toFixed(1)}%
+                  {t('invoice.totalLabel')} {totalPercent.toFixed(1)}%
                 </span>
               </div>
               <div className="space-y-2">
@@ -318,7 +318,7 @@ export default function AddInvoice() {
                     </div>
                     <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
                     {u.role === 'JUNIOR' && (
-                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">Barn</span>
+                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
                     )}
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <input
@@ -340,9 +340,9 @@ export default function AddInvoice() {
           {distributionMethod === 'FIXED' && users && users.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className={labelCls + ' mb-0'}>Velg brukere som deler likt</label>
+                <label className={labelCls + ' mb-0'}>{t('invoice.selectUsersEqual')}</label>
                 {equalPercent && (
-                  <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{equalPercent}% hver</span>
+                  <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{equalPercent}{t('invoice.eachPct')}</span>
                 )}
               </div>
               <div className="space-y-2">
@@ -365,7 +365,7 @@ export default function AddInvoice() {
                       </div>
                       <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
                       {isJunior && (
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">Barn</span>
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
                       )}
                       {checked && equalPercent && (
                         <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{equalPercent}%</span>

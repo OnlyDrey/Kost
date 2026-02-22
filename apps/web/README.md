@@ -1,213 +1,121 @@
-# Kost - Web App
+# Kost — Web App
 
-A Progressive Web Application (PWA) for managing shared expenses and invoices.
-
-## Features
-
-- **PWA Support**: Installable, works offline
-- **Multi-language**: Norwegian (default) and English
-- **Dark/Light Theme**: Automatic detection with manual toggle
-- **Offline Queue**: Mutations are queued when offline and synced when online
-- **Material UI**: Modern, responsive design
-- **Flexible Authentication**: Password-based (default), magic links (optional), or passkeys (optional)
-- **Real-time Updates**: React Query for efficient server state management
+The React frontend for Kost, a self-hosted shared expense tracker.
 
 ## Tech Stack
 
-- **React 18** with TypeScript
-- **Vite** for fast development and optimized builds
-- **Material-UI (MUI)** for components
-- **React Router** for navigation
-- **React Query** for server state management
-- **i18next** for internationalization
-- **Dexie** for IndexedDB (offline cache)
-- **Workbox** for service worker and offline support
-- **Axios** for API requests
+- **React 18** + TypeScript
+- **Vite** — build tool and dev server
+- **Tailwind CSS 3** — utility-first styling
+- **lucide-react** — icons
+- **React Router 6** — client-side routing
+- **TanStack Query (React Query)** — server state management
+- **i18next** — internationalization (English + Norwegian)
+- **Dexie** — IndexedDB for offline cache
+- **Workbox** — service worker (cache-first assets, network-first API)
+- **Axios** — HTTP client with cookie-based auth
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Copy environment file
-cp .env.example .env
-
-# Update .env with your API URL
-```
+- Node.js 22 LTS
+- API container running (see root [README.md](../../README.md))
 
 ### Development
 
 ```bash
-# Start development server
-npm run dev
-
-# The app will be available at http://localhost:3001
+# From project root
+npm run dev:web   # starts Vite dev server on http://localhost:3001
 ```
+
+Vite proxies `/api` requests to `http://localhost:3000` in development.
 
 ### Build
 
 ```bash
 # Type check
-npm run type-check
+npm run type-check --workspace=apps/web
 
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+# Production build
+npm run build --workspace=apps/web
 ```
 
 ## Project Structure
 
 ```
 src/
-├── components/        # Reusable components
-│   ├── Common/       # Shared components
-│   ├── Invoice/      # Invoice-specific components
-│   └── Layout/       # Layout components
-├── hooks/            # Custom React hooks
-├── i18n/             # Internationalization
-├── idb/              # IndexedDB (Dexie) setup
-├── pages/            # Page components
-├── routes/           # React Router configuration
-├── services/         # API services
-├── stores/           # Context providers
-├── sw/               # Service worker
-└── utils/            # Utility functions
+├── components/
+│   ├── Invoice/       # AllocationExplanation
+│   └── Layout/        # AppLayout (sidebar, nav)
+├── hooks/             # React Query hooks (useApi.ts)
+├── i18n/              # Translation files (en.json, nb.json)
+├── idb/               # IndexedDB offline queue (Dexie)
+├── pages/
+│   ├── Admin/         # Users, FamilySettings
+│   ├── Dashboard/
+│   ├── Invoices/      # InvoiceList, InvoiceDetail, AddInvoice
+│   ├── Periods/       # PeriodList, PeriodDetail
+│   ├── Settings/      # Profile
+│   └── Subscriptions/ # SubscriptionList
+├── routes/            # App router
+├── services/          # API client (axios instance)
+├── stores/            # Context providers (auth, settings)
+├── sw/                # Service worker entry (Workbox)
+└── utils/             # currency, date, distribution helpers
 ```
-
-## Key Features
-
-### Dashboard
-
-- Personal share shown first, period total second, with adaptive font sizing for large amounts
-- Category breakdown card: each expense category with its share of your total, shown as a progress bar and percentage
-- Recent invoices list with quick navigation to details
-
-### Invoice Management
-
-- Create invoices with three distribution methods:
-  - **Equal Split**: Divide equally among family members
-  - **Custom Split**: Manually specify each person's share
-  - **Income-Based Split**: Automatically calculate based on income ratios
-- Invoice list shows vendor logos, payment status badges (green **Betalt** for fully paid, amber with remaining amount for partial), and a direct **edit button** per row
-- Filter invoices by search text, distribution method, and **payment status** (paid / partially paid / unpaid)
-- View invoice details with allocation explanations
-
-### Period Management
-
-- Create and manage billing periods
-- Close periods (Admin only)
-- View period statistics
-
-### Offline Support
-
-- Service worker caches assets and API responses
-- Offline queue for mutations (create, update, delete)
-- Automatic sync when connection is restored
-- IndexedDB cache for data persistence
-
-### User Avatars
-
-- Users upload a profile photo from the Settings page (file upload, stored on the server)
-- Admins can upload or remove avatars for any family member from the Users admin page
-- Old avatar files are automatically deleted when replaced or removed
-- Avatars appear in the sidebar and throughout the app
-
-### Settings
-
-- Toggle between light and dark themes
-- Switch between Norwegian and English
-- Preferences saved to localStorage
-- Users confirm income changes before saving (affects cost split calculations)
-- Admins can override any user's income from the Users admin page
 
 ## Environment Variables
 
 ```env
-VITE_API_URL=http://localhost:3000/api
-VITE_APP_NAME=Kost
+VITE_API_URL=/api   # API base path — leave as /api (nginx proxies internally)
 ```
 
-**Note:** In production, use your external reverse proxy's HTTPS URL (e.g., `https://finance.yourdomain.com/api`).
+## Features
 
-## Browser Support
+### Expense Management
+- Create, edit, and delete expenses
+- Three cost-split methods: **Income-Based**, **Custom %**, **Equal Split**
+- Vendor autocomplete with logo support
+- Category and payment method dropdowns (managed by admin)
 
-- Chrome/Edge 90+
-- Firefox 88+
-- Safari 14+
-- Mobile browsers with PWA support
+### Payment Tracking
+- Register full or partial payments per expense
+- Payment status filter (paid / partially paid / unpaid) on invoice list
 
-## PWA Installation
+### Period Statistics
+- View total expenses, user shares, and per-category breakdown
+- Progress bars showing each category's share of total spend
 
-The app can be installed on desktop and mobile devices:
+### Recurring Expenses
+- Define subscriptions (monthly / quarterly / yearly)
+- Generate invoices for the current period with one click
+- Toggle active/inactive without deleting
 
-1. Visit the app in a supported browser
-2. Look for the "Install" prompt or add to home screen option
-3. Follow the browser-specific installation steps
+### User & Family Management (Admin)
+- Create, edit, delete users with role assignment (Admin / Adult / Child)
+- Upload and remove user avatar photos
+- Edit any family member's income directly from the Users page
+- Manage categories, payment methods, vendors, and display currency
 
-## Offline Functionality
+### Settings
+- Light/dark theme toggle
+- Language toggle (English / Norwegian)
+- Profile photo upload
+- Income registration (requires confirmation before saving)
+- Password change
 
-The app works offline with the following capabilities:
+### Offline Support (PWA)
+- Service worker caches static assets (cache-first) and API responses (network-first)
+- Mutations queued in IndexedDB when offline; drained automatically on reconnect
+- Installable as a PWA on desktop and mobile
 
-- **Cached Pages**: All visited pages are cached
-- **Cached Data**: Recently viewed data is cached in IndexedDB
-- **Offline Queue**: Create/update/delete operations are queued when offline
-- **Auto Sync**: Queue is automatically processed when online
+## Internationalization
 
-## Development Notes
+Translations live in `src/i18n/en.json` and `src/i18n/nb.json`.
 
-### Currency Handling
+- Default fallback language is **Norwegian (Bokmål)**
+- Language preference saved to `localStorage`
+- All UI strings must use `t('key')` — no hardcoded text
 
-All amounts are stored in cents (integers) and converted to kr for display:
-- Backend: amounts in cents (e.g., 150000 = 1,500.00 kr)
-- Frontend: display with `formatCurrency()` utility
-
-### Date Handling
-
-All dates are stored in ISO format (YYYY-MM-DD) and formatted for display using the `formatDate()` utility.
-
-### Authentication
-
-The app supports multiple authentication methods configured on the backend:
-
-**Password Authentication (Default):**
-1. User enters email and password
-2. Backend verifies credentials
-3. JWT token issued and stored in HTTP-only cookie
-4. No SMTP configuration required
-
-**Magic Link Authentication (Optional, requires SMTP):**
-1. User enters email
-2. Backend sends email with magic link
-3. User clicks link with token
-4. Frontend verifies token and logs in
-5. JWT stored in HTTP-only cookie
-
-**Passkey/WebAuthn Authentication (Optional):**
-1. User registers a passkey (biometric or hardware key)
-2. Future logins use the registered passkey
-3. Most secure option with phishing resistance
-4. Requires HTTPS in production
-
-At least one authentication method must be enabled on the backend via environment variables (`AUTH_PASSWORD_ENABLED`, `AUTH_MAGIC_LINK_ENABLED`, `AUTH_PASSKEY_ENABLED`).
-
-## Contributing
-
-1. Follow TypeScript best practices
-2. Use Material-UI components
-3. Maintain i18n support for new features
-4. Test offline functionality
-5. Keep accessibility in mind
-
-## License
-
-Private - Family use only
+To add a new string: add to both `en.json` and `nb.json` under the appropriate section, then use `t('section.key')` in the component.

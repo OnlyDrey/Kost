@@ -100,9 +100,6 @@ DB_PASSWORD=your-secure-password
 
 # JWT secret (generate with: openssl rand -base64 32)
 JWT_SECRET=your-jwt-secret-here
-
-# Password auth is enabled by default (no SMTP needed)
-AUTH_PASSWORD_ENABLED=true
 ```
 
 ### 4. Start Services

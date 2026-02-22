@@ -12,17 +12,19 @@ const METHOD_OPTIONS = ['ALL', 'BY_INCOME', 'BY_PERCENT', 'FIXED'];
 const STATUS_OPTIONS = ['ALL', 'PAID', 'PARTIALLY_PAID', 'UNPAID'] as const;
 type StatusFilter = typeof STATUS_OPTIONS[number];
 
-const STATUS_LABELS: Record<StatusFilter, string> = {
-  ALL: 'Status',
-  PAID: 'Betalt',
-  PARTIALLY_PAID: 'Delvis betalt',
-  UNPAID: 'Ubetalt',
-};
+// STATUS_LABELS built inside the component with t() so they respect locale changes
 
 export default function InvoiceList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { settings } = useSettings();
+
+  const STATUS_LABELS: Record<StatusFilter, string> = {
+    ALL: t('invoice.statusAll'),
+    PAID: t('invoice.statusPaid'),
+    PARTIALLY_PAID: t('invoice.statusPartiallyPaid'),
+    UNPAID: t('invoice.statusUnpaid'),
+  };
 
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: invoices, isLoading } = useInvoices(currentPeriod?.id);
@@ -158,12 +160,12 @@ export default function InvoiceList() {
                           </p>
                           {isPaid && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                              <CheckCircle2 size={10} /> Betalt
+                              <CheckCircle2 size={10} /> {t('invoice.statusPaid')}
                             </span>
                           )}
                           {isPartiallyPaid && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                              <Clock size={10} /> {formatCurrency(remaining, currency)} gjenstår
+                              <Clock size={10} /> {t('invoice.remaining', { amount: formatCurrency(remaining, currency) })}
                             </span>
                           )}
                         </div>

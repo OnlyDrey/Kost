@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { Tag, CreditCard, Plus, Trash2, AlertCircle, Globe, Store, Pencil, Check, X, Upload, Link } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   useCategories, useAddCategory, useRemoveCategory,
   usePaymentMethods, useAddPaymentMethod, useRemovePaymentMethod,
@@ -42,14 +43,15 @@ function ManagedList({
   isPendingAdd: boolean;
   isPendingRemove: boolean;
 }) {
+  const { t } = useTranslation();
   const [newItem, setNewItem] = useState('');
   const [error, setError] = useState('');
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newItem.trim();
-    if (!trimmed) { setError('Feltet kan ikke være tomt'); return; }
-    if (items.includes(trimmed)) { setError('Finnes allerede'); return; }
+    if (!trimmed) { setError(t('familySettings.fieldRequired')); return; }
+    if (items.includes(trimmed)) { setError(t('familySettings.alreadyExists')); return; }
     setError('');
     onAdd(trimmed);
     setNewItem('');
@@ -71,10 +73,10 @@ function ManagedList({
       )}
 
       <form onSubmit={handleAdd} className="flex gap-2 mb-4">
-        <input type="text" value={newItem} onChange={(e) => { setNewItem(e.target.value); setError(''); }} className={inputCls} placeholder={`Legg til ${title.toLowerCase()}...`} />
+        <input type="text" value={newItem} onChange={(e) => { setNewItem(e.target.value); setError(''); }} className={inputCls} placeholder={t('familySettings.addPlaceholder', { item: title.toLowerCase() })} />
         <button type="submit" disabled={isPendingAdd} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
           {isPendingAdd ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Plus size={15} />}
-          Legg til
+          {t('familySettings.addItem')}
         </button>
       </form>
 
@@ -83,7 +85,7 @@ function ManagedList({
           <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : items.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">Ingen lagt til ennå</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">{t('familySettings.noneAdded')}</p>
       ) : (
         <div className="space-y-1.5">
           {items.map((item) => (
@@ -111,6 +113,7 @@ function LogoPicker({
   onUrlSave: (url: string) => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation();
   const uploadVendorLogo = useUploadVendorLogo();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'url' | 'upload'>('url');
@@ -125,7 +128,7 @@ function LogoPicker({
       await uploadVendorLogo.mutateAsync({ id: vendorId, file });
     } catch (err: any) {
       const msg = err?.response?.data?.message;
-      setUploadErr(Array.isArray(msg) ? msg.join(', ') : msg || 'Opplasting feilet');
+      setUploadErr(Array.isArray(msg) ? msg.join(', ') : msg || t('familySettings.uploadFailed'));
     }
     e.target.value = '';
   };
@@ -138,14 +141,14 @@ function LogoPicker({
           onClick={() => setMode('url')}
           className={`flex items-center gap-1 px-2 py-1 rounded ${mode === 'url' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          <Link size={11} /> Via URL
+          <Link size={11} /> {t('familySettings.viaUrl')}
         </button>
         <button
           type="button"
           onClick={() => setMode('upload')}
           className={`flex items-center gap-1 px-2 py-1 rounded ${mode === 'upload' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          <Upload size={11} /> Last opp
+          <Upload size={11} /> {t('familySettings.uploadOption')}
         </button>
       </div>
 
@@ -179,7 +182,7 @@ function LogoPicker({
             {uploadVendorLogo.isPending
               ? <span className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
               : <Upload size={12} />}
-            Velg bildefil
+            {t('familySettings.chooseFile')}
           </button>
           {uploadErr && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{uploadErr}</p>}
         </div>
@@ -199,6 +202,7 @@ function VendorRow({
   onRemove: (id: string) => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(vendor.name);
 
@@ -216,7 +220,7 @@ function VendorRow({
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
       {editing ? (
         <div className="space-y-2">
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Navn" className={inputSmCls} />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('users.name')} className={inputSmCls} />
 
           <LogoPicker
             vendorId={vendor.id}
@@ -227,10 +231,10 @@ function VendorRow({
 
           <div className="flex gap-2 justify-end">
             <button onClick={handleCancel} className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors">
-              <X size={13} /> Avbryt
+              <X size={13} /> {t('common.cancel')}
             </button>
             <button onClick={handleSave} disabled={isPending} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60">
-              <Check size={13} /> Lagre navn
+              <Check size={13} /> {t('familySettings.saveName')}
             </button>
           </div>
         </div>
@@ -261,6 +265,7 @@ function VendorRow({
 }
 
 function VendorManager() {
+  const { t } = useTranslation();
   const { data: vendors = [], isLoading } = useVendors();
   const addVendor = useAddVendor();
   const updateVendor = useUpdateVendor();
@@ -272,14 +277,14 @@ function VendorManager() {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newName.trim();
-    if (!trimmed) { setError('Navn er påkrevd'); return; }
-    if (vendors.some(v => v.name.toLowerCase() === trimmed.toLowerCase())) { setError('Leverandør finnes allerede'); return; }
+    if (!trimmed) { setError(t('familySettings.fieldRequired')); return; }
+    if (vendors.some(v => v.name.toLowerCase() === trimmed.toLowerCase())) { setError(t('familySettings.vendorExists')); return; }
     setError('');
     addVendor.mutate({ name: trimmed }, {
       onSuccess: () => setNewName(''),
       onError: (err: any) => {
         const msg = err?.response?.data?.message;
-        setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Noe gikk galt');
+        setError(Array.isArray(msg) ? msg.join(', ') : msg || t('familySettings.somethingWentWrong'));
       },
     });
   };
@@ -288,10 +293,10 @@ function VendorManager() {
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <Store size={18} className="text-indigo-600 dark:text-indigo-400" />
-        <h2 className="font-semibold text-gray-900 dark:text-gray-100">Leverandører</h2>
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('familySettings.vendors')}</h2>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-        Administrer leverandører. Trykk på blyant-ikonet for å redigere navn og logo (via URL eller bildeopplasting).
+        {t('familySettings.vendorsDesc')}
       </p>
 
       {error && (
@@ -302,10 +307,10 @@ function VendorManager() {
       )}
 
       <form onSubmit={handleAdd} className="flex gap-2 mb-5">
-        <input type="text" value={newName} onChange={(e) => { setNewName(e.target.value); setError(''); }} className={inputCls} placeholder="Leverandørnavn..." />
+        <input type="text" value={newName} onChange={(e) => { setNewName(e.target.value); setError(''); }} className={inputCls} placeholder={t('familySettings.vendorNamePlaceholder')} />
         <button type="submit" disabled={addVendor.isPending} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap">
           {addVendor.isPending ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Plus size={15} />}
-          Legg til
+          {t('familySettings.addItem')}
         </button>
       </form>
 
@@ -314,7 +319,7 @@ function VendorManager() {
           <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : vendors.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">Ingen leverandører lagt til ennå</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">{t('familySettings.noVendors')}</p>
       ) : (
         <div className="space-y-1.5">
           {vendors.map((vendor) => (
@@ -333,6 +338,7 @@ function VendorManager() {
 }
 
 function CurrencySettings() {
+  const { t } = useTranslation();
   const { data: currentCurrency = 'NOK', isLoading } = useCurrency();
   const updateCurrency = useUpdateCurrency();
   const [selected, setSelected] = useState<string>('');
@@ -349,13 +355,13 @@ function CurrencySettings() {
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <Globe size={18} className="text-indigo-600 dark:text-indigo-400" />
-        <h2 className="font-semibold text-gray-900 dark:text-gray-100">Valuta</h2>
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('familySettings.currency')}</h2>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">Velg familiens standardvaluta. Brukes i alle beløpsvisninger og beregninger.</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">{t('familySettings.currencyDesc')}</p>
 
       {success && (
         <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-3 py-2 text-sm mb-4">
-          Valuta oppdatert til {value}
+          {t('familySettings.currencyUpdated', { value })}
         </div>
       )}
 
@@ -370,7 +376,7 @@ function CurrencySettings() {
           </select>
           <button onClick={handleSave} disabled={updateCurrency.isPending || value === currentCurrency} className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
             {updateCurrency.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-            Lagre
+            {t('common.save')}
           </button>
         </div>
       )}
@@ -379,6 +385,7 @@ function CurrencySettings() {
 }
 
 export default function FamilySettings() {
+  const { t } = useTranslation();
   const { data: categories = [], isLoading: loadingCats } = useCategories();
   const { data: paymentMethods = [], isLoading: loadingMethods } = usePaymentMethods();
   const addCategory = useAddCategory();
@@ -388,14 +395,14 @@ export default function FamilySettings() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Familieinnstillinger</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('familySettings.title')}</h1>
 
       <CurrencySettings />
 
       <ManagedList
         icon={<Tag size={18} />}
-        title="Kategorier"
-        description="Kategorier brukes til å gruppere utgifter. Velges fra rullegardin når du oppretter en utgift."
+        title={t('familySettings.categories')}
+        description={t('familySettings.categoriesDesc')}
         items={categories}
         isLoading={loadingCats}
         onAdd={(name) => addCategory.mutate(name)}
@@ -406,8 +413,8 @@ export default function FamilySettings() {
 
       <ManagedList
         icon={<CreditCard size={18} />}
-        title="Betalingsmåter"
-        description="Betalingsmåter brukes til å angi hvordan en betaling ble gjennomført. Velges fra rullegardin ved registrering av betaling."
+        title={t('familySettings.paymentMethods')}
+        description={t('familySettings.paymentMethodsDesc')}
         items={paymentMethods}
         isLoading={loadingMethods}
         onAdd={(name) => addPaymentMethod.mutate(name)}

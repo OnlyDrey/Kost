@@ -113,7 +113,7 @@ export default function InvoiceDetail() {
             )}
             {isPaid && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                <CheckCircle2 size={12} /> Betalt
+                <CheckCircle2 size={12} /> {t('invoice.paid')}
               </span>
             )}
           </div>
@@ -139,19 +139,19 @@ export default function InvoiceDetail() {
             )}
             {invoice.paymentMethod && (
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Betalingsmåte</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.paymentMethod')}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.paymentMethod}</p>
               </div>
             )}
             {totalPaid > 0 && (
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Betalt</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountPaid')}</p>
                 <p className="text-sm font-medium text-green-600 dark:text-green-400">{formatCurrency(totalPaid, currency)}</p>
               </div>
             )}
             {!isPaid && totalPaid > 0 && (
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gjenstående</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.remainingLabel')}</p>
                 <p className="text-sm font-medium text-red-600 dark:text-red-400">{formatCurrency(remaining, currency)}</p>
               </div>
             )}
@@ -171,7 +171,7 @@ export default function InvoiceDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {invoice.shares.map((share) => (
                 <div key={share.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{share.user?.name || 'Unknown'}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{share.user?.name || t('invoice.unknown')}</p>
                   <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
                     {formatCurrency(share.shareCents, currency)}
                   </p>
@@ -191,13 +191,13 @@ export default function InvoiceDetail() {
         {/* Payments */}
         <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Betalinger</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('invoice.payments')}</h3>
             {!isPaid && !showPayForm && (
               <button
                 onClick={() => { setShowPayForm(true); setPayAmount(String(remaining / 100)); }}
                 className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
               >
-                + Merk som betalt
+                {t('invoice.markPaid')}
               </button>
             )}
           </div>
@@ -208,7 +208,7 @@ export default function InvoiceDetail() {
               {invoice.payments.map((payment) => (
                 <div key={payment.id} className="flex items-center justify-between text-sm border border-gray-100 dark:border-gray-800 rounded-lg px-3 py-2">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{payment.paidBy?.name ?? 'Ukjent'}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{payment.paidBy?.name ?? t('invoice.unknown')}</p>
                     <p className="text-xs text-gray-400">{formatDate(payment.paidAt)}{payment.note ? ` · ${payment.note}` : ''}</p>
                   </div>
                   <p className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(payment.amountCents, currency)}</p>
@@ -216,7 +216,7 @@ export default function InvoiceDetail() {
               ))}
             </div>
           ) : !showPayForm ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Ingen betalinger registrert</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('invoice.noPayments')}</p>
           ) : null}
 
           {/* Add payment form */}
@@ -228,20 +228,20 @@ export default function InvoiceDetail() {
                 </div>
               )}
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Beløp (kr)</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountInCurrency', { currency })}</label>
                 <input type="number" step="0.01" min="0.01" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} className={inputCls} required placeholder="0.00" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Notat (valgfritt)</label>
-                <input type="text" value={payNote} onChange={(e) => setPayNote(e.target.value)} className={inputCls} placeholder="f.eks. bankoverføring" />
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.noteOptional')}</label>
+                <input type="text" value={payNote} onChange={(e) => setPayNote(e.target.value)} className={inputCls} placeholder={t('invoice.notePlaceholder')} />
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setShowPayForm(false)} className="flex-1 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Avbryt
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" disabled={addPayment.isPending} className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors">
                   {addPayment.isPending && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  Registrer betaling
+                  {t('invoice.registerPayment')}
                 </button>
               </div>
             </form>
