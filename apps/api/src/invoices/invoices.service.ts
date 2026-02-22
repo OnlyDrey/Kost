@@ -132,23 +132,76 @@ export class InvoicesService {
       },
     });
 
-    if (incomes.length === 0) {
-      throw new BadRequestException(
-        "No users with income found for this period. Add incomes first.",
-      );
-    }
-
-    // Build participants; JUNIOR users are excluded by default unless explicitly opted in via userIds
-    const allParticipants = incomes.map((inc) => ({
-      userId: inc.userId,
-      userName: inc.user.name,
-      role: inc.user.role,
-      normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-    }));
     const selectedUserIds = distributionRules?.userIds;
-    const participants = selectedUserIds && selectedUserIds.length > 0
-      ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
-      : allParticipants.filter((p) => p.role !== "JUNIOR");
+
+    let allParticipants: Array<{
+      userId: string;
+      userName: string;
+      role: string;
+      normalizedMonthlyGrossCents: number;
+    }>;
+    let participants: Array<{
+      userId: string;
+      userName: string;
+      role: string;
+      normalizedMonthlyGrossCents: number;
+    }>;
+
+    // If specific users are selected (including manual child selection), include them even without incomes
+    if (selectedUserIds && selectedUserIds.length > 0) {
+      // When users are explicitly selected, we need to include them even if they don't have incomes
+      // This allows manually selecting children (JUNIOR users) for expense distribution
+      const incomesMap = new Map(incomes.map((inc) => [inc.userId, inc]));
+      const allFamily = await this.prisma.user.findMany({
+        where: { familyId },
+      });
+
+      allParticipants = selectedUserIds.map((userId) => {
+        const income = incomesMap.get(userId);
+        const user = allFamily.find((u) => u.id === userId);
+
+        if (!user) {
+          throw new BadRequestException(`User ${userId} not found in family`);
+        }
+
+        return {
+          userId: user.id,
+          userName: user.name,
+          role: user.role,
+          normalizedMonthlyGrossCents: income?.normalizedMonthlyGrossCents ?? 0,
+        };
+      });
+
+      // For FIXED distribution, we can proceed even with no income users
+      // For other methods, validate at least one user has income
+      if (distributionMethod !== "FIXED") {
+        const hasIncome = allParticipants.some(
+          (p) => p.normalizedMonthlyGrossCents > 0,
+        );
+        if (!hasIncome) {
+          throw new BadRequestException(
+            "At least one selected user must have income for this distribution method",
+          );
+        }
+      }
+
+      participants = allParticipants;
+    } else {
+      // Default behavior: use users with incomes, excluding JUNIOR users
+      if (incomes.length === 0) {
+        throw new BadRequestException(
+          "No users with income found for this period. Add incomes first.",
+        );
+      }
+
+      allParticipants = incomes.map((inc) => ({
+        userId: inc.userId,
+        userName: inc.user.name,
+        role: inc.user.role,
+        normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
+      }));
+      participants = allParticipants.filter((p) => p.role !== "JUNIOR");
+    }
 
     // Calculate shares based on distribution method
     const shares = await this.calculateShares(
@@ -271,17 +324,67 @@ export class InvoicesService {
       });
 
       // Filter participants by selected userIds (same logic as create)
-      const allParticipants = incomes.map((inc) => ({
-        userId: inc.userId,
-        userName: inc.user.name,
-        role: inc.user.role,
-        normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-      }));
       const selectedUserIds = distributionRules?.userIds;
-      const participants =
-        selectedUserIds && selectedUserIds.length > 0
-          ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
-          : allParticipants.filter((p) => p.role !== "JUNIOR");
+      let allParticipants: Array<{
+        userId: string;
+        userName: string;
+        role: string;
+        normalizedMonthlyGrossCents: number;
+      }>;
+      let participants: Array<{
+        userId: string;
+        userName: string;
+        role: string;
+        normalizedMonthlyGrossCents: number;
+      }>;
+
+      if (selectedUserIds && selectedUserIds.length > 0) {
+        // When users are explicitly selected, include them even if they don't have incomes
+        const incomesMap = new Map(incomes.map((inc) => [inc.userId, inc]));
+        const allFamily = await this.prisma.user.findMany({
+          where: { familyId },
+        });
+
+        allParticipants = selectedUserIds.map((userId) => {
+          const income = incomesMap.get(userId);
+          const user = allFamily.find((u) => u.id === userId);
+
+          if (!user) {
+            throw new BadRequestException(`User ${userId} not found in family`);
+          }
+
+          return {
+            userId: user.id,
+            userName: user.name,
+            role: user.role,
+            normalizedMonthlyGrossCents: income?.normalizedMonthlyGrossCents ?? 0,
+          };
+        });
+
+        // For FIXED distribution, we can proceed even with no income users
+        // For other methods, validate at least one user has income
+        if (method !== "FIXED") {
+          const hasIncome = allParticipants.some(
+            (p) => p.normalizedMonthlyGrossCents > 0,
+          );
+          if (!hasIncome) {
+            throw new BadRequestException(
+              "At least one selected user must have income for this distribution method",
+            );
+          }
+        }
+
+        participants = allParticipants;
+      } else {
+        // Default behavior: use users with incomes, excluding JUNIOR users
+        allParticipants = incomes.map((inc) => ({
+          userId: inc.userId,
+          userName: inc.user.name,
+          role: inc.user.role,
+          normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
+        }));
+        participants = allParticipants.filter((p) => p.role !== "JUNIOR");
+      }
 
       const shares = await this.calculateShares(
         totalCents,
