@@ -53,7 +53,10 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
 # Give the non-root user write access to both the generated client (.prisma)
 # and the engine binaries (@prisma/engines) which Prisma writes to at runtime.
-RUN chown -R nestjs:nodejs /app/node_modules/.prisma /app/node_modules/@prisma
+# Also pre-create the uploads directories with correct ownership so the API can
+# write avatar/vendor images without needing to run as root.
+RUN mkdir -p /app/apps/api/uploads/avatars /app/apps/api/uploads/vendors && \
+    chown -R nestjs:nodejs /app/node_modules/.prisma /app/node_modules/@prisma /app/apps/api/uploads
 
 USER nestjs
 
