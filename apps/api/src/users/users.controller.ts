@@ -105,8 +105,19 @@ export class UsersController {
         },
       }),
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith("image/")) {
-          cb(new BadRequestException("Only image files are allowed"), false);
+        // Support common image MIME types including HEIC
+        const supportedMimeTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+        ];
+
+        if (!supportedMimeTypes.includes(file.mimetype) && !file.mimetype.startsWith("image/")) {
+          cb(new BadRequestException("Only image files are allowed (JPEG, PNG, GIF, WebP, HEIC)"), false);
         } else {
           cb(null, true);
         }
