@@ -6,7 +6,7 @@ import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import InvoiceList from '../pages/Invoices/InvoiceList';
 import InvoiceDetail from '../pages/Invoices/InvoiceDetail';
-import AddInvoice from '../pages/Invoices/AddInvoice';
+import AddExpense from '../pages/Expenses/AddExpense';
 import PeriodList from '../pages/Periods/PeriodList';
 import PeriodDetail from '../pages/Periods/PeriodDetail';
 import Profile from '../pages/Settings/Profile';
@@ -52,10 +52,12 @@ export default function AppRoutes() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/invoices" element={<InvoiceList />} />
-        <Route path="/invoices/add" element={<AddInvoice />} />
+        <Route path="/invoices/add" element={<AddExpense />} />
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
-        <Route path="/invoices/:id/edit" element={<AddInvoice />} />
+        <Route path="/invoices/:id/edit" element={<AddExpense />} />
         <Route path="/subscriptions" element={<SubscriptionList />} />
+        <Route path="/subscriptions/add" element={<AddExpense />} />
+        <Route path="/subscriptions/:id/edit" element={<AddExpense />} />
         <Route path="/periods" element={<PeriodList />} />
         <Route path="/periods/:id" element={<PeriodDetail />} />
         <Route path="/settings" element={<Profile />} />

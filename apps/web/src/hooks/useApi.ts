@@ -405,6 +405,14 @@ export function useSubscriptions(activeOnly?: boolean) {
   });
 }
 
+export function useSubscription(id: string) {
+  return useQuery({
+    queryKey: queryKeys.subscription(id),
+    queryFn: () => subscriptionApi.getById(id).then(res => res.data),
+    enabled: !!id,
+  });
+}
+
 export function useCreateSubscription() {
   const queryClient = useQueryClient();
   return useMutation({
