@@ -26,7 +26,9 @@
     "totalAmount": "Total Amount",
     "yourShare": "Your Share",
     "recentInvoices": "Recent Expenses",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "categoryBreakdown": "Categories - Your Share",
+    "percentOfShare": "% of your share"
   },
   "invoice": {
     "title": "Expense",

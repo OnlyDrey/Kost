@@ -135,7 +135,7 @@ export default function Dashboard() {
       {categoryBreakdown.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Kategorier – din andel</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('dashboard.categoryBreakdown')}</h2>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {categoryBreakdown.map(({ category, totalCents }) => {
@@ -152,7 +152,7 @@ export default function Dashboard() {
                       style={{ width: `${Math.min(pct, 100).toFixed(1)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{pct.toFixed(1)}% av din andel</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{pct.toFixed(1)}% {t('dashboard.percentOfShare')}</p>
                 </div>
               );
             })}
