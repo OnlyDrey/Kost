@@ -14,8 +14,6 @@ const inputCls =
 
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
-const FREQUENCY_VALUES = ['MONTHLY', 'QUARTERLY', 'YEARLY', 'CUSTOM'];
-
 export default function AddExpense() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -51,8 +49,9 @@ export default function AddExpense() {
   const [dueDate, setDueDate] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [frequency, setFrequency] = useState('MONTHLY');
+  const [frequencyQuantity, setFrequencyQuantity] = useState('1');
+  const [frequencyUnit, setFrequencyUnit] = useState('MONTH');
   const [dayOfMonth, setDayOfMonth] = useState('1');
-  const [customFrequency, setCustomFrequency] = useState('');
   const [active, setActive] = useState(true);
   const [error, setError] = useState('');
   const [userPercents, setUserPercents] = useState<Record<string, string>>({});
@@ -93,20 +92,47 @@ export default function AddExpense() {
     }
   }, [isEditing, existingInvoice?.id, isSubscription]);
 
+  // Parse frequency string into quantity and unit
+  const parseFrequency = (freq: string) => {
+    const match = freq.match(/^(\d+)_(\w+)$/);
+    if (match) {
+      return { quantity: match[1], unit: match[2] };
+    }
+    // Handle standard frequencies
+    if (freq === 'DAILY') return { quantity: '1', unit: 'DAY' };
+    if (freq === 'WEEKLY') return { quantity: '1', unit: 'WEEK' };
+    if (freq === 'MONTHLY') return { quantity: '1', unit: 'MONTH' };
+    if (freq === 'QUARTERLY') return { quantity: '3', unit: 'MONTH' };
+    if (freq === 'YEARLY') return { quantity: '1', unit: 'YEAR' };
+    return { quantity: '1', unit: 'MONTH' };
+  };
+
+  // Calculate frequency string from quantity and unit
+  const calculateFrequency = (quantity: string, unit: string) => {
+    const q = parseInt(quantity) || 1;
+    if (q === 1 && unit === 'DAY') return 'DAILY';
+    if (q === 1 && unit === 'WEEK') return 'WEEKLY';
+    if (q === 1 && unit === 'MONTH') return 'MONTHLY';
+    if (q === 3 && unit === 'MONTH') return 'QUARTERLY';
+    if (q === 1 && unit === 'YEAR') return 'YEARLY';
+    return `${q}_${unit}`;
+  };
+
   // Pre-fill form when editing subscription
   useEffect(() => {
     if (isEditing && isSubscription && existingSubscription) {
       setVendor(existingSubscription.vendor);
+      setDescription(existingSubscription.description || '');
       setCategory(existingSubscription.category ?? '');
       setAmount(String(centsToAmount(existingSubscription.amountCents)));
       setDistributionMethod(existingSubscription.distributionMethod);
       setStartDate(existingSubscription.startDate.slice(0, 10));
       setFrequency(existingSubscription.frequency);
+      const parsed = parseFrequency(existingSubscription.frequency);
+      setFrequencyQuantity(parsed.quantity);
+      setFrequencyUnit(parsed.unit);
       setDayOfMonth(String(existingSubscription.dayOfMonth ?? 1));
       setActive(existingSubscription.active);
-      if (existingSubscription.frequency === 'CUSTOM') {
-        setCustomFrequency(existingSubscription.frequency);
-      }
 
       // Initialize distribution rules from subscription
       const rules = existingSubscription.distributionRules as any;
@@ -185,28 +211,21 @@ export default function AddExpense() {
 
     try {
       if (isSubscription) {
-        const actualFrequency = frequency === 'CUSTOM' ? customFrequency : frequency;
-        if (frequency === 'CUSTOM' && !customFrequency.trim()) {
-          setError(t('validation.required'));
-          return;
-        }
+        const actualFrequency = calculateFrequency(frequencyQuantity, frequencyUnit);
 
         const subData: any = {
           name: vendor.trim(),
           vendor: vendor.trim(),
           category: category.trim() || undefined,
+          description: description.trim() || undefined,
           amountCents: totalCents,
           distributionMethod,
           frequency: actualFrequency,
           dayOfMonth: parseInt(dayOfMonth) || undefined,
           startDate,
           active,
+          distributionRules: distributionRules || {},
         };
-
-        // Only include distributionRules if it was constructed
-        if (distributionRules) {
-          subData.distributionRules = distributionRules;
-        }
 
         if (isEditing) {
           await updateSubscription.mutateAsync({ id: id!, data: subData });
@@ -247,16 +266,8 @@ export default function AddExpense() {
 
   const backUrl = isSubscription ? '/subscriptions' : '/invoices';
   const titleKey = isSubscription
-    ? (isEditing ? 'subscription.edit' : 'subscription.new')
+    ? (isEditing ? 'subscription.edit' : 'subscription.add')
     : (isEditing ? 'invoice.editInvoice' : 'invoice.addInvoice');
-
-  const freqLabel = (value: string) => {
-    if (value === 'MONTHLY') return t('subscription.monthly');
-    if (value === 'QUARTERLY') return t('subscription.quarterly');
-    if (value === 'YEARLY') return t('subscription.yearly');
-    if (value === 'CUSTOM') return t('subscription.custom', { default: 'Custom' });
-    return value;
-  };
 
   return (
     <div className="space-y-5 max-w-2xl">
@@ -304,7 +315,7 @@ export default function AddExpense() {
                 onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
                 required
                 className={inputCls}
-                placeholder={isSubscription ? 'f.eks. Boliglån' : t('invoice.vendorPlaceholder')}
+                placeholder={isSubscription ? 'e.g. Mortgage' : t('invoice.vendorPlaceholder')}
               />
               {showVendorList && vendors.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
@@ -336,10 +347,18 @@ export default function AddExpense() {
             </div>
           </div>
 
-          <div>
-            <label className={labelCls}>{t('invoice.description')}</label>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder={t('invoice.descriptionPlaceholder')} />
-          </div>
+          {!isSubscription && (
+            <div>
+              <label className={labelCls}>{t('invoice.description')}</label>
+              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder={t('invoice.descriptionPlaceholder')} />
+            </div>
+          )}
+          {isSubscription && (
+            <div>
+              <label className={labelCls}>{t('invoice.description')}</label>
+              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={inputCls} placeholder="e.g., Monthly payment for home loan" />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -357,21 +376,19 @@ export default function AddExpense() {
 
           {isSubscription && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className={labelCls}>{t('subscription.frequency')}</label>
-                  <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className={inputCls}>
-                    {FREQUENCY_VALUES.map(f => <option key={f} value={f}>{freqLabel(f)}</option>)}
+                  <input type="number" value={frequencyQuantity} onChange={(e) => setFrequencyQuantity(e.target.value)} className={inputCls} min="1" placeholder="e.g., 1" />
+                </div>
+                <div>
+                  <label className={labelCls} style={{ visibility: 'hidden' }}>Unit</label>
+                  <select value={frequencyUnit} onChange={(e) => setFrequencyUnit(e.target.value)} className={inputCls}>
+                    <option value="DAY">{t('subscription.day', { default: 'Day' })}</option>
+                    <option value="WEEK">{t('subscription.week', { default: 'Week' })}</option>
+                    <option value="MONTH">{t('subscription.month', { default: 'Month' })}</option>
+                    <option value="YEAR">{t('subscription.year', { default: 'Year' })}</option>
                   </select>
-                  {frequency === 'CUSTOM' && (
-                    <input
-                      type="text"
-                      value={customFrequency}
-                      onChange={(e) => setCustomFrequency(e.target.value)}
-                      placeholder="e.g., BI_WEEKLY, EVERY_3_MONTHS"
-                      className={inputCls + ' mt-2'}
-                    />
-                  )}
                 </div>
                 <div>
                   <label className={labelCls}>{t('subscription.dayOfMonth')}</label>

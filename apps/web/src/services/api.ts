@@ -141,6 +141,7 @@ export interface Subscription {
   name: string;
   vendor: string;
   category?: string;
+  description?: string;
   amountCents: number;
   frequency: string;
   dayOfMonth?: number;
@@ -318,6 +319,7 @@ export const subscriptionApi = {
     name: string;
     vendor: string;
     category?: string;
+    description?: string;
     amountCents: number;
     frequency: string;
     dayOfMonth?: number;
