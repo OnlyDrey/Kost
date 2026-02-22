@@ -48,7 +48,7 @@ export default function SubscriptionList() {
   }
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('subscription.title')}</h1>
@@ -160,6 +160,7 @@ function SubscriptionCard({
     if (value === 'MONTHLY') return t('subscription.monthly');
     if (value === 'QUARTERLY') return t('subscription.quarterly');
     if (value === 'YEARLY') return t('subscription.yearly');
+    if (value === 'CUSTOM' || !['MONTHLY', 'QUARTERLY', 'YEARLY'].includes(value)) return value;
     return value;
   };
 
