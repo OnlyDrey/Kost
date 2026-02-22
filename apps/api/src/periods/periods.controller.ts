@@ -126,11 +126,22 @@ export class PeriodsController {
     return this.periodClosingService.reopenPeriod(id, familyId);
   }
 
+  @Get(":id/deletion-info")
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: "Get deletion info for a period (what will be deleted)" })
+  @ApiResponse({ status: 200, description: "Deletion info retrieved" })
+  @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
+  getDeletionInfo(
+    @Param("id") id: string,
+    @CurrentUser("familyId") familyId: string,
+  ) {
+    return this.periodsService.getDeletionInfo(id, familyId);
+  }
+
   @Delete(":id")
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: "Delete an empty period (Admin only)" })
+  @ApiOperation({ summary: "Delete a period and cascade delete all related data (Admin only)" })
   @ApiResponse({ status: 200, description: "Period deleted successfully" })
-  @ApiResponse({ status: 409, description: "Period has invoices or incomes" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
   remove(@Param("id") id: string, @CurrentUser("familyId") familyId: string) {
     return this.periodsService.remove(id, familyId);

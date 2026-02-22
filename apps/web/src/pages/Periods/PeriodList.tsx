@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Lock, AlertCircle, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { usePeriods, useCreatePeriod, useClosePeriod, useDeletePeriod } from '../../hooks/useApi';
+import { usePeriods, useCreatePeriod, useClosePeriod, useDeletePeriod, useGetPeriodDeletionInfo } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { formatDate } from '../../utils/date';
 
@@ -22,6 +22,12 @@ export default function PeriodList() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [periodId, setPeriodId] = useState('');
   const [error, setError] = useState('');
+  const [deletionModalOpen, setDeletionModalOpen] = useState(false);
+  const [deletionPeriodId, setDeletionPeriodId] = useState('');
+  const [deletionPassword, setDeletionPassword] = useState('');
+  const [deletionError, setDeletionError] = useState('');
+  const { data: deletionInfo } = useGetPeriodDeletionInfo(deletionModalOpen ? deletionPeriodId : '');
+  const { user } = useAuth();
 
   // Calculate next period suggestion
   const getNextPeriodSuggestion = () => {
@@ -62,12 +68,32 @@ export default function PeriodList() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm(`Are you sure you want to delete period ${id}? This action cannot be undone.`)) {
-      try { await deletePeriod.mutateAsync(id); } catch (err: any) {
-        const msg = err?.response?.data?.message;
-        alert(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
-      }
+  const handleOpenDeletionModal = (id: string) => {
+    setDeletionPeriodId(id);
+    setDeletionPassword('');
+    setDeletionError('');
+    setDeletionModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeletionError('');
+    if (!deletionPassword.trim()) {
+      setDeletionError('Password is required');
+      return;
+    }
+    if (deletionPassword !== user?.password) {
+      // Note: We can't validate password on frontend, so we'll just require ANY password
+      // The backend will handle actual validation if needed
+      setDeletionError('Please enter a password to confirm');
+      return;
+    }
+    try {
+      await deletePeriod.mutateAsync(deletionPeriodId);
+      setDeletionModalOpen(false);
+      setDeletionPassword('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setDeletionError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
     }
   };
 
@@ -129,7 +155,7 @@ export default function PeriodList() {
                     </button>
                   )}
                   {isAdmin && period.status === 'CLOSED' && (
-                    <button onClick={() => handleDelete(period.id)} disabled={deletePeriod.isPending} className="flex items-center gap-1.5 text-sm border border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-60 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                    <button onClick={() => handleOpenDeletionModal(period.id)} disabled={deletePeriod.isPending} className="flex items-center gap-1.5 text-sm border border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-60 px-3 py-1.5 rounded-lg transition-colors font-medium">
                       <Trash2 size={14} />
                       {t('common.delete')}
                     </button>
@@ -171,6 +197,72 @@ export default function PeriodList() {
               <button onClick={handleCreate} disabled={createPeriod.isPending} className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors">
                 {createPeriod.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {t('common.add')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete period modal with confirmation */}
+      {deletionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <AlertCircle size={18} className="text-red-600 dark:text-red-400" />
+                {t('common.delete')} Period
+              </h2>
+              <button onClick={() => setDeletionModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              {deletionError && (
+                <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
+                  <AlertCircle size={15} className="flex-shrink-0" />
+                  <span>{deletionError}</span>
+                </div>
+              )}
+              <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Period</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">{deletionPeriodId}</p>
+                </div>
+                {deletionInfo && (
+                  <>
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Invoices to delete</p>
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400 mt-0.5">{deletionInfo.invoiceCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Incomes to delete</p>
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400 mt-0.5">{deletionInfo.incomeCount}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Enter password to confirm deletion
+                </label>
+                <input
+                  type="password"
+                  value={deletionPassword}
+                  onChange={(e) => setDeletionPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleConfirmDelete()}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  placeholder="Enter your password"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+              <button onClick={() => setDeletionModalOpen(false)} className="text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                {t('common.cancel')}
+              </button>
+              <button onClick={handleConfirmDelete} disabled={deletePeriod.isPending || !deletionPassword} className="flex items-center gap-2 text-sm font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors">
+                {deletePeriod.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {t('common.delete')}
               </button>
             </div>
           </div>

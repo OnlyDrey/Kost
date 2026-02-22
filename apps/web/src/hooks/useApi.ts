@@ -149,6 +149,14 @@ export function useClosePeriod() {
   });
 }
 
+export function useGetPeriodDeletionInfo(id: string) {
+  return useQuery({
+    queryKey: ['periodDeletionInfo', id],
+    queryFn: () => periodApi.getDeletionInfo(id).then(res => res.data),
+    enabled: !!id,
+  });
+}
+
 export function useDeletePeriod() {
   const queryClient = useQueryClient();
 
