@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Play, Power, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -61,6 +61,12 @@ function SubscriptionForm({
   const [form, setForm] = useState<FormState>(initial ?? defaultForm());
   const [error, setError] = useState('');
   const [showVendorList, setShowVendorList] = useState(false);
+
+  useEffect(() => {
+    if (initial) {
+      setForm(initial);
+    }
+  }, [initial]);
 
   const set = (key: keyof FormState, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -161,7 +167,7 @@ function SubscriptionForm({
 
       <div>
         <label className={labelCls}>{t('subscription.startDate')}</label>
-        <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls + ' max-w-full'} />
+        <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls} />
       </div>
 
       <div>
