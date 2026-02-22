@@ -63,7 +63,7 @@ export default function PeriodList() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm(t('period.confirmDelete') || 'Are you sure you want to delete this period?')) {
+    if (confirm(`Are you sure you want to delete period ${id}? This action cannot be undone.`)) {
       try { await deletePeriod.mutateAsync(id); } catch (err: any) {
         const msg = err?.response?.data?.message;
         alert(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
