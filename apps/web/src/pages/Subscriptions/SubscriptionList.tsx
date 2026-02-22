@@ -165,9 +165,11 @@ function SubscriptionForm({
         </div>
       </div>
 
-      <div>
-        <label className={labelCls}>{t('subscription.startDate')}</label>
-        <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>{t('subscription.startDate')}</label>
+          <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls} />
+        </div>
       </div>
 
       <div>
@@ -428,6 +430,7 @@ function SubscriptionCard({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const { data: users = [] } = useUsers();
 
   const freqLabel = (value: string) => {
     if (value === 'MONTHLY') return t('subscription.monthly');
@@ -438,6 +441,9 @@ function SubscriptionCard({
 
   const methodLabel = sub.distributionMethod === 'BY_INCOME' ? t('invoice.incomeBased')
     : sub.distributionMethod === 'FIXED' ? t('invoice.equal') : t('subscription.customPct');
+
+  const selectedUserIds = ((sub.distributionRules as any)?.userIds ?? []) as string[];
+  const selectedUsers = users.filter(u => selectedUserIds.includes(u.id));
 
   return (
     <div className={`bg-white dark:bg-gray-900 rounded-xl border p-4 shadow-sm transition-all ${
@@ -458,6 +464,11 @@ function SubscriptionCard({
             <span className="text-xs text-indigo-600 dark:text-indigo-400">{freqLabel(sub.frequency)}</span>
             {sub.dayOfMonth && <span className="text-xs text-gray-500 dark:text-gray-400">{t('subscription.day', { day: sub.dayOfMonth })}</span>}
             <span className="text-xs text-gray-500 dark:text-gray-400">{methodLabel}</span>
+            {selectedUsers.length > 0 && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {selectedUsers.map(u => u.name).join(', ')}
+              </span>
+            )}
             {sub.lastGenerated && (
               <span className="text-xs text-gray-400 dark:text-gray-500">
                 {t('subscription.lastGenerated', { date: formatDate(sub.lastGenerated) })}
