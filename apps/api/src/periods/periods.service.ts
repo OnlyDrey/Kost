@@ -345,22 +345,61 @@ export class PeriodsService {
   }
 
   /**
-   * Delete a period (must be empty)
+   * Get deletion info for a period (what will be deleted)
+   */
+  async getDeletionInfo(id: string, familyId: string) {
+    const period = await this.findOne(id, familyId);
+    return {
+      periodId: id,
+      invoiceCount: period._count.invoices,
+      incomeCount: period._count.incomes,
+    };
+  }
+
+  /**
+   * Delete a period and cascade delete all related invoices and incomes
    */
   async remove(id: string, familyId: string) {
     const period = await this.findOne(id, familyId);
 
-    // Check if period has any invoices or incomes
-    if (period._count.invoices > 0 || period._count.incomes > 0) {
-      throw new ConflictException(
-        "Cannot delete period with invoices or incomes. Delete them first.",
-      );
-    }
+    // Delete all related data in transaction
+    await this.prisma.$transaction([
+      // Delete payments associated with invoices
+      this.prisma.payment.deleteMany({
+        where: {
+          invoice: {
+            periodId: id,
+            familyId,
+          },
+        },
+      }),
+      // Delete shares associated with invoices
+      this.prisma.invoiceShare.deleteMany({
+        where: {
+          invoice: {
+            periodId: id,
+            familyId,
+          },
+        },
+      }),
+      // Delete invoices
+      this.prisma.invoice.deleteMany({
+        where: { periodId: id, familyId },
+      }),
+      // Delete incomes
+      this.prisma.income.deleteMany({
+        where: { periodId: id },
+      }),
+      // Delete period
+      this.prisma.period.delete({
+        where: { id },
+      }),
+    ]);
 
-    await this.prisma.period.delete({
-      where: { id },
-    });
-
-    return { message: "Period deleted successfully" };
+    return {
+      message: "Period deleted successfully",
+      deletedInvoices: period._count.invoices,
+      deletedIncomes: period._count.incomes,
+    };
   }
 }

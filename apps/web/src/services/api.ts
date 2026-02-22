@@ -243,6 +243,9 @@ export const periodApi = {
   close: (id: string) =>
     api.post<Period>(`/periods/${id}/close`),
 
+  getDeletionInfo: (id: string) =>
+    api.get<{ periodId: string; invoiceCount: number; incomeCount: number }>(`/periods/${id}/deletion-info`),
+
   delete: (id: string) =>
     api.delete(`/periods/${id}`),
 

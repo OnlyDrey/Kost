@@ -27,6 +27,7 @@ interface FormState {
   distributionMethod: 'BY_INCOME' | 'BY_PERCENT' | 'FIXED';
   active: boolean;
   selectedUserIds: Set<string>;
+  userPercents: Record<string, string>;
 }
 
 const defaultForm = (): FormState => ({
@@ -40,6 +41,7 @@ const defaultForm = (): FormState => ({
   distributionMethod: 'BY_INCOME',
   active: true,
   selectedUserIds: new Set(),
+  userPercents: {},
 });
 
 function SubscriptionForm({
@@ -165,9 +167,11 @@ function SubscriptionForm({
         </div>
       </div>
 
-      <div>
-        <label className={labelCls}>{t('subscription.startDate')}</label>
-        <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>{t('subscription.startDate')}</label>
+          <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls} />
+        </div>
       </div>
 
       <div>
@@ -208,6 +212,37 @@ function SubscriptionForm({
         </div>
       )}
 
+      {form.distributionMethod === 'BY_PERCENT' && users.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className={labelCls + ' mb-0'}>{t('invoice.percentPerUser')} *</label>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              {Object.values(form.userPercents).reduce((sum, v) => sum + (parseFloat(v) || 0), 0).toFixed(1)}%
+            </span>
+          </div>
+          <div className="space-y-2">
+            {users.map((u) => (
+              <div key={u.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
+                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                  {u.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <input
+                    type="number" min="0" max="100" step="0.1"
+                    value={form.userPercents[u.id] ?? ''}
+                    onChange={(e) => set('userPercents', { ...form.userPercents, [u.id]: e.target.value })}
+                    className="w-16 px-2 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="0"
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <input type="checkbox" id="active" checked={form.active} onChange={e => set('active', e.target.checked)} className="rounded border-gray-300" />
         <label htmlFor="active" className="text-sm text-gray-700 dark:text-gray-300">{t('subscription.activeLabel')}</label>
@@ -243,22 +278,43 @@ export default function SubscriptionList() {
   const [generateResult, setGenerateResult] = useState('');
   const [generateError, setGenerateError] = useState('');
 
-  const subToForm = (sub: Subscription): FormState => ({
-    name: sub.name,
-    vendor: sub.vendor,
-    category: sub.category ?? '',
-    amount: String(centsToAmount(sub.amountCents)),
-    frequency: sub.frequency,
-    dayOfMonth: String(sub.dayOfMonth ?? 1),
-    startDate: sub.startDate.slice(0, 10),
-    distributionMethod: sub.distributionMethod,
-    active: sub.active,
-    selectedUserIds: new Set((sub.distributionRules as any)?.userIds ?? []),
-  });
+  const subToForm = (sub: Subscription): FormState => {
+    const percentRules = ((sub.distributionRules as any)?.percentRules ?? []) as Array<{ userId: string; percentBasisPoints: number }>;
+    const userPercents: Record<string, string> = {};
+    percentRules.forEach(rule => {
+      userPercents[rule.userId] = (rule.percentBasisPoints / 100).toFixed(1);
+    });
+    return {
+      name: sub.name,
+      vendor: sub.vendor,
+      category: sub.category ?? '',
+      amount: String(centsToAmount(sub.amountCents)),
+      frequency: sub.frequency,
+      dayOfMonth: String(sub.dayOfMonth ?? 1),
+      startDate: sub.startDate.slice(0, 10),
+      distributionMethod: sub.distributionMethod,
+      active: sub.active,
+      selectedUserIds: new Set((sub.distributionRules as any)?.userIds ?? []),
+      userPercents,
+    };
+  };
 
   const formToPayload = (form: FormState) => {
     const amountCents = Math.round(parseFloat(form.amount) * 100);
     const userIds = Array.from(form.selectedUserIds);
+
+    let distributionRules: any = {};
+    if (form.distributionMethod === 'BY_PERCENT') {
+      const percentRules = Object.entries(form.userPercents)
+        .filter(([, v]) => parseFloat(v) > 0)
+        .map(([userId, v]) => ({ userId, percentBasisPoints: Math.round(parseFloat(v) * 100) }));
+      if (percentRules.length > 0) {
+        distributionRules = { percentRules };
+      }
+    } else if (userIds.length > 0) {
+      distributionRules = { userIds };
+    }
+
     return {
       name: form.name.trim(),
       vendor: form.vendor.trim(),
@@ -268,7 +324,7 @@ export default function SubscriptionList() {
       dayOfMonth: parseInt(form.dayOfMonth) || undefined,
       startDate: form.startDate,
       distributionMethod: form.distributionMethod,
-      distributionRules: userIds.length > 0 ? { userIds } : {},
+      distributionRules,
       active: form.active,
     };
   };
@@ -428,6 +484,7 @@ function SubscriptionCard({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const { data: users = [] } = useUsers();
 
   const freqLabel = (value: string) => {
     if (value === 'MONTHLY') return t('subscription.monthly');
@@ -438,6 +495,9 @@ function SubscriptionCard({
 
   const methodLabel = sub.distributionMethod === 'BY_INCOME' ? t('invoice.incomeBased')
     : sub.distributionMethod === 'FIXED' ? t('invoice.equal') : t('subscription.customPct');
+
+  const selectedUserIds = ((sub.distributionRules as any)?.userIds ?? []) as string[];
+  const selectedUsers = users.filter(u => selectedUserIds.includes(u.id));
 
   return (
     <div className={`bg-white dark:bg-gray-900 rounded-xl border p-4 shadow-sm transition-all ${
@@ -458,6 +518,11 @@ function SubscriptionCard({
             <span className="text-xs text-indigo-600 dark:text-indigo-400">{freqLabel(sub.frequency)}</span>
             {sub.dayOfMonth && <span className="text-xs text-gray-500 dark:text-gray-400">{t('subscription.day', { day: sub.dayOfMonth })}</span>}
             <span className="text-xs text-gray-500 dark:text-gray-400">{methodLabel}</span>
+            {selectedUsers.length > 0 && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {selectedUsers.map(u => u.name).join(', ')}
+              </span>
+            )}
             {sub.lastGenerated && (
               <span className="text-xs text-gray-400 dark:text-gray-500">
                 {t('subscription.lastGenerated', { date: formatDate(sub.lastGenerated) })}
