@@ -173,6 +173,12 @@ export const userApi = {
   update: (id: string, data: { username?: string; name?: string; role?: 'ADMIN' | 'ADULT' | 'JUNIOR'; password?: string; avatarUrl?: string | null }) =>
     api.patch<User>(`/users/${id}`, data),
 
+  uploadAvatar: (id: string, formData: FormData) =>
+    api.post<User>(`/users/${id}/avatar`, formData),
+
+  removeAvatar: (id: string) =>
+    api.delete<User>(`/users/${id}/avatar`),
+
   delete: (id: string) =>
     api.delete(`/users/${id}`),
 };
@@ -278,6 +284,9 @@ export const familyApi = {
 
   removeVendor: (id: string) =>
     api.delete(`/family/vendors/${id}`),
+
+  uploadVendorLogo: (id: string, formData: FormData) =>
+    api.post<Vendor>(`/family/vendors/${id}/logo`, formData),
 };
 
 export const subscriptionApi = {

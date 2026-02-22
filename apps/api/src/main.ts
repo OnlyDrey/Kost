@@ -4,14 +4,25 @@ import { ConfigService } from "@nestjs/config";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import { join } from "path";
+import { mkdirSync } from "fs";
+import * as express from "express";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Security
-  app.use(helmet());
+  // Ensure upload directories exist
+  for (const dir of ["avatars", "vendors"]) {
+    mkdirSync(join(process.cwd(), "uploads", dir), { recursive: true });
+  }
+
+  // Serve uploaded files at /uploads (before global prefix and helmet)
+  app.use("/uploads", express.static(join(process.cwd(), "uploads")));
+
+  // Security (allow same-site image loading from /uploads)
+  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
   app.use(cookieParser());
 
   // CORS
@@ -27,7 +38,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false, // allow extra fields on multipart forms
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,

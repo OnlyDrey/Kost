@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, AlertCircle, X, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Pencil, Trash2, AlertCircle, X, TrendingUp, Camera } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useUsers, useCreateUser, useUpdateUser, useDeleteUser, useCurrentPeriod, useUserIncomes, useUpsertUserIncome } from '../../hooks/useApi';
+import { useUsers, useCreateUser, useUpdateUser, useDeleteUser, useCurrentPeriod, useUserIncomes, useUpsertUserIncome, useUploadAvatar, useRemoveAvatar } from '../../hooks/useApi';
 import { User, UserIncome } from '../../services/api';
 import { amountToCents, centsToAmount, formatCurrency } from '../../utils/currency';
 
@@ -19,12 +19,12 @@ interface UserFormData {
   name: string;
   role: 'ADMIN' | 'ADULT' | 'JUNIOR';
   password: string;
-  avatarUrl: string;
 }
 
-function UserAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+function UserAvatar({ name, avatarUrl, size = 9 }: { name: string; avatarUrl?: string | null; size?: number }) {
+  const cls = `w-${size} h-${size}`;
   return (
-    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden">
+    <div className={`${cls} rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}>
       {avatarUrl
         ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
         : name.charAt(0).toUpperCase()}
@@ -46,17 +46,47 @@ function UserModal({
   error: string;
 }) {
   const { t } = useTranslation();
+  const uploadAvatar = useUploadAvatar();
+  const removeAvatar = useRemoveAvatar();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [username, setUsername] = useState(user?.username ?? '');
   const [name, setName] = useState(user?.name ?? '');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [role, setRole] = useState<'ADMIN' | 'ADULT' | 'JUNIOR'>(
     user?.role === 'ADMIN' ? 'ADMIN' : user?.role === 'JUNIOR' ? 'JUNIOR' : 'ADULT'
   );
   const [password, setPassword] = useState('');
+  const [localAvatarUrl, setLocalAvatarUrl] = useState(user?.avatarUrl ?? '');
+  const [avatarErr, setAvatarErr] = useState('');
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setAvatarErr('');
+    try {
+      const updated = await uploadAvatar.mutateAsync({ id: user.id, file });
+      setLocalAvatarUrl(updated.avatarUrl ?? '');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setAvatarErr(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+    }
+    e.target.value = '';
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    setAvatarErr('');
+    try {
+      const updated = await removeAvatar.mutateAsync(user.id);
+      setLocalAvatarUrl(updated.avatarUrl ?? '');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setAvatarErr(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ username, name, role, password, avatarUrl });
+    onSave({ username, name, role, password });
   };
 
   return (
@@ -78,23 +108,49 @@ function UserModal({
                 <span>{error}</span>
               </div>
             )}
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
-                {avatarUrl
-                  ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  : (name || '?').charAt(0).toUpperCase()}
+
+            {/* Avatar upload — only for existing users */}
+            {user && (
+              <div className="flex items-center gap-4">
+                <div className="relative group">
+                  <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
+                    {localAvatarUrl
+                      ? <img src={localAvatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      : (name || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  >
+                    <Camera size={16} className="text-white" />
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadAvatar.isPending}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
+                  >
+                    <Camera size={12} /> Velg bilde
+                  </button>
+                  {localAvatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      disabled={removeAvatar.isPending}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
+                    >
+                      <Trash2 size={12} /> Fjern bilde
+                    </button>
+                  )}
+                  {avatarErr && <p className="text-xs text-red-600 dark:text-red-400">{avatarErr}</p>}
+                </div>
               </div>
-              <div className="flex-1">
-                <label className={labelCls}>Profilbilde (URL)</label>
-                <input
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  className={inputCls}
-                  placeholder="https://example.com/avatar.jpg"
-                />
-              </div>
-            </div>
+            )}
+
             <div>
               <label className={labelCls}>{t('users.name')} *</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
@@ -115,15 +171,7 @@ function UserModal({
               <label className={labelCls}>
                 {t('users.password')} {user && <span className="text-gray-400 font-normal">(leave blank to keep current)</span>}
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={inputCls}
-                minLength={6}
-                required={!user}
-                placeholder={user ? '••••••' : ''}
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} minLength={6} required={!user} placeholder={user ? '••••••' : ''} />
             </div>
           </div>
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
@@ -168,10 +216,7 @@ function IncomeModal({
     e.preventDefault();
     setError('');
     const inputCents = amountToCents(parseFloat(incomeAmount));
-    if (isNaN(inputCents) || inputCents <= 0) {
-      setError('Ugyldig beløp');
-      return;
-    }
+    if (isNaN(inputCents) || inputCents <= 0) { setError('Ugyldig beløp'); return; }
     try {
       await upsertIncome.mutateAsync({ userId: user.id, periodId, inputType: incomeType, inputCents });
       onClose();
@@ -204,26 +249,13 @@ function IncomeModal({
             <div>
               <label className={labelCls}>Inntektstype</label>
               <select value={incomeType} onChange={(e) => setIncomeType(e.target.value)} className={inputCls}>
-                {INCOME_TYPES.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+                {INCOME_TYPES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
             <div>
               <label className={labelCls}>Beløp (kr)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={incomeAmount}
-                onChange={(e) => setIncomeAmount(e.target.value)}
-                className={inputCls}
-                placeholder="0.00"
-                required
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Beregnes automatisk til månedlig brutto for fordeling.
-              </p>
+              <input type="number" step="0.01" min="0" value={incomeAmount} onChange={(e) => setIncomeAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beregnes automatisk til månedlig brutto for fordeling.</p>
             </div>
           </div>
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
@@ -253,7 +285,6 @@ export default function Users() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [modalError, setModalError] = useState('');
-
   const [incomeModalUser, setIncomeModalUser] = useState<User | null>(null);
 
   const openCreate = () => { setEditingUser(null); setModalError(''); setModalOpen(true); };
@@ -264,7 +295,7 @@ export default function Users() {
     setModalError('');
     try {
       if (editingUser) {
-        const updateData: Record<string, any> = { name: data.name, username: data.username, role: data.role, avatarUrl: data.avatarUrl || null };
+        const updateData: Record<string, any> = { name: data.name, username: data.username, role: data.role };
         if (data.password) updateData.password = data.password;
         await updateUser.mutateAsync({ id: editingUser.id, data: updateData });
       } else {
@@ -329,20 +360,14 @@ export default function Users() {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                      u.role === 'ADMIN'
-                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                        : u.role === 'JUNIOR'
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      u.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                      : u.role === 'JUNIOR' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                     }`}>
                       {u.role === 'ADMIN' ? t('users.admin') : u.role === 'JUNIOR' ? t('users.junior') : t('users.adult')}
                     </span>
                     {currentPeriod && (
-                      <button
-                        onClick={() => setIncomeModalUser(u)}
-                        className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                        title="Rediger inntekt"
-                      >
+                      <button onClick={() => setIncomeModalUser(u)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors" title="Rediger inntekt">
                         <TrendingUp size={16} />
                       </button>
                     )}

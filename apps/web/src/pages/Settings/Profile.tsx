@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle2, User, KeyRound, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { AlertCircle, CheckCircle2, User, KeyRound, TrendingUp, Camera, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../stores/auth.context';
-import { useUpdateUser, useChangePassword, useCurrentPeriod, useUserIncomes, useUpsertUserIncome } from '../../hooks/useApi';
+import { useUpdateUser, useChangePassword, useCurrentPeriod, useUserIncomes, useUpsertUserIncome, useUploadAvatar, useRemoveAvatar } from '../../hooks/useApi';
 import { amountToCents, centsToAmount } from '../../utils/currency';
 
 const inputCls =
@@ -19,16 +19,19 @@ export default function Profile() {
   const { user, login } = useAuth();
   const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
+  const uploadAvatar = useUploadAvatar();
+  const removeAvatar = useRemoveAvatar();
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: incomes } = useUserIncomes(currentPeriod?.id ?? '');
   const upsertIncome = useUpsertUserIncome();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Profile form
   const [name, setName] = useState(user?.name ?? '');
   const [username, setUsername] = useState(user?.username ?? '');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
+  const [avatarError, setAvatarError] = useState('');
 
   // Password form
   const [currentPassword, setCurrentPassword] = useState('');
@@ -44,13 +47,38 @@ export default function Profile() {
   const [incomeError, setIncomeError] = useState('');
   const [incomeSuccess, setIncomeSuccess] = useState(false);
 
-  // Pre-fill income form when data loads
   useEffect(() => {
     if (myIncome) {
       setIncomeAmount(String(centsToAmount(myIncome.inputCents)));
       setIncomeType(myIncome.inputType);
     }
   }, [myIncome?.id]);
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setAvatarError('');
+    try {
+      const updated = await uploadAvatar.mutateAsync({ id: user.id, file });
+      login(updated);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setAvatarError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+    }
+    e.target.value = '';
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    setAvatarError('');
+    try {
+      const updated = await removeAvatar.mutateAsync(user.id);
+      login(updated);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      setAvatarError(Array.isArray(msg) ? msg.join(', ') : msg || t('errors.serverError'));
+    }
+  };
 
   const handleSaveIncome = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,11 +105,10 @@ export default function Profile() {
     setProfileError('');
     setProfileSuccess('');
     if (!user) return;
-
     try {
       const updatedUser = await updateUser.mutateAsync({
         id: user.id,
-        data: { name: name.trim(), username: username.trim(), avatarUrl: avatarUrl.trim() || null },
+        data: { name: name.trim(), username: username.trim() },
       });
       login(updatedUser);
       setProfileSuccess(t('settings.profileUpdated'));
@@ -95,16 +122,8 @@ export default function Profile() {
     e.preventDefault();
     setPwError('');
     setPwSuccess('');
-
-    if (newPassword !== confirmPassword) {
-      setPwError(t('settings.passwordMismatch'));
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPwError('Password must be at least 6 characters');
-      return;
-    }
-
+    if (newPassword !== confirmPassword) { setPwError(t('settings.passwordMismatch')); return; }
+    if (newPassword.length < 6) { setPwError('Password must be at least 6 characters'); return; }
     try {
       await changePassword.mutateAsync({ currentPassword, newPassword });
       setPwSuccess(t('settings.passwordChanged'));
@@ -128,6 +147,54 @@ export default function Profile() {
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('settings.profile')}</h2>
         </div>
 
+        {/* Avatar upload */}
+        <div className="flex items-center gap-5 mb-6">
+          <div className="relative group">
+            <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-semibold flex-shrink-0 overflow-hidden">
+              {user?.avatarUrl
+                ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                : user?.name.charAt(0).toUpperCase()}
+            </div>
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+              title="Bytt profilbilde"
+            >
+              <Camera size={20} className="text-white" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadAvatar.isPending}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
+            >
+              {uploadAvatar.isPending
+                ? <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                : <Camera size={14} />}
+              Velg bilde
+            </button>
+            {user?.avatarUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                disabled={removeAvatar.isPending}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
+              >
+                {removeAvatar.isPending
+                  ? <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                  : <Trash2 size={14} />}
+                Fjern bilde
+              </button>
+            )}
+            {avatarError && <p className="text-xs text-red-600 dark:text-red-400">{avatarError}</p>}
+            <p className="text-xs text-gray-400 dark:text-gray-500">Maks 5 MB · JPG, PNG, WebP</p>
+          </div>
+        </div>
+
         {profileError && (
           <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
             <AlertCircle size={15} className="flex-shrink-0" />
@@ -142,23 +209,6 @@ export default function Profile() {
         )}
 
         <form onSubmit={handleProfileSubmit} className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0 overflow-hidden">
-              {avatarUrl
-                ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                : name.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <label className={labelCls}>Profilbilde (URL)</label>
-              <input
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                className={inputCls}
-                placeholder="https://example.com/avatar.jpg"
-              />
-            </div>
-          </div>
           <div>
             <label className={labelCls}>{t('users.name')}</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
@@ -205,7 +255,6 @@ export default function Profile() {
                 <span>Inntekt lagret</span>
               </div>
             )}
-
             <form onSubmit={handleSaveIncome} className="space-y-4">
               <div>
                 <label className={labelCls}>Inntektstype</label>
@@ -217,26 +266,11 @@ export default function Profile() {
               </div>
               <div>
                 <label className={labelCls}>Beløp (kr)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={incomeAmount}
-                  onChange={(e) => setIncomeAmount(e.target.value)}
-                  className={inputCls}
-                  placeholder="0.00"
-                  required
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Beregnes automatisk til månedlig brutto for fordeling.
-                </p>
+                <input type="number" step="0.01" min="0" value={incomeAmount} onChange={(e) => setIncomeAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beregnes automatisk til månedlig brutto for fordeling.</p>
               </div>
               <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={upsertIncome.isPending || !currentPeriod}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-                >
+                <button type="submit" disabled={upsertIncome.isPending || !currentPeriod} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
                   {upsertIncome.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {t('common.save')}
                 </button>
@@ -280,11 +314,7 @@ export default function Profile() {
             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputCls} required minLength={6} />
           </div>
           <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={changePassword.isPending}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-            >
+            <button type="submit" disabled={changePassword.isPending} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
               {changePassword.isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {t('settings.changePassword')}
             </button>
