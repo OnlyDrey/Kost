@@ -12,6 +12,17 @@ import * as bcrypt from "bcryptjs";
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
+const userSelect = {
+  id: true,
+  username: true,
+  name: true,
+  avatarUrl: true,
+  role: true,
+  familyId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}

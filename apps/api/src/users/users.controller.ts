@@ -14,6 +14,8 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { extname, join } from "path";
+
+type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
 import { mkdirSync } from "fs";
 import {
   ApiTags,
@@ -114,7 +116,7 @@ export class UsersController {
   )
   uploadAvatar(
     @Param("id") id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MulterFile,
     @CurrentUser() currentUser: JwtPayload,
   ) {
     if (!file) throw new BadRequestException("No file uploaded");

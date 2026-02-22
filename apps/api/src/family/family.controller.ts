@@ -5,6 +5,8 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { extname, join } from "path";
+
+type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
 import { mkdirSync } from "fs";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { FamilyService } from "./family.service";
@@ -143,7 +145,7 @@ export class FamilyController {
   )
   uploadVendorLogo(
     @Param("id") id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MulterFile,
     @CurrentUser("familyId") familyId: string,
   ) {
     if (!file) throw new BadRequestException("No file uploaded");
