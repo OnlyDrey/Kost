@@ -2,14 +2,21 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
+  forwardRef,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreatePeriodDto } from "./dto/create-period.dto";
 import { PeriodStatus } from "@prisma/client";
+import { SubscriptionsService } from "../subscriptions/subscriptions.service";
 
 @Injectable()
 export class PeriodsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => SubscriptionsService))
+    private subscriptionsService: SubscriptionsService,
+  ) {}
 
   /**
    * Get all periods for a family
@@ -122,7 +129,8 @@ export class PeriodsService {
       );
     }
 
-    return this.prisma.period.create({
+    // Create the new period
+    const newPeriod = await this.prisma.period.create({
       data: {
         id: createPeriodDto.id,
         familyId,
@@ -137,6 +145,81 @@ export class PeriodsService {
         },
       },
     });
+
+    // Copy incomes from the previous period if it exists
+    await this.copyIncomesFromPreviousPeriod(createPeriodDto.id, familyId);
+
+    // Generate invoices from active subscriptions if incomes exist
+    try {
+      const incomesCount = await this.prisma.income.count({
+        where: { periodId: createPeriodDto.id },
+      });
+
+      if (incomesCount > 0) {
+        await this.subscriptionsService.generateInvoicesForPeriod(
+          createPeriodDto.id,
+          familyId,
+        );
+      }
+    } catch (err) {
+      // Silently fail if invoice generation fails - incomes were still copied
+      // This allows users to generate invoices manually later
+      console.error(
+        `Failed to generate invoices for period ${createPeriodDto.id}:`,
+        err,
+      );
+    }
+
+    return newPeriod;
+  }
+
+  /**
+   * Copy incomes from the previous period to the new period
+   */
+  private async copyIncomesFromPreviousPeriod(
+    newPeriodId: string,
+    familyId: string,
+  ) {
+    // Extract year and month from the new period ID
+    const [year, month] = newPeriodId.split("-").map(Number);
+
+    // Calculate previous month
+    let prevMonth = month - 1;
+    let prevYear = year;
+    if (prevMonth < 1) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+
+    const prevPeriodId = `${prevYear}-${String(prevMonth).padStart(2, "0")}`;
+
+    // Find the previous period
+    const previousPeriod = await this.prisma.period.findFirst({
+      where: { id: prevPeriodId, familyId },
+      include: { incomes: true },
+    });
+
+    if (!previousPeriod || previousPeriod.incomes.length === 0) {
+      return; // No previous period or no incomes to copy
+    }
+
+    // Copy incomes from previous period to new period
+    for (const income of previousPeriod.incomes) {
+      try {
+        await this.prisma.income.create({
+          data: {
+            userId: income.userId,
+            periodId: newPeriodId,
+            inputType: income.inputType,
+            inputCents: income.inputCents,
+            normalizedMonthlyGrossCents: income.normalizedMonthlyGrossCents,
+          },
+        });
+      } catch (err) {
+        // Income might already exist, skip it
+        continue;
+      }
+    }
   }
 
   /**
