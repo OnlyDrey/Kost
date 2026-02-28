@@ -48,7 +48,7 @@ async function bootstrap() {
       },
     }),
   );
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  app.use((req: Request, res: Response, next: NextFunction): void => {
     res.setHeader("X-Kost-Security", "fix-attempt-01b");
     next();
   });
@@ -141,7 +141,7 @@ async function bootstrap() {
 
   // SPA fallback route for frontend paths (excluding /api and /uploads)
   if (hasPublicBundle) {
-    app.use((req: Request, res: Response, next: NextFunction) => {
+    app.use((req: Request, res: Response, next: NextFunction): void => {
       if (
         req.method !== "GET" ||
         req.path.startsWith("/api") ||
