@@ -45,12 +45,17 @@ export default () => {
       origins: uniqueCorsOrigins,
       allowPrivateNetwork: process.env.CORS_ALLOW_PRIVATE_NETWORK !== "false",
     },
+    health: {
+      // Keep strict web bundle validation enabled in production-like container runs,
+      // but allow API-only test/dev contexts (e2e/unit) to skip it.
+      requireWebAssets: process.env.HEALTH_REQUIRE_WEB_ASSETS === "true",
+    },
     // Set COOKIE_SECURE=true only when serving over HTTPS.
     // When running behind HTTP (e.g. local Docker without TLS), keep false.
     cookieSecure: process.env.COOKIE_SECURE === "true",
     rateLimit: {
       ttl: parseInt(process.env.RATE_LIMIT_TTL || "60", 10),
-      max: parseInt(process.env.RATE_LIMIT_MAX || "10", 10),
+      max: parseInt(process.env.RATE_LIMIT_MAX || "120", 10),
     },
   };
 };

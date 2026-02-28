@@ -26,6 +26,7 @@ services:
       args:
         # Single-container mode must call same-origin API path to avoid stale external host configs
         VITE_API_URL: /api
+        VITE_ENABLE_PWA: ${VITE_ENABLE_PWA:-false}
     container_name: kost-app
     restart: unless-stopped
     depends_on:
@@ -33,6 +34,8 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
+      HOST: 0.0.0.0
+      PORT: 3000
       DATABASE_URL: postgresql://${DB_USER:-kostuser}:${DB_PASSWORD:-kostpass}@db:5432/${DB_NAME:-kost}?schema=public
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
@@ -40,6 +43,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       CORS_ALLOW_PRIVATE_NETWORK: ${CORS_ALLOW_PRIVATE_NETWORK:-true}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      HEALTH_REQUIRE_WEB_ASSETS: ${HEALTH_REQUIRE_WEB_ASSETS:-true}
       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10}
       BOOTSTRAP_ADMIN_ON_STARTUP: ${BOOTSTRAP_ADMIN_ON_STARTUP:-true}
@@ -51,7 +55,11 @@ services:
     volumes:
       - uploads_data:/app/apps/api/uploads
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"const http=require('http');const checks=['http://localhost:3000/api/health','http://localhost:3000/'];let pending=checks.length;let failed=false;for(const url of checks){http.get(url,(r)=>{if(r.statusCode!==200)failed=true;r.resume();if(--pending===0)process.exit(failed?1:0)}).on('error',()=>{failed=true;if(--pending===0)process.exit(1)})}\"",
+        ]
       interval: 30s
       timeout: 10s
       start_period: 120s

@@ -87,7 +87,14 @@ export default function AppRoutes() {
         <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Authenticated users land on /overview; unauthenticated on /login */}
+      <Route path="*" element={<CatchAll />} />
     </Routes>
   );
+}
+
+function CatchAll() {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <Spinner />;
+  return <Navigate to={isAuthenticated ? "/overview" : "/login"} replace />;
 }

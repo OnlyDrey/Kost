@@ -6,7 +6,9 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 ARG VITE_API_URL=/api
+ARG VITE_ENABLE_PWA=false
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ENABLE_PWA=$VITE_ENABLE_PWA
 
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/package.json
@@ -59,7 +61,7 @@ WORKDIR /app/apps/api
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=50s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+  CMD node -e "const http=require('http');const checks=['http://localhost:3000/api/health','http://localhost:3000/'];let pending=checks.length;let failed=false;for(const url of checks){http.get(url,(r)=>{if(r.statusCode!==200)failed=true;r.resume();if(--pending===0)process.exit(failed?1:0)}).on('error',()=>{failed=true;if(--pending===0)process.exit(1)})}"
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["sh", "/app/apps/api/scripts/docker-entrypoint.sh"]

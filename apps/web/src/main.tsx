@@ -20,6 +20,7 @@ const queryClient = new QueryClient({
 });
 
 const BF_CACHE_RELOAD_GUARD_KEY = 'kost:bfcache-reload-ts';
+const SW_CLEANUP_RELOAD_GUARD_KEY = 'kost:sw-cleanup-reload-ts';
 
 function logLifecycle(level: 'warn' | 'error', message: string, details?: unknown) {
   const payload = {
@@ -87,6 +88,47 @@ function setupIosBfCacheHardening() {
 
 function setupServiceWorkerHardening() {
   if (!import.meta.env.PROD) return;
+
+  const enablePwa = import.meta.env.VITE_ENABLE_PWA === 'true';
+
+  if (!enablePwa) {
+    console.info('[AppLifecycle] PWA disabled. Unregistering service workers.');
+
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch((error) => {
+        logLifecycle('warn', 'Failed to unregister service worker registrations', error);
+      })
+      .finally(() => {
+        if ('caches' in window) {
+          caches
+            .keys()
+            .then((cacheNames) =>
+              Promise.all(
+                cacheNames
+                  .filter((cacheName) => cacheName.includes('workbox') || cacheName.includes('navigation-cache'))
+                  .map((cacheName) => caches.delete(cacheName))
+              )
+            )
+            .catch((error) => {
+              logLifecycle('warn', 'Failed to clear service worker caches', error);
+            });
+        }
+
+        if (!navigator.serviceWorker.controller) return;
+
+        const lastReload = Number(sessionStorage.getItem(SW_CLEANUP_RELOAD_GUARD_KEY) ?? '0');
+        if (Date.now() - lastReload < 5000) return;
+
+        sessionStorage.setItem(SW_CLEANUP_RELOAD_GUARD_KEY, String(Date.now()));
+        window.location.reload();
+      });
+
+    return;
+  }
 
   let refreshing = false;
   navigator.serviceWorker?.addEventListener('controllerchange', () => {

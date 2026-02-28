@@ -101,11 +101,9 @@ export class PeriodClosingService {
     });
 
     this.logger.log(`Period ${periodId} closed by user ${closedBy}`);
+    this.logger.debug(`Settlement data: ${JSON.stringify(settlementData)}`);
 
-    return {
-      period: updatedPeriod,
-      settlement: settlementData,
-    };
+    return updatedPeriod;
   }
 
   /**
@@ -130,7 +128,7 @@ export class PeriodClosingService {
         status: PeriodStatus.OPEN,
         closedAt: null,
         closedBy: null,
-        settlementData: null,
+        settlementData: null as any,
       },
       include: {
         invoices: true,

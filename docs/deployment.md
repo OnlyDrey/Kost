@@ -110,6 +110,7 @@ labels:
 | `RATE_LIMIT_TTL`             | No       | `60`                       | Rate limit window (seconds)                        |
 | `RATE_LIMIT_MAX`             | No       | `10`                       | Max requests per window                            |
 | `COOKIE_SECURE`              | No       | `false`                    | Set to `true` behind HTTPS                         |
+| `VITE_ENABLE_PWA`            | No       | `false`                    | Enable service worker/PWA registration in frontend |
 | `BOOTSTRAP_ADMIN_ON_STARTUP` | No       | `true`                     | Create admin user on first start if missing        |
 | `BOOTSTRAP_ADMIN_USERNAME`   | No       | `admin`                    | Bootstrap admin username                           |
 | `BOOTSTRAP_ADMIN_PASSWORD`   | No       | `kostpass`                 | Bootstrap admin password — **change in production**|

@@ -18,8 +18,6 @@ async function main() {
   await prisma.income.deleteMany();
   await prisma.period.deleteMany();
   await prisma.subscription.deleteMany();
-  await prisma.webAuthnCredential.deleteMany();
-  await prisma.magicLinkToken.deleteMany();
   await prisma.user.deleteMany();
   await (prisma as any).vendor.deleteMany();
   await prisma.family.deleteMany();

@@ -9,6 +9,7 @@
 **Fix (applied in codebase):**
 1. NestJS serves `index.html` with `Cache-Control: no-store, no-cache, must-revalidate` — both from `express.static` and the SPA fallback route.
 2. The Workbox service worker uses `fetchOptions.cache: 'no-store'` on navigation requests to bypass the browser's HTTP cache entirely.
+3. Production builds now default `VITE_ENABLE_PWA=false`, so the app unregisters stale service workers automatically unless PWA is explicitly enabled.
 
 **If you still see the issue after deploying the fix:**
 1. On the affected iOS device, go to **Settings > Safari > Advanced > Website Data**.

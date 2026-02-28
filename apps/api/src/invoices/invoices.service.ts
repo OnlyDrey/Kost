@@ -198,9 +198,13 @@ export class InvoicesService {
         };
       });
 
-      // For FIXED distribution, we can proceed even with no income users
-      // For other methods, validate at least one user has income
-      if (distributionMethod !== "FIXED") {
+      // For FIXED distribution or explicit percent/fixed rules, we can proceed without income users
+      // For other methods using default allocation, validate at least one user has income
+      if (
+        distributionMethod !== "FIXED" &&
+        distributionMethod !== "BY_PERCENT" &&
+        !distributionRules?.fixedRules
+      ) {
         const hasIncome = allParticipants.some(
           (p) => p.normalizedMonthlyGrossCents > 0,
         );
@@ -214,19 +218,27 @@ export class InvoicesService {
       participants = allParticipants;
     } else {
       // Default behavior: use users with incomes, excluding CHILD users
-      if (incomes.length === 0) {
+      // However, if explicit percentRules or fixedRules are provided, we can use selected users even without incomes
+      if (incomes.length === 0 && !distributionRules?.percentRules && !distributionRules?.fixedRules) {
         throw new BadRequestException(
           "No users with income found for this period. Add incomes first.",
         );
       }
 
-      allParticipants = incomes.map((inc) => ({
-        userId: inc.userId,
-        userName: inc.user.name,
-        role: inc.user.role,
-        normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-      }));
-      participants = allParticipants.filter((p) => p.role !== "CHILD");
+      if (incomes.length > 0) {
+        allParticipants = incomes.map((inc) => ({
+          userId: inc.userId,
+          userName: inc.user.name,
+          role: inc.user.role,
+          normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
+        }));
+        participants = allParticipants.filter((p) => p.role !== "CHILD");
+      } else {
+        // No incomes found, but explicit rules provided - use an empty participants list
+        // This will be sufficient for splitByPercent or splitFixed
+        allParticipants = [];
+        participants = [];
+      }
     }
 
     // Calculate shares based on distribution method

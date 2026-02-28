@@ -452,17 +452,17 @@ export default function AddExpense() {
         }
         navigate("/subscriptions");
       } else {
-        const invoiceData = {
+        const invoiceData: any = {
           vendor: vendor.trim(),
-          category: category.trim() || undefined,
-          description: description.trim() || undefined,
           totalCents,
           distributionMethod,
-          dueDate: dueDate || undefined,
-          paymentMethod: paymentMethod || undefined,
-          distributionRules,
           isPersonal,
         };
+        if (category.trim()) invoiceData.category = category.trim();
+        if (description.trim()) invoiceData.description = description.trim();
+        if (dueDate) invoiceData.dueDate = dueDate;
+        if (paymentMethod) invoiceData.paymentMethod = paymentMethod;
+        if (distributionRules) invoiceData.distributionRules = distributionRules;
 
         if (isEditing) {
           await updateInvoice.mutateAsync({ id: id!, data: invoiceData });

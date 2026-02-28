@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { join } from "path";
 import { mkdirSync, existsSync } from "fs";
 import * as express from "express";
+import { Request, Response, NextFunction } from "express";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
@@ -22,7 +23,15 @@ async function bootstrap() {
     }
   }
 
-  // Serve uploaded files at /uploads (before global prefix and helmet)
+  // Security headers FIRST — must run before any static-file middleware so
+  // that all responses (HTML, JS, CSS, images, uploads) carry the full set of
+  // security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.).
+  // crossOriginResourcePolicy: 'same-site' lets the browser load avatar/logo
+  // images that are served from the same origin via /uploads.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
+  app.use(cookieParser());
+
+  // Serve uploaded files at /uploads
   app.use("/uploads", express.static(join(process.cwd(), "uploads")));
 
   // Serve web bundle (single-container deployment mode)
@@ -30,7 +39,14 @@ async function bootstrap() {
   // references chunk hashes from a previous deployment causes a blank white
   // screen on iOS Safari (and other browsers) after a redeploy.
   const publicDir = join(process.cwd(), "public");
-  if (existsSync(publicDir)) {
+  const hasPublicBundle = existsSync(publicDir);
+
+  if (!hasPublicBundle) {
+    console.error(
+      `[startup] Frontend bundle missing at ${publicDir}. Root path (/) will not serve GUI.`,
+    );
+  }
+  if (hasPublicBundle) {
     app.use(
       express.static(publicDir, {
         setHeaders(res, filePath) {
@@ -46,10 +62,6 @@ async function bootstrap() {
       }),
     );
   }
-
-  // Security (allow same-site image loading from /uploads)
-  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
-  app.use(cookieParser());
 
   // CORS
   const allowedOrigins = configService.get<string[]>("cors.origins") ?? [];
@@ -105,8 +117,8 @@ async function bootstrap() {
   app.setGlobalPrefix("api");
 
   // SPA fallback route for frontend paths (excluding /api and /uploads)
-  if (existsSync(publicDir)) {
-    app.use((req, res, next) => {
+  if (hasPublicBundle) {
+    app.use((req: Request, res: Response, next: NextFunction) => {
       if (
         req.method !== "GET" ||
         req.path.startsWith("/api") ||
@@ -150,11 +162,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
 
-  const port = configService.get<number>("port");
-  await app.listen(port);
+  const port = configService.get<number>("port") ?? 3000;
+  const host = process.env.HOST || "0.0.0.0";
+  await app.listen(port, host);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  console.log(`[startup] Listening on http://${host}:${port}`);
+  console.log(`[startup] API endpoint: http://${host}:${port}/api`);
+  console.log(`[startup] API docs: http://${host}:${port}/api/docs`);
+  console.log(`[startup] Web bundle present: ${hasPublicBundle}`);
 }
 
 bootstrap();

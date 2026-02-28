@@ -12,12 +12,12 @@ export class AddPaymentDto {
   @ApiProperty({ example: "user123" })
   @IsString()
   @IsNotEmpty()
-  paidById: string;
+  paidById!: string;
 
   @ApiProperty({ example: 25000, description: "Payment amount in cents" })
   @IsInt()
   @Min(1)
-  amountCents: number;
+  amountCents!: number;
 
   @ApiPropertyOptional({ example: "Paid via bank transfer" })
   @IsString()
