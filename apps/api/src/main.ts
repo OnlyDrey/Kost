@@ -7,7 +7,7 @@ import cookieParser from "cookie-parser";
 import { join } from "path";
 import { mkdirSync, existsSync } from "fs";
 import * as express from "express";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
@@ -28,7 +28,30 @@ async function bootstrap() {
   // security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.).
   // crossOriginResourcePolicy: 'same-site' lets the browser load avatar/logo
   // images that are served from the same origin via /uploads.
-  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "same-site" },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'self'"],
+          objectSrc: ["'none'"],
+          imgSrc: ["'self'", "data:"],
+          styleSrc: ["'self'", "https:", "'unsafe-inline'"],
+          fontSrc: ["'self'", "https:", "data:"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrcAttr: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+    }),
+  );
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    res.setHeader("X-Kost-Security", "fix-attempt-01b");
+    next();
+  });
   app.use(cookieParser());
 
   // Serve uploaded files at /uploads
@@ -118,7 +141,7 @@ async function bootstrap() {
 
   // SPA fallback route for frontend paths (excluding /api and /uploads)
   if (hasPublicBundle) {
-    app.use((req: Request, res: Response, next: NextFunction) => {
+    app.use((req: Request, res: Response, next: NextFunction): void => {
       if (
         req.method !== "GET" ||
         req.path.startsWith("/api") ||
