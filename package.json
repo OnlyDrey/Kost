@@ -1,0 +1,73 @@
+{
+  "name": "kost",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kost - Self-hosted shared expense tracking PWA",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:migrate": "docker compose exec app /app/node_modules/.bin/prisma migrate deploy",
+    "db:reset": "docker compose exec app /app/node_modules/.bin/prisma migrate reset --force",
+    "db:seed": "docker compose exec app node dist/prisma/seed.js",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build --no-cache",
+    "docker:logs": "docker compose logs -f",
+    "prepare": "[ -d .git ] && husky install || true",
+    "postinstall": "[ -z \"${CI}\" ] && bash check-system.sh || true",
+    "audit": "npm audit --omit=dev",
+    "check": "bash check-system.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "overrides": {
+    "lodash": "^4.17.23",
+    "js-yaml": "^4.1.1",
+    "nodemon": "^3.1.0",
+    "cross-spawn": "^7.0.6",
+    "got": "^11.8.5",
+    "glob": "^11.0.0",
+    "source-map": "^0.7.4",
+    "magic-string": "^0.30.17",
+    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
+    "@jest/reporters": {
+      "glob": "^10.4.5"
+    },
+    "jest-config": {
+      "glob": "^10.4.5"
+    },
+    "jest-runtime": {
+      "glob": "^10.4.5"
+    },
+    "test-exclude": {
+      "glob": "^10.4.5"
+    },
+    "workbox-build": {
+      "glob": "^13.0.0",
+      "source-map": "^0.7.6"
+    },
+    "@rollup/plugin-replace": {
+      "magic-string": "^0.30.17"
+    },
+    "@surma/rollup-plugin-off-main-thread": {
+      "magic-string": "^0.30.17"
+    }
+  }
+}

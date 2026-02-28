@@ -1,0 +1,54 @@
+# --- Dependencies (reinstalled inside Docker) ---
+node_modules
+**/node_modules
+
+# --- Build outputs (rebuilt inside Docker) ---
+**/dist
+**/build
+**/*.tsbuildinfo
+
+# --- Environment files (secrets must not leak into image) ---
+.env
+.env.local
+.env.*.local
+
+# --- Git / CI ---
+.git
+.gitignore
+.github
+
+# --- Dev tooling ---
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Test artifacts ---
+coverage
+.nyc_output
+**/test/
+**/*.spec.ts
+**/*.test.ts
+**/*.spec.js
+**/*.test.js
+
+# --- Logs ---
+logs
+*.log
+/log
+
+# --- Docs (not needed at runtime) ---
+docs
+*.md
+!apps/api/prisma/README.md
+
+# --- Misc ---
+*.pem
+.cache
+.temp
+backup.sql
+check-system.sh
+Makefile

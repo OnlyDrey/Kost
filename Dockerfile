@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1.7
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+RUN apk add --no-cache openssl
+
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY tsconfig.base.json ./
+
+RUN --mount=type=cache,target=/root/.npm \
+  npm ci --workspaces --include-workspace-root
+
+COPY packages ./packages
+COPY apps/api ./apps/api
+COPY apps/web ./apps/web
+
+RUN npm run build --workspace=@kost/shared
+RUN npm run generate --workspace=@kost/api
+RUN npm run typecheck --workspace=@kost/web
+RUN npm run build --workspace=@kost/web
+RUN npm run build --workspace=@kost/api
+RUN npx tsc -p apps/api/tsconfig.seed.json
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN apk add --no-cache dumb-init openssl curl
+RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+
+RUN --mount=type=cache,target=/root/.npm \
+  npm ci --workspaces --include-workspace-root --omit=dev
+
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+RUN npm run generate --workspace=@kost/api
+
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/web/dist ./apps/api/public
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY apps/api/scripts /app/apps/api/scripts
+
+RUN mkdir -p /app/apps/api/uploads/avatars /app/apps/api/uploads/vendors && \
+  chown -R nestjs:nodejs /app/apps/api /app/packages/shared /app/node_modules
+
+USER nestjs
+WORKDIR /app/apps/api
+
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=50s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["sh", "/app/apps/api/scripts/docker-entrypoint.sh"]
