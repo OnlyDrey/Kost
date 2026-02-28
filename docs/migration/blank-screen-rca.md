@@ -195,6 +195,10 @@ tsconfig.base.json
   - `apps/web/index.html`: diff section includes inline `<script>` block for theme init area; strict CSP + inline script mismatch is plausible.
 - **Runtime signal to confirm:** browser console CSP violations (`Refused to execute inline script...` or blocked module/script), document loads but React root never mounts.
 
+#### Fix Attempt 01: pending runtime confirmation
+- Applied a temporary diagnostic CSP change in `apps/web/nginx.conf` to allow inline startup scripts while preserving strict non-script directives.
+- **Runtime signal to look for:** CSP violations for inline/module scripts disappear and React root mounts (login UI visible).
+
 ### HIGH-2: module preload behavior change breaks chunk loading on target browser (Chunk 404/asset path failure or module init failure)
 - **Symptom type:** Chunk load failure / runtime crash after initial HTML loads.
 - **Evidence from diff hunks:**

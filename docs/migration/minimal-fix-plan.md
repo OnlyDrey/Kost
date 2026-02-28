@@ -35,6 +35,17 @@ Scope: only HIGH-probability hypotheses from `docs/migration/blank-screen-rca.md
   - failed network requests (if any),
   - current response headers.
 
+### Fix Attempt 01 implemented
+- Updated `apps/web/nginx.conf` with a temporary diagnostic CSP that allows inline scripts (`script-src 'self' 'unsafe-inline'`) while keeping other directives restrictive.
+- Kept CSP centralized in one file to minimize blast radius and confirm whether CSP caused bootstrap failure.
+
+### Browser validation checklist
+- Reload app with DevTools open.
+- Confirm no CSP violations for inline/module startup scripts.
+- Confirm React app mounts (login page visible).
+- Confirm Network shows `index.html` 200 and JS chunks 200 (not blocked).
+- If this passes, proceed with Fix Attempt 02: remove inline script dependency and harden CSP without `unsafe-inline`.
+
 ---
 
 ## HIGH-2 — `modulePreload.polyfill = false` breaks module/chunk boot on target browser
