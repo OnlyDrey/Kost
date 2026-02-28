@@ -1,0 +1,30 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="outerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(126 136) rotate(90) scale(122)">
+      <stop stop-color="#7C3AED" stop-opacity="0.6" />
+      <stop offset="1" stop-color="#7C3AED" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="shellTop" x1="95" y1="66" x2="184" y2="149" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B5BFF" />
+      <stop offset="0.45" stop-color="#7C63FF" />
+      <stop offset="1" stop-color="#F4E7FF" />
+    </linearGradient>
+    <linearGradient id="shellBottom" x1="103" y1="119" x2="176" y2="192" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4E46FF" />
+      <stop offset="0.55" stop-color="#6B38FF" />
+      <stop offset="1" stop-color="#9F56FF" />
+    </linearGradient>
+    <clipPath id="shellClip">
+      <ellipse cx="131" cy="130" rx="61" ry="95" transform="rotate(32 131 130)" />
+    </clipPath>
+  </defs>
+
+  <ellipse cx="126" cy="136" rx="97" ry="97" fill="url(#outerGlow)" />
+
+  <g clip-path="url(#shellClip)">
+    <ellipse cx="131" cy="130" rx="61" ry="95" transform="rotate(32 131 130)" fill="url(#shellBottom)" />
+    <ellipse cx="126" cy="106" rx="62" ry="96" transform="rotate(32 126 106)" fill="url(#shellTop)" />
+  </g>
+
+  <ellipse cx="131" cy="130" rx="61" ry="95" transform="rotate(32 131 130)" stroke="#4C46FF" stroke-opacity="0.75" stroke-width="1.8" />
+</svg>
