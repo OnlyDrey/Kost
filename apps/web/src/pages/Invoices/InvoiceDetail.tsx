@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pencil, Trash2, AlertCircle, Save, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter } from '../../hooks/useApi';
+import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter, useVendors } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { amountToCents } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
@@ -26,6 +26,7 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id!);
   const { data: currency = 'NOK' } = useCurrency();
+  const { data: vendors = [] } = useVendors();
   const fmt = useCurrencyFormatter();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
@@ -139,6 +140,7 @@ export default function InvoiceDetail() {
   const totalPaid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amountCents, 0);
   const remaining = invoice.totalCents - totalPaid;
   const isPaid = remaining <= 0;
+  const vendorLogo = vendors.find((v) => v.name.toLowerCase() === invoice.vendor.toLowerCase())?.logoUrl;
 
   return (
     <div className="space-y-5">
@@ -156,28 +158,31 @@ export default function InvoiceDetail() {
         <button
           onClick={handleMarkFullyPaid}
           disabled={isPaid || addPayment.isPending}
-          className="h-11 inline-flex items-center gap-2 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 px-4 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          aria-label={t('invoice.markComplete')}
+          title={t('invoice.markComplete')}
+          className="h-11 w-11 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {addPayment.isPending ? (
             <span className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
           ) : (
             <CheckCircle2 size={16} />
           )}
-          {t('invoice.markComplete')}
         </button>
         <button
           onClick={() => navigate(`/invoices/${id}/edit`)}
-          className="h-11 flex items-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-4 rounded-lg text-sm font-medium transition-colors"
+          aria-label={t('common.edit')}
+          title={t('common.edit')}
+          className="h-11 w-11 inline-flex items-center justify-center rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 transition-colors"
         >
-          <Pencil size={15} />
-          {t('common.edit')}
+          <Pencil size={16} />
         </button>
         <button
           onClick={handleDelete}
-          className="h-11 flex items-center gap-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 rounded-lg text-sm font-medium transition-colors"
+          aria-label={t('common.delete')}
+          title={t('common.delete')}
+          className="h-11 w-11 inline-flex items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
         >
-          <Trash2 size={15} />
-          {t('common.delete')}
+          <Trash2 size={16} />
         </button>
       </div>
 
@@ -185,38 +190,38 @@ export default function InvoiceDetail() {
         {/* Main info */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Leverandør</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{invoice.vendor}</p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Beskrivelse</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{invoice.description || '—'}</p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Tag(s)</p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <TagPill label={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)} variant="type" />
-                {invoice.category && <TagPill label={invoice.category} variant="category" />}
-                {isPaid && <TagPill label={t('invoice.statusPaid')} variant="success" />}
+            <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 items-start">
+              {vendorLogo ? (
+                <img
+                  src={vendorLogo}
+                  alt=""
+                  className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
+              )}
+              <div className="min-w-0">
+                <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight break-words">{invoice.vendor}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 break-words">{invoice.description || '—'}</p>
               </div>
             </div>
 
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Pris</p>
-              <p className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{fmt(invoice.totalCents)}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <TagPill label={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)} variant="type" />
+              {invoice.category && <TagPill label={invoice.category} variant="category" />}
+              {isPaid && <TagPill label={t('invoice.statusPaid')} variant="success" />}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-end pt-1">
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Dato</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{formatDate(invoice.createdAt)}</p>
+                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 leading-tight">{fmt(invoice.totalCents)}</p>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Betalingsmåte</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{invoice.paymentMethod || '—'}</p>
+              <div className="text-right">
+                <p className="text-sm text-gray-600 dark:text-gray-300">{formatDate(invoice.createdAt)}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.paymentMethod || '—'}</p>
               </div>
             </div>
           </div>

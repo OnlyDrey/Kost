@@ -57,7 +57,7 @@ export default function ActionIconBar({
             }}
             className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900 ${colorClass}`}
           >
-            <Icon size={14} />
+            <Icon size={15} />
           </button>
         );
       })}

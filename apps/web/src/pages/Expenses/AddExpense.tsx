@@ -23,6 +23,7 @@ import UserSelectionCards from "../../components/Distribution/UserSelectionCards
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
@@ -529,7 +530,7 @@ export default function AddExpense() {
 
           {isSubscription && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <label className={labelCls}>{t("subscription.status")}</label>
                 <select
                   value={subscriptionStatus}
@@ -551,7 +552,7 @@ export default function AddExpense() {
                   </option>
                 </select>
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className={labelCls}>
                   {t("subscription.nextBillingAt")}
                 </label>
@@ -559,7 +560,7 @@ export default function AddExpense() {
                   type="date"
                   value={nextBillingAt}
                   onChange={(e) => setNextBillingAt(e.target.value)}
-                  className={inputCls}
+                  className={dateInputCls}
                 />
               </div>
             </div>
@@ -673,13 +674,13 @@ export default function AddExpense() {
               </div>
             </div>
             {!isSubscription && (
-              <div>
+              <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.dueDate")}</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className={inputCls}
+                  className={dateInputCls}
                 />
               </div>
             )}
@@ -753,7 +754,7 @@ export default function AddExpense() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className="min-w-0">
                   <label className={labelCls}>
                     {t("subscription.startDate")}
                   </label>
@@ -761,7 +762,7 @@ export default function AddExpense() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className={inputCls}
+                    className={dateInputCls}
                   />
                 </div>
               </div>
