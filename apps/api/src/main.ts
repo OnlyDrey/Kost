@@ -48,10 +48,15 @@ async function bootstrap() {
       },
     }),
   );
-  app.use((req: Request, res: Response, next: NextFunction): void => {
+  const securityProofHeaderMiddleware = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void => {
     res.setHeader("X-Kost-Security", "fix-attempt-01b");
     next();
-  });
+  };
+  app.use(securityProofHeaderMiddleware);
   app.use(cookieParser());
 
   // Serve uploaded files at /uploads
