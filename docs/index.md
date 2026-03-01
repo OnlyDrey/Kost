@@ -1,27 +1,16 @@
 # Documentation
 
-Core guides for running and maintaining Kost.
+## What you need
 
-## Start here
+- Decide your goal: learn the system, run it, operate it, or contribute.
 
-- [Setup](./setup.md)
-- [Deployment](./deployment.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Operations](./operations.md)
+## What you get
 
-## Reference
+- A minimal documentation set with direct, non-overlapping guides.
 
-- [Architecture](./architecture.md)
-- [Database](./database.md)
-- [Security](./security.md)
-- [Audit](./audit.md)
-- [Contributing](./contributing.md)
-- [Branding](./branding.md)
-- [UI state guardrails](./ui-state-guardrails.md)
+## Guides
 
-## Legacy / work in progress
-
-- [Setup (legacy)](./setup-legacy.md)
-- [Rounding & allocation rules](./rounding-allocation-rules.md)
-- [Migration notes](./migration/blank-screen-rca.md)
-- [Migration minimal fix plan](./migration/minimal-fix-plan.md)
+1. [System overview](./overview.md)
+2. [Setup and deployment](./setup-and-deployment.md)
+3. [Operations](./operations.md)
+4. [Contributing](./contributing.md)
