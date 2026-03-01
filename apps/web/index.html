@@ -65,6 +65,7 @@
 
 
     <script>
+    window.__KOST_DIAG__ = window.__KOST_DIAG__ || { module: "pending", moduleError: "" };
     (function () {
       function ensureBanner() {
         var el = document.getElementById('kost-diag');
@@ -86,22 +87,34 @@
         return root.childNodes && root.childNodes.length > 0 ? 'mounted' : 'empty';
       }
 
-      function getModuleStatus() {
-        return window.__KOST_MODULE_LOADED__ ? 'loaded' : 'pending';
+      function getModuleLine() {
+        var diag = window.__KOST_DIAG__ || { module: 'pending', moduleError: '' };
+        if (diag.module === 'error' && diag.moduleError) {
+          return 'module: error (' + diag.moduleError + ')';
+        }
+        return 'module: ' + diag.module;
       }
 
-      function render(extraRootMessage) {
+      function render(rootLine) {
         var lines = [
           'Kost diagnostics active',
           'location: ' + window.location.pathname,
-          'module: ' + getModuleStatus(),
-          'root: ' + (extraRootMessage || getRootStatus()),
+          getModuleLine(),
+          'root: ' + rootLine,
         ];
+
+        var diag = window.__KOST_DIAG__ || { module: 'pending', moduleError: '' };
+        if (diag.module === 'loaded' && rootLine === 'still empty after 5s') {
+          lines.push(
+            'hint: module loaded but root empty → likely app init/auth/router dead-end or silent crash',
+          );
+        }
+
         ensureBanner().textContent = lines.join('\n');
       }
 
       document.addEventListener('DOMContentLoaded', function () {
-        render();
+        render(getRootStatus());
 
         [1000, 3000, 5000].forEach(function (delay) {
           setTimeout(function () {
@@ -121,6 +134,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script id="kost-module" type="module" src="/src/main.tsx" onload="window.__KOST_MODULE_LOADED__=true"></script>
+    <script id="kost-module" type="module" crossorigin src="/src/main.tsx" onload="window.__KOST_DIAG__.module='loaded'" onerror="window.__KOST_DIAG__.module='error';window.__KOST_DIAG__.moduleError='module script failed to load or execute'"></script>
   </body>
 </html>
