@@ -14,6 +14,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { extname, join } from "path";
+import { Request } from "express";
 
 type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
 import { mkdirSync } from "fs";
@@ -94,17 +95,17 @@ export class UsersController {
   @UseInterceptors(
     FileInterceptor("avatar", {
       storage: diskStorage({
-        destination: (_req, _file, cb) => {
+        destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
           const dir = join(process.cwd(), "uploads", "avatars");
           mkdirSync(dir, { recursive: true });
           cb(null, dir);
         },
-        filename: (req, file, cb) => {
+        filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
           const ext = extname(file.originalname).toLowerCase() || ".jpg";
-          cb(null, `${req.params.id}${ext}`);
+          cb(null, `${req.params["id"]}${ext}`);
         },
       }),
-      fileFilter: (_req, file, cb) => {
+      fileFilter: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, acceptFile: boolean) => void) => {
         // Support common image MIME types including HEIC
         const supportedMimeTypes = [
           "image/jpeg",

@@ -8,6 +8,28 @@ import './index.css';
 import './i18n';
 import AppErrorBoundary from './components/Common/AppErrorBoundary';
 
+const debugModeEnabled = import.meta.env.VITE_DEBUG_MODE === 'true';
+
+if (debugModeEnabled) {
+  try {
+    (window as any).__KOST_EXEC__ = ((window as any).__KOST_EXEC__ || 0) + 1;
+    const count = (window as any).__KOST_EXEC__;
+    const markerText = `exec beacon: ${count} @ ${new Date().toISOString()} path=${window.location.pathname}`;
+    let marker = document.getElementById('kost-exec');
+
+    if (!marker) {
+      marker = document.createElement('pre');
+      marker.id = 'kost-exec';
+      marker.style.cssText =
+        'position:fixed;left:8px;bottom:8px;z-index:99997;background:rgba(11,16,32,.92);color:#7ee787;padding:6px 8px;margin:0;white-space:pre-wrap;font:12px/1.4 monospace;border:1px solid #2a335c;border-radius:6px;max-width:calc(100vw - 16px);';
+      (document.body || document.documentElement).appendChild(marker);
+    }
+
+    marker.textContent = markerText;
+    console.log('[KOST_EXEC]', markerText);
+  } catch {}
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -20,6 +42,7 @@ const queryClient = new QueryClient({
 });
 
 const BF_CACHE_RELOAD_GUARD_KEY = 'kost:bfcache-reload-ts';
+const SW_CLEANUP_RELOAD_GUARD_KEY = 'kost:sw-cleanup-reload-ts';
 
 function logLifecycle(level: 'warn' | 'error', message: string, details?: unknown) {
   const payload = {
@@ -87,6 +110,47 @@ function setupIosBfCacheHardening() {
 
 function setupServiceWorkerHardening() {
   if (!import.meta.env.PROD) return;
+
+  const enablePwa = import.meta.env.VITE_ENABLE_PWA === 'true';
+
+  if (!enablePwa) {
+    console.info('[AppLifecycle] PWA disabled. Unregistering service workers.');
+
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch((error) => {
+        logLifecycle('warn', 'Failed to unregister service worker registrations', error);
+      })
+      .finally(() => {
+        if ('caches' in window) {
+          caches
+            .keys()
+            .then((cacheNames) =>
+              Promise.all(
+                cacheNames
+                  .filter((cacheName) => cacheName.includes('workbox') || cacheName.includes('navigation-cache'))
+                  .map((cacheName) => caches.delete(cacheName))
+              )
+            )
+            .catch((error) => {
+              logLifecycle('warn', 'Failed to clear service worker caches', error);
+            });
+        }
+
+        if (!navigator.serviceWorker.controller) return;
+
+        const lastReload = Number(sessionStorage.getItem(SW_CLEANUP_RELOAD_GUARD_KEY) ?? '0');
+        if (Date.now() - lastReload < 5000) return;
+
+        sessionStorage.setItem(SW_CLEANUP_RELOAD_GUARD_KEY, String(Date.now()));
+        window.location.reload();
+      });
+
+    return;
+  }
 
   let refreshing = false;
   navigator.serviceWorker?.addEventListener('controllerchange', () => {

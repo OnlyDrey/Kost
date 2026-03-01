@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  HttpCode,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -105,6 +106,7 @@ export class PeriodsController {
   }
 
   @Post(":id/close")
+  @HttpCode(200)
   @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: "Close a period and calculate settlements (Admin only)",
@@ -120,6 +122,7 @@ export class PeriodsController {
   }
 
   @Post(":id/reopen")
+  @HttpCode(200)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: "Reopen a closed period (Admin only)" })
   @ApiResponse({ status: 200, description: "Period reopened successfully" })

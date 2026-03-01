@@ -11,7 +11,7 @@ export class CreatePeriodDto {
   @Matches(/^\d{4}-\d{2}$/, {
     message: "Period ID must be in YYYY-MM format",
   })
-  id: string;
+  id!: string;
 
   @ApiPropertyOptional({
     description: "Automatically import active subscriptions into the new period if incomes exist",

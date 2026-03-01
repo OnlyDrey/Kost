@@ -38,12 +38,11 @@ jobs:
       - name: Pin npm version
         run: npm i -g npm@10
 
-      - name: Install dependencies (verbose)
-        run: npm ci --workspaces --include-workspace-root --foreground-scripts --loglevel verbose
+      - name: Install dependencies
+        run: npm ci --workspaces --include-workspace-root --foreground-scripts
 
-      - name: Lint (if configured)
-        run: npm run lint || echo "Lint not configured, skipping..."
-        continue-on-error: true
+      - name: Lint
+        run: npm run lint --workspaces --if-present
 
       - name: Build shared package
         run: npm run build --workspace=@kost/shared
@@ -53,21 +52,22 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
 
-      - name: Run migrations
-        run: npm run migrate:deploy --workspace=@kost/api
+      - name: Push schema to test DB
+        run: npm run db:push --workspace=@kost/api
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
 
-      - name: Test API
-        run: npm run test --workspace=@kost/api || echo "Tests not configured or failing, continuing..."
-        continue-on-error: true
+      - name: Test API (unit)
+        run: npm run test --workspace=@kost/api
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
           JWT_SECRET: test-secret
-          MAGIC_LINK_SECRET: test-secret
-          AUTH_PASSWORD_ENABLED: true
-          AUTH_MAGIC_LINK_ENABLED: false
-          AUTH_PASSKEY_ENABLED: false
+
+      - name: Test API (e2e)
+        run: npm run test:e2e --workspace=@kost/api
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          JWT_SECRET: test-secret
 
       - name: Build API
         run: npm run build --workspace=@kost/api

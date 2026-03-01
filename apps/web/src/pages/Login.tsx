@@ -21,7 +21,7 @@ export default function Login() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/dashboard');
+    if (isAuthenticated) navigate('/overview');
   }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +37,7 @@ export default function Login() {
         recoveryCode.trim() || undefined,
       );
       login(user);
-      navigate('/dashboard');
+      navigate('/overview');
     } catch (err) {
       const loginError = err as AxiosError<{ message?: string }>;
       const message = loginError.response?.data?.message;

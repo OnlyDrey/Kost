@@ -161,7 +161,7 @@ export default function InvoiceList() {
 
   const renderInvoice = (invoice: any) => {
     const totalPaid = (invoice.payments ?? []).reduce(
-      (sum, p) => sum + p.amountCents,
+      (sum: number, p: any) => sum + p.amountCents,
       0,
     );
     const remaining = invoice.totalCents - totalPaid;

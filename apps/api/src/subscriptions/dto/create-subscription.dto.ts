@@ -16,12 +16,12 @@ export class CreateSubscriptionDto {
   @ApiProperty({ example: "Netflix Subscription" })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: "Netflix" })
   @IsString()
   @IsNotEmpty()
-  vendor: string;
+  vendor!: string;
 
   @ApiPropertyOptional({ example: "Entertainment" })
   @IsString()
@@ -31,7 +31,7 @@ export class CreateSubscriptionDto {
   @ApiProperty({ example: 9900, description: "Amount in cents" })
   @IsInt()
   @Min(0)
-  amountCents: number;
+  amountCents!: number;
 
   @ApiProperty({
     example: "monthly",
@@ -39,7 +39,7 @@ export class CreateSubscriptionDto {
   })
   @IsString()
   @IsNotEmpty()
-  frequency: string;
+  frequency!: string;
 
   @ApiPropertyOptional({
     example: 15,
@@ -52,7 +52,7 @@ export class CreateSubscriptionDto {
 
   @ApiProperty({ example: "2024-01-01" })
   @IsDateString()
-  startDate: string;
+  startDate!: string;
 
   @ApiPropertyOptional({ example: "2024-12-31" })
   @IsDateString()
@@ -64,7 +64,7 @@ export class CreateSubscriptionDto {
     example: DistributionMethod.BY_INCOME,
   })
   @IsEnum(DistributionMethod)
-  distributionMethod: DistributionMethod;
+  distributionMethod!: DistributionMethod;
 
   @ApiPropertyOptional({
     description:

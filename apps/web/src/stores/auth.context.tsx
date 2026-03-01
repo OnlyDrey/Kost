@@ -23,14 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedUser) {
       setUser(storedUser);
       // Verify session is still valid
-      authService.getCurrentUser().then((currentUser) => {
-        if (currentUser) {
-          setUser(currentUser);
-        } else {
+      authService
+        .getCurrentUser()
+        .then((currentUser) => {
+          if (currentUser) {
+            setUser(currentUser);
+          } else {
+            setUser(null);
+          }
+        })
+        .catch(() => {
           setUser(null);
-        }
-        setIsLoading(false);
-      });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } else {
       setIsLoading(false);
     }

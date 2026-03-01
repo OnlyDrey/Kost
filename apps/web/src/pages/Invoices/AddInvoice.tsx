@@ -130,15 +130,15 @@ export default function AddInvoice() {
       setError(t('invoice.atLeastOneUser')); return;
     }
 
-    const sharedData = {
+    const sharedData: any = {
       vendor: vendor.trim(),
-      category: category.trim() || undefined,
-      description: description.trim() || undefined,
       totalCents,
       distributionMethod,
-      dueDate: dueDate || undefined,
-      paymentMethod: paymentMethod || undefined,
     };
+    if (category.trim()) sharedData.category = category.trim();
+    if (description.trim()) sharedData.description = description.trim();
+    if (dueDate) sharedData.dueDate = dueDate;
+    if (paymentMethod) sharedData.paymentMethod = paymentMethod;
 
     try {
       if (isEditing) {

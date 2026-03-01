@@ -18,19 +18,19 @@ export class InvoiceLineDto {
   @ApiProperty({ example: "Line item description" })
   @IsString()
   @IsNotEmpty()
-  description: string;
+  description!: string;
 
   @ApiProperty({ example: 10000, description: "Amount in cents" })
   @IsInt()
   @Min(0)
-  amountCents: number;
+  amountCents!: number;
 }
 
 export class PercentRuleDto {
   @ApiProperty({ example: "user123" })
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @ApiProperty({
     example: 5000,
@@ -38,19 +38,19 @@ export class PercentRuleDto {
   })
   @IsInt()
   @Min(0)
-  percentBasisPoints: number;
+  percentBasisPoints!: number;
 }
 
 export class FixedRuleDto {
   @ApiProperty({ example: "user123" })
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @ApiProperty({ example: 10000, description: "Fixed amount in cents" })
   @IsInt()
   @Min(0)
-  fixedCents: number;
+  fixedCents!: number;
 }
 
 export class DistributionRulesDto {
@@ -87,7 +87,7 @@ export class CreateInvoiceDto {
   @ApiProperty({ example: "2024-01" })
   @IsString()
   @IsNotEmpty()
-  periodId: string;
+  periodId!: string;
 
   @ApiPropertyOptional({ example: "Utilities" })
   @IsString()
@@ -97,7 +97,7 @@ export class CreateInvoiceDto {
   @ApiProperty({ example: "Electric Company" })
   @IsString()
   @IsNotEmpty()
-  vendor: string;
+  vendor!: string;
 
   @ApiPropertyOptional({ example: "January electricity bill" })
   @IsString()
@@ -112,14 +112,14 @@ export class CreateInvoiceDto {
   @ApiProperty({ example: 50000, description: "Total amount in cents" })
   @IsInt()
   @Min(0)
-  totalCents: number;
+  totalCents!: number;
 
   @ApiProperty({
     enum: DistributionMethod,
     example: DistributionMethod.BY_INCOME,
   })
   @IsEnum(DistributionMethod)
-  distributionMethod: DistributionMethod;
+  distributionMethod!: DistributionMethod;
 
   @ApiPropertyOptional({ type: [InvoiceLineDto] })
   @IsArray()

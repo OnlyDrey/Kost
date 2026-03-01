@@ -7,11 +7,32 @@ import cookieParser from "cookie-parser";
 import { join } from "path";
 import { mkdirSync, existsSync } from "fs";
 import * as express from "express";
+import type { Request, Response, NextFunction } from "express";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const isProduction = process.env.NODE_ENV === "production";
+  const trustProxy = Number(process.env.TRUST_PROXY ?? "1");
+  const hstsEnabledMode = "prod-only + req.secure guard";
+  const expressApp = app.getHttpAdapter().getInstance();
+  const cspDirectives = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "img-src 'self' data:",
+    "style-src 'self' https: 'unsafe-inline'",
+    "font-src 'self' https: data:",
+    "script-src 'self' 'unsafe-inline'",
+    "script-src-attr 'none'",
+  ];
+  const cspHttp = cspDirectives.join("; ");
+  const cspHttps = [...cspDirectives, "upgrade-insecure-requests"].join("; ");
+
+  expressApp.set("trust proxy", trustProxy);
 
   // Ensure upload directories exist (pre-created in Docker; this is a no-op if they already exist)
   for (const dir of ["avatars", "vendors"]) {
@@ -22,7 +43,46 @@ async function bootstrap() {
     }
   }
 
-  // Serve uploaded files at /uploads (before global prefix and helmet)
+  // Security headers FIRST — must run before any static-file middleware so
+  // that all responses (HTML, JS, CSS, images, uploads) carry the full set of
+  // security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.).
+  // crossOriginResourcePolicy: 'same-site' lets the browser load avatar/logo
+  // images that are served from the same origin via /uploads.
+  app.use(
+    helmet({
+      hsts: false,
+      crossOriginResourcePolicy: { policy: "same-site" },
+      contentSecurityPolicy: false,
+    }),
+  );
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    const isSecureRequest = req.secure;
+    res.setHeader("Content-Security-Policy", isSecureRequest ? cspHttps : cspHttp);
+    res.setHeader("X-Kost-CSP-Mode", isSecureRequest ? "https" : "http");
+    next();
+  });
+  const securityProofHeaderMiddleware = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void => {
+    res.setHeader("X-Kost-Security", "fix-attempt-01b");
+    next();
+  };
+  app.use(securityProofHeaderMiddleware);
+  app.use(cookieParser());
+
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    if (isProduction && req.secure) {
+      res.setHeader(
+        "Strict-Transport-Security",
+        "max-age=15552000; includeSubDomains",
+      );
+    }
+    next();
+  });
+
+  // Serve uploaded files at /uploads
   app.use("/uploads", express.static(join(process.cwd(), "uploads")));
 
   // Serve web bundle (single-container deployment mode)
@@ -30,7 +90,14 @@ async function bootstrap() {
   // references chunk hashes from a previous deployment causes a blank white
   // screen on iOS Safari (and other browsers) after a redeploy.
   const publicDir = join(process.cwd(), "public");
-  if (existsSync(publicDir)) {
+  const hasPublicBundle = existsSync(publicDir);
+
+  if (!hasPublicBundle) {
+    console.error(
+      `[startup] Frontend bundle missing at ${publicDir}. Root path (/) will not serve GUI.`,
+    );
+  }
+  if (hasPublicBundle) {
     app.use(
       express.static(publicDir, {
         setHeaders(res, filePath) {
@@ -46,10 +113,6 @@ async function bootstrap() {
       }),
     );
   }
-
-  // Security (allow same-site image loading from /uploads)
-  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
-  app.use(cookieParser());
 
   // CORS
   const allowedOrigins = configService.get<string[]>("cors.origins") ?? [];
@@ -105,8 +168,8 @@ async function bootstrap() {
   app.setGlobalPrefix("api");
 
   // SPA fallback route for frontend paths (excluding /api and /uploads)
-  if (existsSync(publicDir)) {
-    app.use((req, res, next) => {
+  if (hasPublicBundle) {
+    app.use((req: Request, res: Response, next: NextFunction): void => {
       if (
         req.method !== "GET" ||
         req.path.startsWith("/api") ||
@@ -150,11 +213,16 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
 
-  const port = configService.get<number>("port");
-  await app.listen(port);
+  const port = configService.get<number>("port") ?? 3000;
+  const host = process.env.HOST || "0.0.0.0";
+  await app.listen(port, host);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  console.log(`[startup] Listening on http://${host}:${port}`);
+  console.log(`[startup] API endpoint: http://${host}:${port}/api`);
+  console.log(`[startup] API docs: http://${host}:${port}/api/docs`);
+  console.log(`[startup] Web bundle present: ${hasPublicBundle}`);
+  console.log(`[startup] Trust proxy hops: ${trustProxy}`);
+  console.log(`[startup] HSTS enabled mode: ${hstsEnabledMode}`);
 }
 
 bootstrap();

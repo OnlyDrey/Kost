@@ -1,139 +1,51 @@
 # Deployment
 
-## Production Setup
-
-### 1. Environment
-
-Copy and configure the environment file:
+## Docker Compose
 
 ```bash
-cp .env.example .env
-```
-
-Minimum required changes:
-
-```bash
-# Strong database password
-DB_PASSWORD=your-secure-password
-
-# Generate JWT secret
-JWT_SECRET=$(openssl rand -base64 32)
-
-# Set your domain
-APP_URL=https://finance.yourdomain.com
-CORS_ORIGIN=https://finance.yourdomain.com
-```
-
-### 2. Build and start
-
-```bash
+docker compose down
+docker compose build --no-cache
 docker compose up -d
 ```
 
-### 3. Run migrations
+## Required environment
 
-```bash
-npm run db:migrate
-# equivalent to: docker compose exec app npx prisma migrate deploy
-```
+- `NODE_ENV=production`
+- `TRUST_PROXY=1` (or actual proxy hop count)
+- `APP_URL=https://your-domain`
+- `CORS_ORIGIN=https://your-domain`
+- `COOKIE_SECURE=true`
+- `VITE_DEBUG_MODE=false`
 
-### 4. (Optional) Seed initial data
+## Reverse proxy (HTTPS)
 
-```bash
-npm run db:seed
-```
+Your proxy should forward:
 
----
+- `Host`
+- `X-Forwarded-Proto`
+- `X-Real-IP` (recommended)
 
-## Reverse Proxy
-
-The `app` container (NestJS) handles all traffic on port `3000`:
-- `/api/*` — REST API endpoints
-- `/uploads/*` — user-uploaded files (avatars, vendor logos)
-- everything else — served as the React SPA (static files built into the image)
-
-An external reverse proxy only needs to forward to **port 3000**. No split routing required.
-
-### Caddy
-
-```caddy
-finance.yourdomain.com {
-    reverse_proxy localhost:3000
-}
-```
-
-### Nginx
+Example (Nginx):
 
 ```nginx
-server {
-    listen 443 ssl;
-    server_name finance.yourdomain.com;
-
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+location / {
+  proxy_pass http://localhost:3000;
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_set_header X-Real-IP $remote_addr;
 }
 ```
 
-### Traefik
+## Header behavior
 
-```yaml
-# docker-compose labels on the app service
-labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.kost.rule=Host(`finance.yourdomain.com`)"
-  - "traefik.http.services.kost.loadbalancer.server.port=3000"
-```
+- HSTS is emitted only in production secure requests.
+- CSP mode is request-aware via `X-Kost-CSP-Mode`:
+  - `http`: no `upgrade-insecure-requests`
+  - `https`: includes `upgrade-insecure-requests`
 
----
-
-## Environment Variables Reference
-
-| Variable                     | Required | Default                    | Description                                        |
-|------------------------------|----------|----------------------------|----------------------------------------------------|
-| `NODE_ENV`                   | No       | `development`              | Set to `production` in prod                        |
-| `DB_USER`                    | Yes      | `kostuser`                 | PostgreSQL username                                |
-| `DB_PASSWORD`                | Yes      | `kostpass`                 | PostgreSQL password                                |
-| `DB_NAME`                    | Yes      | `kost`                     | PostgreSQL database name                           |
-| `DATABASE_URL`               | Yes      | auto-generated             | Full PostgreSQL connection string                  |
-| `JWT_SECRET`                 | Yes      | _(insecure default)_       | Secret for signing JWTs                            |
-| `JWT_EXPIRES_IN`             | No       | `7d`                       | Token expiry                                       |
-| `APP_URL`                    | No       | `http://localhost:3000`    | Application base URL                               |
-| `CORS_ORIGIN`                | No       | `http://localhost:3000`    | Allowed CORS origin                                |
-| `APP_PORT`                   | No       | `3000`                     | Host port mapped to the app container              |
-| `RATE_LIMIT_TTL`             | No       | `60`                       | Rate limit window (seconds)                        |
-| `RATE_LIMIT_MAX`             | No       | `10`                       | Max requests per window                            |
-| `COOKIE_SECURE`              | No       | `false`                    | Set to `true` behind HTTPS                         |
-| `BOOTSTRAP_ADMIN_ON_STARTUP` | No       | `true`                     | Create admin user on first start if missing        |
-| `BOOTSTRAP_ADMIN_USERNAME`   | No       | `admin`                    | Bootstrap admin username                           |
-| `BOOTSTRAP_ADMIN_PASSWORD`   | No       | `kostpass`                 | Bootstrap admin password — **change in production**|
-| `BOOTSTRAP_ADMIN_NAME`       | No       | `Admin`                    | Bootstrap admin display name                       |
-
----
-
-## Database Backup
+## Verify
 
 ```bash
-# Backup
-docker compose exec db pg_dump -U kostuser kost > backup.sql
-
-# Restore
-docker compose exec -T db psql -U kostuser kost < backup.sql
-```
-
----
-
-## Updating
-
-```bash
-git pull
-npm run docker:build
-npm run docker:up
-npm run db:migrate
+curl -sI http://localhost:3000/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
+curl -sI https://your-domain/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
 ```

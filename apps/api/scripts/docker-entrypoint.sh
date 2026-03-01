@@ -5,13 +5,16 @@ MAX_RETRIES="${PRISMA_MIGRATE_MAX_RETRIES:-10}"
 SLEEP_SECONDS="${PRISMA_MIGRATE_RETRY_SECONDS:-3}"
 ATTEMPT=1
 
-echo "[api] Running Prisma migrations (max retries: ${MAX_RETRIES})..."
-until node /app/node_modules/.bin/prisma migrate deploy --schema=/app/apps/api/prisma/schema.prisma; do
+# Use prisma db push to apply the current schema to the database without
+# requiring migration files. A new prisma migrate dev --name init should be
+# run when the schema is stable to create a tracked migration baseline.
+echo "[api] Applying Prisma schema (db push, max retries: ${MAX_RETRIES})..."
+until node /app/node_modules/.bin/prisma db push --schema=/app/apps/api/prisma/schema.prisma --accept-data-loss; do
   if [ "$ATTEMPT" -ge "$MAX_RETRIES" ]; then
-    echo "[api] Prisma migrate deploy failed after ${ATTEMPT} attempt(s)."
+    echo "[api] Prisma db push failed after ${ATTEMPT} attempt(s)."
     exit 1
   fi
-  echo "[api] Migration attempt ${ATTEMPT}/${MAX_RETRIES} failed. Retrying in ${SLEEP_SECONDS}s..."
+  echo "[api] db push attempt ${ATTEMPT}/${MAX_RETRIES} failed. Retrying in ${SLEEP_SECONDS}s..."
   ATTEMPT=$((ATTEMPT + 1))
   sleep "$SLEEP_SECONDS"
 done

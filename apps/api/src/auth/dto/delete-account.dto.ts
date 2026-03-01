@@ -9,5 +9,5 @@ export class DeleteAccountDto {
   })
   @IsString()
   @MinLength(6)
-  currentPassword: string;
+  currentPassword!: string;
 }

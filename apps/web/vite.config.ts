@@ -81,18 +81,6 @@ export default defineConfig({
               networkTimeoutSeconds: 10,
             }
           },
-          // Google Fonts
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst' as const,
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              }
-            }
-          }
         ]
       },
       devOptions: {
@@ -111,6 +99,11 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    target: 'es2019',
+    modulePreload: { polyfill: true }
+  },
+  esbuild: {
+    target: 'es2019'
   }
 });
