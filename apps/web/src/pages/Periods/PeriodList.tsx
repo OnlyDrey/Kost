@@ -207,7 +207,7 @@ export default function PeriodList() {
         {isAdmin && (
           <button
             onClick={handleOpenDialog}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             <Plus size={16} />
             {t("period.createPeriod")}
@@ -284,8 +284,8 @@ export default function PeriodList() {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                ? "bg-success/20 text-success"
+                                : "bg-danger/20 text-danger"
                             }`}
                           >
                             {!closed ? (
@@ -345,7 +345,7 @@ export default function PeriodList() {
                             disabled: closed && !isAdmin,
                             disabledClassName:
                               "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
-                            destructive: !closed,
+                            destructive: false,
                             confirmMessage: !closed
                               ? t("period.confirmClose")
                               : undefined,
@@ -435,7 +435,7 @@ export default function PeriodList() {
               <button
                 onClick={handleCreate}
                 disabled={createPeriod.isPending}
-                className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 {createPeriod.isPending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -478,7 +478,7 @@ export default function PeriodList() {
               <button
                 onClick={handleConfirmReopen}
                 disabled={reopenPeriod.isPending}
-                className="flex items-center gap-2 text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 {reopenPeriod.isPending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

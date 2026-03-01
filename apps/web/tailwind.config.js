@@ -30,6 +30,9 @@ export default {
           DEFAULT: "rgb(var(--color-info) / <alpha-value>)",
           soft: "rgb(var(--color-info-soft) / <alpha-value>)",
         },
+        neutral: {
+          DEFAULT: "rgb(var(--color-neutral) / <alpha-value>)",
+        },
         app: {
           bg: "rgb(var(--color-bg) / <alpha-value>)",
           surface: "rgb(var(--color-surface) / <alpha-value>)",

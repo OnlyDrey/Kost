@@ -39,6 +39,7 @@ import {
   useUploadVendorLogo,
   useRemoveVendorsBulk,
 } from "../../hooks/useApi";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const inputCls =
   "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -57,7 +58,11 @@ const SUPPORTED_CURRENCIES = [
   { code: "GBP", label: "British Pound (GBP)" },
 ];
 
-export type FamilySetting = "currency" | "categories" | "payment-methods" | "vendors";
+export type FamilySetting =
+  | "currency"
+  | "categories"
+  | "payment-methods"
+  | "vendors";
 
 function Pagination({
   page,
@@ -130,6 +135,7 @@ function ManagedList({
   onPageSizeChange: (size: number) => void;
 }) {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const [newItem, setNewItem] = useState("");
   const [error, setError] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -180,23 +186,30 @@ function ManagedList({
     );
   };
 
-  const handleRemoveOne = (item: string) => {
-    if (!confirm(t("familySettings.confirmDeleteItem", { item }))) return;
+  const handleRemoveOne = async (item: string) => {
+    const accepted = await confirm({
+      title: t("common.delete"),
+      message: t("familySettings.confirmDeleteItem", { item }),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!accepted) return;
     onRemove(item);
     setSelectedItems((prev) => prev.filter((value) => value !== item));
     if (pageItems.length === 1 && currentPage > 1) setPage(currentPage - 1);
   };
 
-  const handleRemoveSelected = () => {
+  const handleRemoveSelected = async () => {
     if (!selectedItems.length) return;
-    if (
-      !confirm(
-        t("familySettings.confirmDeleteSelected", {
-          count: selectedItems.length,
-        }),
-      )
-    )
-      return;
+    const accepted = await confirm({
+      title: t("common.delete"),
+      message: t("familySettings.confirmDeleteSelected", {
+        count: selectedItems.length,
+      }),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!accepted) return;
     if (onRemoveMany) {
       onRemoveMany(selectedItems);
     } else {
@@ -251,7 +264,9 @@ function ManagedList({
             className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
         </label>
@@ -297,7 +312,10 @@ function ManagedList({
       {/* Search */}
       {items.length > 0 && (
         <div className="relative mb-3">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
           <input
             type="text"
             value={search}
@@ -330,7 +348,9 @@ function ManagedList({
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
-          {search ? t("common.noResults", { defaultValue: "No results found." }) : t("familySettings.noneAdded")}
+          {search
+            ? t("common.noResults", { defaultValue: "No results found." })
+            : t("familySettings.noneAdded")}
         </p>
       ) : (
         <>
@@ -538,6 +558,7 @@ function VendorRow({
   isPending: boolean;
 }) {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(vendor.name);
 
@@ -621,15 +642,16 @@ function VendorRow({
               <Pencil size={14} />
             </button>
             <button
-              onClick={() => {
-                if (
-                  confirm(
-                    t("familySettings.confirmDeleteItem", {
-                      item: vendor.name,
-                    }),
-                  )
-                )
-                  onRemove(vendor.id);
+              onClick={async () => {
+                const accepted = await confirm({
+                  title: t("common.delete"),
+                  message: t("familySettings.confirmDeleteItem", {
+                    item: vendor.name,
+                  }),
+                  confirmLabel: t("common.delete"),
+                  tone: "danger",
+                });
+                if (accepted) onRemove(vendor.id);
               }}
               disabled={isPending}
               className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
@@ -651,6 +673,7 @@ function VendorManager({
   onPageSizeChange: (size: number) => void;
 }) {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const { data: vendors = [], isLoading } = useVendors();
   const addVendor = useAddVendor();
   const updateVendor = useUpdateVendor();
@@ -716,16 +739,17 @@ function VendorManager({
     );
   };
 
-  const removeSelectedVendors = () => {
+  const removeSelectedVendors = async () => {
     if (!selectedVendorIds.length) return;
-    if (
-      !confirm(
-        t("familySettings.confirmDeleteSelected", {
-          count: selectedVendorIds.length,
-        }),
-      )
-    )
-      return;
+    const accepted = await confirm({
+      title: t("common.delete"),
+      message: t("familySettings.confirmDeleteSelected", {
+        count: selectedVendorIds.length,
+      }),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!accepted) return;
     removeVendorsBulk.mutate(selectedVendorIds, {
       onSuccess: () => {
         setSelectedVendorIds([]);
@@ -758,7 +782,9 @@ function VendorManager({
             className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
         </label>
@@ -802,7 +828,10 @@ function VendorManager({
       {/* Search */}
       {vendors.length > 0 && (
         <div className="relative mb-3">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
           <input
             type="text"
             value={search}
@@ -840,7 +869,9 @@ function VendorManager({
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
-          {search ? t("common.noResults", { defaultValue: "No results found." }) : t("familySettings.noVendors")}
+          {search
+            ? t("common.noResults", { defaultValue: "No results found." })
+            : t("familySettings.noVendors")}
         </p>
       ) : (
         <>
@@ -871,8 +902,10 @@ function VendorManager({
 
 function CurrencySettings() {
   const { t } = useTranslation();
-  const { data: currentCurrency = "NOK", isLoading: loadingCurrency } = useCurrency();
-  const { data: currentPosition = "Before", isLoading: loadingPosition } = useCurrencySymbolPosition();
+  const { data: currentCurrency = "NOK", isLoading: loadingCurrency } =
+    useCurrency();
+  const { data: currentPosition = "Before", isLoading: loadingPosition } =
+    useCurrencySymbolPosition();
   const updateCurrency = useUpdateCurrency();
   const updatePosition = useUpdateCurrencySymbolPosition();
   const [selected, setSelected] = useState<string>("");
@@ -950,7 +983,9 @@ function CurrencySettings() {
           {/* Currency position */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t("familySettings.currencyPosition", { defaultValue: "Currency Position" })}
+              {t("familySettings.currencyPosition", {
+                defaultValue: "Currency Position",
+              })}
             </label>
             {successPosition && (
               <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-3 py-2 text-sm mb-2">
@@ -984,7 +1019,8 @@ export function FamilySettingsContent({
 }) {
   const { t } = useTranslation();
   const { data: categories = [], isLoading: loadingCats } = useCategories();
-  const { data: paymentMethods = [], isLoading: loadingMethods } = usePaymentMethods();
+  const { data: paymentMethods = [], isLoading: loadingMethods } =
+    usePaymentMethods();
   const addCategory = useAddCategory();
   const removeCategory = useRemoveCategory();
   const removeCategoriesBulk = useRemoveCategoriesBulk();
@@ -996,47 +1032,58 @@ export function FamilySettingsContent({
 
   if (activeSection === "currency") return <CurrencySettings />;
 
-  if (activeSection === "categories") return (
-    <ManagedList
-      icon={<Tag size={18} />}
-      title={t("familySettings.categories")}
-      description={t("familySettings.categoriesDesc")}
-      items={categories}
-      isLoading={loadingCats}
-      onAdd={(name) => addCategory.mutate(name)}
-      onRemove={(name) => removeCategory.mutate(name)}
-      onRename={(oldName, newName) => renameCategory.mutate({ oldName, newName })}
-      isPendingAdd={addCategory.isPending}
-      isPendingRemove={removeCategory.isPending || removeCategoriesBulk.isPending}
-      isPendingEdit={renameCategory.isPending}
-      onRemoveMany={(names) => removeCategoriesBulk.mutate(names)}
-      pageSize={pageSize}
-      onPageSizeChange={onPageSizeChange}
-    />
-  );
+  if (activeSection === "categories")
+    return (
+      <ManagedList
+        icon={<Tag size={18} />}
+        title={t("familySettings.categories")}
+        description={t("familySettings.categoriesDesc")}
+        items={categories}
+        isLoading={loadingCats}
+        onAdd={(name) => addCategory.mutate(name)}
+        onRemove={(name) => removeCategory.mutate(name)}
+        onRename={(oldName, newName) =>
+          renameCategory.mutate({ oldName, newName })
+        }
+        isPendingAdd={addCategory.isPending}
+        isPendingRemove={
+          removeCategory.isPending || removeCategoriesBulk.isPending
+        }
+        isPendingEdit={renameCategory.isPending}
+        onRemoveMany={(names) => removeCategoriesBulk.mutate(names)}
+        pageSize={pageSize}
+        onPageSizeChange={onPageSizeChange}
+      />
+    );
 
-  if (activeSection === "payment-methods") return (
-    <ManagedList
-      icon={<CreditCard size={18} />}
-      title={t("familySettings.paymentMethods")}
-      description={t("familySettings.paymentMethodsDesc")}
-      items={paymentMethods}
-      isLoading={loadingMethods}
-      onAdd={(name) => addPaymentMethod.mutate(name)}
-      onRemove={(name) => removePaymentMethod.mutate(name)}
-      onRename={(oldName, newName) => renamePaymentMethod.mutate({ oldName, newName })}
-      isPendingAdd={addPaymentMethod.isPending}
-      isPendingRemove={removePaymentMethod.isPending || removePaymentMethodsBulk.isPending}
-      isPendingEdit={renamePaymentMethod.isPending}
-      onRemoveMany={(names) => removePaymentMethodsBulk.mutate(names)}
-      pageSize={pageSize}
-      onPageSizeChange={onPageSizeChange}
-    />
-  );
+  if (activeSection === "payment-methods")
+    return (
+      <ManagedList
+        icon={<CreditCard size={18} />}
+        title={t("familySettings.paymentMethods")}
+        description={t("familySettings.paymentMethodsDesc")}
+        items={paymentMethods}
+        isLoading={loadingMethods}
+        onAdd={(name) => addPaymentMethod.mutate(name)}
+        onRemove={(name) => removePaymentMethod.mutate(name)}
+        onRename={(oldName, newName) =>
+          renamePaymentMethod.mutate({ oldName, newName })
+        }
+        isPendingAdd={addPaymentMethod.isPending}
+        isPendingRemove={
+          removePaymentMethod.isPending || removePaymentMethodsBulk.isPending
+        }
+        isPendingEdit={renamePaymentMethod.isPending}
+        onRemoveMany={(names) => removePaymentMethodsBulk.mutate(names)}
+        pageSize={pageSize}
+        onPageSizeChange={onPageSizeChange}
+      />
+    );
 
-  if (activeSection === "vendors") return (
-    <VendorManager pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
-  );
+  if (activeSection === "vendors")
+    return (
+      <VendorManager pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
+    );
 
   return null;
 }
@@ -1047,10 +1094,18 @@ export default function FamilySettings() {
   const [activeSection, setActiveSection] = useState<FamilySetting>("currency");
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const navItems: { key: FamilySetting; label: string; icon: React.ElementType }[] = [
+  const navItems: {
+    key: FamilySetting;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
     { key: "currency", label: t("familySettings.currency"), icon: Globe },
     { key: "categories", label: t("familySettings.categories"), icon: Tag },
-    { key: "payment-methods", label: t("familySettings.paymentMethods"), icon: CreditCard },
+    {
+      key: "payment-methods",
+      label: t("familySettings.paymentMethods"),
+      icon: CreditCard,
+    },
     { key: "vendors", label: t("familySettings.vendors"), icon: Store },
   ];
 

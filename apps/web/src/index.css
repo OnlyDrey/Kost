@@ -4,19 +4,19 @@
 
 @layer base {
   :root {
-    --color-primary: 99 102 241;
+    --color-primary: 79 70 229;
     --color-primary-hover: 79 70 229;
-    --color-primary-pressed: 67 56 202;
-    --color-secondary: 99 102 241;
+    --color-primary-pressed: 79 70 229;
+    --color-secondary: 79 70 229;
     --color-secondary-hover: 79 70 229;
-    --color-success: 34 197 94;
+    --color-success: 22 163 74;
     --color-success-soft: 22 163 74;
-    --color-danger: 244 63 94;
-    --color-danger-soft: 190 24 93;
-    --color-warning: 245 158 11;
+    --color-danger: 220 38 38;
+    --color-danger-soft: 220 38 38;
+    --color-warning: 217 119 6;
     --color-warning-soft: 217 119 6;
-    --color-info: 6 182 212;
-    --color-info-soft: 8 145 178;
+    --color-info: 79 70 229;
+    --color-info-soft: 79 70 229;
     --color-bg: 249 250 251;
     --color-surface: 255 255 255;
     --color-surface-elevated: 248 250 252;
@@ -24,23 +24,24 @@
     --color-text-primary: 17 24 39;
     --color-text-secondary: 75 85 99;
     --color-disabled: 156 163 175;
-    --color-focus: 99 102 241;
+    --color-focus: 79 70 229;
+    --color-neutral: 71 85 105;
   }
 
   .dark {
-    --color-primary: 129 140 248;
-    --color-primary-hover: 99 102 241;
+    --color-primary: 79 70 229;
+    --color-primary-hover: 79 70 229;
     --color-primary-pressed: 79 70 229;
-    --color-secondary: 129 140 248;
-    --color-secondary-hover: 99 102 241;
-    --color-success: 52 211 153;
-    --color-success-soft: 16 185 129;
-    --color-danger: 251 113 133;
-    --color-danger-soft: 244 63 94;
-    --color-warning: 251 191 36;
-    --color-warning-soft: 245 158 11;
-    --color-info: 34 211 238;
-    --color-info-soft: 6 182 212;
+    --color-secondary: 79 70 229;
+    --color-secondary-hover: 79 70 229;
+    --color-success: 22 163 74;
+    --color-success-soft: 22 163 74;
+    --color-danger: 220 38 38;
+    --color-danger-soft: 220 38 38;
+    --color-warning: 217 119 6;
+    --color-warning-soft: 217 119 6;
+    --color-info: 79 70 229;
+    --color-info-soft: 79 70 229;
     --color-bg: 3 7 25;
     --color-surface: 15 23 42;
     --color-surface-elevated: 17 24 39;
@@ -48,7 +49,8 @@
     --color-text-primary: 241 245 249;
     --color-text-secondary: 148 163 184;
     --color-disabled: 100 116 139;
-    --color-focus: 129 140 248;
+    --color-focus: 79 70 229;
+    --color-neutral: 71 85 105;
   }
 
   html {

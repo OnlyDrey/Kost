@@ -17,6 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/auth.context";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { useSettings } from "../../stores/settings.context";
 import {
   useUpdateUser,
@@ -35,7 +36,11 @@ import {
   useDisableTwoFactor,
   useRegenerateRecoveryCodes,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
+import {
+  amountToCents,
+  centsToAmount,
+  getCurrencySymbol,
+} from "../../utils/currency";
 import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
@@ -48,7 +53,8 @@ const labelCls =
 const settingsCardCls =
   "bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm";
 const settingsHeaderCls = "flex items-center gap-2 mb-4";
-const settingsTitleCls = "text-base font-semibold text-gray-900 dark:text-gray-100";
+const settingsTitleCls =
+  "text-base font-semibold text-gray-900 dark:text-gray-100";
 
 function SettingsSectionCard({
   icon,
@@ -81,6 +87,7 @@ type SettingsPage = "profile" | "password" | "users" | "family";
 
 export default function Profile() {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, login, logout, isAdmin } = useAuth();
@@ -104,7 +111,8 @@ export default function Profile() {
 
   const initialTab = searchParams.get("tab") as SettingsPage | null;
   const [activePage, setActivePage] = useState<SettingsPage>(
-    initialTab && ["profile", "password", "users", "family"].includes(initialTab)
+    initialTab &&
+      ["profile", "password", "users", "family"].includes(initialTab)
       ? initialTab
       : "profile",
   );
@@ -170,7 +178,6 @@ export default function Profile() {
     setSearchParams(params, { replace: true });
   };
 
-
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -211,7 +218,11 @@ export default function Profile() {
       setIncomeError(t("validation.invalidAmount"));
       return;
     }
-    if (!confirm(t("income.confirmSave"))) return;
+    const shouldSaveIncome = await confirm({
+      message: t("income.confirmSave"),
+      confirmLabel: t("common.confirm"),
+    });
+    if (!shouldSaveIncome) return;
     try {
       await upsertIncome.mutateAsync({
         userId: user.id,
@@ -349,7 +360,13 @@ export default function Profile() {
       return;
     }
 
-    if (!confirm(t("settings.deleteAccountFinalConfirm"))) {
+    const shouldDelete = await confirm({
+      title: t("common.delete"),
+      message: t("settings.deleteAccountFinalConfirm"),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!shouldDelete) {
       return;
     }
 
@@ -374,7 +391,12 @@ export default function Profile() {
     { key: "profile", label: t("settings.profile"), icon: User },
     { key: "password", label: t("settings.password"), icon: KeyRound },
     { key: "users", label: t("users.title"), icon: Users },
-    { key: "family", label: t("familySettings.title"), icon: Store, hidden: !isAdmin },
+    {
+      key: "family",
+      label: t("familySettings.title"),
+      icon: Store,
+      hidden: !isAdmin,
+    },
   ];
 
   const familyNavItems: {
@@ -384,10 +406,13 @@ export default function Profile() {
   }[] = [
     { key: "currency", label: t("familySettings.currency"), icon: Globe },
     { key: "categories", label: t("familySettings.categories"), icon: Tag },
-    { key: "payment-methods", label: t("familySettings.paymentMethods"), icon: CreditCard },
+    {
+      key: "payment-methods",
+      label: t("familySettings.paymentMethods"),
+      icon: CreditCard,
+    },
     { key: "vendors", label: t("familySettings.vendors"), icon: Store },
   ];
-
 
   // ---- Avatar block ----
   const AvatarBlock = () => (
@@ -418,8 +443,16 @@ export default function Profile() {
           type="button"
           onClick={() => avatarInputRef.current?.click()}
           disabled={uploadAvatar.isPending}
-          aria-label={user?.avatarUrl ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          title={user?.avatarUrl ? t("settings.changePhoto") : t("settings.choosePhoto")}
+          aria-label={
+            user?.avatarUrl
+              ? t("settings.changePhoto")
+              : t("settings.choosePhoto")
+          }
+          title={
+            user?.avatarUrl
+              ? t("settings.changePhoto")
+              : t("settings.choosePhoto")
+          }
           className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
         >
           {uploadAvatar.isPending ? (
@@ -447,7 +480,9 @@ export default function Profile() {
       </div>
       <div className="flex flex-col gap-1.5">
         {avatarError && (
-          <p className="text-xs text-red-600 dark:text-red-400">{avatarError}</p>
+          <p className="text-xs text-red-600 dark:text-red-400">
+            {avatarError}
+          </p>
         )}
         <p className="text-xs text-gray-400 dark:text-gray-500">
           {t("settings.photoHint")}
@@ -478,7 +513,11 @@ export default function Profile() {
               <span>{t("income.saved")}</span>
             </div>
           )}
-          <form id="income-form" onSubmit={handleSaveIncome} className="space-y-4">
+          <form
+            id="income-form"
+            onSubmit={handleSaveIncome}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>{t("income.type")}</label>
@@ -536,25 +575,27 @@ export default function Profile() {
 
       <div className="overflow-x-auto pb-1 -mb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-nowrap gap-2 min-w-max pr-1">
-        {pageNavItems.filter((item) => !item.hidden).map((item) => {
-          const Icon = item.icon;
-          const isActive = activePage === item.key;
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => selectPage(item.key)}
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${
-                isActive
-                  ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                  : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Icon size={14} />
-              {item.label}
-            </button>
-          );
-        })}
+          {pageNavItems
+            .filter((item) => !item.hidden)
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = activePage === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => selectPage(item.key)}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${
+                    isActive
+                      ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Icon size={14} />
+                  {item.label}
+                </button>
+              );
+            })}
         </div>
       </div>
 
@@ -563,7 +604,9 @@ export default function Profile() {
           <label className={labelCls}>{t("familySettings.title")}</label>
           <select
             value={activeFamilySection}
-            onChange={(e) => setActiveFamilySection(e.target.value as FamilySetting)}
+            onChange={(e) =>
+              setActiveFamilySection(e.target.value as FamilySetting)
+            }
             className={inputCls}
           >
             {familyNavItems.map((item) => (
@@ -575,14 +618,23 @@ export default function Profile() {
         </div>
       )}
 
-      <div className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}>
-        <div className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}>
+      <div
+        className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
+      >
+        <div
+          className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
+        >
           {/* ---- Profile section: avatar-left + income alongside on desktop ---- */}
           {activePage === "profile" && (
             <div className="space-y-4 lg:contents">
               {/* Profile card with avatar-left layout */}
               <SettingsSectionCard
-                icon={<User size={18} className="text-indigo-600 dark:text-indigo-400" />}
+                icon={
+                  <User
+                    size={18}
+                    className="text-indigo-600 dark:text-indigo-400"
+                  />
+                }
                 title={t("settings.profile")}
                 action={
                   <button
@@ -598,7 +650,6 @@ export default function Profile() {
                   </button>
                 }
               >
-
                 <div className="grid grid-cols-1 min-[380px]:grid-cols-[minmax(96px,1fr)_minmax(0,2fr)] gap-4 items-start">
                   <AvatarBlock />
 
@@ -615,7 +666,11 @@ export default function Profile() {
                         <span>{profileSuccess}</span>
                       </div>
                     )}
-                    <form id="profile-form" onSubmit={handleProfileSubmit} className="space-y-4">
+                    <form
+                      id="profile-form"
+                      onSubmit={handleProfileSubmit}
+                      className="space-y-4"
+                    >
                       <div>
                         <label className={labelCls}>{t("users.name")}</label>
                         <input
@@ -627,7 +682,9 @@ export default function Profile() {
                         />
                       </div>
                       <div>
-                        <label className={labelCls}>{t("users.username")}</label>
+                        <label className={labelCls}>
+                          {t("users.username")}
+                        </label>
                         <input
                           type="text"
                           value={username}
@@ -640,13 +697,17 @@ export default function Profile() {
                   </div>
                 </div>
               </SettingsSectionCard>
-
             </div>
           )}
 
           {activePage === "profile" && (
             <SettingsSectionCard
-              icon={<TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <TrendingUp
+                  size={18}
+                  className="text-indigo-600 dark:text-indigo-400"
+                />
+              }
               title={t("settings.myIncome")}
               action={
                 <button
@@ -669,10 +730,14 @@ export default function Profile() {
           {/* Language section */}
           {activePage === "profile" && (
             <SettingsSectionCard
-              icon={<Globe size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <Globe
+                  size={18}
+                  className="text-indigo-600 dark:text-indigo-400"
+                />
+              }
               title={t("settings.language")}
             >
-
               <div className="space-y-3">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {t("settings.languageDescription")}
@@ -720,7 +785,12 @@ export default function Profile() {
           {/* Change password section */}
           {activePage === "password" && (
             <SettingsSectionCard
-              icon={<KeyRound size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <KeyRound
+                  size={18}
+                  className="text-indigo-600 dark:text-indigo-400"
+                />
+              }
               title={t("settings.changePassword")}
               action={
                 <button
@@ -736,7 +806,6 @@ export default function Profile() {
                 </button>
               }
             >
-
               {pwError && (
                 <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
                   <AlertCircle size={15} className="flex-shrink-0" />
@@ -750,9 +819,15 @@ export default function Profile() {
                 </div>
               )}
 
-              <form id="password-form" onSubmit={handlePasswordSubmit} className="space-y-4">
+              <form
+                id="password-form"
+                onSubmit={handlePasswordSubmit}
+                className="space-y-4"
+              >
                 <div>
-                  <label className={labelCls}>{t("settings.currentPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.currentPassword")}
+                  </label>
                   <input
                     type="password"
                     value={currentPassword}
@@ -762,7 +837,9 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>{t("settings.newPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.newPassword")}
+                  </label>
                   <input
                     type="password"
                     value={newPassword}
@@ -773,7 +850,9 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>{t("settings.confirmPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.confirmPassword")}
+                  </label>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -790,7 +869,12 @@ export default function Profile() {
           {/* Two-factor authentication */}
           {activePage === "password" && (
             <SettingsSectionCard
-              icon={<ShieldCheck size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <ShieldCheck
+                  size={18}
+                  className="text-indigo-600 dark:text-indigo-400"
+                />
+              }
               title={t("settings.twoFactorTitle")}
             >
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
@@ -826,7 +910,9 @@ export default function Profile() {
                     {setupPayload.otpauthUrl}
                   </p>
                   <div>
-                    <label className={labelCls}>{t("settings.twoFactorCode")}</label>
+                    <label className={labelCls}>
+                      {t("settings.twoFactorCode")}
+                    </label>
                     <input
                       type="text"
                       value={twoFactorCode}
@@ -860,7 +946,9 @@ export default function Profile() {
               {twoFactorStatus?.enabled && (
                 <div className="space-y-3">
                   <div>
-                    <label className={labelCls}>{t("settings.currentPassword")}</label>
+                    <label className={labelCls}>
+                      {t("settings.currentPassword")}
+                    </label>
                     <input
                       type="password"
                       value={twoFactorPassword}
@@ -898,7 +986,12 @@ export default function Profile() {
           {/* Danger zone */}
           {activePage === "password" && (
             <SettingsSectionCard
-              icon={<AlertCircle size={18} className="text-red-700 dark:text-red-400" />}
+              icon={
+                <AlertCircle
+                  size={18}
+                  className="text-red-700 dark:text-red-400"
+                />
+              }
               title={t("settings.deleteAccountTitle")}
               className="border-red-200 dark:border-red-900"
             >
@@ -915,7 +1008,9 @@ export default function Profile() {
 
               <form onSubmit={handleDeleteAccount} className="space-y-4">
                 <div>
-                  <label className={labelCls}>{t("settings.currentPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.currentPassword")}
+                  </label>
                   <input
                     type="password"
                     value={deletePassword}

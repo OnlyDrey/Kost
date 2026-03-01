@@ -59,7 +59,7 @@ export default function ExpenseItemCard({
       : "text-primary";
 
   const cardBody = (
-    <div className={`flex flex-col gap-3 ${actionButton ? "pt-12" : ""}`}>
+    <div className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
         {logoUrl ? (
           <img
@@ -119,8 +119,8 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel) && (
-        <div className="flex items-center justify-between gap-2 min-w-0">
+      {(amountLabel || rightContent || dateLabel || actionButton) && (
+        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 min-w-0">
           <div className="min-w-0 flex-1">
             {amountLabel && (
               <p
@@ -141,9 +141,10 @@ export default function ExpenseItemCard({
             )}
           </div>
 
-          {rightContent && (
-            <div className="ml-3 flex items-center justify-end gap-[5px] flex-nowrap shrink-0">
-              <div className="shrink-0">{rightContent}</div>
+          {(rightContent || actionButton) && (
+            <div className="ml-auto flex min-w-0 flex-col items-end gap-1">
+              {rightContent && <div className="shrink-0">{rightContent}</div>}
+              {actionButton && <div className="shrink-0">{actionButton}</div>}
             </div>
           )}
         </div>
@@ -167,11 +168,6 @@ export default function ExpenseItemCard({
         </button>
       ) : (
         <div className="p-3">{cardBody}</div>
-      )}
-      {actionButton && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
-          {actionButton}
-        </div>
       )}
     </div>
   );

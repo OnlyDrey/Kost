@@ -66,10 +66,14 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ confirm, notify }), [confirm, notify]);
 
-  const confirmClass =
-    state.tone === "danger"
-      ? "bg-danger hover:bg-danger-soft text-white"
-      : "bg-primary hover:bg-primary-hover text-white";
+  const destructiveByLabel = /\b(slett|delete)\b/i.test(
+    `${state.confirmLabel ?? ""} ${state.title ?? ""} ${state.message}`,
+  );
+  const isDestructive = state.tone === "danger" || destructiveByLabel;
+
+  const confirmClass = isDestructive
+    ? "bg-danger text-white hover:bg-danger/90"
+    : "bg-primary text-white hover:bg-primary/90";
 
   return (
     <ConfirmContext.Provider value={value}>
@@ -86,7 +90,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => closeDialog(false)}
-                className="rounded-lg border border-app-border px-4 py-2 text-sm font-medium text-app-text-primary transition-colors hover:bg-app-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus"
+                className="rounded-lg border border-neutral/40 px-4 py-2 text-sm font-medium text-neutral transition-colors hover:bg-app-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus"
               >
                 {state.cancelLabel ?? "Avbryt"}
               </button>
