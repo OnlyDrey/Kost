@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, AlertCircle, Save } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, AlertCircle, Save, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useVendors, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter } from '../../hooks/useApi';
+import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter, useVendors } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
-import { amountToCents } from '../../utils/currency';
+import { amountToCents, getCurrencySymbol } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import AllocationExplanation from '../../components/Invoice/AllocationExplanation';
 import { distributionLabel } from '../../utils/distribution';
 import { useSettings } from '../../stores/settings.context';
-import ExpenseItemCard from '../../components/Expense/ExpenseItemCard';
 import UserSharesGrid from '../../components/Invoice/UserSharesGrid';
 import ActionIconBar from '../../components/Common/ActionIconBar';
+import TagPill from '../../components/Common/TagPill';
 
 const inputCls =
   'w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
+const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -26,8 +27,9 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id!);
   const { data: currency = 'NOK' } = useCurrency();
-  const fmt = useCurrencyFormatter();
+  const currencySymbol = getCurrencySymbol(currency);
   const { data: vendors = [] } = useVendors();
+  const fmt = useCurrencyFormatter();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
   const updatePayment = useUpdatePayment();
@@ -109,6 +111,22 @@ export default function InvoiceDetail() {
     }
   };
 
+  const handleMarkFullyPaid = async () => {
+    if (!user || remaining <= 0) return;
+    try {
+      await addPayment.mutateAsync({
+        invoiceId: id!,
+        data: {
+          paidById: user.id,
+          amountCents: remaining,
+          note: undefined,
+        },
+      });
+    } catch {
+      alert(t('errors.serverError'));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -124,87 +142,104 @@ export default function InvoiceDetail() {
   const totalPaid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amountCents, 0);
   const remaining = invoice.totalCents - totalPaid;
   const isPaid = remaining <= 0;
+  const vendorLogo = vendors.find((v) => v.name.toLowerCase() === invoice.vendor.toLowerCase())?.logoUrl;
 
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <button onClick={() => navigate('/invoices')} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex-1 min-w-[9rem]">{t('invoice.title')}</h1>
-        {invoice.isPersonal && (
-          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
-            {t('invoice.personal')}
-          </span>
-        )}
-        <button
-          onClick={() => navigate(`/invoices/${id}/edit`)}
-          className="flex items-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          <Pencil size={15} />
-          {t('common.edit')}
-        </button>
-        <button
-          onClick={handleDelete}
-          className="flex items-center gap-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          <Trash2 size={15} />
-          {t('common.delete')}
-        </button>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => navigate('/invoices')} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('invoice.title')}</h1>
+          {invoice.isPersonal && (
+            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+              {t('invoice.personal')}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-[5px]">
+          <button
+            onClick={handleMarkFullyPaid}
+            disabled={isPaid || addPayment.isPending}
+            aria-label={t('invoice.markComplete')}
+            title={t('invoice.markComplete')}
+            className="h-11 w-11 rounded-full grid place-items-center transition bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+          >
+            {addPayment.isPending ? (
+              <span className="w-4 h-4 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <CheckCircle2 size={20} />
+            )}
+          </button>
+          <button
+            onClick={() => navigate(`/invoices/${id}/edit`)}
+            aria-label={t('common.edit')}
+            title={t('common.edit')}
+            className="h-11 w-11 rounded-full grid place-items-center transition bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+          >
+            <Pencil size={20} />
+          </button>
+          <button
+            onClick={handleDelete}
+            aria-label={t('common.delete')}
+            title={t('common.delete')}
+            className="h-11 w-11 rounded-full grid place-items-center transition bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+          >
+            <Trash2 size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main info */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
-          <ExpenseItemCard
-            vendor={invoice.vendor}
-            description={invoice.description}
-            logoUrl={vendors.find(v => v.name.toLowerCase() === invoice.vendor.toLowerCase())?.logoUrl}
-            typeLabel={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)}
-            category={invoice.category}
-            amountLabel={fmt(invoice.totalCents)}
-            paid={isPaid}
-            paidLabel={t('invoice.statusPaid')}
-          />
-
-          <hr className="border-gray-100 dark:border-gray-800" />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.totalAmount')}</p>
-              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                {fmt(invoice.totalCents)}
-              </p>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
+            <div className="grid gap-3 items-start" style={{ gridTemplateColumns: 'auto minmax(0, 1fr)' }}>
+              {vendorLogo ? (
+                <img
+                  src={vendorLogo}
+                  alt=""
+                  className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
+              )}
+              <div className="min-w-0">
+                <p
+                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
+                >
+                  {invoice.vendor}
+                </p>
+                <p
+                  className="text-sm text-gray-600 dark:text-gray-300 mt-1"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
+                >
+                  {invoice.description || '—'}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.invoiceDate')}</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.createdAt)}</p>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <TagPill label={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)} variant="type" />
+              {invoice.category && <TagPill label={invoice.category} variant="category" />}
+              {isPaid && <TagPill label={t('invoice.statusPaid')} variant="success" />}
             </div>
-            {invoice.dueDate && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.dueDate')}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.dueDate)}</p>
+
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 leading-none m-0">{fmt(invoice.totalCents)}</p>
               </div>
-            )}
-            {invoice.paymentMethod && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.paymentMethod')}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.paymentMethod}</p>
+              <div className="text-right">
+                <p className="text-sm text-gray-600 dark:text-gray-300">{formatDate(invoice.createdAt)}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.paymentMethod || '—'}</p>
               </div>
-            )}
-            {totalPaid > 0 && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountPaid')}</p>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">{fmt(totalPaid)}</p>
-              </div>
-            )}
-            {!isPaid && totalPaid > 0 && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.remainingLabel')}</p>
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{fmt(remaining)}</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -251,8 +286,12 @@ export default function InvoiceDetail() {
                       <>
                         {editError && <p className="text-xs text-red-500">{editError}</p>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <input type="number" step="0.01" min="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className={inputCls} />
-                          <input type="date" value={editPaidAt} onChange={(e) => setEditPaidAt(e.target.value)} className={inputCls} />
+                          <div className="min-w-0">
+                            <input type="number" step="0.01" min="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className={`${inputCls} text-right`} />
+                          </div>
+                          <div className="min-w-0">
+                            <input type="date" value={editPaidAt} onChange={(e) => setEditPaidAt(e.target.value)} className={dateInputCls} />
+                          </div>
                           <select value={editPaidById} onChange={(e) => setEditPaidById(e.target.value)} className={inputCls}>
                             {users.map((u) => (
                               <option key={u.id} value={u.id}>{u.name}</option>
@@ -300,7 +339,7 @@ export default function InvoiceDetail() {
                 </div>
               )}
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountInCurrency', { currency })}</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountInCurrency', { currency: currencySymbol })}</label>
                 <input type="number" step="0.01" min="0.01" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} className={inputCls} required placeholder="0.00" />
               </div>
               <div>

@@ -18,11 +18,12 @@ import {
   useCurrency,
   useCurrencySymbolPosition,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount } from "../../utils/currency";
+import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
@@ -57,20 +58,7 @@ export default function AddExpense() {
   const { data: currency = "NOK" } = useCurrency();
   const { data: symbolPosition = "Before" } = useCurrencySymbolPosition();
 
-  const currencySymbol = useMemo(() => {
-    try {
-      const formatted = new Intl.NumberFormat("en-GB", {
-        style: "currency",
-        currency,
-        currencyDisplay: "narrowSymbol",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(0);
-      return formatted.replace(/[\d\s,.\u00A0\u202F\u2009]+/g, "").trim() || currency;
-    } catch {
-      return currency;
-    }
-  }, [currency]);
+  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
 
   const [vendor, setVendor] = useState("");
   const [showVendorList, setShowVendorList] = useState(false);
@@ -527,9 +515,32 @@ export default function AddExpense() {
             </div>
           )}
 
+          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h2>
+            <div className="ml-auto inline-flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate(backUrl)}
+                className="px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="submit"
+                disabled={isPending || (!isEditing && !isSubscription && !currentPeriod)}
+                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+              >
+                {isPending && (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                {t("common.save")}
+              </button>
+            </div>
+          </div>
+
           {isSubscription && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <label className={labelCls}>{t("subscription.status")}</label>
                 <select
                   value={subscriptionStatus}
@@ -551,7 +562,7 @@ export default function AddExpense() {
                   </option>
                 </select>
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className={labelCls}>
                   {t("subscription.nextBillingAt")}
                 </label>
@@ -559,7 +570,7 @@ export default function AddExpense() {
                   type="date"
                   value={nextBillingAt}
                   onChange={(e) => setNextBillingAt(e.target.value)}
-                  className={inputCls}
+                  className={dateInputCls}
                 />
               </div>
             </div>
@@ -647,7 +658,7 @@ export default function AddExpense() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div className="min-w-0">
               <label className={labelCls}>{t("invoice.amount")} *</label>
               <div className="relative flex items-center">
                 {symbolPosition === "Before" && (
@@ -662,7 +673,7 @@ export default function AddExpense() {
                   required
                   step="0.01"
                   min="0"
-                  className={`${inputCls} ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
+                  className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
                   placeholder="0.00"
                 />
                 {symbolPosition === "After" && (
@@ -673,13 +684,13 @@ export default function AddExpense() {
               </div>
             </div>
             {!isSubscription && (
-              <div>
+              <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.dueDate")}</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className={inputCls}
+                  className={dateInputCls}
                 />
               </div>
             )}
@@ -753,7 +764,7 @@ export default function AddExpense() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className="min-w-0">
                   <label className={labelCls}>
                     {t("subscription.startDate")}
                   </label>
@@ -761,7 +772,7 @@ export default function AddExpense() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className={inputCls}
+                    className={dateInputCls}
                   />
                 </div>
               </div>
@@ -986,28 +997,7 @@ export default function AddExpense() {
               </div>
             ))}
 
-                    <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => navigate(backUrl)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={
-                isPending || (!isEditing && !isSubscription && !currentPeriod)
-              }
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-            >
-              {isPending && (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              {t("common.save")}
-            </button>
-          </div>
-        </form>
+                  </form>
       </div>
     </div>
   );

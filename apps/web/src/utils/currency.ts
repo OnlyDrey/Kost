@@ -14,7 +14,8 @@ function resolveLocale(locale?: string): string {
  * e.g. getCurrencySymbol('NOK', 'nb-NO') → 'kr'
  *      getCurrencySymbol('USD', 'en-GB')  → '$'
  */
-function getCurrencySymbol(currency: string, resolvedLocale: string): string {
+export function getCurrencySymbol(currency: string, locale?: string): string {
+  const resolvedLocale = resolveLocale(locale);
   try {
     // Format a dummy value and strip the digit, separators and whitespace
     const formatted = new Intl.NumberFormat(resolvedLocale, {
@@ -25,9 +26,11 @@ function getCurrencySymbol(currency: string, resolvedLocale: string): string {
       maximumFractionDigits: 0,
     }).format(0);
     // Remove digits, separators (.,) and various whitespace/NBSP — what remains is the symbol
-    return formatted.replace(/[\d\s,.\u00A0\u202F\u2009]+/g, '').trim();
+    const symbol = formatted.replace(/[\d\s,.\u00A0\u202F\u2009]+/g, '').trim();
+    if (!symbol && currency === 'NOK') return 'kr';
+    return symbol || currency;
   } catch {
-    return currency;
+    return currency === 'NOK' ? 'kr' : currency;
   }
 }
 

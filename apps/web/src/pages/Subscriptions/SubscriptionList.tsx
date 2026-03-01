@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, Power, RefreshCw, AlertCircle, CheckCircle2 } fro
 import { useTranslation } from 'react-i18next';
 import {
   useSubscriptions, useToggleSubscription, useDeleteSubscription, useGenerateSubscriptionInvoices,
-  useCurrentPeriod, useCurrency, useCurrencyFormatter,
+  useCurrentPeriod, useCurrencyFormatter,
 } from '../../hooks/useApi';
 import { Subscription } from '../../services/api';
 import { formatDate } from '../../utils/date';
@@ -19,8 +19,6 @@ export default function SubscriptionList() {
   const { data: subscriptions = [], isLoading } = useSubscriptions();
   const { settings } = useSettings();
   const { data: currentPeriod } = useCurrentPeriod();
-  const { data: currency = 'NOK' } = useCurrency();
-  const fmt = useCurrencyFormatter();
 
   const toggleSub = useToggleSubscription();
   const deleteSub = useDeleteSubscription();
@@ -111,12 +109,11 @@ export default function SubscriptionList() {
             <p className="text-sm text-gray-500 dark:text-gray-400">{t('subscription.noActive')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
             {active.map(sub => (
               <SubscriptionCard
                 key={sub.id}
                 sub={sub}
-                currency={currency}
                 locale={settings.locale}
                 onEdit={() => navigate(`/subscriptions/${sub.id}/edit`)}
                 onToggle={() => toggleSub.mutate(sub.id)}
@@ -131,12 +128,11 @@ export default function SubscriptionList() {
       {inactive.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('subscription.inactiveSection', { count: inactive.length })}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
             {inactive.map(sub => (
               <SubscriptionCard
                 key={sub.id}
                 sub={sub}
-                currency={currency}
                 locale={settings.locale}
                 onEdit={() => navigate(`/subscriptions/${sub.id}/edit`)}
                 onToggle={() => toggleSub.mutate(sub.id)}
@@ -153,7 +149,6 @@ export default function SubscriptionList() {
 
 function SubscriptionCard({
   sub,
-  currency: _currency,
   locale,
   onEdit,
   onToggle,
@@ -161,7 +156,6 @@ function SubscriptionCard({
   deleteConfirmMessage,
 }: {
   sub: Subscription;
-  currency: string;
   locale: string;
   onEdit: () => void;
   onToggle: () => void;
@@ -208,46 +202,46 @@ function SubscriptionCard({
         ) : undefined
       }
       actionButton={
-        <div className="flex items-center justify-between w-full gap-2">
-          <div className="flex items-center flex-wrap gap-1.5">
-            <span className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full ${statusClassName}`}>
-              {statusLabel}
-            </span>
-            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
-              {freqLabel(sub.frequency)}
-            </span>
-          </div>
-          <ActionIconBar
-            items={[
-              {
-                key: 'edit',
-                icon: Pencil,
-                label: t('common.edit'),
-                onClick: onEdit,
-                colorClassName:
-                  'bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400',
-              },
-              {
-                key: 'toggle',
-                icon: Power,
-                label: toggleLabel,
-                onClick: onToggle,
-                colorClassName: sub.active
-                  ? 'bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400'
-                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500',
-              },
-              {
-                key: 'delete',
-                icon: Trash2,
-                label: t('common.delete'),
-                onClick: onDelete,
-                destructive: true,
-                confirmMessage: deleteConfirmMessage,
-                colorClassName:
-                  'bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400',
-              },
-            ]}
-          />
+        <ActionIconBar
+          items={[
+            {
+              key: 'edit',
+              icon: Pencil,
+              label: t('common.edit'),
+              onClick: onEdit,
+              colorClassName:
+                'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30',
+            },
+            {
+              key: 'toggle',
+              icon: Power,
+              label: toggleLabel,
+              onClick: onToggle,
+              colorClassName: sub.active
+                ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500',
+            },
+            {
+              key: 'delete',
+              icon: Trash2,
+              label: t('common.delete'),
+              onClick: onDelete,
+              destructive: true,
+              confirmMessage: deleteConfirmMessage,
+              colorClassName:
+                'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30',
+            },
+          ]}
+        />
+      }
+      footerContent={
+        <div className="flex items-center flex-wrap gap-1.5">
+          <span className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full ${statusClassName}`}>
+            {statusLabel}
+          </span>
+          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
+            {freqLabel(sub.frequency)}
+          </span>
         </div>
       }
     />

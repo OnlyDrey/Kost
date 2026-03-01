@@ -202,7 +202,8 @@
     "recoveryCodes": "Recovery codes",
     "regenerateRecoveryCodes": "Regenerate recovery codes",
     "languageDescription": "Choose the display language for the application.",
-    "password": "Password"
+    "password": "Password",
+    "system": "System"
   },
   "users": {
     "title": "Users",
@@ -246,7 +247,7 @@
     "invalidAmount": "Invalid amount"
   },
   "familySettings": {
-    "title": "Family Settings",
+    "title": "Global settings",
     "categories": "Categories",
     "categoriesDesc": "Categories are used to group expenses. Select from the dropdown when creating an expense.",
     "paymentMethods": "Payment Methods",

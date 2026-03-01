@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'system';
 type Locale = 'en' | 'nb';
 
 interface Settings {
@@ -16,7 +16,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: Settings = {
-  theme: 'light',
+  theme: 'system',
   locale: 'nb',
 };
 
@@ -34,8 +34,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
     const browserLang = navigator.language.split('-')[0];
     const detectedLocale = browserLang === 'nb' || browserLang === 'no' ? 'nb' : 'en';
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return { theme: prefersDark ? 'dark' : 'light', locale: detectedLocale };
+    return { theme: 'system', locale: detectedLocale };
   });
 
   useEffect(() => {
@@ -45,7 +44,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setTheme = (theme: Theme) => setSettings((prev) => ({ ...prev, theme }));
   const setLocale = (locale: Locale) => setSettings((prev) => ({ ...prev, locale }));
   const toggleTheme = () =>
-    setSettings((prev) => ({ ...prev, theme: prev.theme === 'light' ? 'dark' : 'light' }));
+    setSettings((prev) => {
+      const nextTheme = prev.theme === 'light' ? 'dark' : prev.theme === 'dark' ? 'system' : 'light';
+      return { ...prev, theme: nextTheme };
+    });
 
   return (
     <SettingsContext.Provider value={{ settings, setTheme, setLocale, toggleTheme }}>

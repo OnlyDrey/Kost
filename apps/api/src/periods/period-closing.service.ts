@@ -109,7 +109,7 @@ export class PeriodClosingService {
   /**
    * Reopen a closed period (Admin only)
    */
-  async reopenPeriod(periodId: string, familyId: string): Promise<any> {
+  async reopenPeriod(periodId: string, familyId: string, reopenedBy?: string): Promise<any> {
     const period = await this.prisma.period.findFirst({
       where: { id: periodId, familyId },
     });
@@ -136,7 +136,7 @@ export class PeriodClosingService {
       },
     });
 
-    this.logger.log(`Period ${periodId} reopened`);
+    this.logger.log(`Period ${periodId} reopened${reopenedBy ? ` by user ${reopenedBy}` : ""}`);
 
     return updatedPeriod;
   }

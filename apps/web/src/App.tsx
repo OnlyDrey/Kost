@@ -13,11 +13,29 @@ function AppContent() {
   }, [settings.locale, i18n]);
 
   useEffect(() => {
-    if (settings.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = () => {
+      const shouldUseDark =
+        settings.theme === 'dark' ||
+        (settings.theme === 'system' && media.matches);
+
+      if (shouldUseDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    if (settings.theme !== 'system') {
+      return;
     }
+
+    const onChange = () => applyTheme();
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
   }, [settings.theme]);
 
   return (

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Lock, AlertCircle, X, Trash2, BarChart3, Pencil, ChevronDown } from "lucide-react";
+import { Plus, Lock, AlertCircle, X, Trash2, BarChart3, LockOpen, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   usePeriods,
   useCreatePeriod,
   useClosePeriod,
+  useReopenPeriod,
   useDeletePeriod,
   useGetPeriodDeletionInfo,
 } from "../../hooks/useApi";
@@ -26,12 +27,15 @@ export default function PeriodList() {
   const { data: periods, isLoading } = usePeriods();
   const createPeriod = useCreatePeriod();
   const closePeriod = useClosePeriod();
+  const reopenPeriod = useReopenPeriod();
   const deletePeriod = useDeletePeriod();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [periodId, setPeriodId] = useState("");
   const [error, setError] = useState("");
   const [autoImportSubscriptions, setAutoImportSubscriptions] = useState(true);
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [reopenPeriodId, setReopenPeriodId] = useState("");
   const [deletionModalOpen, setDeletionModalOpen] = useState(false);
   const [deletionPeriodId, setDeletionPeriodId] = useState("");
   const [deletionPassword, setDeletionPassword] = useState("");
@@ -124,6 +128,21 @@ export default function PeriodList() {
   const handleClose = async (id: string) => {
     try {
       await closePeriod.mutateAsync(id);
+    } catch {
+      alert(t("errors.serverError"));
+    }
+  };
+
+  const handleOpenReopenModal = (id: string) => {
+    setReopenPeriodId(id);
+    setReopenModalOpen(true);
+  };
+
+  const handleConfirmReopen = async () => {
+    try {
+      await reopenPeriod.mutateAsync(reopenPeriodId);
+      setReopenModalOpen(false);
+      setReopenPeriodId("");
     } catch {
       alert(t("errors.serverError"));
     }
@@ -228,7 +247,7 @@ export default function PeriodList() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
           {filteredPeriods.map((period) => (
             <div
               key={period.id}
@@ -246,12 +265,13 @@ export default function PeriodList() {
                             {period.id}
                           </p>
                           <span
-                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             }`}
                           >
+                            {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
                             {!closed ? t("period.open") : t("period.closed")}
                           </span>
                         </div>
@@ -279,24 +299,29 @@ export default function PeriodList() {
                             onClick: () => navigate(`/overview?period=${period.id}`),
                           },
                           {
-                            key: "close",
-                            icon: Lock,
-                            label: t("period.closePeriod"),
-                            onClick: () => handleClose(period.id),
-                            colorClassName:
-                              "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50",
-                            hidden: closed || !canManageOpenPeriod,
-                            destructive: true,
-                            confirmMessage: t("period.confirmClose"),
-                          },
-                          {
-                            key: "edit",
-                            icon: Pencil,
-                            label: t("common.edit"),
-                            onClick: () => navigate(`/periods/${period.id}`),
-                            colorClassName:
-                              "bg-indigo-100 text-indigo-600 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50",
-                            hidden: !closed || !isAdmin,
+                            key: "period-lock-state",
+                            icon: closed ? LockOpen : Lock,
+                            label: closed
+                              ? (isAdmin ? "Gjenåpne periode" : "Kun admin kan gjenåpne periode")
+                              : t("period.closePeriod"),
+                            onClick: () => {
+                              if (closed) {
+                                if (!isAdmin) return;
+                                handleOpenReopenModal(period.id);
+                                return;
+                              }
+                              void handleClose(period.id);
+                            },
+                            colorClassName: closed
+                              ? isAdmin
+                                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                                : "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
+                              : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
+                            hidden: !closed && !canManageOpenPeriod,
+                            disabled: closed && !isAdmin,
+                            disabledClassName: "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
+                            destructive: !closed,
+                            confirmMessage: !closed ? t("period.confirmClose") : undefined,
                           },
                           {
                             key: "delete",
@@ -304,8 +329,8 @@ export default function PeriodList() {
                             label: t("common.delete"),
                             onClick: () => handleOpenDeletionModal(period.id),
                             colorClassName:
-                              "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50",
-                            hidden: !closed || !isAdmin,
+                              "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50",
+                            hidden: !isAdmin,
                             disabled: deletePeriod.isPending,
                           },
                         ]}
@@ -389,6 +414,47 @@ export default function PeriodList() {
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 )}
                 {t("common.add")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Reopen period confirmation modal */}
+      {reopenModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Gjenåpne periode?</h2>
+              <button
+                onClick={() => setReopenModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Ønsker du å gjenåpne denne perioden slik at endringer kan gjøres?
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setReopenModalOpen(false)}
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={handleConfirmReopen}
+                disabled={reopenPeriod.isPending}
+                className="flex items-center gap-2 text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                {reopenPeriod.isPending && (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                Gjenåpne
               </button>
             </div>
           </div>

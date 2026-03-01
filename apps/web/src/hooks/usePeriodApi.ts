@@ -68,6 +68,19 @@ export function useDeletePeriod() {
   });
 }
 
+
+export function useReopenPeriod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => periodApi.reopen(id).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+    },
+  });
+}
+
 export function usePeriodStats(id: string) {
   return useQuery({
     queryKey: queryKeys.periodStats(id),

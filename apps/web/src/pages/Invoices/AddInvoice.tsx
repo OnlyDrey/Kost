@@ -3,10 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCreateInvoice, useUpdateInvoice, useCurrentPeriod, useUsers, useInvoice, useUserIncomes, useCategories, usePaymentMethods, useVendors, useCurrency } from '../../hooks/useApi';
-import { amountToCents, centsToAmount } from '../../utils/currency';
+import { amountToCents, centsToAmount, getCurrencySymbol } from '../../utils/currency';
 
 const inputCls =
   'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
+const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
@@ -26,6 +27,7 @@ export default function AddInvoice() {
   const { data: paymentMethods = [] } = usePaymentMethods();
   const { data: vendors = [] } = useVendors();
   const { data: currency = 'NOK' } = useCurrency();
+  const currencySymbol = getCurrencySymbol(currency);
 
   const [vendor, setVendor] = useState('');
   const [showVendorList, setShowVendorList] = useState(false);
@@ -237,12 +239,12 @@ export default function AddInvoice() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t('invoice.amount')} *</label>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('invoice.amountInCurrency', { currency })}</p>
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={`${inputCls} text-right`} placeholder="0.00" />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('invoice.amountInCurrency', { currency: currencySymbol })}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <label className={labelCls}>{t('invoice.dueDate')}</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={dateInputCls} />
             </div>
           </div>
 
