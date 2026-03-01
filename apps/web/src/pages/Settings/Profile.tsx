@@ -35,7 +35,7 @@ import {
   useDisableTwoFactor,
   useRegenerateRecoveryCodes,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount } from "../../utils/currency";
+import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
 import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
@@ -108,6 +108,7 @@ export default function Profile() {
       ? initialTab
       : "profile",
   );
+  const currencySymbol = getCurrencySymbol(currency);
   const [activeFamilySection, setActiveFamilySection] =
     useState<FamilySetting>("currency");
   const [familyPageSize, setFamilyPageSize] = useState(5);
@@ -495,7 +496,7 @@ export default function Profile() {
                 <div className="relative flex items-center">
                   {symbolPosition === "Before" && (
                     <span className="pointer-events-none absolute left-3 inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {currency}
+                      {currencySymbol}
                     </span>
                   )}
                   <input
@@ -510,7 +511,7 @@ export default function Profile() {
                   />
                   {symbolPosition === "After" && (
                     <span className="pointer-events-none absolute right-3 inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {currency}
+                      {currencySymbol}
                     </span>
                   )}
                 </div>

@@ -246,12 +246,13 @@ export default function PeriodList() {
                             {period.id}
                           </p>
                           <span
-                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                             }`}
                           >
+                            {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
                             {!closed ? t("period.open") : t("period.closed")}
                           </span>
                         </div>
@@ -284,7 +285,7 @@ export default function PeriodList() {
                             label: t("period.closePeriod"),
                             onClick: () => handleClose(period.id),
                             colorClassName:
-                              "bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50",
+                              "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50",
                             hidden: closed || !canManageOpenPeriod,
                             destructive: true,
                             confirmMessage: t("period.confirmClose"),
@@ -292,7 +293,7 @@ export default function PeriodList() {
                           {
                             key: "reopen",
                             icon: LockOpen,
-                            label: t("period.open"),
+                            label: t("period.reopenPeriod", { defaultValue: "Reopen period" }),
                             onClick: () => navigate(`/periods/${period.id}`),
                             colorClassName:
                               "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50",

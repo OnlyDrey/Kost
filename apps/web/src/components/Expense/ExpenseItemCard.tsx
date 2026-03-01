@@ -117,27 +117,27 @@ export default function ExpenseItemCard({
       </div>
 
       {(amountLabel || rightContent || dateLabel || actionButton) && (
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="min-w-0 flex-1">
             {amountLabel && (
-              <p className={`text-2xl leading-10 font-bold ${amountClass}`}>
+              <p className={`text-2xl leading-8 font-bold m-0 ${amountClass}`}>
                 {amountLabel}
               </p>
             )}
             {shareLabel && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {shareLabel}
               </p>
             )}
             {dateLabel && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 {dateLabel}
               </p>
             )}
           </div>
 
           {(rightContent || actionButton) && (
-            <div className="ml-auto flex items-center justify-end gap-2.5 flex-wrap">
+            <div className="ml-auto flex items-center justify-end gap-1.5 flex-wrap">
               {rightContent && <div className="shrink-0">{rightContent}</div>}
               {actionButton && <div className="shrink-0">{actionButton}</div>}
             </div>

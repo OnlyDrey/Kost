@@ -4,7 +4,7 @@ import { ArrowLeft, Pencil, Trash2, AlertCircle, Save, CheckCircle2 } from 'luci
 import { useTranslation } from 'react-i18next';
 import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter, useVendors } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
-import { amountToCents } from '../../utils/currency';
+import { amountToCents, getCurrencySymbol } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import AllocationExplanation from '../../components/Invoice/AllocationExplanation';
 import { distributionLabel } from '../../utils/distribution';
@@ -27,6 +27,7 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id!);
   const { data: currency = 'NOK' } = useCurrency();
+  const currencySymbol = getCurrencySymbol(currency);
   const { data: vendors = [] } = useVendors();
   const fmt = useCurrencyFormatter();
   const deleteInvoice = useDeleteInvoice();
@@ -342,7 +343,7 @@ export default function InvoiceDetail() {
                 </div>
               )}
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountInCurrency', { currency })}</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountInCurrency', { currency: currencySymbol })}</label>
                 <input type="number" step="0.01" min="0.01" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} className={inputCls} required placeholder="0.00" />
               </div>
               <div>

@@ -18,7 +18,7 @@ import {
   useCurrency,
   useCurrencySymbolPosition,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount } from "../../utils/currency";
+import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
 
 const inputCls =
@@ -58,20 +58,7 @@ export default function AddExpense() {
   const { data: currency = "NOK" } = useCurrency();
   const { data: symbolPosition = "Before" } = useCurrencySymbolPosition();
 
-  const currencySymbol = useMemo(() => {
-    try {
-      const formatted = new Intl.NumberFormat("en-GB", {
-        style: "currency",
-        currency,
-        currencyDisplay: "narrowSymbol",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(0);
-      return formatted.replace(/[\d\s,.\u00A0\u202F\u2009]+/g, "").trim() || currency;
-    } catch {
-      return currency;
-    }
-  }, [currency]);
+  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
 
   const [vendor, setVendor] = useState("");
   const [showVendorList, setShowVendorList] = useState(false);

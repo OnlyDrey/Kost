@@ -10,14 +10,12 @@ import {
   Menu,
   ChevronRight,
   RefreshCw,
-  Shield,
-  Baby,
-  User,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../stores/auth.context';
 import { useSettings } from '../../stores/settings.context';
 import LogoMark from '../Brand/LogoMark';
+import TagPill from '../Common/TagPill';
 
 const NAV_ITEMS = [
   { key: 'nav.overview', icon: LayoutDashboard, path: '/overview' },
@@ -69,7 +67,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { settings, toggleTheme } = useSettings();
-  const RoleIcon = user?.role === 'ADMIN' ? Shield : user?.role === 'CHILD' ? Baby : User;
+  const roleLabel = user?.role === 'ADMIN' ? t('users.admin') : user?.role === 'CHILD' ? t('users.junior') : t('users.adult');
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
@@ -113,10 +111,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
             <UserAvatar name={user?.name ?? ''} avatarUrl={user?.avatarUrl} size={8} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1">
-                <RoleIcon size={12} />
-                {user?.role === 'ADMIN' ? t('users.admin') : user?.role === 'CHILD' ? t('users.junior') : t('users.adult')}
-              </p>
+              <TagPill label={roleLabel} variant="type" size="sm" />
             </div>
           </button>
           <button
