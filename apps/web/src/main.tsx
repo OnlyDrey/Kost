@@ -27,7 +27,9 @@ if (debugModeEnabled) {
 
     marker.textContent = markerText;
     console.log('[KOST_EXEC]', markerText);
-  } catch {}
+  } catch {
+    // Ignore diagnostics rendering issues to avoid affecting app bootstrap.
+  }
 }
 
 const queryClient = new QueryClient({

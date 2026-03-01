@@ -1,50 +1,64 @@
 # Troubleshooting
 
-## Blank screen on `http://<ip>:3000`
+## Quick checks
+
+```bash
+docker compose ps
+docker compose logs -f app
+docker compose logs -f db
+```
+
+## Blank screen on `http://<host>:3000`
 
 ### Symptoms
 
-- HTML/CSS/JS respond `200 OK`
-- UI remains blank
+- HTML/CSS/JS respond with `200 OK`
+- UI is blank or stale
 
 ### Common causes
 
-1. Browser cached HSTS for host/IP.
-2. CSP for local HTTP includes `upgrade-insecure-requests`, forcing assets to `https://<ip>:3000` where TLS is unavailable.
+1. Cached service worker/assets from older builds
+2. Browser HSTS/site cache mismatch for local HTTP
+3. CSP upgrades requests to HTTPS while local TLS is unavailable
 
 ### Fix checklist
 
-1. Clear HSTS/site data in browser.
-2. Restart browser.
-3. Verify local HTTP headers below.
+1. Hard-refresh browser and clear site data for the host.
+2. Confirm local HTTP headers:
 
 ```bash
 curl -sI http://localhost:3000/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
 ```
 
-Expected on local HTTP:
+Expected locally:
+
 - no `Strict-Transport-Security`
 - `x-kost-csp-mode: http`
 - CSP without `upgrade-insecure-requests`
 
-Production should use HTTPS domain + reverse proxy:
+## App cannot connect to API
+
+- Check `APP_URL` and `CORS_ORIGIN` in `.env`.
+- In local non-Docker web development, set `VITE_API_URL` correctly (for example `http://localhost:3000/api`).
+- Rebuild if any `VITE_*` value changed:
 
 ```bash
-curl -sI https://your-domain/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
+docker compose up --build
 ```
 
-## Debug diagnostics toggle
+## Diagnostics mode
 
-Diagnostics overlay/banner/execution marker are disabled by default.
-Enable only for RCA:
+Diagnostics overlay/banner/execution marker are OFF by default.
 
-```bash
+```env
 VITE_DEBUG_MODE=true
 ```
 
-Then rebuild web assets/container.
+Rebuild after toggling and disable again after root-cause analysis.
 
-## Docker rebuild
+## Docker cleanup (optional)
+
+> ⚠️ These commands can remove cached layers/images. Use only when needed.
 
 ```bash
 docker compose down
@@ -52,7 +66,16 @@ docker compose build --no-cache
 docker compose up
 ```
 
-## API build blocked by Prisma engine download
+### Deeper cleanup (destructive)
+
+> ⚠️ `--volumes` can remove local Postgres data for this project.
+
+```bash
+docker system prune
+docker system prune --volumes
+```
+
+## Prisma engine download blocked
 
 If network policy blocks Prisma checksum fetch:
 
