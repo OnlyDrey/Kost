@@ -93,11 +93,40 @@ labels:
 
 ---
 
+
+## Behind reverse proxy (HTTPS)
+
+When running behind a TLS-terminating reverse proxy, forward these headers to the app:
+
+- `Host`
+- `X-Forwarded-Proto`
+- `X-Real-IP` (recommended)
+
+The API now trusts proxy hops via `TRUST_PROXY` (default `1`) so `req.secure` is accurate behind HTTPS proxies.
+
+- In production (`NODE_ENV=production`), HSTS is enabled only for secure requests (`req.secure === true`).
+- In local/dev HTTP access (for example `http://<LAN-IP>:3000`), HSTS is not emitted.
+
+### Header verification
+
+```bash
+# Through HTTPS proxy/domain (production expected): includes Strict-Transport-Security
+curl -sI https://finance.yourdomain.com/ | egrep -i "strict-transport-security|x-kost-security|content-security-policy"
+
+# Direct local HTTP (dev expected): should NOT include Strict-Transport-Security
+curl -sI http://localhost:3000/ | egrep -i "strict-transport-security|x-kost-security|content-security-policy"
+```
+
+If you accidentally cached HSTS for a host/IP in your browser, clear HSTS state for that host before retesting.
+
+---
+
 ## Environment Variables Reference
 
 | Variable                     | Required | Default                    | Description                                        |
 |------------------------------|----------|----------------------------|----------------------------------------------------|
 | `NODE_ENV`                   | No       | `development`              | Set to `production` in prod                        |
+| `TRUST_PROXY`                | No       | `1`                        | Proxy hops trusted for `X-Forwarded-*` headers     |
 | `DB_USER`                    | Yes      | `kostuser`                 | PostgreSQL username                                |
 | `DB_PASSWORD`                | Yes      | `kostpass`                 | PostgreSQL password                                |
 | `DB_NAME`                    | Yes      | `kost`                     | PostgreSQL database name                           |
