@@ -147,16 +147,49 @@ export default function InvoiceDetail() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <button onClick={() => navigate('/invoices')} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex-1 min-w-[9rem]">{t('invoice.title')}</h1>
-        {invoice.isPersonal && (
-          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
-            {t('invoice.personal')}
-          </span>
-        )}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => navigate('/invoices')} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('invoice.title')}</h1>
+          {invoice.isPersonal && (
+            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+              {t('invoice.personal')}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-[5px]">
+          <button
+            onClick={handleMarkFullyPaid}
+            disabled={isPaid || addPayment.isPending}
+            aria-label={t('invoice.markComplete')}
+            title={t('invoice.markComplete')}
+            className="h-11 w-11 rounded-full grid place-items-center transition bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+          >
+            {addPayment.isPending ? (
+              <span className="w-4 h-4 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <CheckCircle2 size={20} />
+            )}
+          </button>
+          <button
+            onClick={() => navigate(`/invoices/${id}/edit`)}
+            aria-label={t('common.edit')}
+            title={t('common.edit')}
+            className="h-11 w-11 rounded-full grid place-items-center transition bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+          >
+            <Pencil size={20} />
+          </button>
+          <button
+            onClick={handleDelete}
+            aria-label={t('common.delete')}
+            title={t('common.delete')}
+            className="h-11 w-11 rounded-full grid place-items-center transition bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+          >
+            <Trash2 size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -200,38 +233,7 @@ export default function InvoiceDetail() {
 
             <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 leading-none m-0">{fmt(invoice.totalCents)}</p>
-                <div className="inline-flex items-center gap-[5px]">
-                  <button
-                    onClick={handleMarkFullyPaid}
-                    disabled={isPaid || addPayment.isPending}
-                    aria-label={t('invoice.markComplete')}
-                    title={t('invoice.markComplete')}
-                    className="h-11 w-11 rounded-full grid place-items-center transition bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
-                  >
-                    {addPayment.isPending ? (
-                      <span className="w-4 h-4 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <CheckCircle2 size={20} />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => navigate(`/invoices/${id}/edit`)}
-                    aria-label={t('common.edit')}
-                    title={t('common.edit')}
-                    className="h-11 w-11 rounded-full grid place-items-center transition bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
-                  >
-                    <Pencil size={20} />
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    aria-label={t('common.delete')}
-                    title={t('common.delete')}
-                    className="h-11 w-11 rounded-full grid place-items-center transition bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
+                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 leading-none m-0">{fmt(invoice.totalCents)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600 dark:text-gray-300">{formatDate(invoice.createdAt)}</p>

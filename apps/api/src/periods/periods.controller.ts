@@ -130,9 +130,9 @@ export class PeriodsController {
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
   reopenPeriod(
     @Param("id") id: string,
-    @CurrentUser("familyId") familyId: string,
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.periodClosingService.reopenPeriod(id, familyId);
+    return this.periodClosingService.reopenPeriod(id, user.familyId, user.sub);
   }
 
   @Get(":id/deletion-info")

@@ -6,6 +6,7 @@ import {
   usePeriods,
   useCreatePeriod,
   useClosePeriod,
+  useReopenPeriod,
   useDeletePeriod,
   useGetPeriodDeletionInfo,
 } from "../../hooks/useApi";
@@ -26,12 +27,15 @@ export default function PeriodList() {
   const { data: periods, isLoading } = usePeriods();
   const createPeriod = useCreatePeriod();
   const closePeriod = useClosePeriod();
+  const reopenPeriod = useReopenPeriod();
   const deletePeriod = useDeletePeriod();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [periodId, setPeriodId] = useState("");
   const [error, setError] = useState("");
   const [autoImportSubscriptions, setAutoImportSubscriptions] = useState(true);
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [reopenPeriodId, setReopenPeriodId] = useState("");
   const [deletionModalOpen, setDeletionModalOpen] = useState(false);
   const [deletionPeriodId, setDeletionPeriodId] = useState("");
   const [deletionPassword, setDeletionPassword] = useState("");
@@ -124,6 +128,21 @@ export default function PeriodList() {
   const handleClose = async (id: string) => {
     try {
       await closePeriod.mutateAsync(id);
+    } catch {
+      alert(t("errors.serverError"));
+    }
+  };
+
+  const handleOpenReopenModal = (id: string) => {
+    setReopenPeriodId(id);
+    setReopenModalOpen(true);
+  };
+
+  const handleConfirmReopen = async () => {
+    try {
+      await reopenPeriod.mutateAsync(reopenPeriodId);
+      setReopenModalOpen(false);
+      setReopenPeriodId("");
     } catch {
       alert(t("errors.serverError"));
     }
@@ -282,21 +301,25 @@ export default function PeriodList() {
                           {
                             key: "period-lock-state",
                             icon: closed ? LockOpen : Lock,
-                            label: closed ? t("period.open") : t("period.closePeriod"),
+                            label: closed
+                              ? (isAdmin ? "Gjenåpne periode" : "Kun admin kan gjenåpne periode")
+                              : t("period.closePeriod"),
                             onClick: () => {
                               if (closed) {
-                                navigate(`/periods/${period.id}`);
+                                if (!isAdmin) return;
+                                handleOpenReopenModal(period.id);
                                 return;
                               }
                               void handleClose(period.id);
                             },
                             colorClassName: closed
                               ? isAdmin
-                                ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
                                 : "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
                               : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
                             hidden: !closed && !canManageOpenPeriod,
                             disabled: closed && !isAdmin,
+                            disabledClassName: "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
                             destructive: !closed,
                             confirmMessage: !closed ? t("period.confirmClose") : undefined,
                           },
@@ -391,6 +414,47 @@ export default function PeriodList() {
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 )}
                 {t("common.add")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Reopen period confirmation modal */}
+      {reopenModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Gjenåpne periode?</h2>
+              <button
+                onClick={() => setReopenModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Ønsker du å gjenåpne denne perioden slik at endringer kan gjøres?
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setReopenModalOpen(false)}
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={handleConfirmReopen}
+                disabled={reopenPeriod.isPending}
+                className="flex items-center gap-2 text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                {reopenPeriod.isPending && (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                Gjenåpne
               </button>
             </div>
           </div>

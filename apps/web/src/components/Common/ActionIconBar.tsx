@@ -7,6 +7,7 @@ export interface ActionIconItem {
   onClick: () => void;
   colorClassName?: string;
   disabled?: boolean;
+  disabledClassName?: string;
   hidden?: boolean;
   destructive?: boolean;
   confirmMessage?: string;
@@ -34,7 +35,7 @@ export default function ActionIconBar({
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const colorClass = item.disabled
-          ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
+          ? item.disabledClassName ?? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
           : item.colorClassName ??
             "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700";
 

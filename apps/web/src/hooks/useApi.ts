@@ -23,6 +23,7 @@ export {
   useCurrentPeriod,
   useCreatePeriod,
   useClosePeriod,
+  useReopenPeriod,
   useGetPeriodDeletionInfo,
   useDeletePeriod,
   usePeriodStats,

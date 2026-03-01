@@ -120,7 +120,7 @@ export default function ExpenseItemCard({
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">
             {amountLabel && (
-              <p className={`text-2xl leading-none font-bold m-0 ${amountClass}`}>
+              <p className={`text-3xl leading-none font-bold m-0 ${amountClass}`}>
                 {amountLabel}
               </p>
             )}
