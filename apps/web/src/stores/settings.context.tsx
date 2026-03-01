@@ -5,10 +5,16 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import {
+  DEFAULT_PRIMARY_COLOR_FAMILY,
+  PRIMARY_COLOR_FAMILIES,
+  type PrimaryColorFamily,
+} from "../theme/primaryColorFamilies";
 
 type Theme = "light" | "dark" | "system";
 type Locale = "en" | "nb";
-export type BrandingPreset = "indigo" | "emerald" | "violet";
+
+export type BrandingPreset = PrimaryColorFamily;
 
 export interface BrandingSettings {
   appTitle: string;
@@ -30,34 +36,10 @@ interface SettingsContextType {
   toggleTheme: () => void;
 }
 
-interface BrandPresetTokens {
-  primary: string;
-  focus: string;
-  info: string;
-}
-
-export const BRAND_PRESET_TOKENS: Record<BrandingPreset, BrandPresetTokens> = {
-  indigo: {
-    primary: "99 102 241",
-    focus: "99 102 241",
-    info: "99 102 241",
-  },
-  emerald: {
-    primary: "16 185 129",
-    focus: "16 185 129",
-    info: "16 185 129",
-  },
-  violet: {
-    primary: "139 92 246",
-    focus: "139 92 246",
-    info: "139 92 246",
-  },
-};
-
 const defaultBranding: BrandingSettings = {
   appTitle: "Kost",
   logoUrl: "",
-  primaryPreset: "indigo",
+  primaryPreset: DEFAULT_PRIMARY_COLOR_FAMILY,
 };
 
 const defaultSettings: Settings = {
@@ -75,17 +57,18 @@ function applyBrandingToDocument(branding: BrandingSettings) {
 
   const root = document.documentElement;
   const preset =
-    BRAND_PRESET_TOKENS[branding.primaryPreset] ?? BRAND_PRESET_TOKENS.indigo;
+    PRIMARY_COLOR_FAMILIES[branding.primaryPreset] ??
+    PRIMARY_COLOR_FAMILIES[DEFAULT_PRIMARY_COLOR_FAMILY];
 
   root.dataset.brandPreset = branding.primaryPreset;
-  root.style.setProperty("--color-primary", preset.primary);
-  root.style.setProperty("--color-primary-hover", preset.primary);
-  root.style.setProperty("--color-primary-pressed", preset.primary);
-  root.style.setProperty("--color-secondary", preset.primary);
-  root.style.setProperty("--color-secondary-hover", preset.primary);
-  root.style.setProperty("--color-focus", preset.focus);
-  root.style.setProperty("--color-info", preset.info);
-  root.style.setProperty("--color-info-soft", preset.info);
+  root.style.setProperty("--color-primary", preset.rgb);
+  root.style.setProperty("--color-primary-hover", preset.rgb);
+  root.style.setProperty("--color-primary-pressed", preset.rgb);
+  root.style.setProperty("--color-secondary", preset.rgb);
+  root.style.setProperty("--color-secondary-hover", preset.rgb);
+  root.style.setProperty("--color-focus", preset.rgb);
+  root.style.setProperty("--color-info", preset.rgb);
+  root.style.setProperty("--color-info-soft", preset.rgb);
 
   document.title = branding.appTitle?.trim() || defaultBranding.appTitle;
 }

@@ -33,7 +33,7 @@ export default function PeriodList() {
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
   const canManageOpenPeriod = isAdmin || user?.role === "ADULT";
-  const { notify } = useConfirmDialog();
+  const { confirm, notify } = useConfirmDialog();
 
   const { data: periods, isLoading } = usePeriods();
   const createPeriod = useCreatePeriod();
@@ -143,6 +143,18 @@ export default function PeriodList() {
   };
 
   const handleClose = async (id: string) => {
+    const accepted = await confirm({
+      title: t("period.closePeriod"),
+      message: t("period.confirmClose"),
+      confirmLabel: t("period.closePeriod"),
+      cancelLabel: t("common.cancel"),
+      tone: "default",
+    });
+
+    if (!accepted) {
+      return;
+    }
+
     try {
       await closePeriod.mutateAsync(id);
     } catch {

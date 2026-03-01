@@ -48,6 +48,7 @@ import {
 import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
+import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -1112,28 +1113,11 @@ export default function Profile() {
                     placeholder="https://example.com/logo.png"
                   />
                 </div>
-                <div>
-                  <label className={labelCls}>
-                    {t("settings.brandingPrimaryPreset")}
-                  </label>
-                  <select
-                    value={brandingPreset}
-                    onChange={(e) =>
-                      setBrandingPreset(e.target.value as BrandingPreset)
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
-                  >
-                    <option value="indigo">
-                      {t("settings.brandingPresetIndigo")}
-                    </option>
-                    <option value="emerald">
-                      {t("settings.brandingPresetEmerald")}
-                    </option>
-                    <option value="violet">
-                      {t("settings.brandingPresetViolet")}
-                    </option>
-                  </select>
-                </div>
+                <ColorFamilySelect
+                  value={brandingPreset}
+                  onChange={(next) => setBrandingPreset(next as BrandingPreset)}
+                  label={t("settings.brandingPrimaryPreset")}
+                />
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-text-secondary">
                     {t("settings.brandingHelp")}
