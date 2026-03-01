@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Lock, AlertCircle, X, Trash2, BarChart3, LockOpen, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  Lock,
+  AlertCircle,
+  X,
+  Trash2,
+  BarChart3,
+  LockOpen,
+  ChevronDown,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   usePeriods,
@@ -14,6 +23,7 @@ import { useAuth } from "../../stores/auth.context";
 import { formatDate } from "../../utils/date";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -23,6 +33,7 @@ export default function PeriodList() {
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
   const canManageOpenPeriod = isAdmin || user?.role === "ADULT";
+  const { notify } = useConfirmDialog();
 
   const { data: periods, isLoading } = usePeriods();
   const createPeriod = useCreatePeriod();
@@ -48,9 +59,9 @@ export default function PeriodList() {
 
   const years = useMemo(() => {
     if (!periods) return [];
-    return Array.from(new Set(periods.map((period) => period.id.split("-")[0]))).sort(
-      (a, b) => b.localeCompare(a),
-    );
+    return Array.from(
+      new Set(periods.map((period) => period.id.split("-")[0])),
+    ).sort((a, b) => b.localeCompare(a));
   }, [periods]);
 
   const months = useMemo(() => {
@@ -59,19 +70,25 @@ export default function PeriodList() {
       selectedYear === "all"
         ? periods
         : periods.filter((period) => period.id.startsWith(`${selectedYear}-`));
-    return Array.from(new Set(source.map((period) => period.id.split("-")[1]))).sort(
-      (a, b) => b.localeCompare(a),
-    );
+    return Array.from(
+      new Set(source.map((period) => period.id.split("-")[1])),
+    ).sort((a, b) => b.localeCompare(a));
   }, [periods, selectedYear]);
 
   const filteredPeriods = useMemo(() => {
     if (!periods) return [];
     return periods
       .filter((period) => {
-        if (selectedYear !== "all" && !period.id.startsWith(`${selectedYear}-`)) {
+        if (
+          selectedYear !== "all" &&
+          !period.id.startsWith(`${selectedYear}-`)
+        ) {
           return false;
         }
-        if (selectedMonth !== "all" && !period.id.endsWith(`-${selectedMonth}`)) {
+        if (
+          selectedMonth !== "all" &&
+          !period.id.endsWith(`-${selectedMonth}`)
+        ) {
           return false;
         }
         return true;
@@ -129,7 +146,7 @@ export default function PeriodList() {
     try {
       await closePeriod.mutateAsync(id);
     } catch {
-      alert(t("errors.serverError"));
+      await notify(t("errors.serverError"), t("common.error"));
     }
   };
 
@@ -144,7 +161,7 @@ export default function PeriodList() {
       setReopenModalOpen(false);
       setReopenPeriodId("");
     } catch {
-      alert(t("errors.serverError"));
+      await notify(t("errors.serverError"), t("common.error"));
     }
   };
 
@@ -271,7 +288,11 @@ export default function PeriodList() {
                                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             }`}
                           >
-                            {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
+                            {!closed ? (
+                              <LockOpen size={11} />
+                            ) : (
+                              <Lock size={11} />
+                            )}
                             {!closed ? t("period.open") : t("period.closed")}
                           </span>
                         </div>
@@ -296,13 +317,16 @@ export default function PeriodList() {
                             key: "stats",
                             icon: BarChart3,
                             label: t("period.stats"),
-                            onClick: () => navigate(`/overview?period=${period.id}`),
+                            onClick: () =>
+                              navigate(`/overview?period=${period.id}`),
                           },
                           {
                             key: "period-lock-state",
                             icon: closed ? LockOpen : Lock,
                             label: closed
-                              ? (isAdmin ? "Gjenåpne periode" : "Kun admin kan gjenåpne periode")
+                              ? isAdmin
+                                ? "Gjenåpne periode"
+                                : "Kun admin kan gjenåpne periode"
                               : t("period.closePeriod"),
                             onClick: () => {
                               if (closed) {
@@ -314,14 +338,17 @@ export default function PeriodList() {
                             },
                             colorClassName: closed
                               ? isAdmin
-                                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                                ? "bg-success/20 text-success hover:bg-success/30"
                                 : "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
-                              : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
+                              : "bg-warning/20 text-warning hover:bg-warning/30",
                             hidden: !closed && !canManageOpenPeriod,
                             disabled: closed && !isAdmin,
-                            disabledClassName: "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
+                            disabledClassName:
+                              "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
                             destructive: !closed,
-                            confirmMessage: !closed ? t("period.confirmClose") : undefined,
+                            confirmMessage: !closed
+                              ? t("period.confirmClose")
+                              : undefined,
                           },
                           {
                             key: "delete",
@@ -329,7 +356,7 @@ export default function PeriodList() {
                             label: t("common.delete"),
                             onClick: () => handleOpenDeletionModal(period.id),
                             colorClassName:
-                              "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50",
+                              "bg-danger/20 text-danger hover:bg-danger/30",
                             hidden: !isAdmin,
                             disabled: deletePeriod.isPending,
                           },
@@ -420,13 +447,14 @@ export default function PeriodList() {
         </div>
       )}
 
-
       {/* Reopen period confirmation modal */}
       {reopenModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Gjenåpne periode?</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                Gjenåpne periode?
+              </h2>
               <button
                 onClick={() => setReopenModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -436,7 +464,8 @@ export default function PeriodList() {
             </div>
             <div className="px-6 py-5">
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Ønsker du å gjenåpne denne perioden slik at endringer kan gjøres?
+                Ønsker du å gjenåpne denne perioden slik at endringer kan
+                gjøres?
               </p>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">

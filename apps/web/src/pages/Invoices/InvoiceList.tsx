@@ -27,6 +27,7 @@ import { useSettings } from "../../stores/settings.context";
 import { useAuth } from "../../stores/auth.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const METHOD_OPTIONS = [
   "ALL",
@@ -49,6 +50,7 @@ export default function InvoiceList() {
   const navigate = useNavigate();
   const { settings } = useSettings();
   const { user } = useAuth();
+  const { notify } = useConfirmDialog();
 
   const STATUS_LABELS: Record<StatusFilter, string> = {
     ALL: t("invoice.statusAll"),
@@ -175,7 +177,7 @@ export default function InvoiceList() {
       try {
         await deleteInvoice.mutateAsync(invoice.id);
       } catch {
-        alert(t("errors.serverError"));
+        await notify(t("errors.serverError"), t("common.error"));
       }
     };
 
@@ -191,7 +193,7 @@ export default function InvoiceList() {
           },
         });
       } catch {
-        alert(t("errors.serverError"));
+        await notify(t("errors.serverError"), t("common.error"));
       }
     };
 
@@ -232,6 +234,7 @@ export default function InvoiceList() {
         }
         actionButton={
           <ActionIconBar
+            tight
             stopPropagation
             items={[
               {
@@ -241,7 +244,7 @@ export default function InvoiceList() {
                 onClick: handleMarkPaidInFull,
                 disabled: remaining <= 0 || addPayment.isPending,
                 colorClassName:
-                  "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30",
+                  "bg-success/20 text-success hover:bg-success/30",
               },
               {
                 key: "edit",
@@ -249,7 +252,7 @@ export default function InvoiceList() {
                 label: t("common.edit"),
                 onClick: () => navigate(`/invoices/${invoice.id}/edit`),
                 colorClassName:
-                  "bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30",
+                  "bg-primary/20 text-primary hover:bg-primary/30",
               },
               {
                 key: "delete",
@@ -258,8 +261,7 @@ export default function InvoiceList() {
                 onClick: handleDeleteInvoice,
                 destructive: true,
                 confirmMessage: t("invoice.confirmDelete"),
-                colorClassName:
-                  "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30",
+                colorClassName: "bg-danger/20 text-danger hover:bg-danger/30",
               },
             ]}
           />

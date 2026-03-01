@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { AuthProvider } from './stores/auth.context';
-import { SettingsProvider, useSettings } from './stores/settings.context';
-import AppRoutes from './routes';
-import { useTranslation } from 'react-i18next';
+import { useEffect } from "react";
+import { AuthProvider } from "./stores/auth.context";
+import { SettingsProvider, useSettings } from "./stores/settings.context";
+import AppRoutes from "./routes";
+import { useTranslation } from "react-i18next";
+import { ConfirmDialogProvider } from "./components/Common/ConfirmDialogProvider";
 
 function AppContent() {
   const { settings } = useSettings();
@@ -13,34 +14,36 @@ function AppContent() {
   }, [settings.locale, i18n]);
 
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
 
     const applyTheme = () => {
       const shouldUseDark =
-        settings.theme === 'dark' ||
-        (settings.theme === 'system' && media.matches);
+        settings.theme === "dark" ||
+        (settings.theme === "system" && media.matches);
 
       if (shouldUseDark) {
-        document.documentElement.classList.add('dark');
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.remove("dark");
       }
     };
 
     applyTheme();
 
-    if (settings.theme !== 'system') {
+    if (settings.theme !== "system") {
       return;
     }
 
     const onChange = () => applyTheme();
-    media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
   }, [settings.theme]);
 
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ConfirmDialogProvider>
+        <AppRoutes />
+      </ConfirmDialogProvider>
     </AuthProvider>
   );
 }
