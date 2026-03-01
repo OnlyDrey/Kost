@@ -164,7 +164,7 @@ export default function InvoiceDetail() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -264,7 +264,7 @@ export default function InvoiceDetail() {
                   {invoice.vendor}
                 </p>
                 <p
-                  className="text-sm text-gray-600 dark:text-gray-300 mt-1"
+                  className="text-sm text-gray-500 dark:text-gray-300 mt-1"
                   style={{ overflowWrap: "break-word", wordBreak: "normal" }}
                 >
                   {invoice.description || "—"}
@@ -341,7 +341,7 @@ export default function InvoiceDetail() {
                   setShowPayForm(true);
                   setPayAmount(String(remaining / 100));
                 }}
-                className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                className="text-sm font-medium text-indigo-500 dark:text-indigo-400 hover:underline"
               >
                 {t("invoice.markComplete")}
               </button>
@@ -413,7 +413,7 @@ export default function InvoiceDetail() {
                           <button
                             type="button"
                             onClick={() => handleSavePayment(payment.id)}
-                            className="px-2 py-1 text-xs rounded bg-indigo-600 text-white inline-flex items-center gap-1"
+                            className="px-2 py-1 text-xs rounded bg-indigo-500 text-white inline-flex items-center gap-1"
                           >
                             <Save size={12} />
                             {t("common.save")}
@@ -432,7 +432,7 @@ export default function InvoiceDetail() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-green-600 dark:text-green-400">
+                          <p className="font-semibold text-green-500 dark:text-green-400">
                             {fmt(payment.amountCents)}
                           </p>
                           <ActionIconBar
@@ -445,7 +445,7 @@ export default function InvoiceDetail() {
                                 onClick: () => startEditPayment(payment),
                                 hidden: !canManagePayments,
                                 colorClassName:
-                                  "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400",
+                                  "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400",
                               },
                               {
                                 key: "delete",
@@ -480,7 +480,7 @@ export default function InvoiceDetail() {
               className="space-y-3 border-t border-gray-100 dark:border-gray-800 pt-4"
             >
               {payError && (
-                <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-xs">
+                <div className="flex items-center gap-2 text-red-500 dark:text-red-400 text-xs">
                   <AlertCircle size={13} /> <span>{payError}</span>
                 </div>
               )}
@@ -522,7 +522,7 @@ export default function InvoiceDetail() {
                 <button
                   type="submit"
                   disabled={addPayment.isPending}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {addPayment.isPending && (
                     <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />

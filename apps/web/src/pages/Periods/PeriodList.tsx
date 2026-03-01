@@ -193,7 +193,7 @@ export default function PeriodList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -381,7 +381,7 @@ export default function PeriodList() {
               </h2>
               <button
                 onClick={() => setDialogOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -457,13 +457,13 @@ export default function PeriodList() {
               </h2>
               <button
                 onClick={() => setReopenModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
             <div className="px-6 py-5">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-gray-500 dark:text-gray-300">
                 Ønsker du å gjenåpne denne perioden slik at endringer kan
                 gjøres?
               </p>
@@ -498,13 +498,13 @@ export default function PeriodList() {
               <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <AlertCircle
                   size={18}
-                  className="text-red-600 dark:text-red-400"
+                  className="text-red-500 dark:text-red-400"
                 />
                 {t("period.deletePeriodTitle")}
               </h2>
               <button
                 onClick={() => setDeletionModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -518,7 +518,7 @@ export default function PeriodList() {
               )}
               <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 space-y-3">
                 <div>
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     {t("period.title")}
                   </p>
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
@@ -528,7 +528,7 @@ export default function PeriodList() {
                 {deletionInfo && (
                   <>
                     <div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                         {t("period.invoicesToDelete")}
                       </p>
                       <p className="text-sm font-semibold text-red-700 dark:text-red-400 mt-0.5">
@@ -536,7 +536,7 @@ export default function PeriodList() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                         {t("period.incomesToDelete")}
                       </p>
                       <p className="text-sm font-semibold text-red-700 dark:text-red-400 mt-0.5">
@@ -571,7 +571,7 @@ export default function PeriodList() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deletePeriod.isPending || !deletionPassword}
-                className="flex items-center gap-2 text-sm font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold bg-red-500 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 {deletePeriod.isPending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

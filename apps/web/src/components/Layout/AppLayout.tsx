@@ -58,7 +58,7 @@ function NavLink({
 function UserAvatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl?: string | null; size?: number }) {
   const sizeClass = `w-${size} h-${size}`;
   return (
-    <div className={`${sizeClass} rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}>
+    <div className={`${sizeClass} rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}>
       {avatarUrl
         ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
         : name.charAt(0).toUpperCase()}
@@ -86,7 +86,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
       <div className="px-5 py-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
           <LogoMark className="w-7 h-7 flex-shrink-0" title="Kost" />
-          <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Kost</span>
+          <span className="text-xl font-bold text-indigo-500 dark:text-indigo-400">Kost</span>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('app.tagline')}</p>
       </div>
@@ -194,7 +194,7 @@ export default function AppLayout() {
           </button>
           <div className="flex items-center gap-2">
             <LogoMark className="w-6 h-6 flex-shrink-0" title="Kost" />
-            <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">Kost</span>
+            <span className="text-lg font-bold text-indigo-500 dark:text-indigo-400">Kost</span>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-8">

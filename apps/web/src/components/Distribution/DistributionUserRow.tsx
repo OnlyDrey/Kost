@@ -26,7 +26,7 @@ function RoleIcon({ role }: { role: User["role"] }) {
   }
   return (
     <span
-      className={`${base} bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300`}
+      className={`${base} bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300`}
       title="Adult"
     >
       <UsersRound size={11} />
@@ -62,7 +62,7 @@ export default function DistributionUserRow({
       }`}
     >
       <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-indigo-600 overflow-hidden">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-indigo-500 overflow-hidden">
           {user.avatarUrl ? (
             <img
               src={user.avatarUrl}
@@ -92,7 +92,7 @@ export default function DistributionUserRow({
 
         <span
           className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
-            selected ? "bg-indigo-600 border-indigo-600" : "border-gray-400"
+            selected ? "bg-indigo-500 border-indigo-500" : "border-gray-400"
           }`}
         >
           {selected && <Check size={13} className="text-white" />}

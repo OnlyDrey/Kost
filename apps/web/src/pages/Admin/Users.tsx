@@ -58,7 +58,7 @@ function UserAvatar({
   const cls = `w-${size} h-${size}`;
   return (
     <div
-      className={`${cls} rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}
+      className={`${cls} rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}
     >
       {avatarUrl ? (
         <img
@@ -154,7 +154,7 @@ function UserModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
           >
             <X size={18} />
           </button>
@@ -172,7 +172,7 @@ function UserModal({
             {user && (
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
                     {localAvatarUrl ? (
                       <img
                         src={localAvatarUrl}
@@ -215,13 +215,13 @@ function UserModal({
                       type="button"
                       onClick={handleRemoveAvatar}
                       disabled={removeAvatar.isPending}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
                     >
                       <Trash2 size={12} /> {t("users.removePhoto")}
                     </button>
                   )}
                   {avatarErr && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
+                    <p className="text-xs text-red-500 dark:text-red-400">
                       {avatarErr}
                     </p>
                   )}
@@ -301,7 +301,7 @@ function UserModal({
             <button
               type="submit"
               disabled={isPending}
-              className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -377,7 +377,7 @@ function IncomeModal({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
           >
             <X size={18} />
           </button>
@@ -429,7 +429,7 @@ function IncomeModal({
             <button
               type="submit"
               disabled={upsertIncome.isPending}
-              className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {upsertIncome.isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -546,7 +546,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -558,7 +558,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
           <div className="flex items-center gap-2 min-w-0">
             <UsersIcon
               size={18}
-              className="text-indigo-600 dark:text-indigo-400"
+              className="text-indigo-500 dark:text-indigo-400"
             />
             <h2 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
               {t("users.title")}
@@ -572,7 +572,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
         {isAdmin && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
+            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
           >
             <Plus size={16} />
             {t("users.addUser")}
@@ -660,7 +660,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                               ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                               : u.role === "CHILD"
                                 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
                           }`}
                         >
                           {u.role === "ADMIN" ? (
@@ -676,7 +676,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         @{u.username}
                       </p>
                       {userIncome && (
-                        <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">
                           {userIncome.inputType === "ANNUAL_GROSS"
                             ? t("users.incomeAnnual")
                             : t("users.incomeMonthly")}
@@ -684,7 +684,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         </p>
                       )}
                       {!userIncome && currentPeriod && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                        <p className="text-xs text-amber-500 dark:text-amber-400 mt-0.5">
                           {t("income.noneRecorded")}
                         </p>
                       )}
@@ -701,7 +701,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         onClick: () => setIncomeModalUser(u),
                         hidden: !currentPeriod,
                         colorClassName:
-                          "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400",
+                          "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
                       },
                       {
                         key: "edit",
@@ -709,7 +709,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         label: t("common.edit"),
                         onClick: () => openEdit(u),
                         colorClassName:
-                          "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400",
+                          "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400",
                         hidden:
                           !isAdmin &&
                           !(
@@ -724,7 +724,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         destructive: true,
                         confirmMessage: t("users.confirmDelete"),
                         colorClassName:
-                          "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400",
+                          "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400",
                         hidden: !isAdmin,
                       },
                     ]}

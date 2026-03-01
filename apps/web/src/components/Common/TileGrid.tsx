@@ -27,7 +27,7 @@ export default function TileGrid({ items }: { items: TileItem[] }) {
             >
               <Icon size={12} className="text-white sm:w-[14px] sm:h-[14px]" />
             </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight line-clamp-2">
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight line-clamp-2">
               {label}
             </p>
           </div>
@@ -43,7 +43,7 @@ export default function TileGrid({ items }: { items: TileItem[] }) {
             >
               <Icon size={12} className="text-white sm:w-[14px] sm:h-[14px]" />
             </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight line-clamp-2">
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight line-clamp-2">
               {label}
             </p>
           </div>

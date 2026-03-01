@@ -73,7 +73,7 @@ export default function PeriodDetail() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -172,7 +172,7 @@ export default function PeriodDetail() {
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
-      amountClass: "text-indigo-600 dark:text-indigo-400",
+      amountClass: "text-indigo-500 dark:text-indigo-400",
     },
     {
       key: "partial",
@@ -217,7 +217,7 @@ export default function PeriodDetail() {
               className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                 !closed
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
               }`}
             >
               {!closed ? t("period.open") : t("period.closed")}

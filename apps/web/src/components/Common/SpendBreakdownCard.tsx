@@ -63,13 +63,13 @@ export default function SpendBreakdownCard({
         <div className="inline-flex w-full sm:w-auto rounded-lg border border-gray-200 dark:border-gray-700 p-0.5">
           <button
             onClick={() => setMode("YOUR_SHARE")}
-            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "YOUR_SHARE" ? "bg-indigo-600 text-white font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "YOUR_SHARE" ? "bg-indigo-500 text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
             {t("dashboard.yourShare")}
           </button>
           <button
             onClick={() => setMode("TOTAL")}
-            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "TOTAL" ? "bg-indigo-600 text-white font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "TOTAL" ? "bg-indigo-500 text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
             {t("dashboard.totalAmount")}
           </button>
@@ -87,7 +87,7 @@ export default function SpendBreakdownCard({
                   {category}
                 </span>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-base font-bold text-indigo-600 dark:text-indigo-400 leading-tight">
+                  <p className="text-base font-bold text-indigo-500 dark:text-indigo-400 leading-tight">
                     {fmt(primaryCents)}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">

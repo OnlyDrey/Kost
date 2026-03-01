@@ -249,7 +249,7 @@ function ManagedList({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-indigo-600 dark:text-indigo-400">{icon}</span>
+          <span className="text-indigo-500 dark:text-indigo-400">{icon}</span>
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {title}
           </h2>
@@ -298,7 +298,7 @@ function ManagedList({
         <button
           type="submit"
           disabled={isPendingAdd}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
         >
           {isPendingAdd ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -334,7 +334,7 @@ function ManagedList({
           <button
             onClick={handleRemoveSelected}
             disabled={isPendingRemove}
-            className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
           >
             <Trash2 size={13} />
             {t("familySettings.deleteSelected")}
@@ -344,7 +344,7 @@ function ManagedList({
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
@@ -369,7 +369,7 @@ function ManagedList({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleSelected(item)}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
                     />
                     {editing ? (
                       <input
@@ -391,7 +391,7 @@ function ManagedList({
                         <button
                           onClick={submitEdit}
                           disabled={isPendingEdit}
-                          className="p-1 text-gray-500 hover:text-emerald-600 disabled:opacity-50"
+                          className="p-1 text-gray-500 hover:text-emerald-500 disabled:opacity-50"
                         >
                           <Check size={14} />
                         </button>
@@ -501,7 +501,7 @@ function LogoPicker({
             type="button"
             onClick={() => onUrlSave(urlValue.trim())}
             disabled={isPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
           >
             <Check size={12} />
           </button>
@@ -529,7 +529,7 @@ function LogoPicker({
             {t("familySettings.chooseFile")}
           </button>
           {uploadErr && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
               {uploadErr}
             </p>
           )}
@@ -594,14 +594,14 @@ function VendorRow({
           <div className="flex gap-2 justify-end">
             <button
               onClick={handleCancel}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               <X size={13} /> {t("common.cancel")}
             </button>
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
             >
               <Check size={13} /> {t("familySettings.saveName")}
             </button>
@@ -614,19 +614,19 @@ function VendorRow({
               type="checkbox"
               checked={checked}
               onChange={onToggle}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
             />
             {vendor.logoUrl ? (
               <img
                 src={vendor.logoUrl}
                 alt={vendor.name}
-                className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-600 flex-shrink-0"
+                className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-500 flex-shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}
               />
             ) : (
-              <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-500 flex items-center justify-center flex-shrink-0">
                 <Store size={12} className="text-gray-500" />
               </div>
             )}
@@ -767,7 +767,7 @@ function VendorManager({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
-          <Store size={18} className="text-indigo-600 dark:text-indigo-400" />
+          <Store size={18} className="text-indigo-500 dark:text-indigo-400" />
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {t("familySettings.vendors")}
           </h2>
@@ -814,7 +814,7 @@ function VendorManager({
         <button
           type="submit"
           disabled={addVendor.isPending}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
         >
           {addVendor.isPending ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -855,7 +855,7 @@ function VendorManager({
           <button
             onClick={removeSelectedVendors}
             disabled={pending}
-            className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
           >
             <Trash2 size={13} />
             {t("familySettings.deleteSelected")}
@@ -865,7 +865,7 @@ function VendorManager({
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
@@ -931,7 +931,7 @@ function CurrencySettings() {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
-        <Globe size={18} className="text-indigo-600 dark:text-indigo-400" />
+        <Globe size={18} className="text-indigo-500 dark:text-indigo-400" />
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">
           {t("familySettings.currency")}
         </h2>
@@ -948,7 +948,7 @@ function CurrencySettings() {
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="space-y-4">
@@ -971,7 +971,7 @@ function CurrencySettings() {
             <button
               onClick={handleSaveCurrency}
               disabled={updateCurrency.isPending || value === currentCurrency}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
             >
               {updateCurrency.isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1143,7 +1143,7 @@ export default function FamilySettings() {
                 className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors ${
                   isActive
                     ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                 }`}
               >
                 <Icon size={15} />

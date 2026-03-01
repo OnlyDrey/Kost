@@ -60,7 +60,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-1">
             <LogoMark className="w-10 h-10" title="Kost" />
-            <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">Kost</h1>
+            <h1 className="text-4xl font-bold text-indigo-500 dark:text-indigo-400">Kost</h1>
           </div>
           <p className="text-gray-500 dark:text-gray-400 text-sm">{t('auth.login')}</p>
         </div>
@@ -105,7 +105,7 @@ export default function Login() {
             </div>
             {showSecondFactor && (
               <div className="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/10 p-3 space-y-3">
-                <p className="text-xs text-gray-600 dark:text-gray-300">{t('auth.secondFactorHint')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-300">{t('auth.secondFactorHint')}</p>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -141,7 +141,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition-colors mt-2"
+              className="w-full flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition-colors mt-2"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

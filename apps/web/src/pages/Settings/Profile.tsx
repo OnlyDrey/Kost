@@ -417,7 +417,7 @@ export default function Profile() {
   // ---- Avatar block ----
   const AvatarBlock = () => (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
+      <div className="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
         {user?.avatarUrl ? (
           <img
             src={user.avatarUrl}
@@ -468,7 +468,7 @@ export default function Profile() {
             disabled={removeAvatar.isPending}
             aria-label={t("settings.removePhoto")}
             title={t("settings.removePhoto")}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-60"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-60"
           >
             {removeAvatar.isPending ? (
               <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
@@ -480,7 +480,7 @@ export default function Profile() {
       </div>
       <div className="flex flex-col gap-1.5">
         {avatarError && (
-          <p className="text-xs text-red-600 dark:text-red-400">
+          <p className="text-xs text-red-500 dark:text-red-400">
             {avatarError}
           </p>
         )}
@@ -588,7 +588,7 @@ export default function Profile() {
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${
                     isActive
                       ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
                   <Icon size={14} />
@@ -632,7 +632,7 @@ export default function Profile() {
                 icon={
                   <User
                     size={18}
-                    className="text-indigo-600 dark:text-indigo-400"
+                    className="text-indigo-500 dark:text-indigo-400"
                   />
                 }
                 title={t("settings.profile")}
@@ -641,7 +641,7 @@ export default function Profile() {
                     type="submit"
                     form="profile-form"
                     disabled={updateUser.isPending}
-                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                   >
                     {updateUser.isPending && (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -705,7 +705,7 @@ export default function Profile() {
               icon={
                 <TrendingUp
                   size={18}
-                  className="text-indigo-600 dark:text-indigo-400"
+                  className="text-indigo-500 dark:text-indigo-400"
                 />
               }
               title={t("settings.myIncome")}
@@ -714,7 +714,7 @@ export default function Profile() {
                   type="submit"
                   form="income-form"
                   disabled={upsertIncome.isPending || !currentPeriod}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {upsertIncome.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -733,13 +733,13 @@ export default function Profile() {
               icon={
                 <Globe
                   size={18}
-                  className="text-indigo-600 dark:text-indigo-400"
+                  className="text-indigo-500 dark:text-indigo-400"
                 />
               }
               title={t("settings.language")}
             >
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t("settings.languageDescription")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -756,7 +756,7 @@ export default function Profile() {
                     {settings.locale === "en" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-600 dark:text-indigo-400"
+                        className="ml-auto text-indigo-500 dark:text-indigo-400"
                       />
                     )}
                   </button>
@@ -773,7 +773,7 @@ export default function Profile() {
                     {settings.locale === "nb" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-600 dark:text-indigo-400"
+                        className="ml-auto text-indigo-500 dark:text-indigo-400"
                       />
                     )}
                   </button>
@@ -788,7 +788,7 @@ export default function Profile() {
               icon={
                 <KeyRound
                   size={18}
-                  className="text-indigo-600 dark:text-indigo-400"
+                  className="text-indigo-500 dark:text-indigo-400"
                 />
               }
               title={t("settings.changePassword")}
@@ -797,7 +797,7 @@ export default function Profile() {
                   type="submit"
                   form="password-form"
                   disabled={changePassword.isPending}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {changePassword.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -872,7 +872,7 @@ export default function Profile() {
               icon={
                 <ShieldCheck
                   size={18}
-                  className="text-indigo-600 dark:text-indigo-400"
+                  className="text-indigo-500 dark:text-indigo-400"
                 />
               }
               title={t("settings.twoFactorTitle")}
@@ -894,7 +894,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={handleSetupTwoFactor}
-                  className="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                 >
                   {t("settings.setupTwoFactor")}
                 </button>
@@ -924,7 +924,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={handleEnableTwoFactor}
-                    className="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 text-white rounded-lg transition-colors"
                   >
                     {t("settings.enableTwoFactor")}
                   </button>
@@ -967,7 +967,7 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={handleDisableTwoFactor}
-                      className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-semibold bg-red-500 hover:bg-red-700 text-white rounded-lg transition-colors"
                     >
                       {t("settings.disableTwoFactor")}
                     </button>
@@ -995,7 +995,7 @@ export default function Profile() {
               title={t("settings.deleteAccountTitle")}
               className="border-red-200 dark:border-red-900"
             >
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-sm text-gray-500 dark:text-gray-300 mb-4">
                 {t("settings.deleteAccountWarning")}
               </p>
 
@@ -1037,7 +1037,7 @@ export default function Profile() {
                   <button
                     type="submit"
                     disabled={deleteMyAccount.isPending}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-red-500 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                   >
                     {deleteMyAccount.isPending && (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
