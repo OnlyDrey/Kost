@@ -92,6 +92,9 @@
         if (diag.module === 'error' && diag.moduleError) {
           return 'module: error (' + diag.moduleError + ')';
         }
+        if (diag.module === 'pending' && diag.moduleError) {
+          return 'module: pending (' + diag.moduleError + ')';
+        }
         return 'module: ' + diag.module;
       }
 
@@ -126,6 +129,15 @@
             render(rootStatus);
           }, delay);
         });
+
+        setTimeout(function () {
+          var rootStatus = getRootStatus();
+          if (rootStatus === 'empty') {
+            render('still empty after 5s');
+            return;
+          }
+          render(rootStatus);
+        }, 6100);
       });
     })();
     </script>
@@ -134,6 +146,39 @@
   </head>
   <body>
     <div id="root"></div>
-    <script id="kost-module" type="module" crossorigin src="/src/main.tsx" onload="window.__KOST_DIAG__.module='loaded'" onerror="window.__KOST_DIAG__.module='error';window.__KOST_DIAG__.moduleError='module script failed to load or execute'"></script>
+        <script>
+    (function () {
+      var attempts = 0;
+
+      function attachModuleTracking() {
+        var script = document.getElementById('kost-module');
+        if (!script) {
+          attempts += 1;
+          if (attempts < 20) {
+            window.requestAnimationFrame(attachModuleTracking);
+          }
+          return;
+        }
+
+        script.addEventListener('load', function () {
+          window.__KOST_DIAG__.module = 'loaded';
+        });
+
+        script.addEventListener('error', function () {
+          window.__KOST_DIAG__.module = 'error';
+          window.__KOST_DIAG__.moduleError = 'module script failed to load';
+        });
+      }
+
+      attachModuleTracking();
+
+      window.setTimeout(function () {
+        if (window.__KOST_DIAG__.module === 'pending') {
+          window.__KOST_DIAG__.moduleError = 'no load/error event after 6s (possible execute/parse issue)';
+        }
+      }, 6000);
+    })();
+    </script>
+    <script id="kost-module" type="module" crossorigin src="/src/main.tsx"></script>
   </body>
 </html>
