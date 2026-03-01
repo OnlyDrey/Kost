@@ -107,7 +107,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
 
       <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
         <div className="flex justify-center">
-          <div className="w-60 h-10 p-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-1">
+          <div className="w-64 h-10 p-1 rounded-full bg-slate-100/80 border border-slate-300 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none flex items-center gap-1">
             {themeOptions.map(({ key, icon: Icon, ariaLabel }) => {
               const selected = settings.theme === key;
               return (
@@ -119,8 +119,8 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
                   onClick={() => setTheme(key)}
                   className={`flex-1 h-8 rounded-full grid place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     selected
-                      ? 'bg-indigo-500/25 text-indigo-200'
-                      : 'text-slate-300/70 hover:text-slate-100'
+                      ? 'bg-indigo-200/80 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-200'
+                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-300/70 dark:hover:text-slate-100'
                   }`}
                 >
                   <Icon className="h-5 w-5" />

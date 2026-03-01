@@ -248,8 +248,8 @@ export default function PeriodList() {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
-                                ? "bg-emerald-500/15 text-emerald-300"
-                                : "bg-rose-500/15 text-rose-300"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             }`}
                           >
                             {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
@@ -291,9 +291,12 @@ export default function PeriodList() {
                               void handleClose(period.id);
                             },
                             colorClassName: closed
-                              ? "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
+                              ? isAdmin
+                                ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                                : "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
                               : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
-                            hidden: closed ? !isAdmin : !canManageOpenPeriod,
+                            hidden: !closed && !canManageOpenPeriod,
+                            disabled: closed && !isAdmin,
                             destructive: !closed,
                             confirmMessage: !closed ? t("period.confirmClose") : undefined,
                           },

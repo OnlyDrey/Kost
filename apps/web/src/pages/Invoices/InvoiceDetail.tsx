@@ -200,7 +200,7 @@ export default function InvoiceDetail() {
 
             <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-4xl font-semibold tracking-tight text-indigo-300 leading-none m-0">{fmt(invoice.totalCents)}</p>
+                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 leading-none m-0">{fmt(invoice.totalCents)}</p>
                 <div className="inline-flex items-center gap-[5px]">
                   <button
                     onClick={handleMarkFullyPaid}

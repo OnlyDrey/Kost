@@ -59,7 +59,7 @@ export default function ExpenseItemCard({
       : "text-indigo-600 dark:text-indigo-400";
 
   const cardBody = (
-    <div className="flex flex-col gap-3">
+    <div className={`flex flex-col gap-3 ${actionButton ? "pt-12" : ""}`}>
       <div className="flex items-start gap-3">
         {logoUrl ? (
           <img
@@ -116,11 +116,11 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel || actionButton) && (
+      {(amountLabel || rightContent || dateLabel) && (
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">
             {amountLabel && (
-              <p className={`text-[2.25rem] leading-none font-semibold tracking-tight m-0 ${amountClass}`}>
+              <p className={`text-2xl leading-none font-bold m-0 ${amountClass}`}>
                 {amountLabel}
               </p>
             )}
@@ -136,10 +136,9 @@ export default function ExpenseItemCard({
             )}
           </div>
 
-          {(rightContent || actionButton) && (
+          {rightContent && (
             <div className="ml-3 flex items-center justify-end gap-[5px] flex-nowrap shrink-0">
-              {rightContent && <div className="shrink-0">{rightContent}</div>}
-              {actionButton && <div className="shrink-0">{actionButton}</div>}
+              <div className="shrink-0">{rightContent}</div>
             </div>
           )}
         </div>
@@ -163,6 +162,11 @@ export default function ExpenseItemCard({
         </button>
       ) : (
         <div className="p-3">{cardBody}</div>
+      )}
+      {actionButton && (
+        <div className="absolute top-3 right-3 flex items-center gap-[5px] z-10">
+          {actionButton}
+        </div>
       )}
     </div>
   );
