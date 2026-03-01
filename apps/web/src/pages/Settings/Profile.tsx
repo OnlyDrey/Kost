@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
 import {
@@ -51,19 +51,24 @@ const settingsTitleCls = "text-base font-semibold text-gray-900 dark:text-gray-1
 function SettingsSectionCard({
   icon,
   title,
+  action,
   className = "",
   children,
 }: {
   icon: ReactNode;
   title: string;
+  action?: ReactNode;
   className?: string;
   children: ReactNode;
 }) {
   return (
     <section className={`${settingsCardCls} ${className}`.trim()}>
-      <div className={settingsHeaderCls}>
-        {icon}
-        <h2 className={settingsTitleCls}>{title}</h2>
+      <div className={`${settingsHeaderCls} justify-between gap-3 flex-wrap`}>
+        <div className="flex items-center gap-2 min-w-0">
+          {icon}
+          <h2 className={settingsTitleCls}>{title}</h2>
+        </div>
+        {action}
       </div>
       {children}
     </section>
@@ -75,6 +80,7 @@ type SettingsPage = "profile" | "password" | "users" | "family";
 export default function Profile() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, login, logout, isAdmin } = useAuth();
   const { settings, setLocale } = useSettings();
   const updateUser = useUpdateUser();
@@ -92,7 +98,12 @@ export default function Profile() {
   const upsertIncome = useUpsertUserIncome();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const [activePage, setActivePage] = useState<SettingsPage>("profile");
+  const initialTab = searchParams.get("tab") as SettingsPage | null;
+  const [activePage, setActivePage] = useState<SettingsPage>(
+    initialTab && ["profile", "password", "users", "family"].includes(initialTab)
+      ? initialTab
+      : "profile",
+  );
   const [activeFamilySection, setActiveFamilySection] =
     useState<FamilySetting>("currency");
   const [familyPageSize, setFamilyPageSize] = useState(5);
@@ -139,6 +150,20 @@ export default function Profile() {
       setIncomeType(myIncome.inputType);
     }
   }, [myIncome?.id]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab") as SettingsPage | null;
+    if (tab && ["profile", "password", "users", "family"].includes(tab)) {
+      setActivePage(tab);
+    }
+  }, [searchParams]);
+
+  const selectPage = (page: SettingsPage) => {
+    setActivePage(page);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", page);
+    setSearchParams(params, { replace: true });
+  };
 
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -448,7 +473,7 @@ export default function Profile() {
               <span>{t("income.saved")}</span>
             </div>
           )}
-          <form onSubmit={handleSaveIncome} className="space-y-4">
+          <form id="income-form" onSubmit={handleSaveIncome} className="space-y-4">
             <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>{t("income.type")}</label>
@@ -485,18 +510,6 @@ export default function Profile() {
                 {t("income.autoConverted")}
               </p>
             </div>
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={upsertIncome.isPending || !currentPeriod}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-              >
-                {upsertIncome.isPending && (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                {t("income.saveButton")}
-              </button>
-            </div>
           </form>
         </>
       )}
@@ -518,7 +531,7 @@ export default function Profile() {
             <button
               key={item.key}
               type="button"
-              onClick={() => setActivePage(item.key)}
+              onClick={() => selectPage(item.key)}
               className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${
                 isActive
                   ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
@@ -559,6 +572,19 @@ export default function Profile() {
               <SettingsSectionCard
                 icon={<User size={18} className="text-indigo-600 dark:text-indigo-400" />}
                 title={t("settings.profile")}
+                action={
+                  <button
+                    type="submit"
+                    form="profile-form"
+                    disabled={updateUser.isPending}
+                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  >
+                    {updateUser.isPending && (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    )}
+                    {t("common.save")}
+                  </button>
+                }
               >
 
                 <div className="grid grid-cols-1 min-[380px]:grid-cols-[minmax(96px,1fr)_minmax(0,2fr)] gap-4 items-start">
@@ -577,7 +603,7 @@ export default function Profile() {
                         <span>{profileSuccess}</span>
                       </div>
                     )}
-                    <form onSubmit={handleProfileSubmit} className="space-y-4">
+                    <form id="profile-form" onSubmit={handleProfileSubmit} className="space-y-4">
                       <div>
                         <label className={labelCls}>{t("users.name")}</label>
                         <input
@@ -598,18 +624,6 @@ export default function Profile() {
                           required
                         />
                       </div>
-                      <div className="flex justify-end">
-                        <button
-                          type="submit"
-                          disabled={updateUser.isPending}
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-                        >
-                          {updateUser.isPending && (
-                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          )}
-                          {t("common.save")}
-                        </button>
-                      </div>
                     </form>
                   </div>
                 </div>
@@ -622,6 +636,19 @@ export default function Profile() {
             <SettingsSectionCard
               icon={<TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />}
               title={t("settings.myIncome")}
+              action={
+                <button
+                  type="submit"
+                  form="income-form"
+                  disabled={upsertIncome.isPending || !currentPeriod}
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                >
+                  {upsertIncome.isPending && (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {t("income.saveButton")}
+                </button>
+              }
             >
               <IncomeFormContent />
             </SettingsSectionCard>
@@ -683,6 +710,19 @@ export default function Profile() {
             <SettingsSectionCard
               icon={<KeyRound size={18} className="text-indigo-600 dark:text-indigo-400" />}
               title={t("settings.changePassword")}
+              action={
+                <button
+                  type="submit"
+                  form="password-form"
+                  disabled={changePassword.isPending}
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                >
+                  {changePassword.isPending && (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {t("settings.changePassword")}
+                </button>
+              }
             >
 
               {pwError && (
@@ -698,7 +738,7 @@ export default function Profile() {
                 </div>
               )}
 
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <form id="password-form" onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
                   <label className={labelCls}>{t("settings.currentPassword")}</label>
                   <input
@@ -730,18 +770,6 @@ export default function Profile() {
                     required
                     minLength={6}
                   />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={changePassword.isPending}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-                  >
-                    {changePassword.isPending && (
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    )}
-                    {t("settings.changePassword")}
-                  </button>
                 </div>
               </form>
             </SettingsSectionCard>

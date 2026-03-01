@@ -13,7 +13,6 @@ import {
   ChevronDown,
   Plus,
   RotateCcw,
-  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -380,15 +379,14 @@ export default function Overview() {
                       <button
                         type="button"
                         onClick={() => setFilter("all")}
-                        disabled={!hasShareSelection}
                         aria-label={t("common.reset")}
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
                           hasShareSelection
-                            ? "border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
-                            : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400"
+                            ? "border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                            : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                         }`}
                       >
-                        {hasShareSelection ? <X size={16} /> : <RotateCcw size={16} />}
+                        <RotateCcw size={16} />
                       </button>
                     </div>
                     <UserSharesGrid

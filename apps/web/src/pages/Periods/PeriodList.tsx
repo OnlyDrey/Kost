@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Lock, AlertCircle, X, Trash2, BarChart3, Pencil, ChevronDown } from "lucide-react";
+import { Plus, Lock, AlertCircle, X, Trash2, BarChart3, LockOpen, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   usePeriods,
@@ -249,7 +249,7 @@ export default function PeriodList() {
                             className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             }`}
                           >
                             {!closed ? t("period.open") : t("period.closed")}
@@ -290,12 +290,12 @@ export default function PeriodList() {
                             confirmMessage: t("period.confirmClose"),
                           },
                           {
-                            key: "edit",
-                            icon: Pencil,
-                            label: t("common.edit"),
+                            key: "reopen",
+                            icon: LockOpen,
+                            label: t("period.open"),
                             onClick: () => navigate(`/periods/${period.id}`),
                             colorClassName:
-                              "bg-indigo-100 text-indigo-600 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50",
+                              "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50",
                             hidden: !closed || !isAdmin,
                           },
                           {

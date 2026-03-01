@@ -103,7 +103,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
         <div className="flex items-center gap-2 px-1 mt-1">
           <button
             type="button"
-            onClick={() => onNavigate('/settings')}
+            onClick={() => onNavigate('/settings?tab=profile')}
             className="flex-1 flex items-center gap-3 px-2 py-2.5 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
           >
             <UserAvatar name={user?.name ?? ''} avatarUrl={user?.avatarUrl} size={8} />

@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, AlertCircle, Save } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, AlertCircle, Save, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useVendors, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter } from '../../hooks/useApi';
+import { useInvoice, useDeleteInvoice, useAddPayment, useCurrency, useUpdatePayment, useDeletePayment, useUsers, useCurrencyFormatter } from '../../hooks/useApi';
 import { useAuth } from '../../stores/auth.context';
 import { amountToCents } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import AllocationExplanation from '../../components/Invoice/AllocationExplanation';
 import { distributionLabel } from '../../utils/distribution';
 import { useSettings } from '../../stores/settings.context';
-import ExpenseItemCard from '../../components/Expense/ExpenseItemCard';
 import UserSharesGrid from '../../components/Invoice/UserSharesGrid';
 import ActionIconBar from '../../components/Common/ActionIconBar';
+import TagPill from '../../components/Common/TagPill';
 
 const inputCls =
   'w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
@@ -27,7 +27,6 @@ export default function InvoiceDetail() {
   const { data: invoice, isLoading } = useInvoice(id!);
   const { data: currency = 'NOK' } = useCurrency();
   const fmt = useCurrencyFormatter();
-  const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
   const updatePayment = useUpdatePayment();
@@ -109,6 +108,22 @@ export default function InvoiceDetail() {
     }
   };
 
+  const handleMarkFullyPaid = async () => {
+    if (!user || remaining <= 0) return;
+    try {
+      await addPayment.mutateAsync({
+        invoiceId: id!,
+        data: {
+          paidById: user.id,
+          amountCents: remaining,
+          note: undefined,
+        },
+      });
+    } catch {
+      alert(t('errors.serverError'));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -139,15 +154,27 @@ export default function InvoiceDetail() {
           </span>
         )}
         <button
+          onClick={handleMarkFullyPaid}
+          disabled={isPaid || addPayment.isPending}
+          className="h-11 inline-flex items-center gap-2 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 px-4 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {addPayment.isPending ? (
+            <span className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <CheckCircle2 size={16} />
+          )}
+          {t('invoice.markComplete')}
+        </button>
+        <button
           onClick={() => navigate(`/invoices/${id}/edit`)}
-          className="flex items-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="h-11 flex items-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-4 rounded-lg text-sm font-medium transition-colors"
         >
           <Pencil size={15} />
           {t('common.edit')}
         </button>
         <button
           onClick={handleDelete}
-          className="flex items-center gap-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="h-11 flex items-center gap-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 rounded-lg text-sm font-medium transition-colors"
         >
           <Trash2 size={15} />
           {t('common.delete')}
@@ -157,54 +184,41 @@ export default function InvoiceDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main info */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
-          <ExpenseItemCard
-            vendor={invoice.vendor}
-            description={invoice.description}
-            logoUrl={vendors.find(v => v.name.toLowerCase() === invoice.vendor.toLowerCase())?.logoUrl}
-            typeLabel={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)}
-            category={invoice.category}
-            amountLabel={fmt(invoice.totalCents)}
-            paid={isPaid}
-            paidLabel={t('invoice.statusPaid')}
-          />
-
-          <hr className="border-gray-100 dark:border-gray-800" />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.totalAmount')}</p>
-              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                {fmt(invoice.totalCents)}
-              </p>
-            </div>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.invoiceDate')}</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.createdAt)}</p>
+              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Leverandør</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{invoice.vendor}</p>
             </div>
-            {invoice.dueDate && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.dueDate')}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(invoice.dueDate)}</p>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Beskrivelse</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{invoice.description || '—'}</p>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Tag(s)</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <TagPill label={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)} variant="type" />
+                {invoice.category && <TagPill label={invoice.category} variant="category" />}
+                {isPaid && <TagPill label={t('invoice.statusPaid')} variant="success" />}
               </div>
-            )}
-            {invoice.paymentMethod && (
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Pris</p>
+              <p className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{fmt(invoice.totalCents)}</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.paymentMethod')}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.paymentMethod}</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Dato</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{formatDate(invoice.createdAt)}</p>
               </div>
-            )}
-            {totalPaid > 0 && (
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.amountPaid')}</p>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">{fmt(totalPaid)}</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Betalingsmåte</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{invoice.paymentMethod || '—'}</p>
               </div>
-            )}
-            {!isPaid && totalPaid > 0 && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('invoice.remainingLabel')}</p>
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{fmt(remaining)}</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
