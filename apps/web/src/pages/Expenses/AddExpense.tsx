@@ -663,7 +663,7 @@ export default function AddExpense() {
                   required
                   step="0.01"
                   min="0"
-                  className={`${inputCls} ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
+                  className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
                   placeholder="0.00"
                 />
                 {symbolPosition === "After" && (

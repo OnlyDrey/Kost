@@ -34,7 +34,7 @@ export default function ActionIconBar({
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const colorClass = item.disabled
-          ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+          ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
           : item.colorClassName ??
             "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700";
 
@@ -55,9 +55,13 @@ export default function ActionIconBar({
               }
               item.onClick();
             }}
-            className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900 ${colorClass}`}
+            className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900 ${item.disabled ? "cursor-not-allowed" : ""}`}
           >
-            <Icon size={15} />
+            <span
+              className={`h-[34px] w-[34px] rounded-full inline-flex items-center justify-center transition-colors ${colorClass}`}
+            >
+              <Icon size={15} />
+            </span>
           </button>
         );
       })}

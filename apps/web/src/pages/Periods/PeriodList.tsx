@@ -284,7 +284,7 @@ export default function PeriodList() {
                             label: t("period.closePeriod"),
                             onClick: () => handleClose(period.id),
                             colorClassName:
-                              "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50",
+                              "bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50",
                             hidden: closed || !canManageOpenPeriod,
                             destructive: true,
                             confirmMessage: t("period.confirmClose"),

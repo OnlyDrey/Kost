@@ -238,7 +238,7 @@ export default function AddInvoice() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t('invoice.amount')} *</label>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={inputCls} placeholder="0.00" />
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0" className={`${inputCls} text-right`} placeholder="0.00" />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('invoice.amountInCurrency', { currency })}</p>
             </div>
             <div className="min-w-0">

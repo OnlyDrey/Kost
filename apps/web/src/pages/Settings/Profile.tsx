@@ -24,6 +24,8 @@ import {
   useCurrentPeriod,
   useUserIncomes,
   useUpsertUserIncome,
+  useCurrency,
+  useCurrencySymbolPosition,
   useUploadAvatar,
   useRemoveAvatar,
   useDeleteMyAccount,
@@ -94,6 +96,8 @@ export default function Profile() {
   const disableTwoFactor = useDisableTwoFactor();
   const regenerateRecoveryCodes = useRegenerateRecoveryCodes();
   const { data: currentPeriod } = useCurrentPeriod();
+  const { data: currency = "NOK" } = useCurrency();
+  const { data: symbolPosition = "Before" } = useCurrencySymbolPosition();
   const { data: incomes } = useUserIncomes(currentPeriod?.id ?? "");
   const upsertIncome = useUpsertUserIncome();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -488,20 +492,27 @@ export default function Profile() {
               </div>
               <div>
                 <label className={labelCls}>{t("income.amount")}</label>
-                <div className="relative">
+                <div className="relative flex items-center">
+                  {symbolPosition === "Before" && (
+                    <span className="pointer-events-none absolute left-3 inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {currency}
+                    </span>
+                  )}
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={incomeAmount}
                     onChange={(e) => setIncomeAmount(e.target.value)}
-                    className={`${inputCls} pr-12`}
+                    className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-14 pr-3" : "pr-14 pl-3"}`}
                     placeholder="0.00"
                     required
                   />
-                  <span className="pointer-events-none absolute inset-y-0 right-3 inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
-                    kr
-                  </span>
+                  {symbolPosition === "After" && (
+                    <span className="pointer-events-none absolute right-3 inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {currency}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

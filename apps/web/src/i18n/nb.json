@@ -246,7 +246,7 @@
     "invalidAmount": "Ugyldig beløp"
   },
   "familySettings": {
-    "title": "Familieinnstillinger",
+    "title": "Globale innstillinger",
     "categories": "Kategorier",
     "categoriesDesc": "Kategorier brukes til å gruppere utgifter. Velges fra rullegardin når du oppretter en utgift.",
     "paymentMethods": "Betalingsmåter",

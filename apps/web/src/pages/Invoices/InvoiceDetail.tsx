@@ -15,6 +15,7 @@ import TagPill from '../../components/Common/TagPill';
 
 const inputCls =
   'w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm';
+const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -160,29 +161,37 @@ export default function InvoiceDetail() {
           disabled={isPaid || addPayment.isPending}
           aria-label={t('invoice.markComplete')}
           title={t('invoice.markComplete')}
-          className="h-11 w-11 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
         >
           {addPayment.isPending ? (
-            <span className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+            <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-green-100 dark:bg-green-900/30">
+              <span className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+            </span>
           ) : (
-            <CheckCircle2 size={16} />
+            <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
+              <CheckCircle2 size={16} />
+            </span>
           )}
         </button>
         <button
           onClick={() => navigate(`/invoices/${id}/edit`)}
           aria-label={t('common.edit')}
           title={t('common.edit')}
-          className="h-11 w-11 inline-flex items-center justify-center rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 transition-colors"
+          className="h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
         >
-          <Pencil size={16} />
+          <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50">
+            <Pencil size={16} />
+          </span>
         </button>
         <button
           onClick={handleDelete}
           aria-label={t('common.delete')}
           title={t('common.delete')}
-          className="h-11 w-11 inline-flex items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+          className="h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
         >
-          <Trash2 size={16} />
+          <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+            <Trash2 size={16} />
+          </span>
         </button>
       </div>
 
@@ -190,7 +199,7 @@ export default function InvoiceDetail() {
         {/* Main info */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
-            <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 items-start">
+            <div className="grid gap-3 items-start" style={{ gridTemplateColumns: 'auto minmax(0, 1fr)' }}>
               {vendorLogo ? (
                 <img
                   src={vendorLogo}
@@ -204,8 +213,18 @@ export default function InvoiceDetail() {
                 <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
               )}
               <div className="min-w-0">
-                <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight break-words">{invoice.vendor}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 break-words">{invoice.description || '—'}</p>
+                <p
+                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
+                >
+                  {invoice.vendor}
+                </p>
+                <p
+                  className="text-sm text-gray-600 dark:text-gray-300 mt-1"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
+                >
+                  {invoice.description || '—'}
+                </p>
               </div>
             </div>
 
@@ -270,8 +289,12 @@ export default function InvoiceDetail() {
                       <>
                         {editError && <p className="text-xs text-red-500">{editError}</p>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <input type="number" step="0.01" min="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className={inputCls} />
-                          <input type="date" value={editPaidAt} onChange={(e) => setEditPaidAt(e.target.value)} className={inputCls} />
+                          <div className="min-w-0">
+                            <input type="number" step="0.01" min="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className={`${inputCls} text-right`} />
+                          </div>
+                          <div className="min-w-0">
+                            <input type="date" value={editPaidAt} onChange={(e) => setEditPaidAt(e.target.value)} className={dateInputCls} />
+                          </div>
                           <select value={editPaidById} onChange={(e) => setEditPaidById(e.target.value)} className={inputCls}>
                             {users.map((u) => (
                               <option key={u.id} value={u.id}>{u.name}</option>
