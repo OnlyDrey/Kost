@@ -1,0 +1,3639 @@
+diff --git a/.env.example b/.env.example
+index 66b0af4..6682c70 100644
+--- a/.env.example
++++ b/.env.example
+@@ -27,9 +27,17 @@ RATE_LIMIT_MAX=10
+ # Cookie security — set to true when serving over HTTPS
+ COOKIE_SECURE=false
+ 
++# Health endpoint strictness for single-container mode.
++# true: /api/health fails if frontend bundle (public/index.html + assets) is missing.
++# false: allows API-only test/dev runs (e.g. e2e) without built web artifacts.
++HEALTH_REQUIRE_WEB_ASSETS=true
++
+ # Frontend API path for local non-container dev only (single-container image always bakes /api)
+ VITE_API_URL=/api
+ 
++# Disable PWA/service worker by default in production to avoid stale-cache blank screens
++VITE_ENABLE_PWA=false
++
+ # Bootstrap default admin on container start
+ BOOTSTRAP_ADMIN_ON_STARTUP=true
+ BOOTSTRAP_ADMIN_USERNAME=admin
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 431da37..148d7bc 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -38,12 +38,11 @@ jobs:
+       - name: Pin npm version
+         run: npm i -g npm@10
+ 
+-      - name: Install dependencies (verbose)
+-        run: npm ci --workspaces --include-workspace-root --foreground-scripts --loglevel verbose
++      - name: Install dependencies
++        run: npm ci --workspaces --include-workspace-root --foreground-scripts
+ 
+-      - name: Lint (if configured)
+-        run: npm run lint || echo "Lint not configured, skipping..."
+-        continue-on-error: true
++      - name: Lint
++        run: npm run lint --workspaces --if-present
+ 
+       - name: Build shared package
+         run: npm run build --workspace=@kost/shared
+@@ -53,21 +52,22 @@ jobs:
+         env:
+           DATABASE_URL: postgresql://test:test@localhost:5432/test
+ 
+-      - name: Run migrations
+-        run: npm run migrate:deploy --workspace=@kost/api
++      - name: Push schema to test DB
++        run: npm run db:push --workspace=@kost/api
+         env:
+           DATABASE_URL: postgresql://test:test@localhost:5432/test
+ 
+-      - name: Test API
+-        run: npm run test --workspace=@kost/api || echo "Tests not configured or failing, continuing..."
+-        continue-on-error: true
++      - name: Test API (unit)
++        run: npm run test --workspace=@kost/api
++        env:
++          DATABASE_URL: postgresql://test:test@localhost:5432/test
++          JWT_SECRET: test-secret
++
++      - name: Test API (e2e)
++        run: npm run test:e2e --workspace=@kost/api
+         env:
+           DATABASE_URL: postgresql://test:test@localhost:5432/test
+           JWT_SECRET: test-secret
+-          MAGIC_LINK_SECRET: test-secret
+-          AUTH_PASSWORD_ENABLED: true
+-          AUTH_MAGIC_LINK_ENABLED: false
+-          AUTH_PASSKEY_ENABLED: false
+ 
+       - name: Build API
+         run: npm run build --workspace=@kost/api
+diff --git a/Dockerfile b/Dockerfile
+index 75c53f9..2e7e507 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -6,7 +6,9 @@ WORKDIR /app
+ RUN apk add --no-cache openssl
+ 
+ ARG VITE_API_URL=/api
++ARG VITE_ENABLE_PWA=false
+ ENV VITE_API_URL=$VITE_API_URL
++ENV VITE_ENABLE_PWA=$VITE_ENABLE_PWA
+ 
+ COPY package.json package-lock.json ./
+ COPY apps/api/package.json ./apps/api/package.json
+@@ -59,7 +61,7 @@ WORKDIR /app/apps/api
+ 
+ EXPOSE 3000
+ HEALTHCHECK --interval=30s --timeout=10s --start-period=50s --retries=3 \
+-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
++  CMD node -e "const http=require('http');const checks=['http://localhost:3000/api/health','http://localhost:3000/'];let pending=checks.length;let failed=false;for(const url of checks){http.get(url,(r)=>{if(r.statusCode!==200)failed=true;r.resume();if(--pending===0)process.exit(failed?1:0)}).on('error',()=>{failed=true;if(--pending===0)process.exit(1)})}"
+ 
+ ENTRYPOINT ["dumb-init", "--"]
+ CMD ["sh", "/app/apps/api/scripts/docker-entrypoint.sh"]
+diff --git a/apps/api/package.json b/apps/api/package.json
+index 8e0aa06..9635f23 100644
+--- a/apps/api/package.json
++++ b/apps/api/package.json
+@@ -16,6 +16,7 @@
+     "test:cov": "jest --coverage",
+     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+     "test:e2e": "jest --config ./test/jest-e2e.json",
++    "db:push": "prisma db push",
+     "migrate": "prisma migrate dev",
+     "migrate:deploy": "prisma migrate deploy",
+     "migrate:reset": "prisma migrate reset",
+@@ -35,7 +36,6 @@
+     "@nestjs/terminus": "^10.2.0",
+     "@nestjs/throttler": "^5.1.1",
+     "@prisma/client": "^5.8.1",
+-    "prisma": "^5.8.1",
+     "bcryptjs": "^2.4.3",
+     "class-transformer": "^0.5.1",
+     "class-validator": "^0.14.1",
+@@ -43,10 +43,9 @@
+     "helmet": "^7.1.0",
+     "passport": "^0.7.0",
+     "passport-jwt": "^4.0.1",
++    "prisma": "^5.8.1",
+     "reflect-metadata": "^0.2.1",
+-    "rxjs": "^7.8.1",
+-    "uuid": "^9.0.1",
+-    "zod": "^3.22.4"
++    "rxjs": "^7.8.1"
+   },
+   "devDependencies": {
+     "@nestjs/cli": "^11.0.0",
+@@ -56,14 +55,13 @@
+     "@types/cookie-parser": "^1.4.6",
+     "@types/express": "^4.17.21",
+     "@types/jest": "^29.5.11",
++    "@types/multer": "^2.0.0",
+     "@types/node": "^20.11.5",
+     "@types/passport-jwt": "^4.0.0",
+     "@types/supertest": "^6.0.2",
+-    "@types/uuid": "^9.0.7",
+     "eslint": "^9.0.0",
+     "eslint-config-prettier": "^9.1.0",
+     "eslint-plugin-prettier": "^5.1.3",
+-    "typescript-eslint": "^8.0.0",
+     "fast-check": "^3.15.0",
+     "ignore-loader": "^0.1.2",
+     "jest": "^29.7.0",
+@@ -74,6 +72,7 @@
+     "ts-loader": "^9.5.1",
+     "ts-node": "^10.9.2",
+     "tsconfig-paths": "^4.2.0",
+-    "typescript": "^5.3.3"
++    "typescript": "^5.3.3",
++    "typescript-eslint": "^8.0.0"
+   }
+ }
+diff --git a/apps/api/prisma/migrations/20260213000000_init/migration.sql b/apps/api/prisma/migrations/20260213000000_init/migration.sql
+deleted file mode 100644
+index b02f030..0000000
+--- a/apps/api/prisma/migrations/20260213000000_init/migration.sql
++++ /dev/null
+@@ -1,326 +0,0 @@
+--- CreateEnum
+-CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'ADULT', 'JUNIOR');
+-
+--- CreateEnum
+-CREATE TYPE "PeriodStatus" AS ENUM ('OPEN', 'CLOSED');
+-
+--- CreateEnum
+-CREATE TYPE "InvoiceStatus" AS ENUM ('UNPAID', 'PARTIALLY_PAID', 'PAID');
+-
+--- CreateEnum
+-CREATE TYPE "DistributionMethod" AS ENUM ('BY_PERCENT', 'BY_INCOME', 'FIXED');
+-
+--- CreateEnum
+-CREATE TYPE "RemainderMethod" AS ENUM ('EQUAL', 'BY_INCOME');
+-
+--- CreateEnum
+-CREATE TYPE "IncomeType" AS ENUM ('MONTHLY_GROSS', 'MONTHLY_NET', 'ANNUAL_GROSS', 'ANNUAL_NET');
+-
+--- CreateEnum
+-CREATE TYPE "AuditAction" AS ENUM ('CREATE', 'UPDATE', 'DELETE', 'PERIOD_CLOSE', 'PERIOD_REOPEN', 'INVITE_USER');
+-
+--- CreateTable
+-CREATE TABLE "families" (
+-    "id" TEXT NOT NULL,
+-    "name" TEXT NOT NULL,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "families_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "users" (
+-    "id" TEXT NOT NULL,
+-    "username" TEXT NOT NULL,
+-    "name" TEXT NOT NULL,
+-    "role" "UserRole" NOT NULL DEFAULT 'ADULT',
+-    "familyId" TEXT NOT NULL,
+-    "passwordHash" TEXT,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "periods" (
+-    "id" TEXT NOT NULL,
+-    "familyId" TEXT NOT NULL,
+-    "status" "PeriodStatus" NOT NULL DEFAULT 'OPEN',
+-    "closedAt" TIMESTAMP(3),
+-    "closedBy" TEXT,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-    "settlementData" JSONB,
+-
+-    CONSTRAINT "periods_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "incomes" (
+-    "id" TEXT NOT NULL,
+-    "userId" TEXT NOT NULL,
+-    "periodId" TEXT NOT NULL,
+-    "inputType" "IncomeType" NOT NULL,
+-    "inputCents" INTEGER NOT NULL DEFAULT 0,
+-    "normalizedMonthlyGrossCents" INTEGER NOT NULL,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "incomes_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "invoices" (
+-    "id" TEXT NOT NULL,
+-    "familyId" TEXT NOT NULL,
+-    "periodId" TEXT NOT NULL,
+-    "category" TEXT NOT NULL,
+-    "vendor" TEXT NOT NULL,
+-    "description" TEXT,
+-    "dueDate" TIMESTAMP(3),
+-    "totalCents" INTEGER NOT NULL,
+-    "distributionMethod" "DistributionMethod" NOT NULL,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "invoices_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "invoice_lines" (
+-    "id" TEXT NOT NULL,
+-    "invoiceId" TEXT NOT NULL,
+-    "description" TEXT NOT NULL,
+-    "amountCents" INTEGER NOT NULL,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "invoice_lines_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "invoice_distribution_rules" (
+-    "id" TEXT NOT NULL,
+-    "invoiceId" TEXT NOT NULL,
+-    "method" "DistributionMethod" NOT NULL,
+-    "percentRules" JSONB,
+-    "fixedRules" JSONB,
+-    "remainderMethod" "RemainderMethod",
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "invoice_distribution_rules_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "invoice_shares" (
+-    "id" TEXT NOT NULL,
+-    "invoiceId" TEXT NOT NULL,
+-    "userId" TEXT NOT NULL,
+-    "shareCents" INTEGER NOT NULL,
+-    "explanation" TEXT NOT NULL,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "invoice_shares_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "payments" (
+-    "id" TEXT NOT NULL,
+-    "invoiceId" TEXT NOT NULL,
+-    "paidById" TEXT NOT NULL,
+-    "amountCents" INTEGER NOT NULL,
+-    "paidAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "note" TEXT,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "subscriptions" (
+-    "id" TEXT NOT NULL,
+-    "familyId" TEXT NOT NULL,
+-    "name" TEXT NOT NULL,
+-    "vendor" TEXT NOT NULL,
+-    "category" TEXT NOT NULL,
+-    "amountCents" INTEGER NOT NULL,
+-    "frequency" TEXT NOT NULL,
+-    "dayOfMonth" INTEGER,
+-    "startDate" TIMESTAMP(3) NOT NULL,
+-    "endDate" TIMESTAMP(3),
+-    "distributionMethod" "DistributionMethod" NOT NULL,
+-    "distributionRules" JSONB NOT NULL,
+-    "active" BOOLEAN NOT NULL DEFAULT true,
+-    "lastGenerated" TIMESTAMP(3),
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-
+-    CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "audit_logs" (
+-    "id" TEXT NOT NULL,
+-    "familyId" TEXT NOT NULL,
+-    "userId" TEXT,
+-    "action" "AuditAction" NOT NULL,
+-    "entityType" TEXT NOT NULL,
+-    "entityId" TEXT NOT NULL,
+-    "changes" JSONB,
+-    "metadata" JSONB,
+-    "ipAddress" TEXT,
+-    "userAgent" TEXT,
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-
+-    CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "magic_link_tokens" (
+-    "id" TEXT NOT NULL,
+-    "userId" TEXT NOT NULL,
+-    "token" TEXT NOT NULL,
+-    "expiresAt" TIMESTAMP(3) NOT NULL,
+-    "usedAt" TIMESTAMP(3),
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-
+-    CONSTRAINT "magic_link_tokens_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateTable
+-CREATE TABLE "webauthn_credentials" (
+-    "id" TEXT NOT NULL,
+-    "userId" TEXT NOT NULL,
+-    "publicKey" BYTEA NOT NULL,
+-    "counter" BIGINT NOT NULL DEFAULT 0,
+-    "transports" TEXT[],
+-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-    "lastUsedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-
+-    CONSTRAINT "webauthn_credentials_pkey" PRIMARY KEY ("id")
+-);
+-
+--- CreateIndex
+-CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
+-
+--- CreateIndex
+-CREATE INDEX "users_familyId_idx" ON "users"("familyId");
+-
+--- CreateIndex
+-CREATE INDEX "users_username_idx" ON "users"("username");
+-
+--- CreateIndex
+-CREATE INDEX "periods_familyId_status_idx" ON "periods"("familyId", "status");
+-
+--- CreateIndex
+-CREATE UNIQUE INDEX "periods_familyId_id_key" ON "periods"("familyId", "id");
+-
+--- CreateIndex
+-CREATE INDEX "incomes_periodId_idx" ON "incomes"("periodId");
+-
+--- CreateIndex
+-CREATE UNIQUE INDEX "incomes_userId_periodId_key" ON "incomes"("userId", "periodId");
+-
+--- CreateIndex
+-CREATE INDEX "invoices_familyId_periodId_idx" ON "invoices"("familyId", "periodId");
+-
+--- CreateIndex
+-CREATE INDEX "invoices_periodId_idx" ON "invoices"("periodId");
+-
+--- CreateIndex
+-CREATE INDEX "invoice_lines_invoiceId_idx" ON "invoice_lines"("invoiceId");
+-
+--- CreateIndex
+-CREATE UNIQUE INDEX "invoice_distribution_rules_invoiceId_key" ON "invoice_distribution_rules"("invoiceId");
+-
+--- CreateIndex
+-CREATE INDEX "invoice_shares_invoiceId_idx" ON "invoice_shares"("invoiceId");
+-
+--- CreateIndex
+-CREATE INDEX "invoice_shares_userId_idx" ON "invoice_shares"("userId");
+-
+--- CreateIndex
+-CREATE UNIQUE INDEX "invoice_shares_invoiceId_userId_key" ON "invoice_shares"("invoiceId", "userId");
+-
+--- CreateIndex
+-CREATE INDEX "payments_invoiceId_idx" ON "payments"("invoiceId");
+-
+--- CreateIndex
+-CREATE INDEX "payments_paidById_idx" ON "payments"("paidById");
+-
+--- CreateIndex
+-CREATE INDEX "subscriptions_familyId_active_idx" ON "subscriptions"("familyId", "active");
+-
+--- CreateIndex
+-CREATE INDEX "audit_logs_familyId_createdAt_idx" ON "audit_logs"("familyId", "createdAt");
+-
+--- CreateIndex
+-CREATE INDEX "audit_logs_entityType_entityId_idx" ON "audit_logs"("entityType", "entityId");
+-
+--- CreateIndex
+-CREATE UNIQUE INDEX "magic_link_tokens_token_key" ON "magic_link_tokens"("token");
+-
+--- CreateIndex
+-CREATE INDEX "magic_link_tokens_token_idx" ON "magic_link_tokens"("token");
+-
+--- CreateIndex
+-CREATE INDEX "magic_link_tokens_expiresAt_idx" ON "magic_link_tokens"("expiresAt");
+-
+--- CreateIndex
+-CREATE INDEX "webauthn_credentials_userId_idx" ON "webauthn_credentials"("userId");
+-
+--- AddForeignKey
+-ALTER TABLE "users" ADD CONSTRAINT "users_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "periods" ADD CONSTRAINT "periods_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "incomes" ADD CONSTRAINT "incomes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "incomes" ADD CONSTRAINT "incomes_periodId_fkey" FOREIGN KEY ("periodId") REFERENCES "periods"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "invoices" ADD CONSTRAINT "invoices_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "invoices" ADD CONSTRAINT "invoices_periodId_fkey" FOREIGN KEY ("periodId") REFERENCES "periods"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "invoice_lines" ADD CONSTRAINT "invoice_lines_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "invoice_distribution_rules" ADD CONSTRAINT "invoice_distribution_rules_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "invoice_shares" ADD CONSTRAINT "invoice_shares_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "invoice_shares" ADD CONSTRAINT "invoice_shares_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "payments" ADD CONSTRAINT "payments_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "payments" ADD CONSTRAINT "payments_paidById_fkey" FOREIGN KEY ("paidById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "magic_link_tokens" ADD CONSTRAINT "magic_link_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-
+--- AddForeignKey
+-ALTER TABLE "webauthn_credentials" ADD CONSTRAINT "webauthn_credentials_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+diff --git a/apps/api/prisma/migrations/20260221000000_add_family_categories_payment_method/migration.sql b/apps/api/prisma/migrations/20260221000000_add_family_categories_payment_method/migration.sql
+deleted file mode 100644
+index f2bb0f3..0000000
+--- a/apps/api/prisma/migrations/20260221000000_add_family_categories_payment_method/migration.sql
++++ /dev/null
+@@ -1,6 +0,0 @@
+--- AlterTable: add categories and paymentMethods to Family
+-ALTER TABLE "families" ADD COLUMN "categories" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+-ALTER TABLE "families" ADD COLUMN "paymentMethods" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+-
+--- AlterTable: add paymentMethod to Invoice (how the expense was received)
+-ALTER TABLE "invoices" ADD COLUMN "paymentMethod" TEXT;
+diff --git a/apps/api/prisma/migrations/20260221000001_move_payment_method_to_invoice/migration.sql b/apps/api/prisma/migrations/20260221000001_move_payment_method_to_invoice/migration.sql
+deleted file mode 100644
+index 34a0feb..0000000
+--- a/apps/api/prisma/migrations/20260221000001_move_payment_method_to_invoice/migration.sql
++++ /dev/null
+@@ -1,6 +0,0 @@
+--- Move paymentMethod from payments to invoices
+--- Drop from payments if it exists (added by previous migration iteration)
+-ALTER TABLE "payments" DROP COLUMN IF EXISTS "paymentMethod";
+-
+--- Add to invoices
+-ALTER TABLE "invoices" ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT;
+diff --git a/apps/api/prisma/migrations/20260221000002_add_vendor_and_currency/migration.sql b/apps/api/prisma/migrations/20260221000002_add_vendor_and_currency/migration.sql
+deleted file mode 100644
+index 8c79af2..0000000
+--- a/apps/api/prisma/migrations/20260221000002_add_vendor_and_currency/migration.sql
++++ /dev/null
+@@ -1,24 +0,0 @@
+--- Add currency field to families
+-ALTER TABLE "families" ADD COLUMN IF NOT EXISTS "currency" TEXT NOT NULL DEFAULT 'NOK';
+-
+--- Create vendors table
+-CREATE TABLE IF NOT EXISTS "vendors" (
+-  "id"        TEXT NOT NULL,
+-  "familyId"  TEXT NOT NULL,
+-  "name"      TEXT NOT NULL,
+-  "logoUrl"   TEXT,
+-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-
+-  CONSTRAINT "vendors_pkey" PRIMARY KEY ("id")
+-);
+-
+--- Unique constraint: one name per family
+-ALTER TABLE "vendors" ADD CONSTRAINT "vendors_familyId_name_key" UNIQUE ("familyId", "name");
+-
+--- Index for lookups by family
+-CREATE INDEX IF NOT EXISTS "vendors_familyId_idx" ON "vendors"("familyId");
+-
+--- Foreign key to families
+-ALTER TABLE "vendors" ADD CONSTRAINT "vendors_familyId_fkey"
+-  FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+diff --git a/apps/api/prisma/migrations/20260221000003_add_user_avatar/migration.sql b/apps/api/prisma/migrations/20260221000003_add_user_avatar/migration.sql
+deleted file mode 100644
+index ef6c16d..0000000
+--- a/apps/api/prisma/migrations/20260221000003_add_user_avatar/migration.sql
++++ /dev/null
+@@ -1,2 +0,0 @@
+--- Add avatarUrl field to users
+-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "avatarUrl" TEXT;
+diff --git a/apps/api/prisma/migrations/20260222000000_subscription_specialization/migration.sql b/apps/api/prisma/migrations/20260222000000_subscription_specialization/migration.sql
+deleted file mode 100644
+index 19e89f1..0000000
+--- a/apps/api/prisma/migrations/20260222000000_subscription_specialization/migration.sql
++++ /dev/null
+@@ -1,13 +0,0 @@
+--- CreateEnum
+-CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'PAUSED', 'CANCELED');
+-
+--- AlterTable
+-ALTER TABLE "subscriptions"
+-ADD COLUMN "plan" TEXT,
+-ADD COLUMN "nextBillingAt" TIMESTAMP(3),
+-ADD COLUMN "status" "SubscriptionStatus" NOT NULL DEFAULT 'ACTIVE';
+-
+--- Backfill nextBillingAt from startDate for existing rows
+-UPDATE "subscriptions"
+-SET "nextBillingAt" = "startDate"
+-WHERE "nextBillingAt" IS NULL;
+diff --git a/apps/api/prisma/migrations/20260223000000_add_personal_invoice_privacy/migration.sql b/apps/api/prisma/migrations/20260223000000_add_personal_invoice_privacy/migration.sql
+deleted file mode 100644
+index e62c95e..0000000
+--- a/apps/api/prisma/migrations/20260223000000_add_personal_invoice_privacy/migration.sql
++++ /dev/null
+@@ -1,10 +0,0 @@
+--- AlterTable
+-ALTER TABLE "invoices"
+-ADD COLUMN "isPersonal" BOOLEAN NOT NULL DEFAULT false,
+-ADD COLUMN "ownerUserId" TEXT;
+-
+--- CreateIndex
+-CREATE INDEX "invoices_ownerUserId_idx" ON "invoices"("ownerUserId");
+-
+--- AddForeignKey
+-ALTER TABLE "invoices" ADD CONSTRAINT "invoices_ownerUserId_fkey" FOREIGN KEY ("ownerUserId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+diff --git a/apps/api/prisma/migrations/20260223000001_add_2fa_fields/migration.sql b/apps/api/prisma/migrations/20260223000001_add_2fa_fields/migration.sql
+deleted file mode 100644
+index c22306e..0000000
+--- a/apps/api/prisma/migrations/20260223000001_add_2fa_fields/migration.sql
++++ /dev/null
+@@ -1,5 +0,0 @@
+--- AlterTable
+-ALTER TABLE "users"
+-ADD COLUMN "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
+-ADD COLUMN "twoFactorSecret" TEXT,
+-ADD COLUMN "twoFactorRecoveryCodes" TEXT[] DEFAULT ARRAY[]::TEXT[];
+diff --git a/apps/api/prisma/migrations/20260227000000_rename_junior_to_child/migration.sql b/apps/api/prisma/migrations/20260227000000_rename_junior_to_child/migration.sql
+deleted file mode 100644
+index 10eb6c9..0000000
+--- a/apps/api/prisma/migrations/20260227000000_rename_junior_to_child/migration.sql
++++ /dev/null
+@@ -1,3 +0,0 @@
+--- Rename enum value JUNIOR to CHILD in UserRole
+--- PostgreSQL 10+ supports ALTER TYPE ... RENAME VALUE
+-ALTER TYPE "UserRole" RENAME VALUE 'JUNIOR' TO 'CHILD';
+diff --git a/apps/api/prisma/migrations/20260227000001_add_currency_symbol_position/migration.sql b/apps/api/prisma/migrations/20260227000001_add_currency_symbol_position/migration.sql
+deleted file mode 100644
+index c6ecdd7..0000000
+--- a/apps/api/prisma/migrations/20260227000001_add_currency_symbol_position/migration.sql
++++ /dev/null
+@@ -1,4 +0,0 @@
+--- Add currencySymbolPosition to families table
+--- 'Before' = symbol before number (e.g. $1,234.00)
+--- 'After'  = symbol after number  (e.g. 1.234,00 kr)
+-ALTER TABLE "families" ADD COLUMN "currencySymbolPosition" TEXT NOT NULL DEFAULT 'Before';
+diff --git a/apps/api/prisma/schema.prisma b/apps/api/prisma/schema.prisma
+index 176c7c0..092711a 100644
+--- a/apps/api/prisma/schema.prisma
++++ b/apps/api/prisma/schema.prisma
+@@ -108,14 +108,12 @@ model User {
+   createdAt    DateTime @default(now())
+   updatedAt    DateTime @updatedAt
+ 
+-  family              Family               @relation(fields: [familyId], references: [id], onDelete: Cascade)
+-  incomes             Income[]
+-  paymentsCreated     Payment[]            @relation("PaymentCreator")
+-  invoiceShares       InvoiceShare[]
+-  magicLinkTokens     MagicLinkToken[]
+-  webAuthnCredentials WebAuthnCredential[]
+-  auditLogs           AuditLog[]
+-  personalInvoices    Invoice[]             @relation("PersonalInvoiceOwner")
++  family           Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
++  incomes          Income[]
++  paymentsCreated  Payment[]      @relation("PaymentCreator")
++  invoiceShares    InvoiceShare[]
++  auditLogs        AuditLog[]
++  personalInvoices Invoice[]      @relation("PersonalInvoiceOwner")
+ 
+   @@index([familyId])
+   @@index([username])
+@@ -313,34 +311,3 @@ model AuditLog {
+   @@map("audit_logs")
+ }
+ 
+-model MagicLinkToken {
+-  id        String   @id @default(cuid())
+-  userId    String
+-  token     String   @unique
+-  expiresAt DateTime
+-  usedAt    DateTime?
+-
+-  createdAt DateTime @default(now())
+-
+-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+-
+-  @@index([token])
+-  @@index([expiresAt])
+-  @@map("magic_link_tokens")
+-}
+-
+-model WebAuthnCredential {
+-  id              String   @id
+-  userId          String
+-  publicKey       Bytes
+-  counter         BigInt   @default(0)
+-  transports      String[]
+-
+-  createdAt DateTime @default(now())
+-  lastUsedAt DateTime @default(now())
+-
+-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+-
+-  @@index([userId])
+-  @@map("webauthn_credentials")
+-}
+diff --git a/apps/api/prisma/seed.ts b/apps/api/prisma/seed.ts
+index af212db..b73e62e 100644
+--- a/apps/api/prisma/seed.ts
++++ b/apps/api/prisma/seed.ts
+@@ -18,8 +18,6 @@ async function main() {
+   await prisma.income.deleteMany();
+   await prisma.period.deleteMany();
+   await prisma.subscription.deleteMany();
+-  await prisma.webAuthnCredential.deleteMany();
+-  await prisma.magicLinkToken.deleteMany();
+   await prisma.user.deleteMany();
+   await (prisma as any).vendor.deleteMany();
+   await prisma.family.deleteMany();
+diff --git a/apps/api/scripts/docker-entrypoint.sh b/apps/api/scripts/docker-entrypoint.sh
+index 63a82e4..3f9e9f2 100644
+--- a/apps/api/scripts/docker-entrypoint.sh
++++ b/apps/api/scripts/docker-entrypoint.sh
+@@ -5,13 +5,16 @@ MAX_RETRIES="${PRISMA_MIGRATE_MAX_RETRIES:-10}"
+ SLEEP_SECONDS="${PRISMA_MIGRATE_RETRY_SECONDS:-3}"
+ ATTEMPT=1
+ 
+-echo "[api] Running Prisma migrations (max retries: ${MAX_RETRIES})..."
+-until node /app/node_modules/.bin/prisma migrate deploy --schema=/app/apps/api/prisma/schema.prisma; do
++# Use prisma db push to apply the current schema to the database without
++# requiring migration files. A new prisma migrate dev --name init should be
++# run when the schema is stable to create a tracked migration baseline.
++echo "[api] Applying Prisma schema (db push, max retries: ${MAX_RETRIES})..."
++until node /app/node_modules/.bin/prisma db push --schema=/app/apps/api/prisma/schema.prisma --accept-data-loss; do
+   if [ "$ATTEMPT" -ge "$MAX_RETRIES" ]; then
+-    echo "[api] Prisma migrate deploy failed after ${ATTEMPT} attempt(s)."
++    echo "[api] Prisma db push failed after ${ATTEMPT} attempt(s)."
+     exit 1
+   fi
+-  echo "[api] Migration attempt ${ATTEMPT}/${MAX_RETRIES} failed. Retrying in ${SLEEP_SECONDS}s..."
++  echo "[api] db push attempt ${ATTEMPT}/${MAX_RETRIES} failed. Retrying in ${SLEEP_SECONDS}s..."
+   ATTEMPT=$((ATTEMPT + 1))
+   sleep "$SLEEP_SECONDS"
+ done
+diff --git a/apps/api/src/app.module.ts b/apps/api/src/app.module.ts
+index d884ec4..b200b16 100644
+--- a/apps/api/src/app.module.ts
++++ b/apps/api/src/app.module.ts
+@@ -1,6 +1,7 @@
+ import { Module } from "@nestjs/common";
+-import { ConfigModule } from "@nestjs/config";
+-import { ThrottlerModule } from "@nestjs/throttler";
++import { APP_GUARD } from "@nestjs/core";
++import { ConfigModule, ConfigService } from "@nestjs/config";
++import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+ import configuration from "./config/configuration";
+ import { PrismaModule } from "./prisma/prisma.module";
+ import { AuthModule } from "./auth/auth.module";
+@@ -20,12 +21,20 @@ import { FamilyModule } from "./family/family.module";
+       isGlobal: true,
+       load: [configuration],
+     }),
+-    ThrottlerModule.forRoot([
+-      {
+-        ttl: 60000, // 1 minute
+-        limit: 10,
++    ThrottlerModule.forRootAsync({
++      inject: [ConfigService],
++      useFactory: (configService: ConfigService) => {
++        const ttlSeconds = configService.get<number>("rateLimit.ttl") ?? 60;
++        const max = configService.get<number>("rateLimit.max") ?? 120;
++
++        return [
++          {
++            ttl: ttlSeconds * 1000,
++            limit: max,
++          },
++        ];
+       },
+-    ]),
++    }),
+     PrismaModule,
+     AuthModule,
+     UsersModule,
+@@ -38,5 +47,11 @@ import { FamilyModule } from "./family/family.module";
+     HealthModule,
+     FamilyModule,
+   ],
++  providers: [
++    {
++      provide: APP_GUARD,
++      useClass: ThrottlerGuard,
++    },
++  ],
+ })
+ export class AppModule {}
+diff --git a/apps/api/src/auth/dto/delete-account.dto.ts b/apps/api/src/auth/dto/delete-account.dto.ts
+index b17a4fe..5eb875e 100644
+--- a/apps/api/src/auth/dto/delete-account.dto.ts
++++ b/apps/api/src/auth/dto/delete-account.dto.ts
+@@ -9,5 +9,5 @@ export class DeleteAccountDto {
+   })
+   @IsString()
+   @MinLength(6)
+-  currentPassword: string;
++  currentPassword!: string;
+ }
+diff --git a/apps/api/src/auth/dto/password-login.dto.ts b/apps/api/src/auth/dto/password-login.dto.ts
+index ab64eac..57df39c 100644
+--- a/apps/api/src/auth/dto/password-login.dto.ts
++++ b/apps/api/src/auth/dto/password-login.dto.ts
+@@ -5,12 +5,12 @@ export class PasswordLoginDto {
+   @ApiProperty({ example: "admin" })
+   @IsString()
+   @IsNotEmpty()
+-  username: string;
++  username!: string;
+ 
+   @ApiProperty({ example: "password123", minLength: 8 })
+   @IsString()
+   @MinLength(8, { message: "Password must be at least 8 characters long" })
+-  password: string;
++  password!: string;
+ 
+   @ApiProperty({
+     example: "123456",
+diff --git a/apps/api/src/auth/dto/password-register.dto.ts b/apps/api/src/auth/dto/password-register.dto.ts
+index a97f046..e13b84d 100644
+--- a/apps/api/src/auth/dto/password-register.dto.ts
++++ b/apps/api/src/auth/dto/password-register.dto.ts
+@@ -5,15 +5,15 @@ export class PasswordRegisterDto {
+   @ApiProperty({ example: "John Doe" })
+   @IsString()
+   @MinLength(1, { message: "Name is required" })
+-  name: string;
++  name!: string;
+ 
+   @ApiProperty({ example: "admin" })
+   @IsString()
+   @IsNotEmpty()
+-  username: string;
++  username!: string;
+ 
+   @ApiProperty({ example: "password123", minLength: 8 })
+   @IsString()
+   @MinLength(8, { message: "Password must be at least 8 characters long" })
+-  password: string;
++  password!: string;
+ }
+diff --git a/apps/api/src/config/configuration.ts b/apps/api/src/config/configuration.ts
+index 0c5e6a4..39049bb 100644
+--- a/apps/api/src/config/configuration.ts
++++ b/apps/api/src/config/configuration.ts
+@@ -45,12 +45,17 @@ export default () => {
+       origins: uniqueCorsOrigins,
+       allowPrivateNetwork: process.env.CORS_ALLOW_PRIVATE_NETWORK !== "false",
+     },
++    health: {
++      // Keep strict web bundle validation enabled in production-like container runs,
++      // but allow API-only test/dev contexts (e2e/unit) to skip it.
++      requireWebAssets: process.env.HEALTH_REQUIRE_WEB_ASSETS === "true",
++    },
+     // Set COOKIE_SECURE=true only when serving over HTTPS.
+     // When running behind HTTP (e.g. local Docker without TLS), keep false.
+     cookieSecure: process.env.COOKIE_SECURE === "true",
+     rateLimit: {
+       ttl: parseInt(process.env.RATE_LIMIT_TTL || "60", 10),
+-      max: parseInt(process.env.RATE_LIMIT_MAX || "10", 10),
++      max: parseInt(process.env.RATE_LIMIT_MAX || "120", 10),
+     },
+   };
+ };
+diff --git a/apps/api/src/family/family.controller.ts b/apps/api/src/family/family.controller.ts
+index 6dc8b7d..8d66110 100644
+--- a/apps/api/src/family/family.controller.ts
++++ b/apps/api/src/family/family.controller.ts
+@@ -5,6 +5,7 @@ import {
+ import { FileInterceptor } from "@nestjs/platform-express";
+ import { diskStorage } from "multer";
+ import { extname, join } from "path";
++import { Request } from "express";
+ 
+ type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
+ import { mkdirSync } from "fs";
+@@ -178,17 +179,17 @@ export class FamilyController {
+   @UseInterceptors(
+     FileInterceptor("logo", {
+       storage: diskStorage({
+-        destination: (_req, _file, cb) => {
++        destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+           const dir = join(process.cwd(), "uploads", "vendors");
+           mkdirSync(dir, { recursive: true });
+           cb(null, dir);
+         },
+-        filename: (req, file, cb) => {
++        filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+           const ext = extname(file.originalname).toLowerCase() || ".jpg";
+-          cb(null, `${req.params.id}${ext}`);
++          cb(null, `${req.params["id"]}${ext}`);
+         },
+       }),
+-      fileFilter: (_req, file, cb) => {
++      fileFilter: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, acceptFile: boolean) => void) => {
+         // Support common image MIME types including HEIC
+         const supportedMimeTypes = [
+           "image/jpeg",
+diff --git a/apps/api/src/health/health.controller.ts b/apps/api/src/health/health.controller.ts
+index 3365960..34ba37a 100644
+--- a/apps/api/src/health/health.controller.ts
++++ b/apps/api/src/health/health.controller.ts
+@@ -5,16 +5,22 @@ import {
+   HealthCheckService,
+   HealthIndicatorResult,
+ } from "@nestjs/terminus";
++import { SkipThrottle } from "@nestjs/throttler";
+ import { PrismaService } from "../prisma/prisma.service";
+ import { Public } from "../common/decorators/public.decorator";
++import { existsSync, readdirSync } from "fs";
++import { join } from "path";
++import { ConfigService } from "@nestjs/config";
+ 
+ @Public()
++@SkipThrottle()
+ @ApiTags("health")
+ @Controller("health")
+ export class HealthController {
+   constructor(
+     private health: HealthCheckService,
+     private prisma: PrismaService,
++    private configService: ConfigService,
+   ) {}
+ 
+   @Get()
+@@ -26,6 +32,32 @@ export class HealthController {
+         await this.prisma.$queryRaw`SELECT 1`;
+         return { database: { status: "up" } };
+       },
++      async (): Promise<HealthIndicatorResult> => {
++        const requireWebAssets =
++          this.configService.get<boolean>("health.requireWebAssets") ?? false;
++
++        if (!requireWebAssets) {
++          return {
++            web: {
++              status: "up",
++              skipped: true,
++              reason: "web-asset validation disabled",
++            },
++          };
++        }
++
++        const publicDir = join(process.cwd(), "public");
++        const assetsDir = join(publicDir, "assets");
++        const hasIndex = existsSync(join(publicDir, "index.html"));
++        const hasAssetFiles =
++          existsSync(assetsDir) && readdirSync(assetsDir).length > 0;
++
++        if (!hasIndex || !hasAssetFiles) {
++          throw new Error("Web assets missing");
++        }
++
++        return { web: { status: "up" } };
++      },
+     ]);
+   }
+ }
+diff --git a/apps/api/src/incomes/dto/create-income.dto.ts b/apps/api/src/incomes/dto/create-income.dto.ts
+index 2587d8e..6cab593 100644
+--- a/apps/api/src/incomes/dto/create-income.dto.ts
++++ b/apps/api/src/incomes/dto/create-income.dto.ts
+@@ -6,19 +6,19 @@ export class CreateIncomeDto {
+   @ApiProperty({ example: "user123" })
+   @IsString()
+   @IsNotEmpty()
+-  userId: string;
++  userId!: string;
+ 
+   @ApiProperty({ example: "2024-01" })
+   @IsString()
+   @IsNotEmpty()
+-  periodId: string;
++  periodId!: string;
+ 
+   @ApiProperty({ enum: IncomeType, example: IncomeType.MONTHLY_GROSS })
+   @IsEnum(IncomeType)
+-  inputType: IncomeType;
++  inputType!: IncomeType;
+ 
+   @ApiProperty({ example: 500000, description: "Income amount in cents" })
+   @IsInt()
+   @Min(0)
+-  inputCents: number;
++  inputCents!: number;
+ }
+diff --git a/apps/api/src/invoices/dto/add-payment.dto.ts b/apps/api/src/invoices/dto/add-payment.dto.ts
+index a2a3ed1..50f4cae 100644
+--- a/apps/api/src/invoices/dto/add-payment.dto.ts
++++ b/apps/api/src/invoices/dto/add-payment.dto.ts
+@@ -12,12 +12,12 @@ export class AddPaymentDto {
+   @ApiProperty({ example: "user123" })
+   @IsString()
+   @IsNotEmpty()
+-  paidById: string;
++  paidById!: string;
+ 
+   @ApiProperty({ example: 25000, description: "Payment amount in cents" })
+   @IsInt()
+   @Min(1)
+-  amountCents: number;
++  amountCents!: number;
+ 
+   @ApiPropertyOptional({ example: "Paid via bank transfer" })
+   @IsString()
+diff --git a/apps/api/src/invoices/dto/create-invoice.dto.ts b/apps/api/src/invoices/dto/create-invoice.dto.ts
+index e964a51..ff44409 100644
+--- a/apps/api/src/invoices/dto/create-invoice.dto.ts
++++ b/apps/api/src/invoices/dto/create-invoice.dto.ts
+@@ -18,19 +18,19 @@ export class InvoiceLineDto {
+   @ApiProperty({ example: "Line item description" })
+   @IsString()
+   @IsNotEmpty()
+-  description: string;
++  description!: string;
+ 
+   @ApiProperty({ example: 10000, description: "Amount in cents" })
+   @IsInt()
+   @Min(0)
+-  amountCents: number;
++  amountCents!: number;
+ }
+ 
+ export class PercentRuleDto {
+   @ApiProperty({ example: "user123" })
+   @IsString()
+   @IsNotEmpty()
+-  userId: string;
++  userId!: string;
+ 
+   @ApiProperty({
+     example: 5000,
+@@ -38,19 +38,19 @@ export class PercentRuleDto {
+   })
+   @IsInt()
+   @Min(0)
+-  percentBasisPoints: number;
++  percentBasisPoints!: number;
+ }
+ 
+ export class FixedRuleDto {
+   @ApiProperty({ example: "user123" })
+   @IsString()
+   @IsNotEmpty()
+-  userId: string;
++  userId!: string;
+ 
+   @ApiProperty({ example: 10000, description: "Fixed amount in cents" })
+   @IsInt()
+   @Min(0)
+-  fixedCents: number;
++  fixedCents!: number;
+ }
+ 
+ export class DistributionRulesDto {
+@@ -87,7 +87,7 @@ export class CreateInvoiceDto {
+   @ApiProperty({ example: "2024-01" })
+   @IsString()
+   @IsNotEmpty()
+-  periodId: string;
++  periodId!: string;
+ 
+   @ApiPropertyOptional({ example: "Utilities" })
+   @IsString()
+@@ -97,7 +97,7 @@ export class CreateInvoiceDto {
+   @ApiProperty({ example: "Electric Company" })
+   @IsString()
+   @IsNotEmpty()
+-  vendor: string;
++  vendor!: string;
+ 
+   @ApiPropertyOptional({ example: "January electricity bill" })
+   @IsString()
+@@ -112,14 +112,14 @@ export class CreateInvoiceDto {
+   @ApiProperty({ example: 50000, description: "Total amount in cents" })
+   @IsInt()
+   @Min(0)
+-  totalCents: number;
++  totalCents!: number;
+ 
+   @ApiProperty({
+     enum: DistributionMethod,
+     example: DistributionMethod.BY_INCOME,
+   })
+   @IsEnum(DistributionMethod)
+-  distributionMethod: DistributionMethod;
++  distributionMethod!: DistributionMethod;
+ 
+   @ApiPropertyOptional({ type: [InvoiceLineDto] })
+   @IsArray()
+diff --git a/apps/api/src/invoices/invoices.service.ts b/apps/api/src/invoices/invoices.service.ts
+index 95815d9..8012416 100644
+--- a/apps/api/src/invoices/invoices.service.ts
++++ b/apps/api/src/invoices/invoices.service.ts
+@@ -198,9 +198,13 @@ export class InvoicesService {
+         };
+       });
+ 
+-      // For FIXED distribution, we can proceed even with no income users
+-      // For other methods, validate at least one user has income
+-      if (distributionMethod !== "FIXED") {
++      // For FIXED distribution or explicit percent/fixed rules, we can proceed without income users
++      // For other methods using default allocation, validate at least one user has income
++      if (
++        distributionMethod !== "FIXED" &&
++        distributionMethod !== "BY_PERCENT" &&
++        !distributionRules?.fixedRules
++      ) {
+         const hasIncome = allParticipants.some(
+           (p) => p.normalizedMonthlyGrossCents > 0,
+         );
+@@ -214,19 +218,27 @@ export class InvoicesService {
+       participants = allParticipants;
+     } else {
+       // Default behavior: use users with incomes, excluding CHILD users
+-      if (incomes.length === 0) {
++      // However, if explicit percentRules or fixedRules are provided, we can use selected users even without incomes
++      if (incomes.length === 0 && !distributionRules?.percentRules && !distributionRules?.fixedRules) {
+         throw new BadRequestException(
+           "No users with income found for this period. Add incomes first.",
+         );
+       }
+ 
+-      allParticipants = incomes.map((inc) => ({
+-        userId: inc.userId,
+-        userName: inc.user.name,
+-        role: inc.user.role,
+-        normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
+-      }));
+-      participants = allParticipants.filter((p) => p.role !== "CHILD");
++      if (incomes.length > 0) {
++        allParticipants = incomes.map((inc) => ({
++          userId: inc.userId,
++          userName: inc.user.name,
++          role: inc.user.role,
++          normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
++        }));
++        participants = allParticipants.filter((p) => p.role !== "CHILD");
++      } else {
++        // No incomes found, but explicit rules provided - use an empty participants list
++        // This will be sufficient for splitByPercent or splitFixed
++        allParticipants = [];
++        participants = [];
++      }
+     }
+ 
+     // Calculate shares based on distribution method
+diff --git a/apps/api/src/main.ts b/apps/api/src/main.ts
+index e991075..47a0848 100644
+--- a/apps/api/src/main.ts
++++ b/apps/api/src/main.ts
+@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
+ import { join } from "path";
+ import { mkdirSync, existsSync } from "fs";
+ import * as express from "express";
++import { Request, Response, NextFunction } from "express";
+ import { AppModule } from "./app.module";
+ 
+ async function bootstrap() {
+@@ -22,7 +23,15 @@ async function bootstrap() {
+     }
+   }
+ 
+-  // Serve uploaded files at /uploads (before global prefix and helmet)
++  // Security headers FIRST — must run before any static-file middleware so
++  // that all responses (HTML, JS, CSS, images, uploads) carry the full set of
++  // security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.).
++  // crossOriginResourcePolicy: 'same-site' lets the browser load avatar/logo
++  // images that are served from the same origin via /uploads.
++  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
++  app.use(cookieParser());
++
++  // Serve uploaded files at /uploads
+   app.use("/uploads", express.static(join(process.cwd(), "uploads")));
+ 
+   // Serve web bundle (single-container deployment mode)
+@@ -30,7 +39,14 @@ async function bootstrap() {
+   // references chunk hashes from a previous deployment causes a blank white
+   // screen on iOS Safari (and other browsers) after a redeploy.
+   const publicDir = join(process.cwd(), "public");
+-  if (existsSync(publicDir)) {
++  const hasPublicBundle = existsSync(publicDir);
++
++  if (!hasPublicBundle) {
++    console.error(
++      `[startup] Frontend bundle missing at ${publicDir}. Root path (/) will not serve GUI.`,
++    );
++  }
++  if (hasPublicBundle) {
+     app.use(
+       express.static(publicDir, {
+         setHeaders(res, filePath) {
+@@ -47,10 +63,6 @@ async function bootstrap() {
+     );
+   }
+ 
+-  // Security (allow same-site image loading from /uploads)
+-  app.use(helmet({ crossOriginResourcePolicy: { policy: "same-site" } }));
+-  app.use(cookieParser());
+-
+   // CORS
+   const allowedOrigins = configService.get<string[]>("cors.origins") ?? [];
+   const normalizeOrigin = (value: string) => {
+@@ -105,8 +117,8 @@ async function bootstrap() {
+   app.setGlobalPrefix("api");
+ 
+   // SPA fallback route for frontend paths (excluding /api and /uploads)
+-  if (existsSync(publicDir)) {
+-    app.use((req, res, next) => {
++  if (hasPublicBundle) {
++    app.use((req: Request, res: Response, next: NextFunction) => {
+       if (
+         req.method !== "GET" ||
+         req.path.startsWith("/api") ||
+@@ -150,11 +162,14 @@ async function bootstrap() {
+   const document = SwaggerModule.createDocument(app, config);
+   SwaggerModule.setup("api/docs", app, document);
+ 
+-  const port = configService.get<number>("port");
+-  await app.listen(port);
++  const port = configService.get<number>("port") ?? 3000;
++  const host = process.env.HOST || "0.0.0.0";
++  await app.listen(port, host);
+ 
+-  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
+-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
++  console.log(`[startup] Listening on http://${host}:${port}`);
++  console.log(`[startup] API endpoint: http://${host}:${port}/api`);
++  console.log(`[startup] API docs: http://${host}:${port}/api/docs`);
++  console.log(`[startup] Web bundle present: ${hasPublicBundle}`);
+ }
+ 
+ bootstrap();
+diff --git a/apps/api/src/periods/dto/create-period.dto.ts b/apps/api/src/periods/dto/create-period.dto.ts
+index eb9bd28..50dffb3 100644
+--- a/apps/api/src/periods/dto/create-period.dto.ts
++++ b/apps/api/src/periods/dto/create-period.dto.ts
+@@ -11,7 +11,7 @@ export class CreatePeriodDto {
+   @Matches(/^\d{4}-\d{2}$/, {
+     message: "Period ID must be in YYYY-MM format",
+   })
+-  id: string;
++  id!: string;
+ 
+   @ApiPropertyOptional({
+     description: "Automatically import active subscriptions into the new period if incomes exist",
+diff --git a/apps/api/src/periods/period-closing.service.ts b/apps/api/src/periods/period-closing.service.ts
+index 755de0c..cf167f6 100644
+--- a/apps/api/src/periods/period-closing.service.ts
++++ b/apps/api/src/periods/period-closing.service.ts
+@@ -101,11 +101,9 @@ export class PeriodClosingService {
+     });
+ 
+     this.logger.log(`Period ${periodId} closed by user ${closedBy}`);
++    this.logger.debug(`Settlement data: ${JSON.stringify(settlementData)}`);
+ 
+-    return {
+-      period: updatedPeriod,
+-      settlement: settlementData,
+-    };
++    return updatedPeriod;
+   }
+ 
+   /**
+@@ -130,7 +128,7 @@ export class PeriodClosingService {
+         status: PeriodStatus.OPEN,
+         closedAt: null,
+         closedBy: null,
+-        settlementData: null,
++        settlementData: null as any,
+       },
+       include: {
+         invoices: true,
+diff --git a/apps/api/src/periods/periods.controller.ts b/apps/api/src/periods/periods.controller.ts
+index 3de2bf7..d9bdcc2 100644
+--- a/apps/api/src/periods/periods.controller.ts
++++ b/apps/api/src/periods/periods.controller.ts
+@@ -6,6 +6,7 @@ import {
+   Param,
+   Delete,
+   UseGuards,
++  HttpCode,
+ } from "@nestjs/common";
+ import {
+   ApiTags,
+@@ -105,6 +106,7 @@ export class PeriodsController {
+   }
+ 
+   @Post(":id/close")
++  @HttpCode(200)
+   @Roles(UserRole.ADMIN)
+   @ApiOperation({
+     summary: "Close a period and calculate settlements (Admin only)",
+@@ -120,6 +122,7 @@ export class PeriodsController {
+   }
+ 
+   @Post(":id/reopen")
++  @HttpCode(200)
+   @Roles(UserRole.ADMIN)
+   @ApiOperation({ summary: "Reopen a closed period (Admin only)" })
+   @ApiResponse({ status: 200, description: "Period reopened successfully" })
+diff --git a/apps/api/src/subscriptions/dto/create-subscription.dto.ts b/apps/api/src/subscriptions/dto/create-subscription.dto.ts
+index 70f7ba4..7238b4c 100644
+--- a/apps/api/src/subscriptions/dto/create-subscription.dto.ts
++++ b/apps/api/src/subscriptions/dto/create-subscription.dto.ts
+@@ -16,12 +16,12 @@ export class CreateSubscriptionDto {
+   @ApiProperty({ example: "Netflix Subscription" })
+   @IsString()
+   @IsNotEmpty()
+-  name: string;
++  name!: string;
+ 
+   @ApiProperty({ example: "Netflix" })
+   @IsString()
+   @IsNotEmpty()
+-  vendor: string;
++  vendor!: string;
+ 
+   @ApiPropertyOptional({ example: "Entertainment" })
+   @IsString()
+@@ -31,7 +31,7 @@ export class CreateSubscriptionDto {
+   @ApiProperty({ example: 9900, description: "Amount in cents" })
+   @IsInt()
+   @Min(0)
+-  amountCents: number;
++  amountCents!: number;
+ 
+   @ApiProperty({
+     example: "monthly",
+@@ -39,7 +39,7 @@ export class CreateSubscriptionDto {
+   })
+   @IsString()
+   @IsNotEmpty()
+-  frequency: string;
++  frequency!: string;
+ 
+   @ApiPropertyOptional({
+     example: 15,
+@@ -52,7 +52,7 @@ export class CreateSubscriptionDto {
+ 
+   @ApiProperty({ example: "2024-01-01" })
+   @IsDateString()
+-  startDate: string;
++  startDate!: string;
+ 
+   @ApiPropertyOptional({ example: "2024-12-31" })
+   @IsDateString()
+@@ -64,7 +64,7 @@ export class CreateSubscriptionDto {
+     example: DistributionMethod.BY_INCOME,
+   })
+   @IsEnum(DistributionMethod)
+-  distributionMethod: DistributionMethod;
++  distributionMethod!: DistributionMethod;
+ 
+   @ApiPropertyOptional({
+     description:
+diff --git a/apps/api/src/users/dto/create-user.dto.ts b/apps/api/src/users/dto/create-user.dto.ts
+index aa8a8c3..2d14816 100644
+--- a/apps/api/src/users/dto/create-user.dto.ts
++++ b/apps/api/src/users/dto/create-user.dto.ts
+@@ -11,16 +11,16 @@ export class CreateUserDto {
+   @ApiProperty({ example: "admin" })
+   @IsString()
+   @IsNotEmpty()
+-  username: string;
++  username!: string;
+ 
+   @ApiProperty({ example: "John Doe" })
+   @IsString()
+   @IsNotEmpty()
+-  name: string;
++  name!: string;
+ 
+   @ApiProperty({ enum: UserRole, example: UserRole.ADULT })
+   @IsEnum(UserRole)
+-  role: UserRole;
++  role!: UserRole;
+ 
+   @ApiPropertyOptional({ example: "password123", minLength: 6 })
+   @IsString()
+diff --git a/apps/api/src/users/users.controller.ts b/apps/api/src/users/users.controller.ts
+index 976709b..1374234 100644
+--- a/apps/api/src/users/users.controller.ts
++++ b/apps/api/src/users/users.controller.ts
+@@ -14,6 +14,7 @@ import {
+ import { FileInterceptor } from "@nestjs/platform-express";
+ import { diskStorage } from "multer";
+ import { extname, join } from "path";
++import { Request } from "express";
+ 
+ type MulterFile = { filename: string; originalname: string; mimetype: string; size: number };
+ import { mkdirSync } from "fs";
+@@ -94,17 +95,17 @@ export class UsersController {
+   @UseInterceptors(
+     FileInterceptor("avatar", {
+       storage: diskStorage({
+-        destination: (_req, _file, cb) => {
++        destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+           const dir = join(process.cwd(), "uploads", "avatars");
+           mkdirSync(dir, { recursive: true });
+           cb(null, dir);
+         },
+-        filename: (req, file, cb) => {
++        filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+           const ext = extname(file.originalname).toLowerCase() || ".jpg";
+-          cb(null, `${req.params.id}${ext}`);
++          cb(null, `${req.params["id"]}${ext}`);
+         },
+       }),
+-      fileFilter: (_req, file, cb) => {
++      fileFilter: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, acceptFile: boolean) => void) => {
+         // Support common image MIME types including HEIC
+         const supportedMimeTypes = [
+           "image/jpeg",
+diff --git a/apps/api/test/app.e2e-spec.ts b/apps/api/test/app.e2e-spec.ts
+new file mode 100644
+index 0000000..7ad94c0
+--- /dev/null
++++ b/apps/api/test/app.e2e-spec.ts
+@@ -0,0 +1,235 @@
++import { Test, TestingModule } from "@nestjs/testing";
++import { INestApplication, ValidationPipe } from "@nestjs/common";
++import request from "supertest";
++import cookieParser from "cookie-parser";
++import { AppModule } from "../src/app.module";
++import { PrismaService } from "../src/prisma/prisma.service";
++
++/**
++ * End-to-end tests covering the critical user path:
++ *   register → login → create period → create invoice → add payment → close period
++ *
++ * The test database is seeded fresh for each suite run and torn down after all
++ * tests complete.  Requires DATABASE_URL and JWT_SECRET env vars (set in CI).
++ */
++describe("Critical path (e2e)", () => {
++  let app: INestApplication;
++  let prisma: PrismaService;
++  let authCookie: string;
++  let userId: string;
++  const periodId = new Date().toISOString().slice(0, 7); // YYYY-MM
++  let invoiceId: string;
++
++  beforeAll(async () => {
++    const moduleFixture: TestingModule = await Test.createTestingModule({
++      imports: [AppModule],
++    }).compile();
++
++    app = moduleFixture.createNestApplication();
++    app.setGlobalPrefix("api");
++    app.use(cookieParser());
++    app.useGlobalPipes(
++      new ValidationPipe({
++        whitelist: true,
++        transform: true,
++        transformOptions: { enableImplicitConversion: true },
++      }),
++    );
++
++    await app.init();
++    prisma = app.get(PrismaService);
++  });
++
++  afterAll(async () => {
++    // Clean up test data in dependency order
++    await prisma.payment.deleteMany();
++    await prisma.invoiceShare.deleteMany();
++    await prisma.invoiceDistributionRule.deleteMany();
++    await prisma.invoiceLine.deleteMany();
++    await prisma.invoice.deleteMany();
++    await prisma.income.deleteMany();
++    await prisma.period.deleteMany();
++    await prisma.auditLog.deleteMany();
++    await prisma.user.deleteMany({ where: { username: "e2e_testadmin" } });
++    await prisma.family.deleteMany({ where: { name: "e2e_testadmin's Family" } });
++    await app.close();
++  });
++
++  // ─── Auth ────────────────────────────────────────────────────────────────────
++
++  describe("Auth flow", () => {
++    it("POST /api/auth/register — registers a new user and returns a cookie", async () => {
++      const res = await request(app.getHttpServer())
++        .post("/api/auth/register")
++        .send({
++          name: "e2e_testadmin",
++          username: "e2e_testadmin",
++          password: "SecurePass123!",
++        })
++        .expect(201);
++
++      expect(res.body.user).toBeDefined();
++      expect(res.body.user.username).toBe("e2e_testadmin");
++      userId = res.body.user.id;
++
++      const cookies = res.headers["set-cookie"] as string | string[];
++      authCookie = Array.isArray(cookies) ? cookies[0] : cookies;
++      expect(authCookie).toMatch(/access_token=/);
++    });
++
++    it("POST /api/auth/login/password — logs in with valid credentials", async () => {
++      const res = await request(app.getHttpServer())
++        .post("/api/auth/login/password")
++        .send({ username: "e2e_testadmin", password: "SecurePass123!" })
++        .expect(200);
++
++      expect(res.body.user.id).toBe(userId);
++      const cookies = res.headers["set-cookie"] as string | string[];
++      authCookie = Array.isArray(cookies) ? cookies[0] : cookies;
++    });
++
++    it("POST /api/auth/login/password — rejects wrong password with 401", async () => {
++      await request(app.getHttpServer())
++        .post("/api/auth/login/password")
++        .send({ username: "e2e_testadmin", password: "WrongPassword" })
++        .expect(401);
++    });
++
++    it("GET /api/auth/me — returns current user when authenticated", async () => {
++      const res = await request(app.getHttpServer())
++        .get("/api/auth/me")
++        .set("Cookie", authCookie)
++        .expect(200);
++
++      expect(res.body.id).toBe(userId);
++    });
++
++    it("GET /api/auth/me — returns 401 without cookie", async () => {
++      await request(app.getHttpServer()).get("/api/auth/me").expect(401);
++    });
++  });
++
++  // ─── Period lifecycle ─────────────────────────────────────────────────────────
++
++  describe("Period lifecycle", () => {
++    it("POST /api/periods — creates a new open period", async () => {
++      const res = await request(app.getHttpServer())
++        .post("/api/periods")
++        .set("Cookie", authCookie)
++        .send({ id: periodId })
++        .expect(201);
++
++      expect(res.body.id).toBe(periodId);
++      expect(res.body.status).toBe("OPEN");
++    });
++
++    it("GET /api/periods — lists periods including the new one", async () => {
++      const res = await request(app.getHttpServer())
++        .get("/api/periods")
++        .set("Cookie", authCookie)
++        .expect(200);
++
++      expect(Array.isArray(res.body)).toBe(true);
++      expect(res.body.some((p: { id: string }) => p.id === periodId)).toBe(true);
++    });
++  });
++
++  // ─── Invoice + payment lifecycle ─────────────────────────────────────────────
++
++  describe("Invoice + payment lifecycle", () => {
++    it("POST /api/invoices — creates an invoice with BY_PERCENT distribution", async () => {
++      const res = await request(app.getHttpServer())
++        .post("/api/invoices")
++        .set("Cookie", authCookie)
++        .send({
++          periodId,
++          category: "Groceries",
++          vendor: "Rema 1000",
++          totalCents: 50000,
++          distributionMethod: "BY_PERCENT",
++          distributionRules: {
++            percentRules: [{ userId, percentBasisPoints: 10000 }],
++          },
++        })
++        .expect(201);
++
++      expect(res.body.id).toBeDefined();
++      expect(res.body.totalCents).toBe(50000);
++      invoiceId = res.body.id;
++    });
++
++    it("GET /api/invoices — lists invoices for the period", async () => {
++      const res = await request(app.getHttpServer())
++        .get(`/api/invoices?periodId=${periodId}`)
++        .set("Cookie", authCookie)
++        .expect(200);
++
++      expect(Array.isArray(res.body)).toBe(true);
++      expect(res.body.some((inv: { id: string }) => inv.id === invoiceId)).toBe(true);
++    });
++
++    it("POST /api/invoices/:id/payments — records a full payment", async () => {
++      const res = await request(app.getHttpServer())
++        .post(`/api/invoices/${invoiceId}/payments`)
++        .set("Cookie", authCookie)
++        .send({ paidById: userId, amountCents: 50000 })
++        .expect(201);
++
++      expect(res.body.amountCents).toBe(50000);
++      expect(res.body.paidById).toBe(userId);
++    });
++
++    it("GET /api/invoices/:id — returns invoice with payments attached", async () => {
++      const res = await request(app.getHttpServer())
++        .get(`/api/invoices/${invoiceId}`)
++        .set("Cookie", authCookie)
++        .expect(200);
++
++      expect(Array.isArray(res.body.payments)).toBe(true);
++      expect(res.body.payments).toHaveLength(1);
++      expect(res.body.payments[0].amountCents).toBe(50000);
++    });
++  });
++
++  // ─── Period closing ───────────────────────────────────────────────────────────
++
++  describe("Period closing", () => {
++    it("POST /api/periods/:id/close — closes the open period", async () => {
++      const res = await request(app.getHttpServer())
++        .post(`/api/periods/${periodId}/close`)
++        .set("Cookie", authCookie)
++        .expect(200);
++
++      expect(res.body.status).toBe("CLOSED");
++    });
++
++    it("POST /api/invoices — rejects new invoice on a closed period", async () => {
++      await request(app.getHttpServer())
++        .post("/api/invoices")
++        .set("Cookie", authCookie)
++        .send({
++          periodId,
++          category: "Groceries",
++          vendor: "Test",
++          totalCents: 10000,
++          distributionMethod: "BY_PERCENT",
++          distributionRules: {
++            percentRules: [{ userId, percentBasisPoints: 10000 }],
++          },
++        })
++        .expect(400);
++    });
++  });
++
++  // ─── Health ───────────────────────────────────────────────────────────────────
++
++  describe("Health check", () => {
++    it("GET /api/health — returns 200 without authentication", async () => {
++      const res = await request(app.getHttpServer())
++        .get("/api/health")
++        .expect(200);
++
++      expect(res.body.status).toBe("ok");
++    });
++  });
++});
+diff --git a/apps/api/tsconfig.json b/apps/api/tsconfig.json
+index 115e73f..441bf5c 100644
+--- a/apps/api/tsconfig.json
++++ b/apps/api/tsconfig.json
+@@ -13,10 +13,7 @@
+     "baseUrl": "./",
+     "incremental": true,
+     "skipLibCheck": true,
+-    "strictNullChecks": false,
+-    "noImplicitAny": false,
+-    "strictBindCallApply": false,
+-    "strictPropertyInitialization": false,
++    "strict": true,
+     "forceConsistentCasingInFileNames": true,
+     "noFallthroughCasesInSwitch": true,
+     "paths": {
+diff --git a/apps/web/index.html b/apps/web/index.html
+index 8b4606e..5bd0a9a 100644
+--- a/apps/web/index.html
++++ b/apps/web/index.html
+@@ -7,19 +7,15 @@
+     <meta name="description" content="Shared expense tracking application" />
+     <meta name="theme-color" content="#0B1020" />
+     <link rel="manifest" href="/manifest.webmanifest" />
+-    <!-- iOS Safari requires a PNG (not SVG) for Add-to-Home-Screen icon -->
+     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+-    <!-- iOS standalone PWA meta tags -->
+     <meta name="apple-mobile-web-app-capable" content="yes" />
+     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+     <meta name="apple-mobile-web-app-title" content="Kost" />
+ 
+-    <!-- Preconnect to Google Fonts -->
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+ 
+-    <!-- Apply dark mode before first render to prevent flash -->
+     <script>
+       try {
+         const s = localStorage.getItem('settings');
+diff --git a/apps/web/nginx.conf b/apps/web/nginx.conf
+index ee0243b..3e0f66c 100644
+--- a/apps/web/nginx.conf
++++ b/apps/web/nginx.conf
+@@ -14,19 +14,27 @@ server {
+     add_header X-Frame-Options "SAMEORIGIN" always;
+     add_header X-Content-Type-Options "nosniff" always;
+     add_header X-XSS-Protection "1; mode=block" always;
++    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+ 
+     # Cache static assets
+     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+         expires 1y;
+         add_header Cache-Control "public, immutable";
++        add_header X-Frame-Options "SAMEORIGIN" always;
++        add_header X-Content-Type-Options "nosniff" always;
++        add_header X-XSS-Protection "1; mode=block" always;
++        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+     }
+ 
+-
+     # Never cache app shell document to avoid iOS Safari stale HTML/chunk mismatches
+     location = /index.html {
+         add_header Cache-Control "no-store, no-cache, must-revalidate";
+         add_header Pragma "no-cache";
+         add_header Expires "0";
++        add_header X-Frame-Options "SAMEORIGIN" always;
++        add_header X-Content-Type-Options "nosniff" always;
++        add_header X-XSS-Protection "1; mode=block" always;
++        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+     }
+ 
+     # Service worker - no cache
+@@ -34,12 +42,20 @@ server {
+         add_header Cache-Control "no-cache, no-store, must-revalidate";
+         add_header Pragma "no-cache";
+         add_header Expires "0";
++        add_header X-Frame-Options "SAMEORIGIN" always;
++        add_header X-Content-Type-Options "nosniff" always;
++        add_header X-XSS-Protection "1; mode=block" always;
++        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+     }
+ 
+     # Manifest
+     location /manifest.webmanifest {
+         add_header Content-Type "application/manifest+json";
+         add_header Cache-Control "public, max-age=604800";
++        add_header X-Frame-Options "SAMEORIGIN" always;
++        add_header X-Content-Type-Options "nosniff" always;
++        add_header X-XSS-Protection "1; mode=block" always;
++        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+     }
+ 
+     # Proxy uploaded files (avatars, vendor logos) — use ^~ to prevent regex override
+@@ -52,6 +68,10 @@ server {
+         proxy_set_header X-Forwarded-Proto $scheme;
+         expires 7d;
+         add_header Cache-Control "public, max-age=604800";
++        add_header X-Frame-Options "SAMEORIGIN" always;
++        add_header X-Content-Type-Options "nosniff" always;
++        add_header X-XSS-Protection "1; mode=block" always;
++        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+     }
+ 
+     # Proxy API requests to the API container
+@@ -69,6 +89,10 @@ server {
+     location / {
+         try_files $uri $uri/ /index.html;
+         add_header Cache-Control "no-store, no-cache, must-revalidate";
++        add_header X-Frame-Options "SAMEORIGIN" always;
++        add_header X-Content-Type-Options "nosniff" always;
++        add_header X-XSS-Protection "1; mode=block" always;
++        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'" always;
+     }
+ 
+     # Health check
+diff --git a/apps/web/package.json b/apps/web/package.json
+index fd09ec3..6601591 100644
+--- a/apps/web/package.json
++++ b/apps/web/package.json
+@@ -16,7 +16,6 @@
+     "autoprefixer": "^10.4.24",
+     "axios": "^1.6.7",
+     "dexie": "^3.2.5",
+-    "dexie-react-hooks": "^1.1.7",
+     "i18next": "^23.8.2",
+     "i18next-browser-languagedetector": "^7.2.0",
+     "lucide-react": "^0.575.0",
+diff --git a/apps/web/public/theme-init.js b/apps/web/public/theme-init.js
+new file mode 100644
+index 0000000..aba2a5c
+--- /dev/null
++++ b/apps/web/public/theme-init.js
+@@ -0,0 +1,10 @@
++// Applies dark mode class before first render to prevent flash of wrong theme.
++// Loaded as an external script so it works with a strict Content-Security-Policy
++// (no 'unsafe-inline' required).
++try {
++  var s = localStorage.getItem('settings');
++  var theme = s ? JSON.parse(s).theme : null;
++  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
++    document.documentElement.classList.add('dark');
++  }
++} catch (e) {}
+diff --git a/apps/web/src/hooks/queryKeys.ts b/apps/web/src/hooks/queryKeys.ts
+new file mode 100644
+index 0000000..abafe56
+--- /dev/null
++++ b/apps/web/src/hooks/queryKeys.ts
+@@ -0,0 +1,23 @@
++/**
++ * Centralised TanStack Query key factory.
++ * Import from here rather than using raw string arrays so that all
++ * invalidations stay in sync automatically.
++ */
++export const queryKeys = {
++  invoices: (periodId?: string) => ['invoices', periodId] as const,
++  invoice: (id: string) => ['invoice', id] as const,
++  periods: () => ['periods'] as const,
++  period: (id: string) => ['period', id] as const,
++  currentPeriod: () => ['currentPeriod'] as const,
++  periodStats: (id: string) => ['periodStats', id] as const,
++  userIncomes: (periodId: string) => ['userIncomes', periodId] as const,
++  users: () => ['users'] as const,
++  user: (id: string) => ['user', id] as const,
++  categories: () => ['categories'] as const,
++  paymentMethods: () => ['paymentMethods'] as const,
++  currency: () => ['currency'] as const,
++  currencySymbolPosition: () => ['currencySymbolPosition'] as const,
++  vendors: () => ['vendors'] as const,
++  subscriptions: () => ['subscriptions'] as const,
++  subscription: (id: string) => ['subscription', id] as const,
++};
+diff --git a/apps/web/src/hooks/useApi.ts b/apps/web/src/hooks/useApi.ts
+index bda58e8..6e79e32 100644
+--- a/apps/web/src/hooks/useApi.ts
++++ b/apps/web/src/hooks/useApi.ts
+@@ -1,627 +1,93 @@
+-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+-import { useCallback } from 'react';
+-import { invoiceApi, periodApi, userIncomeApi, userApi, authApi, paymentApi, familyApi, subscriptionApi, Invoice, Period, UserIncome, PeriodStats, User, Subscription } from '../services/api';
+-import { addToOfflineQueue } from '../idb/queue';
+-import { useSettings } from '../stores/settings.context';
+-import { formatCurrency } from '../utils/currency';
+-
+-// Query keys
+-export const queryKeys = {
+-  invoices: (periodId?: string) => ['invoices', periodId] as const,
+-  invoice: (id: string) => ['invoice', id] as const,
+-  periods: () => ['periods'] as const,
+-  period: (id: string) => ['period', id] as const,
+-  currentPeriod: () => ['currentPeriod'] as const,
+-  periodStats: (id: string) => ['periodStats', id] as const,
+-  userIncomes: (periodId: string) => ['userIncomes', periodId] as const,
+-  users: () => ['users'] as const,
+-  user: (id: string) => ['user', id] as const,
+-  categories: () => ['categories'] as const,
+-  paymentMethods: () => ['paymentMethods'] as const,
+-  currency: () => ['currency'] as const,
+-  currencySymbolPosition: () => ['currencySymbolPosition'] as const,
+-  vendors: () => ['vendors'] as const,
+-  subscriptions: () => ['subscriptions'] as const,
+-  subscription: (id: string) => ['subscription', id] as const,
+-};
+-
+-// Invoice hooks
+-export function useInvoices(periodId?: string) {
+-  return useQuery({
+-    queryKey: queryKeys.invoices(periodId),
+-    queryFn: () => invoiceApi.getAll({ periodId }).then(res => res.data),
+-    enabled: !!periodId,
+-  });
+-}
+-
+-export function useInvoice(id: string) {
+-  return useQuery({
+-    queryKey: queryKeys.invoice(id),
+-    queryFn: () => invoiceApi.getById(id).then(res => res.data),
+-    enabled: !!id,
+-  });
+-}
+-
+-export function useCreateInvoice() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (data: Parameters<typeof invoiceApi.create>[0]) =>
+-      invoiceApi.create(data).then(res => res.data),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-      queryClient.invalidateQueries({ queryKey: ['currentPeriod'] });
+-    },
+-    onError: async (error, variables) => {
+-      // Add to offline queue if network error
+-      if (!navigator.onLine) {
+-        await addToOfflineQueue({
+-          method: 'POST',
+-          url: '/invoices',
+-          data: variables,
+-        });
+-      }
+-    },
+-  });
+-}
+-
+-export function useUpdateInvoice() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: ({ id, data }: { id: string; data: Partial<Invoice> & { distributionRules?: any } }) =>
+-      invoiceApi.update(id, data).then(res => res.data),
+-    onSuccess: (data) => {
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(data.id) });
+-    },
+-    onError: async (error, variables) => {
+-      if (!navigator.onLine) {
+-        await addToOfflineQueue({
+-          method: 'PATCH',
+-          url: `/invoices/${variables.id}`,
+-          data: variables.data,
+-        });
+-      }
+-    },
+-  });
+-}
+-
+-export function useDeleteInvoice() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (id: string) => invoiceApi.delete(id),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-    },
+-    onError: async (error, id) => {
+-      if (!navigator.onLine) {
+-        await addToOfflineQueue({
+-          method: 'DELETE',
+-          url: `/invoices/${id}`,
+-        });
+-      }
+-    },
+-  });
+-}
+-
+-// Period hooks
+-export function usePeriods() {
+-  return useQuery({
+-    queryKey: queryKeys.periods(),
+-    queryFn: () => periodApi.getAll().then(res => res.data),
+-  });
+-}
+-
+-export function usePeriod(id: string) {
+-  return useQuery({
+-    queryKey: queryKeys.period(id),
+-    queryFn: () => periodApi.getById(id).then(res => res.data),
+-    enabled: !!id,
+-  });
+-}
+-
+-export function useCurrentPeriod() {
+-  return useQuery({
+-    queryKey: queryKeys.currentPeriod(),
+-    queryFn: () => periodApi.getCurrent().then(res => res.data),
+-  });
+-}
+-
+-export function useCreatePeriod() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (data: { id: string; autoImportSubscriptions?: boolean }) =>
+-      periodApi.create(data).then(res => res.data),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+-    },
+-  });
+-}
+-
+-export function useClosePeriod() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (id: string) => periodApi.close(id).then(res => res.data),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+-    },
+-  });
+-}
+-
+-export function useGetPeriodDeletionInfo(id: string) {
+-  return useQuery({
+-    queryKey: ['periodDeletionInfo', id],
+-    queryFn: () => periodApi.getDeletionInfo(id).then(res => res.data),
+-    enabled: !!id,
+-  });
+-}
+-
+-export function useDeletePeriod() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (id: string) => periodApi.delete(id),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+-    },
+-  });
+-}
+-
+-export function usePeriodStats(id: string) {
+-  return useQuery({
+-    queryKey: queryKeys.periodStats(id),
+-    queryFn: () => periodApi.getStats(id).then(res => res.data),
+-    enabled: !!id,
+-  });
+-}
+-
+-// User income hooks
+-export function useUserIncomes(periodId: string) {
+-  return useQuery({
+-    queryKey: queryKeys.userIncomes(periodId),
+-    queryFn: () => userIncomeApi.getByPeriod(periodId).then(res => res.data),
+-    enabled: !!periodId,
+-  });
+-}
+-
+-export function useUpsertUserIncome() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (data: Parameters<typeof userIncomeApi.upsert>[0]) =>
+-      userIncomeApi.upsert(data).then(res => res.data),
+-    onSuccess: (data) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.userIncomes(data.periodId) });
+-    },
+-  });
+-}
+-
+-// User hooks
+-export function useUsers() {
+-  return useQuery({
+-    queryKey: queryKeys.users(),
+-    queryFn: () => userApi.getAll().then(res => res.data),
+-  });
+-}
+-
+-export function useCreateUser() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (data: Parameters<typeof userApi.create>[0]) =>
+-      userApi.create(data).then(res => res.data),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+-    },
+-  });
+-}
+-
+-export function useUpdateUser() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof userApi.update>[1] }) =>
+-      userApi.update(id, data).then(res => res.data),
+-    onSuccess: (user: User) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
+-    },
+-  });
+-}
+-
+-export function useDeleteUser() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: (id: string) => userApi.delete(id),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+-    },
+-  });
+-}
+-
+-export function useUploadAvatar() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ id, file }: { id: string; file: File }) => {
+-      const fd = new FormData();
+-      fd.append('avatar', file);
+-      return userApi.uploadAvatar(id, fd).then(r => r.data);
+-    },
+-    onSuccess: (user: User) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
+-    },
+-  });
+-}
+-
+-export function useRemoveAvatar() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (id: string) => userApi.removeAvatar(id).then(r => r.data),
+-    onSuccess: (user: User) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
+-    },
+-  });
+-}
+-
+-export function useUploadVendorLogo() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ id, file }: { id: string; file: File }) => {
+-      const fd = new FormData();
+-      fd.append('logo', file);
+-      return familyApi.uploadVendorLogo(id, fd).then(r => r.data);
+-    },
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+-  });
+-}
+-
+-export function useChangePassword() {
+-  return useMutation({
+-    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
+-      authApi.changePassword(currentPassword, newPassword).then(res => res.data),
+-  });
+-}
+-
+-
+-export function useDeleteMyAccount() {
+-  return useMutation({
+-    mutationFn: (currentPassword: string) =>
+-      authApi.deleteMyAccount(currentPassword).then(res => res.data),
+-  });
+-}
+-
+-
+-export function useTwoFactorStatus() {
+-  return useQuery({
+-    queryKey: ['twoFactorStatus'],
+-    queryFn: () => authApi.getTwoFactorStatus().then(res => res.data),
+-  });
+-}
+-
+-export function useSetupTwoFactor() {
+-  return useMutation({
+-    mutationFn: () => authApi.setupTwoFactor().then(res => res.data),
+-  });
+-}
+-
+-export function useEnableTwoFactor() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (code: string) => authApi.enableTwoFactor(code).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] }),
+-  });
+-}
+-
+-export function useDisableTwoFactor() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (currentPassword: string) => authApi.disableTwoFactor(currentPassword).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] }),
+-  });
+-}
+-
+-export function useRegenerateRecoveryCodes() {
+-  return useMutation({
+-    mutationFn: (currentPassword: string) => authApi.regenerateRecoveryCodes(currentPassword).then(res => res.data),
+-  });
+-}
+-
+-export function useAddPayment() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: ({ invoiceId, data }: { invoiceId: string; data: Parameters<typeof paymentApi.create>[1] }) =>
+-      paymentApi.create(invoiceId, data).then(res => res.data),
+-    onSuccess: (_data, variables) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-    },
+-  });
+-}
+-
+-
+-export function useUpdatePayment() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: ({ paymentId, data }: { paymentId: string; data: Parameters<typeof paymentApi.update>[1] }) =>
+-      paymentApi.update(paymentId, data).then(res => res.data),
+-    onSuccess: (data) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(data.invoiceId) });
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-    },
+-  });
+-}
+-
+-export function useDeletePayment() {
+-  const queryClient = useQueryClient();
+-
+-  return useMutation({
+-    mutationFn: ({ paymentId }: { paymentId: string; invoiceId: string }) =>
+-      paymentApi.delete(paymentId).then(res => res.data),
+-    onSuccess: (_data, variables) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-    },
+-  });
+-}
+-
+-// Family settings hooks
+-// Family configuration data rarely changes; cache it for 30 minutes to reduce
+-// unnecessary round-trips when multiple components mount on the same page.
+-const FAMILY_CONFIG_STALE_MS = 1000 * 60 * 30;
+-
+-export function useCategories() {
+-  return useQuery({
+-    queryKey: queryKeys.categories(),
+-    queryFn: () => familyApi.getCategories().then(res => res.data),
+-    staleTime: FAMILY_CONFIG_STALE_MS,
+-  });
+-}
+-
+-export function useAddCategory() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (name: string) => familyApi.addCategory(name).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
+-  });
+-}
+-
+-export function useRemoveCategory() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (name: string) => familyApi.removeCategory(name).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
+-  });
+-}
+-
+-export function useRemoveCategoriesBulk() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (names: string[]) => familyApi.removeCategoriesBulk(names).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
+-  });
+-}
+-
+-
+-export function useRenameCategory() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ oldName, newName }: { oldName: string; newName: string }) =>
+-      familyApi.renameCategory(oldName, newName).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
+-  });
+-}
+-
+-export function usePaymentMethods() {
+-  return useQuery({
+-    queryKey: queryKeys.paymentMethods(),
+-    queryFn: () => familyApi.getPaymentMethods().then(res => res.data),
+-    staleTime: FAMILY_CONFIG_STALE_MS,
+-  });
+-}
+-
+-export function useAddPaymentMethod() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (name: string) => familyApi.addPaymentMethod(name).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
+-  });
+-}
+-
+-export function useRemovePaymentMethod() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (name: string) => familyApi.removePaymentMethod(name).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
+-  });
+-}
+-
+-export function useRemovePaymentMethodsBulk() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (names: string[]) => familyApi.removePaymentMethodsBulk(names).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
+-  });
+-}
+-
+-
+-export function useRenamePaymentMethod() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ oldName, newName }: { oldName: string; newName: string }) =>
+-      familyApi.renamePaymentMethod(oldName, newName).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
+-  });
+-}
+-
+-// Currency hooks
+-export function useCurrency() {
+-  return useQuery({
+-    queryKey: queryKeys.currency(),
+-    queryFn: () => familyApi.getCurrency().then(res => res.data),
+-    staleTime: FAMILY_CONFIG_STALE_MS,
+-  });
+-}
+-
+-export function useUpdateCurrency() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (currency: string) => familyApi.updateCurrency(currency).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.currency() }),
+-  });
+-}
+-
+-export function useCurrencySymbolPosition() {
+-  return useQuery({
+-    queryKey: queryKeys.currencySymbolPosition(),
+-    queryFn: () => familyApi.getCurrencySymbolPosition().then(res => res.data),
+-    staleTime: FAMILY_CONFIG_STALE_MS,
+-  });
+-}
+-
+-export function useUpdateCurrencySymbolPosition() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (position: 'Before' | 'After') =>
+-      familyApi.updateCurrencySymbolPosition(position).then(res => res.data),
+-    onSuccess: () =>
+-      queryClient.invalidateQueries({ queryKey: queryKeys.currencySymbolPosition() }),
+-  });
+-}
+-
+ /**
+- * Returns a pre-configured currency formatter that automatically applies the
+- * family's currencySymbolPosition, currency code, and locale settings.
+- * Use this hook instead of calling formatCurrency directly so the symbol
+- * position preference is honoured everywhere.
++ * Barrel re-export — keeps all existing import paths working while the
++ * implementation now lives in focused per-domain files.
++ *
++ * New code should import directly from the domain file (e.g.
++ * `import { useInvoices } from './useInvoiceApi'`) for better tree-shaking
++ * and readability.
+  */
+-export function useCurrencyFormatter() {
+-  const { data: currency = 'NOK' } = useCurrency();
+-  const { data: symbolPosition = 'Before' } = useCurrencySymbolPosition();
+-  const { settings } = useSettings();
+-
+-  return useCallback(
+-    (cents: number, showCurrency = true) =>
+-      formatCurrency(cents, currency, showCurrency, settings.locale, symbolPosition as 'Before' | 'After'),
+-    [currency, symbolPosition, settings.locale],
+-  );
+-}
+-
+-// Vendor hooks
+-export function useVendors() {
+-  return useQuery({
+-    queryKey: queryKeys.vendors(),
+-    queryFn: () => familyApi.getVendors().then(res => res.data),
+-    staleTime: FAMILY_CONFIG_STALE_MS,
+-  });
+-}
+-
+-export function useAddVendor() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ name, logoUrl }: { name: string; logoUrl?: string }) =>
+-      familyApi.addVendor(name, logoUrl).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+-  });
+-}
+-
+-export function useUpdateVendor() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ id, data }: { id: string; data: { name?: string; logoUrl?: string | null } }) =>
+-      familyApi.updateVendor(id, data).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+-  });
+-}
+-
+-export function useRemoveVendor() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (id: string) => familyApi.removeVendor(id),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+-  });
+-}
+-
+-
+-export function useRemoveVendorsBulk() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (ids: string[]) => familyApi.removeVendorsBulk(ids),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
+-  });
+-}
+-
+-// Subscription hooks
+-export function useSubscriptions(activeOnly?: boolean) {
+-  return useQuery({
+-    queryKey: queryKeys.subscriptions(),
+-    queryFn: () => subscriptionApi.getAll(activeOnly).then(res => res.data),
+-  });
+-}
+-
+-export function useSubscription(id: string) {
+-  return useQuery({
+-    queryKey: queryKeys.subscription(id),
+-    queryFn: () => subscriptionApi.getById(id).then(res => res.data),
+-    enabled: !!id,
+-  });
+-}
+-
+-export function useCreateSubscription() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (data: Parameters<typeof subscriptionApi.create>[0]) =>
+-      subscriptionApi.create(data).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+-  });
+-}
+-
+-export function useUpdateSubscription() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: ({ id, data }: { id: string; data: Partial<Subscription> }) =>
+-      subscriptionApi.update(id, data).then(res => res.data),
+-    onSuccess: (updated) => {
+-      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.subscription(updated.id) });
+-      queryClient.setQueryData(queryKeys.subscription(updated.id), updated);
+-    },
+-  });
+-}
+-
+-export function useToggleSubscription() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (id: string) => subscriptionApi.toggleActive(id).then(res => res.data),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+-  });
+-}
+-
+-export function useDeleteSubscription() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (id: string) => subscriptionApi.delete(id),
+-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
+-  });
+-}
+ 
+-export function useGenerateSubscriptionInvoices() {
+-  const queryClient = useQueryClient();
+-  return useMutation({
+-    mutationFn: (periodId: string) => subscriptionApi.generateForPeriod(periodId).then(res => res.data),
+-    onSuccess: () => {
+-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+-      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+-    },
+-  });
+-}
++export { queryKeys } from './queryKeys';
++
++export {
++  useInvoices,
++  useInvoice,
++  useCreateInvoice,
++  useUpdateInvoice,
++  useDeleteInvoice,
++} from './useInvoiceApi';
++
++export {
++  usePeriods,
++  usePeriod,
++  useCurrentPeriod,
++  useCreatePeriod,
++  useClosePeriod,
++  useGetPeriodDeletionInfo,
++  useDeletePeriod,
++  usePeriodStats,
++} from './usePeriodApi';
++
++export {
++  useUserIncomes,
++  useUpsertUserIncome,
++} from './useIncomeApi';
++
++export {
++  useUsers,
++  useCreateUser,
++  useUpdateUser,
++  useDeleteUser,
++  useUploadAvatar,
++  useRemoveAvatar,
++  useUploadVendorLogo,
++} from './useUserApi';
++
++export {
++  useChangePassword,
++  useDeleteMyAccount,
++  useTwoFactorStatus,
++  useSetupTwoFactor,
++  useEnableTwoFactor,
++  useDisableTwoFactor,
++  useRegenerateRecoveryCodes,
++} from './useAuthApi';
++
++export {
++  useAddPayment,
++  useUpdatePayment,
++  useDeletePayment,
++} from './usePaymentApi';
++
++export {
++  useCategories,
++  useAddCategory,
++  useRemoveCategory,
++  useRemoveCategoriesBulk,
++  useRenameCategory,
++  usePaymentMethods,
++  useAddPaymentMethod,
++  useRemovePaymentMethod,
++  useRemovePaymentMethodsBulk,
++  useRenamePaymentMethod,
++  useCurrency,
++  useUpdateCurrency,
++  useCurrencySymbolPosition,
++  useUpdateCurrencySymbolPosition,
++  useCurrencyFormatter,
++  useVendors,
++  useAddVendor,
++  useUpdateVendor,
++  useRemoveVendor,
++  useRemoveVendorsBulk,
++} from './useFamilyApi';
++
++export {
++  useSubscriptions,
++  useSubscription,
++  useCreateSubscription,
++  useUpdateSubscription,
++  useToggleSubscription,
++  useDeleteSubscription,
++  useGenerateSubscriptionInvoices,
++} from './useSubscriptionApi';
+diff --git a/apps/web/src/hooks/useAuthApi.ts b/apps/web/src/hooks/useAuthApi.ts
+new file mode 100644
+index 0000000..ac51771
+--- /dev/null
++++ b/apps/web/src/hooks/useAuthApi.ts
+@@ -0,0 +1,51 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { authApi } from '../services/api';
++
++export function useChangePassword() {
++  return useMutation({
++    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
++      authApi.changePassword(currentPassword, newPassword).then(res => res.data),
++  });
++}
++
++export function useDeleteMyAccount() {
++  return useMutation({
++    mutationFn: (currentPassword: string) =>
++      authApi.deleteMyAccount(currentPassword).then(res => res.data),
++  });
++}
++
++export function useTwoFactorStatus() {
++  return useQuery({
++    queryKey: ['twoFactorStatus'],
++    queryFn: () => authApi.getTwoFactorStatus().then(res => res.data),
++  });
++}
++
++export function useSetupTwoFactor() {
++  return useMutation({
++    mutationFn: () => authApi.setupTwoFactor().then(res => res.data),
++  });
++}
++
++export function useEnableTwoFactor() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (code: string) => authApi.enableTwoFactor(code).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] }),
++  });
++}
++
++export function useDisableTwoFactor() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (currentPassword: string) => authApi.disableTwoFactor(currentPassword).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['twoFactorStatus'] }),
++  });
++}
++
++export function useRegenerateRecoveryCodes() {
++  return useMutation({
++    mutationFn: (currentPassword: string) => authApi.regenerateRecoveryCodes(currentPassword).then(res => res.data),
++  });
++}
+diff --git a/apps/web/src/hooks/useFamilyApi.ts b/apps/web/src/hooks/useFamilyApi.ts
+new file mode 100644
+index 0000000..f7f36f4
+--- /dev/null
++++ b/apps/web/src/hooks/useFamilyApi.ts
+@@ -0,0 +1,194 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { useCallback } from 'react';
++import { familyApi } from '../services/api';
++import { useSettings } from '../stores/settings.context';
++import { formatCurrency } from '../utils/currency';
++import { queryKeys } from './queryKeys';
++
++// Family configuration data rarely changes; cache for 30 minutes to reduce
++// unnecessary round-trips when multiple components mount on the same page.
++const FAMILY_CONFIG_STALE_MS = 1000 * 60 * 30;
++
++// ── Categories ────────────────────────────────────────────────────────────────
++
++export function useCategories() {
++  return useQuery({
++    queryKey: queryKeys.categories(),
++    queryFn: () => familyApi.getCategories().then(res => res.data),
++    staleTime: FAMILY_CONFIG_STALE_MS,
++  });
++}
++
++export function useAddCategory() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (name: string) => familyApi.addCategory(name).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
++  });
++}
++
++export function useRemoveCategory() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (name: string) => familyApi.removeCategory(name).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
++  });
++}
++
++export function useRemoveCategoriesBulk() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (names: string[]) => familyApi.removeCategoriesBulk(names).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
++  });
++}
++
++export function useRenameCategory() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ oldName, newName }: { oldName: string; newName: string }) =>
++      familyApi.renameCategory(oldName, newName).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories() }),
++  });
++}
++
++// ── Payment methods ───────────────────────────────────────────────────────────
++
++export function usePaymentMethods() {
++  return useQuery({
++    queryKey: queryKeys.paymentMethods(),
++    queryFn: () => familyApi.getPaymentMethods().then(res => res.data),
++    staleTime: FAMILY_CONFIG_STALE_MS,
++  });
++}
++
++export function useAddPaymentMethod() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (name: string) => familyApi.addPaymentMethod(name).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
++  });
++}
++
++export function useRemovePaymentMethod() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (name: string) => familyApi.removePaymentMethod(name).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
++  });
++}
++
++export function useRemovePaymentMethodsBulk() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (names: string[]) => familyApi.removePaymentMethodsBulk(names).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
++  });
++}
++
++export function useRenamePaymentMethod() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ oldName, newName }: { oldName: string; newName: string }) =>
++      familyApi.renamePaymentMethod(oldName, newName).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods() }),
++  });
++}
++
++// ── Currency ──────────────────────────────────────────────────────────────────
++
++export function useCurrency() {
++  return useQuery({
++    queryKey: queryKeys.currency(),
++    queryFn: () => familyApi.getCurrency().then(res => res.data),
++    staleTime: FAMILY_CONFIG_STALE_MS,
++  });
++}
++
++export function useUpdateCurrency() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (currency: string) => familyApi.updateCurrency(currency).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.currency() }),
++  });
++}
++
++export function useCurrencySymbolPosition() {
++  return useQuery({
++    queryKey: queryKeys.currencySymbolPosition(),
++    queryFn: () => familyApi.getCurrencySymbolPosition().then(res => res.data),
++    staleTime: FAMILY_CONFIG_STALE_MS,
++  });
++}
++
++export function useUpdateCurrencySymbolPosition() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (position: 'Before' | 'After') =>
++      familyApi.updateCurrencySymbolPosition(position).then(res => res.data),
++    onSuccess: () =>
++      queryClient.invalidateQueries({ queryKey: queryKeys.currencySymbolPosition() }),
++  });
++}
++
++/**
++ * Returns a pre-configured currency formatter that automatically applies the
++ * family's currencySymbolPosition, currency code, and locale settings.
++ * Use this hook instead of calling formatCurrency directly so the symbol
++ * position preference is honoured everywhere.
++ */
++export function useCurrencyFormatter() {
++  const { data: currency = 'NOK' } = useCurrency();
++  const { data: symbolPosition = 'Before' } = useCurrencySymbolPosition();
++  const { settings } = useSettings();
++
++  return useCallback(
++    (cents: number, showCurrency = true) =>
++      formatCurrency(cents, currency, showCurrency, settings.locale, symbolPosition as 'Before' | 'After'),
++    [currency, symbolPosition, settings.locale],
++  );
++}
++
++// ── Vendors ───────────────────────────────────────────────────────────────────
++
++export function useVendors() {
++  return useQuery({
++    queryKey: queryKeys.vendors(),
++    queryFn: () => familyApi.getVendors().then(res => res.data),
++    staleTime: FAMILY_CONFIG_STALE_MS,
++  });
++}
++
++export function useAddVendor() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ name, logoUrl }: { name: string; logoUrl?: string }) =>
++      familyApi.addVendor(name, logoUrl).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
++  });
++}
++
++export function useUpdateVendor() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ id, data }: { id: string; data: { name?: string; logoUrl?: string | null } }) =>
++      familyApi.updateVendor(id, data).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
++  });
++}
++
++export function useRemoveVendor() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (id: string) => familyApi.removeVendor(id),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
++  });
++}
++
++export function useRemoveVendorsBulk() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (ids: string[]) => familyApi.removeVendorsBulk(ids),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
++  });
++}
+diff --git a/apps/web/src/hooks/useIncomeApi.ts b/apps/web/src/hooks/useIncomeApi.ts
+new file mode 100644
+index 0000000..e80ac02
+--- /dev/null
++++ b/apps/web/src/hooks/useIncomeApi.ts
+@@ -0,0 +1,23 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { userIncomeApi } from '../services/api';
++import { queryKeys } from './queryKeys';
++
++export function useUserIncomes(periodId: string) {
++  return useQuery({
++    queryKey: queryKeys.userIncomes(periodId),
++    queryFn: () => userIncomeApi.getByPeriod(periodId).then(res => res.data),
++    enabled: !!periodId,
++  });
++}
++
++export function useUpsertUserIncome() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (data: Parameters<typeof userIncomeApi.upsert>[0]) =>
++      userIncomeApi.upsert(data).then(res => res.data),
++    onSuccess: (data) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.userIncomes(data.periodId) });
++    },
++  });
++}
+diff --git a/apps/web/src/hooks/useInvoiceApi.ts b/apps/web/src/hooks/useInvoiceApi.ts
+new file mode 100644
+index 0000000..da22d35
+--- /dev/null
++++ b/apps/web/src/hooks/useInvoiceApi.ts
+@@ -0,0 +1,83 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { invoiceApi, Invoice } from '../services/api';
++import { addToOfflineQueue } from '../idb/queue';
++import { queryKeys } from './queryKeys';
++
++export function useInvoices(periodId?: string) {
++  return useQuery({
++    queryKey: queryKeys.invoices(periodId),
++    queryFn: () => invoiceApi.getAll({ periodId }).then(res => res.data),
++    enabled: !!periodId,
++  });
++}
++
++export function useInvoice(id: string) {
++  return useQuery({
++    queryKey: queryKeys.invoice(id),
++    queryFn: () => invoiceApi.getById(id).then(res => res.data),
++    enabled: !!id,
++  });
++}
++
++export function useCreateInvoice() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (data: Parameters<typeof invoiceApi.create>[0]) =>
++      invoiceApi.create(data).then(res => res.data),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++      queryClient.invalidateQueries({ queryKey: ['currentPeriod'] });
++    },
++    onError: async (_error, variables) => {
++      if (!navigator.onLine) {
++        await addToOfflineQueue({
++          method: 'POST',
++          url: '/invoices',
++          data: variables,
++        });
++      }
++    },
++  });
++}
++
++export function useUpdateInvoice() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: ({ id, data }: { id: string; data: Partial<Invoice> & { distributionRules?: unknown } }) =>
++      invoiceApi.update(id, data).then(res => res.data),
++    onSuccess: (data) => {
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(data.id) });
++    },
++    onError: async (_error, variables) => {
++      if (!navigator.onLine) {
++        await addToOfflineQueue({
++          method: 'PATCH',
++          url: `/invoices/${variables.id}`,
++          data: variables.data,
++        });
++      }
++    },
++  });
++}
++
++export function useDeleteInvoice() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (id: string) => invoiceApi.delete(id),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++    },
++    onError: async (_error, id) => {
++      if (!navigator.onLine) {
++        await addToOfflineQueue({
++          method: 'DELETE',
++          url: `/invoices/${id}`,
++        });
++      }
++    },
++  });
++}
+diff --git a/apps/web/src/hooks/usePaymentApi.ts b/apps/web/src/hooks/usePaymentApi.ts
+new file mode 100644
+index 0000000..fa5c488
+--- /dev/null
++++ b/apps/web/src/hooks/usePaymentApi.ts
+@@ -0,0 +1,42 @@
++import { useMutation, useQueryClient } from '@tanstack/react-query';
++import { paymentApi } from '../services/api';
++import { queryKeys } from './queryKeys';
++
++export function useAddPayment() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: ({ invoiceId, data }: { invoiceId: string; data: Parameters<typeof paymentApi.create>[1] }) =>
++      paymentApi.create(invoiceId, data).then(res => res.data),
++    onSuccess: (_data, variables) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++    },
++  });
++}
++
++export function useUpdatePayment() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: ({ paymentId, data }: { paymentId: string; data: Parameters<typeof paymentApi.update>[1] }) =>
++      paymentApi.update(paymentId, data).then(res => res.data),
++    onSuccess: (data) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(data.invoiceId) });
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++    },
++  });
++}
++
++export function useDeletePayment() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: ({ paymentId }: { paymentId: string; invoiceId: string }) =>
++      paymentApi.delete(paymentId).then(res => res.data),
++    onSuccess: (_data, variables) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++    },
++  });
++}
+diff --git a/apps/web/src/hooks/usePeriodApi.ts b/apps/web/src/hooks/usePeriodApi.ts
+new file mode 100644
+index 0000000..7baaae7
+--- /dev/null
++++ b/apps/web/src/hooks/usePeriodApi.ts
+@@ -0,0 +1,77 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { periodApi } from '../services/api';
++import { queryKeys } from './queryKeys';
++
++export function usePeriods() {
++  return useQuery({
++    queryKey: queryKeys.periods(),
++    queryFn: () => periodApi.getAll().then(res => res.data),
++  });
++}
++
++export function usePeriod(id: string) {
++  return useQuery({
++    queryKey: queryKeys.period(id),
++    queryFn: () => periodApi.getById(id).then(res => res.data),
++    enabled: !!id,
++  });
++}
++
++export function useCurrentPeriod() {
++  return useQuery({
++    queryKey: queryKeys.currentPeriod(),
++    queryFn: () => periodApi.getCurrent().then(res => res.data),
++  });
++}
++
++export function useCreatePeriod() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (data: { id: string; autoImportSubscriptions?: boolean }) =>
++      periodApi.create(data).then(res => res.data),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
++    },
++  });
++}
++
++export function useClosePeriod() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (id: string) => periodApi.close(id).then(res => res.data),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
++      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
++    },
++  });
++}
++
++export function useGetPeriodDeletionInfo(id: string) {
++  return useQuery({
++    queryKey: ['periodDeletionInfo', id],
++    queryFn: () => periodApi.getDeletionInfo(id).then(res => res.data),
++    enabled: !!id,
++  });
++}
++
++export function useDeletePeriod() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (id: string) => periodApi.delete(id),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
++      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
++    },
++  });
++}
++
++export function usePeriodStats(id: string) {
++  return useQuery({
++    queryKey: queryKeys.periodStats(id),
++    queryFn: () => periodApi.getStats(id).then(res => res.data),
++    enabled: !!id,
++  });
++}
+diff --git a/apps/web/src/hooks/useSubscriptionApi.ts b/apps/web/src/hooks/useSubscriptionApi.ts
+new file mode 100644
+index 0000000..ea49e70
+--- /dev/null
++++ b/apps/web/src/hooks/useSubscriptionApi.ts
+@@ -0,0 +1,67 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { subscriptionApi, Subscription } from '../services/api';
++import { queryKeys } from './queryKeys';
++
++export function useSubscriptions(activeOnly?: boolean) {
++  return useQuery({
++    queryKey: queryKeys.subscriptions(),
++    queryFn: () => subscriptionApi.getAll(activeOnly).then(res => res.data),
++  });
++}
++
++export function useSubscription(id: string) {
++  return useQuery({
++    queryKey: queryKeys.subscription(id),
++    queryFn: () => subscriptionApi.getById(id).then(res => res.data),
++    enabled: !!id,
++  });
++}
++
++export function useCreateSubscription() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (data: Parameters<typeof subscriptionApi.create>[0]) =>
++      subscriptionApi.create(data).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
++  });
++}
++
++export function useUpdateSubscription() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ id, data }: { id: string; data: Partial<Subscription> }) =>
++      subscriptionApi.update(id, data).then(res => res.data),
++    onSuccess: (updated) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() });
++      queryClient.invalidateQueries({ queryKey: queryKeys.subscription(updated.id) });
++      queryClient.setQueryData(queryKeys.subscription(updated.id), updated);
++    },
++  });
++}
++
++export function useToggleSubscription() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (id: string) => subscriptionApi.toggleActive(id).then(res => res.data),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
++  });
++}
++
++export function useDeleteSubscription() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (id: string) => subscriptionApi.delete(id),
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions() }),
++  });
++}
++
++export function useGenerateSubscriptionInvoices() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (periodId: string) => subscriptionApi.generateForPeriod(periodId).then(res => res.data),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['invoices'] });
++      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
++    },
++  });
++}
+diff --git a/apps/web/src/hooks/useUserApi.ts b/apps/web/src/hooks/useUserApi.ts
+new file mode 100644
+index 0000000..08d070b
+--- /dev/null
++++ b/apps/web/src/hooks/useUserApi.ts
+@@ -0,0 +1,84 @@
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import { userApi, familyApi, User } from '../services/api';
++import { queryKeys } from './queryKeys';
++
++export function useUsers() {
++  return useQuery({
++    queryKey: queryKeys.users(),
++    queryFn: () => userApi.getAll().then(res => res.data),
++  });
++}
++
++export function useCreateUser() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (data: Parameters<typeof userApi.create>[0]) =>
++      userApi.create(data).then(res => res.data),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
++    },
++  });
++}
++
++export function useUpdateUser() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof userApi.update>[1] }) =>
++      userApi.update(id, data).then(res => res.data),
++    onSuccess: (user: User) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
++      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
++    },
++  });
++}
++
++export function useDeleteUser() {
++  const queryClient = useQueryClient();
++
++  return useMutation({
++    mutationFn: (id: string) => userApi.delete(id),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
++    },
++  });
++}
++
++export function useUploadAvatar() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ id, file }: { id: string; file: File }) => {
++      const fd = new FormData();
++      fd.append('avatar', file);
++      return userApi.uploadAvatar(id, fd).then(r => r.data);
++    },
++    onSuccess: (user: User) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
++      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
++    },
++  });
++}
++
++export function useRemoveAvatar() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: (id: string) => userApi.removeAvatar(id).then(r => r.data),
++    onSuccess: (user: User) => {
++      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
++      queryClient.invalidateQueries({ queryKey: queryKeys.user(user.id) });
++    },
++  });
++}
++
++export function useUploadVendorLogo() {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: ({ id, file }: { id: string; file: File }) => {
++      const fd = new FormData();
++      fd.append('logo', file);
++      return familyApi.uploadVendorLogo(id, fd).then(r => r.data);
++    },
++    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors() }),
++  });
++}
+diff --git a/apps/web/src/main.tsx b/apps/web/src/main.tsx
+index 2aa216e..a6b555a 100644
+--- a/apps/web/src/main.tsx
++++ b/apps/web/src/main.tsx
+@@ -20,6 +20,7 @@ const queryClient = new QueryClient({
+ });
+ 
+ const BF_CACHE_RELOAD_GUARD_KEY = 'kost:bfcache-reload-ts';
++const SW_CLEANUP_RELOAD_GUARD_KEY = 'kost:sw-cleanup-reload-ts';
+ 
+ function logLifecycle(level: 'warn' | 'error', message: string, details?: unknown) {
+   const payload = {
+@@ -88,6 +89,47 @@ function setupIosBfCacheHardening() {
+ function setupServiceWorkerHardening() {
+   if (!import.meta.env.PROD) return;
+ 
++  const enablePwa = import.meta.env.VITE_ENABLE_PWA === 'true';
++
++  if (!enablePwa) {
++    console.info('[AppLifecycle] PWA disabled. Unregistering service workers.');
++
++    if (!('serviceWorker' in navigator)) return;
++
++    navigator.serviceWorker
++      .getRegistrations()
++      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
++      .catch((error) => {
++        logLifecycle('warn', 'Failed to unregister service worker registrations', error);
++      })
++      .finally(() => {
++        if ('caches' in window) {
++          caches
++            .keys()
++            .then((cacheNames) =>
++              Promise.all(
++                cacheNames
++                  .filter((cacheName) => cacheName.includes('workbox') || cacheName.includes('navigation-cache'))
++                  .map((cacheName) => caches.delete(cacheName))
++              )
++            )
++            .catch((error) => {
++              logLifecycle('warn', 'Failed to clear service worker caches', error);
++            });
++        }
++
++        if (!navigator.serviceWorker.controller) return;
++
++        const lastReload = Number(sessionStorage.getItem(SW_CLEANUP_RELOAD_GUARD_KEY) ?? '0');
++        if (Date.now() - lastReload < 5000) return;
++
++        sessionStorage.setItem(SW_CLEANUP_RELOAD_GUARD_KEY, String(Date.now()));
++        window.location.reload();
++      });
++
++    return;
++  }
++
+   let refreshing = false;
+   navigator.serviceWorker?.addEventListener('controllerchange', () => {
+     if (refreshing) return;
+diff --git a/apps/web/src/pages/Expenses/AddExpense.tsx b/apps/web/src/pages/Expenses/AddExpense.tsx
+index 567562f..0774063 100644
+--- a/apps/web/src/pages/Expenses/AddExpense.tsx
++++ b/apps/web/src/pages/Expenses/AddExpense.tsx
+@@ -452,17 +452,17 @@ export default function AddExpense() {
+         }
+         navigate("/subscriptions");
+       } else {
+-        const invoiceData = {
++        const invoiceData: any = {
+           vendor: vendor.trim(),
+-          category: category.trim() || undefined,
+-          description: description.trim() || undefined,
+           totalCents,
+           distributionMethod,
+-          dueDate: dueDate || undefined,
+-          paymentMethod: paymentMethod || undefined,
+-          distributionRules,
+           isPersonal,
+         };
++        if (category.trim()) invoiceData.category = category.trim();
++        if (description.trim()) invoiceData.description = description.trim();
++        if (dueDate) invoiceData.dueDate = dueDate;
++        if (paymentMethod) invoiceData.paymentMethod = paymentMethod;
++        if (distributionRules) invoiceData.distributionRules = distributionRules;
+ 
+         if (isEditing) {
+           await updateInvoice.mutateAsync({ id: id!, data: invoiceData });
+diff --git a/apps/web/src/pages/Invoices/AddInvoice.tsx b/apps/web/src/pages/Invoices/AddInvoice.tsx
+index c70fb83..1a06f2b 100644
+--- a/apps/web/src/pages/Invoices/AddInvoice.tsx
++++ b/apps/web/src/pages/Invoices/AddInvoice.tsx
+@@ -130,15 +130,15 @@ export default function AddInvoice() {
+       setError(t('invoice.atLeastOneUser')); return;
+     }
+ 
+-    const sharedData = {
++    const sharedData: any = {
+       vendor: vendor.trim(),
+-      category: category.trim() || undefined,
+-      description: description.trim() || undefined,
+       totalCents,
+       distributionMethod,
+-      dueDate: dueDate || undefined,
+-      paymentMethod: paymentMethod || undefined,
+     };
++    if (category.trim()) sharedData.category = category.trim();
++    if (description.trim()) sharedData.description = description.trim();
++    if (dueDate) sharedData.dueDate = dueDate;
++    if (paymentMethod) sharedData.paymentMethod = paymentMethod;
+ 
+     try {
+       if (isEditing) {
+diff --git a/apps/web/src/pages/Invoices/InvoiceList.tsx b/apps/web/src/pages/Invoices/InvoiceList.tsx
+index 3abce93..d0daebf 100644
+--- a/apps/web/src/pages/Invoices/InvoiceList.tsx
++++ b/apps/web/src/pages/Invoices/InvoiceList.tsx
+@@ -161,7 +161,7 @@ export default function InvoiceList() {
+ 
+   const renderInvoice = (invoice: any) => {
+     const totalPaid = (invoice.payments ?? []).reduce(
+-      (sum, p) => sum + p.amountCents,
++      (sum: number, p: any) => sum + p.amountCents,
+       0,
+     );
+     const remaining = invoice.totalCents - totalPaid;
+diff --git a/apps/web/src/pages/Login.tsx b/apps/web/src/pages/Login.tsx
+index 3f70f9d..1c3b990 100644
+--- a/apps/web/src/pages/Login.tsx
++++ b/apps/web/src/pages/Login.tsx
+@@ -21,7 +21,7 @@ export default function Login() {
+   const [error, setError] = useState('');
+ 
+   useEffect(() => {
+-    if (isAuthenticated) navigate('/dashboard');
++    if (isAuthenticated) navigate('/overview');
+   }, [isAuthenticated, navigate]);
+ 
+   const handleSubmit = async (e: React.FormEvent) => {
+@@ -37,7 +37,7 @@ export default function Login() {
+         recoveryCode.trim() || undefined,
+       );
+       login(user);
+-      navigate('/dashboard');
++      navigate('/overview');
+     } catch (err) {
+       const loginError = err as AxiosError<{ message?: string }>;
+       const message = loginError.response?.data?.message;
+diff --git a/apps/web/src/routes/index.tsx b/apps/web/src/routes/index.tsx
+index 6853387..253acb3 100644
+--- a/apps/web/src/routes/index.tsx
++++ b/apps/web/src/routes/index.tsx
+@@ -87,7 +87,14 @@ export default function AppRoutes() {
+         <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+       </Route>
+ 
+-      <Route path="*" element={<Navigate to="/login" replace />} />
++      {/* Authenticated users land on /overview; unauthenticated on /login */}
++      <Route path="*" element={<CatchAll />} />
+     </Routes>
+   );
+ }
++
++function CatchAll() {
++  const { isAuthenticated, isLoading } = useAuth();
++  if (isLoading) return <Spinner />;
++  return <Navigate to={isAuthenticated ? "/overview" : "/login"} replace />;
++}
+diff --git a/apps/web/src/stores/auth.context.tsx b/apps/web/src/stores/auth.context.tsx
+index b6128ba..66f4dfa 100644
+--- a/apps/web/src/stores/auth.context.tsx
++++ b/apps/web/src/stores/auth.context.tsx
+@@ -23,14 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+     if (storedUser) {
+       setUser(storedUser);
+       // Verify session is still valid
+-      authService.getCurrentUser().then((currentUser) => {
+-        if (currentUser) {
+-          setUser(currentUser);
+-        } else {
++      authService
++        .getCurrentUser()
++        .then((currentUser) => {
++          if (currentUser) {
++            setUser(currentUser);
++          } else {
++            setUser(null);
++          }
++        })
++        .catch(() => {
+           setUser(null);
+-        }
+-        setIsLoading(false);
+-      });
++        })
++        .finally(() => {
++          setIsLoading(false);
++        });
+     } else {
+       setIsLoading(false);
+     }
+diff --git a/apps/web/src/vite-env.d.ts b/apps/web/src/vite-env.d.ts
+index 4b1ecbb..7bdf869 100644
+--- a/apps/web/src/vite-env.d.ts
++++ b/apps/web/src/vite-env.d.ts
+@@ -4,6 +4,7 @@
+ interface ImportMetaEnv {
+   readonly VITE_API_URL: string;
+   readonly VITE_APP_NAME: string;
++  readonly VITE_ENABLE_PWA?: string;
+ }
+ 
+ interface ImportMeta {
+diff --git a/apps/web/tsconfig.json b/apps/web/tsconfig.json
+index 6706607..332938b 100644
+--- a/apps/web/tsconfig.json
++++ b/apps/web/tsconfig.json
+@@ -14,8 +14,8 @@
+     "noEmit": true,
+     "jsx": "react-jsx",
+ 
+-    /* Linting */
+-    "strict": false,
++    /* Strict type checking */
++    "strict": true,
+     "noUnusedLocals": false,
+     "noUnusedParameters": false,
+     "noFallthroughCasesInSwitch": true,
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index efb7c67..75898c7 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -81,18 +81,6 @@ export default defineConfig({
+               networkTimeoutSeconds: 10,
+             }
+           },
+-          // Google Fonts
+-          {
+-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+-            handler: 'CacheFirst' as const,
+-            options: {
+-              cacheName: 'google-fonts-cache',
+-              expiration: {
+-                maxEntries: 10,
+-                maxAgeSeconds: 60 * 60 * 24 * 365
+-              }
+-            }
+-          }
+         ]
+       },
+       devOptions: {
+@@ -111,6 +99,7 @@ export default defineConfig({
+   },
+   build: {
+     outDir: 'dist',
+-    sourcemap: true
++    sourcemap: true,
++    modulePreload: { polyfill: false }
+   }
+ });
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 4d4973a..d769924 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -26,6 +26,7 @@ services:
+       args:
+         # Single-container mode must call same-origin API path to avoid stale external host configs
+         VITE_API_URL: /api
++        VITE_ENABLE_PWA: ${VITE_ENABLE_PWA:-false}
+     container_name: kost-app
+     restart: unless-stopped
+     depends_on:
+@@ -33,6 +34,8 @@ services:
+         condition: service_healthy
+     environment:
+       NODE_ENV: ${NODE_ENV:-production}
++      HOST: 0.0.0.0
++      PORT: 3000
+       DATABASE_URL: postgresql://${DB_USER:-kostuser}:${DB_PASSWORD:-kostpass}@db:5432/${DB_NAME:-kost}?schema=public
+       JWT_SECRET: ${JWT_SECRET}
+       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+@@ -40,6 +43,7 @@ services:
+       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+       CORS_ALLOW_PRIVATE_NETWORK: ${CORS_ALLOW_PRIVATE_NETWORK:-true}
+       COOKIE_SECURE: ${COOKIE_SECURE:-false}
++      HEALTH_REQUIRE_WEB_ASSETS: ${HEALTH_REQUIRE_WEB_ASSETS:-true}
+       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
+       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10}
+       BOOTSTRAP_ADMIN_ON_STARTUP: ${BOOTSTRAP_ADMIN_ON_STARTUP:-true}
+@@ -51,7 +55,11 @@ services:
+     volumes:
+       - uploads_data:/app/apps/api/uploads
+     healthcheck:
+-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
++      test:
++        [
++          "CMD-SHELL",
++          "node -e \"const http=require('http');const checks=['http://localhost:3000/api/health','http://localhost:3000/'];let pending=checks.length;let failed=false;for(const url of checks){http.get(url,(r)=>{if(r.statusCode!==200)failed=true;r.resume();if(--pending===0)process.exit(failed?1:0)}).on('error',()=>{failed=true;if(--pending===0)process.exit(1)})}\"",
++        ]
+       interval: 30s
+       timeout: 10s
+       start_period: 120s
+diff --git a/docs/TROUBLESHOOTING.md b/docs/TROUBLESHOOTING.md
+index e66aed8..d46433a 100644
+--- a/docs/TROUBLESHOOTING.md
++++ b/docs/TROUBLESHOOTING.md
+@@ -9,6 +9,7 @@
+ **Fix (applied in codebase):**
+ 1. NestJS serves `index.html` with `Cache-Control: no-store, no-cache, must-revalidate` — both from `express.static` and the SPA fallback route.
+ 2. The Workbox service worker uses `fetchOptions.cache: 'no-store'` on navigation requests to bypass the browser's HTTP cache entirely.
++3. Production builds now default `VITE_ENABLE_PWA=false`, so the app unregisters stale service workers automatically unless PWA is explicitly enabled.
+ 
+ **If you still see the issue after deploying the fix:**
+ 1. On the affected iOS device, go to **Settings > Safari > Advanced > Website Data**.
+diff --git a/docs/deployment.md b/docs/deployment.md
+index 854d5ab..9b25fac 100644
+--- a/docs/deployment.md
++++ b/docs/deployment.md
+@@ -110,6 +110,7 @@ labels:
+ | `RATE_LIMIT_TTL`             | No       | `60`                       | Rate limit window (seconds)                        |
+ | `RATE_LIMIT_MAX`             | No       | `10`                       | Max requests per window                            |
+ | `COOKIE_SECURE`              | No       | `false`                    | Set to `true` behind HTTPS                         |
++| `VITE_ENABLE_PWA`            | No       | `false`                    | Enable service worker/PWA registration in frontend |
+ | `BOOTSTRAP_ADMIN_ON_STARTUP` | No       | `true`                     | Create admin user on first start if missing        |
+ | `BOOTSTRAP_ADMIN_USERNAME`   | No       | `admin`                    | Bootstrap admin username                           |
+ | `BOOTSTRAP_ADMIN_PASSWORD`   | No       | `kostpass`                 | Bootstrap admin password — **change in production**|
+diff --git a/package-lock.json b/package-lock.json
+index 0712b5b..bd3899b 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -48,9 +48,7 @@
+         "passport-jwt": "^4.0.1",
+         "prisma": "^5.8.1",
+         "reflect-metadata": "^0.2.1",
+-        "rxjs": "^7.8.1",
+-        "uuid": "^9.0.1",
+-        "zod": "^3.22.4"
++        "rxjs": "^7.8.1"
+       },
+       "devDependencies": {
+         "@nestjs/cli": "^11.0.0",
+@@ -60,10 +58,10 @@
+         "@types/cookie-parser": "^1.4.6",
+         "@types/express": "^4.17.21",
+         "@types/jest": "^29.5.11",
++        "@types/multer": "^2.0.0",
+         "@types/node": "^20.11.5",
+         "@types/passport-jwt": "^4.0.0",
+         "@types/supertest": "^6.0.2",
+-        "@types/uuid": "^9.0.7",
+         "eslint": "^9.0.0",
+         "eslint-config-prettier": "^9.1.0",
+         "eslint-plugin-prettier": "^5.1.3",
+@@ -89,7 +87,6 @@
+         "autoprefixer": "^10.4.24",
+         "axios": "^1.6.7",
+         "dexie": "^3.2.5",
+-        "dexie-react-hooks": "^1.1.7",
+         "i18next": "^23.8.2",
+         "i18next-browser-languagedetector": "^7.2.0",
+         "lucide-react": "^0.575.0",
+@@ -5518,6 +5515,16 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/@types/multer": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/@types/multer/-/multer-2.0.0.tgz",
++      "integrity": "sha512-C3Z9v9Evij2yST3RSBktxP9STm6OdMc5uR1xF1SGr98uv8dUlAL2hqwrZ3GVB3uyMyiegnscEK6PGtYvNrjTjw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/express": "*"
++      }
++    },
+     "node_modules/@types/node": {
+       "version": "20.19.33",
+       "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.33.tgz",
+@@ -5678,13 +5685,6 @@
+       "integrity": "sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==",
+       "license": "MIT"
+     },
+-    "node_modules/@types/uuid": {
+-      "version": "9.0.8",
+-      "resolved": "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.8.tgz",
+-      "integrity": "sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==",
+-      "dev": true,
+-      "license": "MIT"
+-    },
+     "node_modules/@types/validator": {
+       "version": "13.15.10",
+       "resolved": "https://registry.npmjs.org/@types/validator/-/validator-13.15.10.tgz",
+@@ -8152,17 +8152,6 @@
+         "node": ">=6.0"
+       }
+     },
+-    "node_modules/dexie-react-hooks": {
+-      "version": "1.1.7",
+-      "resolved": "https://registry.npmjs.org/dexie-react-hooks/-/dexie-react-hooks-1.1.7.tgz",
+-      "integrity": "sha512-Lwv5W0Hk+uOW3kGnsU9GZoR1er1B7WQ5DSdonoNG+focTNeJbHW6vi6nBoX534VKI3/uwHebYzSw1fwY6a7mTw==",
+-      "license": "Apache-2.0",
+-      "peerDependencies": {
+-        "@types/react": ">=16",
+-        "dexie": "^3.2 || ^4.0.1-alpha",
+-        "react": ">=16"
+-      }
+-    },
+     "node_modules/dezalgo": {
+       "version": "1.0.4",
+       "resolved": "https://registry.npmjs.org/dezalgo/-/dezalgo-1.0.4.tgz",
+@@ -16567,19 +16556,6 @@
+         "node": ">= 0.4.0"
+       }
+     },
+-    "node_modules/uuid": {
+-      "version": "9.0.1",
+-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
+-      "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==",
+-      "funding": [
+-        "https://github.com/sponsors/broofa",
+-        "https://github.com/sponsors/ctavan"
+-      ],
+-      "license": "MIT",
+-      "bin": {
+-        "uuid": "dist/bin/uuid"
+-      }
+-    },
+     "node_modules/v8-compile-cache-lib": {
+       "version": "3.0.1",
+       "resolved": "https://registry.npmjs.org/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz",
+diff --git a/tsconfig.base.json b/tsconfig.base.json
+index f02a459..814de9a 100644
+--- a/tsconfig.base.json
++++ b/tsconfig.base.json
+@@ -6,7 +6,7 @@
+     "moduleResolution": "node",
+     "resolveJsonModule": true,
+     "allowJs": true,
+-    "strict": false,
++    "strict": true,
+     "esModuleInterop": true,
+     "skipLibCheck": true,
+     "forceConsistentCasingInFileNames": true,
