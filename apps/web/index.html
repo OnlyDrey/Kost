@@ -26,6 +26,43 @@
       } catch(e) {}
     </script>
 
+    <script>
+    (function () {
+      function show(msg) {
+        try {
+          var el = document.getElementById('kost-crash');
+          if (!el) {
+            el = document.createElement('pre');
+            el.id = 'kost-crash';
+            el.style.cssText =
+              'position:fixed;inset:0;z-index:99999;overflow:auto;background:#0b1020;color:#fff;padding:16px;white-space:pre-wrap;font:12px/1.4 monospace;';
+            document.body.appendChild(el);
+          }
+          el.textContent = msg;
+        } catch (_) {}
+      }
+
+      window.addEventListener('error', function (e) {
+        show(
+          '[window.error]\n' +
+            (e && e.message ? e.message : String(e)) +
+            '\n' +
+            (e && e.error && e.error.stack ? e.error.stack : '')
+        );
+      });
+
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e && e.reason;
+        show(
+          '[unhandledrejection]\n' +
+            (r && r.message ? r.message : String(r)) +
+            '\n' +
+            (r && r.stack ? r.stack : '')
+        );
+      });
+    })();
+    </script>
+
     <title>Kost</title>
   </head>
   <body>
