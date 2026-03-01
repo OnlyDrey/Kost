@@ -202,7 +202,8 @@
     "recoveryCodes": "Recovery codes",
     "regenerateRecoveryCodes": "Regenerate recovery codes",
     "languageDescription": "Choose the display language for the application.",
-    "password": "Password"
+    "password": "Password",
+    "system": "System"
   },
   "users": {
     "title": "Users",

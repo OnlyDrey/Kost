@@ -202,7 +202,8 @@
     "recoveryCodes": "Gjenopprettingskoder",
     "regenerateRecoveryCodes": "Generer nye gjenopprettingskoder",
     "languageDescription": "Velg visningsspråk for applikasjonen.",
-    "password": "Passord"
+    "password": "Passord",
+    "system": "System"
   },
   "users": {
     "title": "Brukere",

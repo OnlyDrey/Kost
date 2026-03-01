@@ -117,7 +117,7 @@ export default function ExpenseItemCard({
       </div>
 
       {(amountLabel || rightContent || dateLabel || actionButton) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">
             {amountLabel && (
               <p className={`text-2xl leading-8 font-bold m-0 ${amountClass}`}>
@@ -137,7 +137,7 @@ export default function ExpenseItemCard({
           </div>
 
           {(rightContent || actionButton) && (
-            <div className="ml-auto flex items-center justify-end gap-1.5 flex-wrap">
+            <div className="ml-3 flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
               {rightContent && <div className="shrink-0">{rightContent}</div>}
               {actionButton && <div className="shrink-0">{actionButton}</div>}
             </div>

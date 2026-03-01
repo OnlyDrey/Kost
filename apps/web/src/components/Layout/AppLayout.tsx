@@ -10,6 +10,10 @@ import {
   Menu,
   ChevronRight,
   RefreshCw,
+  SlidersHorizontal,
+  Shield,
+  Baby,
+  User,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../stores/auth.context';
@@ -66,8 +70,16 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { t } = useTranslation();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { settings, toggleTheme } = useSettings();
+  const { settings, setTheme } = useSettings();
+
   const roleLabel = user?.role === 'ADMIN' ? t('users.admin') : user?.role === 'CHILD' ? t('users.junior') : t('users.adult');
+  const RoleIcon = user?.role === 'ADMIN' ? Shield : user?.role === 'CHILD' ? Baby : User;
+
+  const themeOptions = [
+    { key: 'system', icon: SlidersHorizontal, ariaLabel: `${t('settings.theme')}: ${t('settings.system')}` },
+    { key: 'light', icon: Sun, ariaLabel: `${t('settings.theme')}: ${t('settings.light')}` },
+    { key: 'dark', icon: Moon, ariaLabel: `${t('settings.theme')}: ${t('settings.dark')}` },
+  ] as const;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
@@ -93,14 +105,30 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
         </div>
       </nav>
 
-      <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800 space-y-0.5">
-        <button
-          onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
-        >
-          {settings.theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-          <span>{settings.theme === 'dark' ? t('settings.dark') : t('settings.light')}</span>
-        </button>
+      <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-1">
+            {themeOptions.map(({ key, icon: Icon, ariaLabel }) => {
+              const selected = settings.theme === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-label={ariaLabel}
+                  title={ariaLabel}
+                  onClick={() => setTheme(key)}
+                  className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                    selected
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+                      : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <Icon size={16} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="flex items-center gap-2 px-1 mt-1">
           <button
@@ -111,7 +139,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
             <UserAvatar name={user?.name ?? ''} avatarUrl={user?.avatarUrl} size={8} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
-              <TagPill label={roleLabel} variant="type" size="sm" />
+              <TagPill label={roleLabel} variant="type" size="sm" icon={<RoleIcon size={11} />} />
             </div>
           </button>
           <button

@@ -249,7 +249,7 @@ export default function PeriodList() {
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             }`}
                           >
                             {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
@@ -280,24 +280,21 @@ export default function PeriodList() {
                             onClick: () => navigate(`/overview?period=${period.id}`),
                           },
                           {
-                            key: "close",
-                            icon: Lock,
-                            label: t("period.closePeriod"),
-                            onClick: () => handleClose(period.id),
-                            colorClassName:
-                              "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50",
-                            hidden: closed || !canManageOpenPeriod,
-                            destructive: true,
-                            confirmMessage: t("period.confirmClose"),
-                          },
-                          {
-                            key: "reopen",
-                            icon: LockOpen,
-                            label: t("period.reopenPeriod", { defaultValue: "Reopen period" }),
-                            onClick: () => navigate(`/periods/${period.id}`),
-                            colorClassName:
-                              "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50",
-                            hidden: !closed || !isAdmin,
+                            key: "period-lock-state",
+                            icon: closed ? Lock : LockOpen,
+                            label: closed ? t("period.closed") : t("period.closePeriod"),
+                            onClick: () => {
+                              if (!closed) {
+                                void handleClose(period.id);
+                              }
+                            },
+                            colorClassName: closed
+                              ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                              : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50",
+                            hidden: !closed && !canManageOpenPeriod,
+                            disabled: closed,
+                            destructive: !closed,
+                            confirmMessage: !closed ? t("period.confirmClose") : undefined,
                           },
                           {
                             key: "delete",
