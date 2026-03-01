@@ -27,7 +27,21 @@
     </script>
 
     <script>
+    window.__KOST_DEBUG_MODE__ = (function () {
+      var raw = "%VITE_DEBUG_MODE%";
+      if (!raw || raw === "%VITE_DEBUG_MODE%") {
+        return true;
+      }
+      return String(raw).toLowerCase() !== "false";
+    })();
+    </script>
+
+    <script>
     (function () {
+      if (!window.__KOST_DEBUG_MODE__) {
+        return;
+      }
+
       function show(msg) {
         try {
           var el = document.getElementById('kost-crash');
@@ -67,6 +81,9 @@
     <script>
     window.__KOST_DIAG__ = window.__KOST_DIAG__ || { module: "pending", moduleError: "" };
     (function () {
+      if (!window.__KOST_DEBUG_MODE__) {
+        return;
+      }
       function ensureBanner() {
         var el = document.getElementById('kost-diag');
         if (!el) {
@@ -148,6 +165,10 @@
     <div id="root"></div>
         <script>
     (function () {
+      if (!window.__KOST_DEBUG_MODE__) {
+        return;
+      }
+
       var attempts = 0;
 
       function attachModuleTracking() {

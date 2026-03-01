@@ -15,9 +15,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const isProduction = process.env.NODE_ENV === "production";
   const trustProxy = Number(process.env.TRUST_PROXY ?? "1");
-  const hstsEnabled = isProduction;
+  const hstsEnabledMode = "prod-only + req.secure guard";
+  const expressApp = app.getHttpAdapter().getInstance();
 
-  app.set("trust proxy", trustProxy);
+  expressApp.set("trust proxy", trustProxy);
 
   // Ensure upload directories exist (pre-created in Docker; this is a no-op if they already exist)
   for (const dir of ["avatars", "vendors"]) {
@@ -35,14 +36,7 @@ async function bootstrap() {
   // images that are served from the same origin via /uploads.
   app.use(
     helmet({
-      hsts: hstsEnabled
-        ? {
-            maxAge: 15552000,
-            includeSubDomains: true,
-            preload: false,
-            setIf: (req: Request) => req.secure,
-          }
-        : false,
+      hsts: false,
       crossOriginResourcePolicy: { policy: "same-site" },
       contentSecurityPolicy: {
         directives: {
@@ -71,6 +65,16 @@ async function bootstrap() {
   };
   app.use(securityProofHeaderMiddleware);
   app.use(cookieParser());
+
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    if (isProduction && req.secure) {
+      res.setHeader(
+        "Strict-Transport-Security",
+        "max-age=15552000; includeSubDomains",
+      );
+    }
+    next();
+  });
 
   // Serve uploaded files at /uploads
   app.use("/uploads", express.static(join(process.cwd(), "uploads")));
@@ -212,7 +216,7 @@ async function bootstrap() {
   console.log(`[startup] API docs: http://${host}:${port}/api/docs`);
   console.log(`[startup] Web bundle present: ${hasPublicBundle}`);
   console.log(`[startup] Trust proxy hops: ${trustProxy}`);
-  console.log(`[startup] HSTS enabled (prod-only): ${hstsEnabled}`);
+  console.log(`[startup] HSTS enabled mode: ${hstsEnabledMode}`);
 }
 
 bootstrap();
