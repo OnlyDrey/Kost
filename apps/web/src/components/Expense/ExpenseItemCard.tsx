@@ -19,6 +19,7 @@ interface ExpenseItemCardProps {
   onClick?: () => void;
   rightContent?: ReactNode;
   actionButton?: ReactNode;
+  footerContent?: ReactNode;
   paidLabel?: string;
   overdueLabel?: string;
   showPaidIcon?: boolean;
@@ -39,6 +40,7 @@ export default function ExpenseItemCard({
   onClick,
   rightContent,
   actionButton,
+  footerContent,
   paidLabel,
   overdueLabel,
   showPaidIcon = true,
@@ -57,7 +59,7 @@ export default function ExpenseItemCard({
       : "text-indigo-600 dark:text-indigo-400";
 
   const cardBody = (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
         {logoUrl ? (
           <img
@@ -87,7 +89,6 @@ export default function ExpenseItemCard({
       </div>
 
       <div className="w-full flex flex-wrap gap-1">
-        {/* Status tags first */}
         {paid && (
           <span className="inline-flex items-center gap-1">
             <TagPill
@@ -108,7 +109,6 @@ export default function ExpenseItemCard({
             variant="danger"
           />
         )}
-        {/* Type / category / frequency tags */}
         <TagPill label={typeLabel} variant="type" />
         {category && <TagPill label={category} variant="category" />}
         {frequencyLabel && (
@@ -116,9 +116,9 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel) && (
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="min-w-0">
+      {(amountLabel || rightContent || dateLabel || actionButton) && (
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-0 flex-1">
             {amountLabel && (
               <p className={`text-2xl leading-none font-bold ${amountClass}`}>
                 {amountLabel}
@@ -136,17 +136,18 @@ export default function ExpenseItemCard({
             )}
           </div>
 
-          {rightContent && (
-            <div className="flex flex-col items-end gap-1.5 shrink-0">
-              {rightContent}
+          {(rightContent || actionButton) && (
+            <div className="ml-auto flex items-center justify-end gap-2.5 flex-wrap">
+              {rightContent && <div className="shrink-0">{rightContent}</div>}
+              {actionButton && <div className="shrink-0">{actionButton}</div>}
             </div>
           )}
         </div>
       )}
 
-      {actionButton && (
-        <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end">
-          {actionButton}
+      {footerContent && (
+        <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+          {footerContent}
         </div>
       )}
     </div>

@@ -100,7 +100,6 @@ export default function Profile() {
   // Profile form
   const [name, setName] = useState(user?.name ?? "");
   const [username, setUsername] = useState(user?.username ?? "");
-  const [profileRole, setProfileRole] = useState(user?.role ?? "ADULT");
   const [profileError, setProfileError] = useState("");
   const [profileSuccess, setProfileSuccess] = useState("");
   const [avatarError, setAvatarError] = useState("");
@@ -141,11 +140,6 @@ export default function Profile() {
     }
   }, [myIncome?.id]);
 
-  useEffect(() => {
-    if (user?.role) {
-      setProfileRole(user.role);
-    }
-  }, [user?.role]);
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -215,7 +209,6 @@ export default function Profile() {
         data: {
           name: name.trim(),
           username: username.trim(),
-          ...(canEditRole ? { role: profileRole } : {}),
         },
       });
       login(updatedUser);
@@ -365,7 +358,6 @@ export default function Profile() {
     { key: "vendors", label: t("familySettings.vendors"), icon: Store },
   ];
 
-  const canEditRole = isAdmin;
 
   // ---- Avatar block ----
   const AvatarBlock = () => (
@@ -471,16 +463,21 @@ export default function Profile() {
               </div>
               <div>
                 <label className={labelCls}>{t("income.amount")}</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={incomeAmount}
-                  onChange={(e) => setIncomeAmount(e.target.value)}
-                  className={inputCls}
-                  placeholder="0.00"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={incomeAmount}
+                    onChange={(e) => setIncomeAmount(e.target.value)}
+                    className={`${inputCls} pr-12`}
+                    placeholder="0.00"
+                    required
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                    kr
+                  </span>
+                </div>
               </div>
             </div>
             <div>
@@ -553,8 +550,8 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-        <div className="min-w-0 lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}>
+        <div className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}>
           {/* ---- Profile section: avatar-left + income alongside on desktop ---- */}
           {activePage === "profile" && (
             <div className="space-y-4 lg:contents">
@@ -600,23 +597,6 @@ export default function Profile() {
                           className={inputCls}
                           required
                         />
-                      </div>
-                      <div>
-                        <label className={labelCls}>{t("users.role")}</label>
-                        <select
-                          value={profileRole}
-                          onChange={(e) =>
-                            setProfileRole(
-                              e.target.value as "ADMIN" | "ADULT" | "CHILD",
-                            )
-                          }
-                          className={inputCls}
-                          disabled={!canEditRole}
-                        >
-                          <option value="ADULT">{t("users.adult")}</option>
-                          <option value="ADMIN">{t("users.admin")}</option>
-                          <option value="CHILD">{t("users.junior")}</option>
-                        </select>
                       </div>
                       <div className="flex justify-end">
                         <button
@@ -870,7 +850,7 @@ export default function Profile() {
           )}
 
           {activePage === "users" && (
-            <div className={settingsCardCls}>
+            <div className={`${settingsCardCls} w-full`}>
               <AdminUsers embedded />
             </div>
           )}

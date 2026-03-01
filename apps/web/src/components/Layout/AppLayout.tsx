@@ -100,16 +100,22 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
           <span>{settings.theme === 'dark' ? t('settings.dark') : t('settings.light')}</span>
         </button>
 
-        <div className="flex items-center gap-3 px-3 py-2.5 mt-1">
-          <UserAvatar name={user?.name ?? ''} avatarUrl={user?.avatarUrl} size={8} />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
-            {isAdmin && <p className="text-xs text-indigo-600 dark:text-indigo-400">{t('users.admin')}</p>}
-          </div>
+        <div className="flex items-center gap-2 px-1 mt-1">
+          <button
+            type="button"
+            onClick={() => onNavigate('/settings')}
+            className="flex-1 flex items-center gap-3 px-2 py-2.5 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <UserAvatar name={user?.name ?? ''} avatarUrl={user?.avatarUrl} size={8} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
+              {isAdmin && <p className="text-xs text-indigo-600 dark:text-indigo-400">{t('users.admin')}</p>}
+            </div>
+          </button>
           <button
             onClick={logout}
             title={t('nav.logout')}
-            className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            className="h-11 w-11 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
           >
             <LogOut size={16} />
           </button>

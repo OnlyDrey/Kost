@@ -55,7 +55,7 @@ export default function ActionIconBar({
               }
               item.onClick();
             }}
-            className={`h-9 w-9 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900 ${colorClass}`}
+            className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900 ${colorClass}`}
           >
             <Icon size={16} />
           </button>

@@ -228,7 +228,7 @@ export default function PeriodList() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
           {filteredPeriods.map((period) => (
             <div
               key={period.id}
@@ -284,7 +284,7 @@ export default function PeriodList() {
                             label: t("period.closePeriod"),
                             onClick: () => handleClose(period.id),
                             colorClassName:
-                              "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50",
+                              "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50",
                             hidden: closed || !canManageOpenPeriod,
                             destructive: true,
                             confirmMessage: t("period.confirmClose"),
@@ -304,8 +304,8 @@ export default function PeriodList() {
                             label: t("common.delete"),
                             onClick: () => handleOpenDeletionModal(period.id),
                             colorClassName:
-                              "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50",
-                            hidden: !closed || !isAdmin,
+                              "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50",
+                            hidden: !isAdmin,
                             disabled: deletePeriod.isPending,
                           },
                         ]}
