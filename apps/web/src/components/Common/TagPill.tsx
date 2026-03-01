@@ -1,43 +1,45 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 interface TagPillProps {
   label: string;
-  variant?: 'type' | 'category' | 'frequency' | 'danger' | 'success';
-  shape?: 'pill' | 'rounded';
-  size?: 'sm' | 'md';
+  variant?: "type" | "category" | "frequency" | "danger" | "success";
+  shape?: "pill" | "rounded";
+  size?: "sm" | "md";
   icon?: ReactNode;
 }
 
-const variantClass: Record<NonNullable<TagPillProps['variant']>, string> = {
-  type: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-  category: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
-  frequency: 'bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-  danger: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  success: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+const variantClass: Record<NonNullable<TagPillProps["variant"]>, string> = {
+  type: "bg-primary/15 text-primary",
+  category: "bg-surface-elevated text-text-secondary",
+  frequency: "bg-info/15 text-info",
+  danger: "bg-danger/15 text-danger",
+  success: "bg-success/15 text-success",
 };
 
 export default function TagPill({
   label,
-  variant = 'category',
-  shape = 'pill',
-  size = 'sm',
+  variant = "category",
+  shape = "pill",
+  size = "sm",
   icon,
 }: TagPillProps) {
   const shapeClass = {
-    pill: 'rounded-full',
-    rounded: 'rounded-lg',
+    pill: "rounded-full",
+    rounded: "rounded-lg",
   };
 
   const sizeClass = {
-    sm: 'px-2 py-0.5 text-xs gap-1',
-    md: 'px-3 py-2 text-sm gap-1.5',
+    sm: "px-2 py-0.5 text-xs gap-1",
+    md: "px-3 py-2 text-sm gap-1.5",
   };
 
   return (
     <span
       className={`inline-flex items-center font-medium leading-none ${shapeClass[shape]} ${sizeClass[size]} ${variantClass[variant]}`}
     >
-      {icon ? <span className="inline-flex items-center justify-center">{icon}</span> : null}
+      {icon ? (
+        <span className="inline-flex items-center justify-center">{icon}</span>
+      ) : null}
       <span>{label}</span>
     </span>
   );

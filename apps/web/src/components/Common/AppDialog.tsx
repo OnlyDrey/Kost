@@ -92,7 +92,7 @@ export default function AppDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className={`w-full ${sizeClassMap[size]} rounded-2xl border border-app-border bg-app-surface shadow-xl outline-none`}
+        className={`w-full ${sizeClassMap[size]} rounded-2xl border border-border bg-surface shadow-xl outline-none`}
         onMouseDown={(event) => event.stopPropagation()}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
@@ -104,10 +104,10 @@ export default function AppDialog({
         }}
         tabIndex={-1}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-app-border px-6 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
           <h2
             id={titleId}
-            className="text-xl font-semibold text-app-text-primary inline-flex items-center gap-2"
+            className="text-xl font-semibold text-text-primary inline-flex items-center gap-2"
           >
             {titleIcon}
             {title}
@@ -116,7 +116,7 @@ export default function AppDialog({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-app-text-secondary transition-colors hover:bg-app-surface-elevated hover:text-app-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-elevated hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
               aria-label="Close dialog"
             >
               <X size={18} />
@@ -127,7 +127,7 @@ export default function AppDialog({
         {(description || children) && (
           <div
             id={description ? descriptionId : undefined}
-            className="space-y-4 px-6 py-5 text-app-text-secondary"
+            className="space-y-4 px-6 py-5 text-text-secondary"
           >
             {description && (
               <div className="text-sm sm:text-base leading-relaxed">
@@ -139,7 +139,7 @@ export default function AppDialog({
         )}
 
         {footer && (
-          <div className="flex flex-wrap justify-end gap-3 border-t border-app-border px-6 py-4">
+          <div className="flex flex-wrap justify-end gap-3 border-t border-border px-6 py-4">
             {footer}
           </div>
         )}

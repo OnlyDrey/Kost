@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import AppDialog from "./AppDialog";
+import AppButton from "./AppButton";
 
 interface ConfirmOptions {
   title?: string;
@@ -71,10 +72,6 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   );
   const isDestructive = state.tone === "danger" || destructiveByLabel;
 
-  const confirmClass = isDestructive
-    ? "bg-danger text-white hover:bg-danger/90"
-    : "bg-primary text-white hover:bg-primary/90";
-
   return (
     <ConfirmContext.Provider value={value}>
       {children}
@@ -87,21 +84,20 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         footer={
           <>
             {state.mode === "confirm" && (
-              <button
-                type="button"
+              <AppButton
                 onClick={() => closeDialog(false)}
-                className="rounded-lg border border-neutral/40 px-4 py-2 text-sm font-medium text-neutral transition-colors hover:bg-app-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus"
+                variant="neutral"
+                tone="outline"
               >
                 {state.cancelLabel ?? "Avbryt"}
-              </button>
+              </AppButton>
             )}
-            <button
-              type="button"
+            <AppButton
               onClick={() => closeDialog(true)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus ${confirmClass}`}
+              variant={isDestructive ? "danger" : "primary"}
             >
               {state.confirmLabel ?? "Bekreft"}
-            </button>
+            </AppButton>
           </>
         }
       />

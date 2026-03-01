@@ -37,9 +37,9 @@ export default function ActionIconBar({
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const colorClass = item.disabled
-          ? (item.disabledClassName ?? "bg-app-disabled/20 text-app-disabled")
+          ? (item.disabledClassName ?? "bg-disabled/20 text-disabled")
           : (item.colorClassName ??
-            "bg-app-surface-elevated text-app-text-primary hover:bg-app-border");
+            "bg-surface-elevated text-text-primary hover:bg-border");
 
         return (
           <button
@@ -63,7 +63,7 @@ export default function ActionIconBar({
               }
               await item.onClick();
             }}
-            className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-app-focus dark:focus-visible:ring-offset-gray-950 ${item.disabled ? "cursor-not-allowed" : ""}`}
+            className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus focus-visible:ring-offset-surface ${item.disabled ? "cursor-not-allowed" : ""}`}
           >
             <span
               className={`h-8 w-8 rounded-full inline-flex items-center justify-center transition-colors ${colorClass}`}

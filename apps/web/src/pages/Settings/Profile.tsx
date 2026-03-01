@@ -13,12 +13,16 @@ import {
   CreditCard,
   Store,
   Users,
+  Palette,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/auth.context";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
-import { useSettings } from "../../stores/settings.context";
+import {
+  useSettings,
+  type BrandingPreset,
+} from "../../stores/settings.context";
 import {
   useUpdateUser,
   useChangePassword,
@@ -91,7 +95,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, login, logout, isAdmin } = useAuth();
-  const { settings, setLocale } = useSettings();
+  const { settings, setLocale, setBranding } = useSettings();
   const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
   const uploadAvatar = useUploadAvatar();
@@ -120,6 +124,17 @@ export default function Profile() {
   const [activeFamilySection, setActiveFamilySection] =
     useState<FamilySetting>("currency");
   const [familyPageSize, setFamilyPageSize] = useState(5);
+
+  const [brandingTitle, setBrandingTitle] = useState(
+    settings.branding.appTitle,
+  );
+  const [brandingLogoUrl, setBrandingLogoUrl] = useState(
+    settings.branding.logoUrl,
+  );
+  const [brandingPreset, setBrandingPreset] = useState<BrandingPreset>(
+    settings.branding.primaryPreset,
+  );
+  const [brandingSaved, setBrandingSaved] = useState(false);
 
   // Profile form
   const [name, setName] = useState(user?.name ?? "");
@@ -165,6 +180,12 @@ export default function Profile() {
   }, [myIncome?.id]);
 
   useEffect(() => {
+    setBrandingTitle(settings.branding.appTitle);
+    setBrandingLogoUrl(settings.branding.logoUrl);
+    setBrandingPreset(settings.branding.primaryPreset);
+  }, [settings.branding]);
+
+  useEffect(() => {
     const tab = searchParams.get("tab") as SettingsPage | null;
     if (tab && ["profile", "password", "users", "family"].includes(tab)) {
       setActivePage(tab);
@@ -176,6 +197,17 @@ export default function Profile() {
     const params = new URLSearchParams(searchParams);
     params.set("tab", page);
     setSearchParams(params, { replace: true });
+  };
+
+  const handleSaveBranding = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBranding({
+      appTitle: brandingTitle.trim() || settings.branding.appTitle,
+      logoUrl: brandingLogoUrl.trim(),
+      primaryPreset: brandingPreset,
+    });
+    setBrandingSaved(true);
+    window.setTimeout(() => setBrandingSaved(false), 2000);
   };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1050,6 +1082,78 @@ export default function Profile() {
           )}
 
           {/* Family settings sections (admin only) */}
+          {activePage === "family" && isAdmin && (
+            <SettingsSectionCard
+              icon={<Palette size={18} className="text-primary" />}
+              title={t("settings.brandingTitle")}
+            >
+              <form onSubmit={handleSaveBranding} className="space-y-4">
+                <div>
+                  <label className={labelCls}>
+                    {t("settings.brandingAppTitle")}
+                  </label>
+                  <input
+                    type="text"
+                    value={brandingTitle}
+                    onChange={(e) => setBrandingTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                    placeholder={t("app.title")}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>
+                    {t("settings.brandingLogoUrl")}
+                  </label>
+                  <input
+                    type="url"
+                    value={brandingLogoUrl}
+                    onChange={(e) => setBrandingLogoUrl(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                    placeholder="https://example.com/logo.png"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>
+                    {t("settings.brandingPrimaryPreset")}
+                  </label>
+                  <select
+                    value={brandingPreset}
+                    onChange={(e) =>
+                      setBrandingPreset(e.target.value as BrandingPreset)
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                  >
+                    <option value="indigo">
+                      {t("settings.brandingPresetIndigo")}
+                    </option>
+                    <option value="emerald">
+                      {t("settings.brandingPresetEmerald")}
+                    </option>
+                    <option value="violet">
+                      {t("settings.brandingPresetViolet")}
+                    </option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs text-text-secondary">
+                    {t("settings.brandingHelp")}
+                  </p>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  >
+                    {t("common.save")}
+                  </button>
+                </div>
+                {brandingSaved && (
+                  <p className="text-xs text-success">
+                    {t("settings.profileUpdated")}
+                  </p>
+                )}
+              </form>
+            </SettingsSectionCard>
+          )}
+
           {activePage === "family" && isAdmin && (
             <FamilySettingsContent
               activeSection={activeFamilySection}

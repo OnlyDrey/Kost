@@ -203,7 +203,15 @@
     "regenerateRecoveryCodes": "Generer nye gjenopprettingskoder",
     "languageDescription": "Velg visningsspråk for applikasjonen.",
     "password": "Passord",
-    "system": "System"
+    "system": "System",
+    "brandingTitle": "Profilering",
+    "brandingAppTitle": "App-tittel",
+    "brandingLogoUrl": "Logo-URL",
+    "brandingPrimaryPreset": "Primærfarge-mal",
+    "brandingPresetIndigo": "Indigo",
+    "brandingPresetEmerald": "Smaragd",
+    "brandingPresetViolet": "Fiolett",
+    "brandingHelp": "Endringer brukes umiddelbart i hele appen."
   },
   "users": {
     "title": "Brukere",
