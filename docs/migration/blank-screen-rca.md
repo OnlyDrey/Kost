@@ -1,8 +1,11 @@
-# Blank Screen RCA
+# Blank Screen RCA (Work in progress)
 
 ## Status
-- Fix Attempt 01 implemented on refactored base; pending runtime confirmation.
+
+- Historical RCA notes from temporary debugging phase.
+- Keep as reference only; not current runtime behavior contract.
 
 ## Notes
-- Diagnostic-only CSP relaxation: `script-src 'self' 'unsafe-inline'`.
-- This is temporary and must be reverted after confirmation.
+
+- Diagnostic-only CSP relaxation used during investigation.
+- Should remain disabled in normal operation.

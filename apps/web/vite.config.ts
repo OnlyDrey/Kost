@@ -100,6 +100,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    modulePreload: { polyfill: false }
+    target: 'es2019',
+    modulePreload: { polyfill: true }
+  },
+  esbuild: {
+    target: 'es2019'
   }
 });

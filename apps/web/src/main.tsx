@@ -8,6 +8,28 @@ import './index.css';
 import './i18n';
 import AppErrorBoundary from './components/Common/AppErrorBoundary';
 
+const debugModeEnabled = import.meta.env.VITE_DEBUG_MODE === 'true';
+
+if (debugModeEnabled) {
+  try {
+    (window as any).__KOST_EXEC__ = ((window as any).__KOST_EXEC__ || 0) + 1;
+    const count = (window as any).__KOST_EXEC__;
+    const markerText = `exec beacon: ${count} @ ${new Date().toISOString()} path=${window.location.pathname}`;
+    let marker = document.getElementById('kost-exec');
+
+    if (!marker) {
+      marker = document.createElement('pre');
+      marker.id = 'kost-exec';
+      marker.style.cssText =
+        'position:fixed;left:8px;bottom:8px;z-index:99997;background:rgba(11,16,32,.92);color:#7ee787;padding:6px 8px;margin:0;white-space:pre-wrap;font:12px/1.4 monospace;border:1px solid #2a335c;border-radius:6px;max-width:calc(100vw - 16px);';
+      (document.body || document.documentElement).appendChild(marker);
+    }
+
+    marker.textContent = markerText;
+    console.log('[KOST_EXEC]', markerText);
+  } catch {}
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

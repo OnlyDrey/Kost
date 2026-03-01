@@ -27,13 +27,17 @@ services:
         # Single-container mode must call same-origin API path to avoid stale external host configs
         VITE_API_URL: /api
         VITE_ENABLE_PWA: ${VITE_ENABLE_PWA:-false}
+        # Enable temporary runtime diagnostics with VITE_DEBUG_MODE=true when needed.
+        VITE_DEBUG_MODE: ${VITE_DEBUG_MODE:-false}
     container_name: kost-app
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
+      # Use production when running behind an HTTPS reverse proxy
       NODE_ENV: ${NODE_ENV:-production}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       HOST: 0.0.0.0
       PORT: 3000
       DATABASE_URL: postgresql://${DB_USER:-kostuser}:${DB_PASSWORD:-kostpass}@db:5432/${DB_NAME:-kost}?schema=public
@@ -50,6 +54,8 @@ services:
       BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-kostpass}
       BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-Admin}
+    # Direct :3000 access is intended for local/dev diagnostics.
+    # In production, prefer HTTPS via reverse proxy in front of this service.
     ports:
       - "${APP_PORT:-3000}:3000"
     volumes:

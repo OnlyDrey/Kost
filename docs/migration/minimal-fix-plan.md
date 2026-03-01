@@ -1,9 +1,12 @@
-# Minimal Fix Plan
+# Minimal Fix Plan (Work in progress)
 
-## Attempt Status
-- Fix Attempt 01 implemented (refactored-based).
+## Status
+
+- Legacy migration checklist from blank-screen incident.
+- Keep for historical context during migration tasks.
 
 ## Validation checklist
-- Confirm app boot without blank screen in target environment.
-- Check browser console for CSP violations after deployment.
-- Revert `unsafe-inline` once root cause is confirmed.
+
+- Confirm app boot in target environment.
+- Verify CSP headers for local HTTP vs HTTPS proxy traffic.
+- Remove temporary diagnostics when incident is closed.
