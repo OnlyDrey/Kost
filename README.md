@@ -5,33 +5,45 @@
 
 <p align="center">Self-hosted shared expense tracking for households.</p>
 
-## Features
+## What it is
 
-- ✅ Shared expense tracking with clear user allocation
-- 👨‍👩‍👧‍👦 Family-oriented accounts and roles
-- 🧾 Invoice and payment workflows
-- 📅 Period-based overview of costs and balances
-- 🔒 Authentication with security-focused defaults
-- 📊 Audit-ready data and operational visibility
+Kost is a single-container web app (React frontend + NestJS API + PostgreSQL) for shared household finances: invoices, payments, recurring subscriptions, period closing, and family-level settings.
 
-## Quickstart
+## Who it is for
+
+- Households that want self-hosted shared expense tracking.
+- Operators who want a simple Docker deployment with clear runtime controls.
+
+## Key features
+
+- Shared expense tracking with weighted allocation
+- Family/workspace settings (categories, vendors, payment methods, currency)
+- Recurring subscription invoicing per period
+- Payment tracking, period summaries, and dashboard views
+- Cookie-based auth with role-aware access
+- Audit events for key administrative and financial actions
+
+## Quick start (Docker)
 
 ```bash
+git clone https://github.com/OnlyDrey/Kost.git
+cd Kost
 cp .env.example .env
+# Required before first run:
+# - set JWT_SECRET
+# - set BOOTSTRAP_ADMIN_PASSWORD
 docker compose up --build
 ```
 
-Open:
-- Web: http://localhost:3000
-- API docs: http://localhost:3000/api/docs
+After startup:
+
+- App: <http://localhost:3000>
+- Health: <http://localhost:3000/api/health>
+- API docs: <http://localhost:3000/api/docs>
 
 ## Documentation
 
-- [Docs overview](docs/index.md)
-- [Setup](docs/setup.md)
-- [Deployment](docs/deployment.md)
-- [Troubleshooting](docs/troubleshooting.md)
+- [System overview](docs/overview.md)
+- [Setup and deployment](docs/setup-and-deployment.md)
 - [Operations](docs/operations.md)
-- [Architecture](docs/architecture.md)
-- [Database](docs/database.md)
-- [Security](docs/security.md)
+- [Contributing](docs/contributing.md)
