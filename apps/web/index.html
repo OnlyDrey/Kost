@@ -63,10 +63,64 @@
     })();
     </script>
 
+
+    <script>
+    (function () {
+      function ensureBanner() {
+        var el = document.getElementById('kost-diag');
+        if (!el) {
+          el = document.createElement('pre');
+          el.id = 'kost-diag';
+          el.style.cssText =
+            'position:fixed;top:8px;left:8px;z-index:99998;background:rgba(11,16,32,.9);color:#9ef;padding:8px 10px;margin:0;white-space:pre-wrap;font:12px/1.4 monospace;border:1px solid #2a335c;border-radius:6px;max-width:calc(100vw - 16px);';
+          document.body.appendChild(el);
+        }
+        return el;
+      }
+
+      function getRootStatus() {
+        var root = document.getElementById('root');
+        if (!root) {
+          return 'missing';
+        }
+        return root.childNodes && root.childNodes.length > 0 ? 'mounted' : 'empty';
+      }
+
+      function getModuleStatus() {
+        return window.__KOST_MODULE_LOADED__ ? 'loaded' : 'pending';
+      }
+
+      function render(extraRootMessage) {
+        var lines = [
+          'Kost diagnostics active',
+          'location: ' + window.location.pathname,
+          'module: ' + getModuleStatus(),
+          'root: ' + (extraRootMessage || getRootStatus()),
+        ];
+        ensureBanner().textContent = lines.join('\n');
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        render();
+
+        [1000, 3000, 5000].forEach(function (delay) {
+          setTimeout(function () {
+            var rootStatus = getRootStatus();
+            if (delay === 5000 && rootStatus === 'empty') {
+              render('still empty after 5s');
+              return;
+            }
+            render(rootStatus);
+          }, delay);
+        });
+      });
+    })();
+    </script>
+
     <title>Kost</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script id="kost-module" type="module" src="/src/main.tsx" onload="window.__KOST_MODULE_LOADED__=true"></script>
   </body>
 </html>
