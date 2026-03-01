@@ -29,7 +29,7 @@ export default function ActionIconBar({
 
   return (
     <div
-      className={`flex items-center ${tight ? "gap-1" : "gap-1.5"} ${className}`.trim()}
+      className={`flex items-center ${tight ? "gap-[5px]" : "gap-[5px]"} ${className}`.trim()}
     >
       {visibleItems.map((item) => {
         const Icon = item.icon;

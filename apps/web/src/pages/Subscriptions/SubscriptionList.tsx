@@ -210,7 +210,7 @@ function SubscriptionCard({
               label: t('common.edit'),
               onClick: onEdit,
               colorClassName:
-                'bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400',
+                'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30',
             },
             {
               key: 'toggle',
@@ -218,7 +218,7 @@ function SubscriptionCard({
               label: toggleLabel,
               onClick: onToggle,
               colorClassName: sub.active
-                ? 'bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400'
+                ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
                 : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500',
             },
             {
@@ -229,7 +229,7 @@ function SubscriptionCard({
               destructive: true,
               confirmMessage: deleteConfirmMessage,
               colorClassName:
-                'bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400',
+                'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30',
             },
           ]}
         />

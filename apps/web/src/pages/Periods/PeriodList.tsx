@@ -248,8 +248,8 @@ export default function PeriodList() {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                ? "bg-emerald-500/15 text-emerald-300"
+                                : "bg-rose-500/15 text-rose-300"
                             }`}
                           >
                             {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
@@ -281,18 +281,19 @@ export default function PeriodList() {
                           },
                           {
                             key: "period-lock-state",
-                            icon: closed ? Lock : LockOpen,
-                            label: closed ? t("period.closed") : t("period.closePeriod"),
+                            icon: closed ? LockOpen : Lock,
+                            label: closed ? t("period.open") : t("period.closePeriod"),
                             onClick: () => {
-                              if (!closed) {
-                                void handleClose(period.id);
+                              if (closed) {
+                                navigate(`/periods/${period.id}`);
+                                return;
                               }
+                              void handleClose(period.id);
                             },
                             colorClassName: closed
-                              ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                              : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50",
-                            hidden: !closed && !canManageOpenPeriod,
-                            disabled: closed,
+                              ? "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
+                              : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
+                            hidden: closed ? !isAdmin : !canManageOpenPeriod,
                             destructive: !closed,
                             confirmMessage: !closed ? t("period.confirmClose") : undefined,
                           },

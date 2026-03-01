@@ -107,7 +107,7 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
 
       <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
         <div className="flex justify-center">
-          <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-1">
+          <div className="w-60 h-10 p-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-1">
             {themeOptions.map(({ key, icon: Icon, ariaLabel }) => {
               const selected = settings.theme === key;
               return (
@@ -117,13 +117,13 @@ function Sidebar({ onNavigate }: { onNavigate: (path: string) => void }) {
                   aria-label={ariaLabel}
                   title={ariaLabel}
                   onClick={() => setTheme(key)}
-                  className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                  className={`flex-1 h-8 rounded-full grid place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     selected
-                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
-                      : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                      ? 'bg-indigo-500/25 text-indigo-200'
+                      : 'text-slate-300/70 hover:text-slate-100'
                   }`}
                 >
-                  <Icon size={16} />
+                  <Icon className="h-5 w-5" />
                 </button>
               );
             })}

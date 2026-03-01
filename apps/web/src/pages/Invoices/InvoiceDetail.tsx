@@ -157,43 +157,6 @@ export default function InvoiceDetail() {
             {t('invoice.personal')}
           </span>
         )}
-        <button
-          onClick={handleMarkFullyPaid}
-          disabled={isPaid || addPayment.isPending}
-          aria-label={t('invoice.markComplete')}
-          title={t('invoice.markComplete')}
-          className="h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
-        >
-          {addPayment.isPending ? (
-            <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-green-100 dark:bg-green-900/30">
-              <span className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-            </span>
-          ) : (
-            <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
-              <CheckCircle2 size={16} />
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => navigate(`/invoices/${id}/edit`)}
-          aria-label={t('common.edit')}
-          title={t('common.edit')}
-          className="h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
-        >
-          <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50">
-            <Pencil size={16} />
-          </span>
-        </button>
-        <button
-          onClick={handleDelete}
-          aria-label={t('common.delete')}
-          title={t('common.delete')}
-          className="h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
-        >
-          <span className="h-8 w-8 rounded-full inline-flex items-center justify-center bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
-            <Trash2 size={16} />
-          </span>
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -235,9 +198,40 @@ export default function InvoiceDetail() {
               {isPaid && <TagPill label={t('invoice.statusPaid')} variant="success" />}
             </div>
 
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-end pt-1">
-              <div>
-                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 leading-tight">{fmt(invoice.totalCents)}</p>
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-4xl font-semibold tracking-tight text-indigo-300 leading-none m-0">{fmt(invoice.totalCents)}</p>
+                <div className="inline-flex items-center gap-[5px]">
+                  <button
+                    onClick={handleMarkFullyPaid}
+                    disabled={isPaid || addPayment.isPending}
+                    aria-label={t('invoice.markComplete')}
+                    title={t('invoice.markComplete')}
+                    className="h-11 w-11 rounded-full grid place-items-center transition bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+                  >
+                    {addPayment.isPending ? (
+                      <span className="w-4 h-4 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <CheckCircle2 size={20} />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => navigate(`/invoices/${id}/edit`)}
+                    aria-label={t('common.edit')}
+                    title={t('common.edit')}
+                    className="h-11 w-11 rounded-full grid place-items-center transition bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+                  >
+                    <Pencil size={20} />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    aria-label={t('common.delete')}
+                    title={t('common.delete')}
+                    className="h-11 w-11 rounded-full grid place-items-center transition bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-900"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600 dark:text-gray-300">{formatDate(invoice.createdAt)}</p>
