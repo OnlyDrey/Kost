@@ -211,7 +211,18 @@
     "brandingPresetIndigo": "Indigo",
     "brandingPresetEmerald": "Emerald",
     "brandingPresetViolet": "Violet",
-    "brandingHelp": "Changes apply immediately across the app."
+    "brandingHelp": "Changes apply immediately across the app.",
+    "brandingLogo": "Logo",
+    "brandingUploadLogo": "Upload logo",
+    "brandingReplaceLogo": "Replace logo",
+    "brandingDeleteLogo": "Delete logo",
+    "brandingLogoPreviewAlt": "Current branding logo",
+    "brandingDefaultLogoActive": "Default logo is active.",
+    "brandingCustomLogoActive": "Custom logo is active.",
+    "brandingAppIconBackground": "App icon background color",
+    "brandingAppIconPreview": "App icon preview",
+    "brandingInvalidHex": "Use a valid hex color (#RGB or #RRGGBB).",
+    "brandingInvalidImage": "Please select a valid image file."
   },
   "users": {
     "title": "Users",

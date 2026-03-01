@@ -10,6 +10,11 @@ import {
   PRIMARY_COLOR_FAMILIES,
   type PrimaryColorFamily,
 } from "../theme/primaryColorFamilies";
+import {
+  DEFAULT_APP_ICON_BACKGROUND,
+  applyBrandingIcons,
+  isValidHexColor,
+} from "../utils/branding";
 
 type Theme = "light" | "dark" | "system";
 type Locale = "en" | "nb";
@@ -18,8 +23,9 @@ export type BrandingPreset = PrimaryColorFamily;
 
 export interface BrandingSettings {
   appTitle: string;
-  logoUrl: string;
+  logoDataUrl: string;
   primaryPreset: BrandingPreset;
+  appIconBackground: string;
 }
 
 interface Settings {
@@ -38,8 +44,9 @@ interface SettingsContextType {
 
 const defaultBranding: BrandingSettings = {
   appTitle: "Kost",
-  logoUrl: "",
+  logoDataUrl: "",
   primaryPreset: DEFAULT_PRIMARY_COLOR_FAMILY,
+  appIconBackground: DEFAULT_APP_ICON_BACKGROUND,
 };
 
 const defaultSettings: Settings = {
@@ -51,6 +58,25 @@ const defaultSettings: Settings = {
 const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined,
 );
+
+function normalizeBrandingSettings(
+  branding?: Partial<BrandingSettings> & { logoUrl?: string },
+): BrandingSettings {
+  return {
+    appTitle: branding?.appTitle?.trim() || defaultBranding.appTitle,
+    logoDataUrl:
+      branding?.logoDataUrl?.trim() || branding?.logoUrl?.trim() || "",
+    primaryPreset:
+      branding?.primaryPreset &&
+      branding.primaryPreset in PRIMARY_COLOR_FAMILIES
+        ? branding.primaryPreset
+        : defaultBranding.primaryPreset,
+    appIconBackground:
+      branding?.appIconBackground && isValidHexColor(branding.appIconBackground)
+        ? branding.appIconBackground
+        : defaultBranding.appIconBackground,
+  };
+}
 
 function applyBrandingToDocument(branding: BrandingSettings) {
   if (typeof document === "undefined") return;
@@ -85,10 +111,9 @@ function resolveInitialSettings(): Settings {
       return {
         ...defaultSettings,
         ...parsed,
-        branding: {
-          ...defaultBranding,
-          ...(parsed.branding ?? {}),
-        },
+        branding: normalizeBrandingSettings(
+          parsed.branding as Partial<BrandingSettings> & { logoUrl?: string },
+        ),
       };
     } catch {
       return defaultSettings;
@@ -98,19 +123,32 @@ function resolveInitialSettings(): Settings {
   const browserLang = navigator.language.split("-")[0];
   const detectedLocale: Locale =
     browserLang === "nb" || browserLang === "no" ? "nb" : "en";
-  return { ...defaultSettings, locale: detectedLocale };
+  return {
+    ...defaultSettings,
+    locale: detectedLocale,
+    branding: normalizeBrandingSettings(defaultSettings.branding),
+  };
+}
+
+export function applyStoredBrandingEarly() {
+  const initial = resolveInitialSettings();
+  applyBrandingToDocument(initial.branding);
+  void applyBrandingIcons(initial.branding);
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(() => {
     const initial = resolveInitialSettings();
-    applyBrandingToDocument(initial.branding);
-    return initial;
+    const branding = normalizeBrandingSettings(initial.branding);
+    applyBrandingToDocument(branding);
+    void applyBrandingIcons(branding);
+    return { ...initial, branding };
   });
 
   useEffect(() => {
     localStorage.setItem("settings", JSON.stringify(settings));
     applyBrandingToDocument(settings.branding);
+    void applyBrandingIcons(settings.branding);
   }, [settings]);
 
   const setTheme = (theme: Theme) =>
@@ -120,7 +158,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setBranding = (branding: Partial<BrandingSettings>) =>
     setSettings((prev) => ({
       ...prev,
-      branding: { ...prev.branding, ...branding },
+      branding: normalizeBrandingSettings({ ...prev.branding, ...branding }),
     }));
 
   const toggleTheme = () =>

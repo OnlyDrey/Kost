@@ -18,8 +18,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
-import LogoMark from "../Brand/LogoMark";
 import TagPill from "../Common/TagPill";
+import { getCurrentLogo } from "../../utils/branding";
 
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
@@ -88,11 +88,11 @@ function UserAvatar({
 function Sidebar({
   onNavigate,
   appTitle,
-  appLogoUrl,
+  appLogoSrc,
 }: {
   onNavigate: (path: string) => void;
   appTitle: string;
-  appLogoUrl?: string;
+  appLogoSrc: string;
 }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -130,15 +130,14 @@ function Sidebar({
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
       <div className="px-5 py-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
-          {appLogoUrl ? (
-            <img
-              src={appLogoUrl}
-              alt={appTitle}
-              className="w-7 h-7 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
-            />
-          ) : (
-            <LogoMark className="w-7 h-7 flex-shrink-0" title={appTitle} />
-          )}
+          <img
+            src={appLogoSrc}
+            alt={appTitle}
+            className="w-7 h-7 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
+            onError={(event) => {
+              event.currentTarget.src = "/logo-mark.png";
+            }}
+          />
           <span className="text-xl font-bold text-primary">{appTitle}</span>
         </div>
         <p className="text-xs text-text-secondary mt-0.5">{t("app.tagline")}</p>
@@ -224,7 +223,7 @@ export default function AppLayout() {
   const { settings } = useSettings();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appTitle = settings.branding.appTitle?.trim() || "Kost";
-  const appLogoUrl = settings.branding.logoUrl?.trim() || undefined;
+  const appLogoSrc = getCurrentLogo(settings.branding);
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -240,7 +239,7 @@ export default function AppLayout() {
         <Sidebar
           onNavigate={handleNavigate}
           appTitle={appTitle}
-          appLogoUrl={appLogoUrl}
+          appLogoSrc={appLogoSrc}
         />
       </aside>
 
@@ -258,7 +257,7 @@ export default function AppLayout() {
         <Sidebar
           onNavigate={handleNavigate}
           appTitle={appTitle}
-          appLogoUrl={appLogoUrl}
+          appLogoSrc={appLogoSrc}
         />
       </aside>
 
@@ -271,15 +270,14 @@ export default function AppLayout() {
             <Menu size={22} />
           </button>
           <div className="flex items-center gap-2">
-            {appLogoUrl ? (
-              <img
-                src={appLogoUrl}
-                alt={appTitle}
-                className="w-6 h-6 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
-              />
-            ) : (
-              <LogoMark className="w-6 h-6 flex-shrink-0" title={appTitle} />
-            )}
+            <img
+              src={appLogoSrc}
+              alt={appTitle}
+              className="w-6 h-6 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
+              onError={(event) => {
+                event.currentTarget.src = "/logo-mark.png";
+              }}
+            />
             <span className="text-lg font-bold text-primary">{appTitle}</span>
           </div>
         </header>

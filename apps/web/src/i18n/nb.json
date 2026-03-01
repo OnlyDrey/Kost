@@ -211,7 +211,18 @@
     "brandingPresetIndigo": "Indigo",
     "brandingPresetEmerald": "Smaragd",
     "brandingPresetViolet": "Fiolett",
-    "brandingHelp": "Endringer brukes umiddelbart i hele appen."
+    "brandingHelp": "Endringer brukes umiddelbart i hele appen.",
+    "brandingLogo": "Logo",
+    "brandingUploadLogo": "Last opp logo",
+    "brandingReplaceLogo": "Bytt logo",
+    "brandingDeleteLogo": "Slett logo",
+    "brandingLogoPreviewAlt": "Gjeldende profil-logo",
+    "brandingDefaultLogoActive": "Standardlogo er aktiv.",
+    "brandingCustomLogoActive": "Egendefinert logo er aktiv.",
+    "brandingAppIconBackground": "Bakgrunnsfarge for app-ikon",
+    "brandingAppIconPreview": "Forhåndsvisning av app-ikon",
+    "brandingInvalidHex": "Bruk en gyldig hex-farge (#RGB eller #RRGGBB).",
+    "brandingInvalidImage": "Velg en gyldig bildefil."
   },
   "users": {
     "title": "Brukere",

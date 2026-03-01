@@ -1,33 +1,35 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
-import { LogIn, AlertCircle } from 'lucide-react';
-import authService from '../services/auth';
-import { useAuth } from '../stores/auth.context';
-import LogoMark from '../components/Brand/LogoMark';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { AxiosError } from "axios";
+import { LogIn, AlertCircle } from "lucide-react";
+import authService from "../services/auth";
+import { useAuth } from "../stores/auth.context";
+import { useSettings } from "../stores/settings.context";
+import { getCurrentLogo } from "../utils/branding";
 
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
+  const { settings } = useSettings();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [recoveryCode, setRecoveryCode] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState("");
   const [showSecondFactor, setShowSecondFactor] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/overview');
+    if (isAuthenticated) navigate("/overview");
   }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const user = await authService.loginWithPassword(
@@ -37,17 +39,17 @@ export default function Login() {
         recoveryCode.trim() || undefined,
       );
       login(user);
-      navigate('/overview');
+      navigate("/overview");
     } catch (err) {
       const loginError = err as AxiosError<{ message?: string }>;
       const message = loginError.response?.data?.message;
 
-      if (message === 'Two-factor code is required') {
+      if (message === "Two-factor code is required") {
         setShowSecondFactor(true);
-        setError(t('auth.twoFactorRequired'));
+        setError(t("auth.twoFactorRequired"));
       } else {
         setShowSecondFactor(false);
-        setError(t('auth.loginFailed'));
+        setError(t("auth.loginFailed"));
       }
     } finally {
       setLoading(false);
@@ -59,10 +61,21 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-1">
-            <LogoMark className="w-10 h-10" title="Kost" />
-            <h1 className="text-4xl font-bold text-indigo-500 dark:text-indigo-400">Kost</h1>
+            <img
+              src={getCurrentLogo(settings.branding)}
+              alt={settings.branding.appTitle || "Kost"}
+              className="w-10 h-10 rounded-md object-contain bg-surface-elevated border border-border"
+              onError={(event) => {
+                event.currentTarget.src = "/logo-mark.png";
+              }}
+            />
+            <h1 className="text-4xl font-bold text-indigo-500 dark:text-indigo-400">
+              {settings.branding.appTitle || "Kost"}
+            </h1>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('auth.login')}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            {t("auth.login")}
+          </p>
         </div>
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
@@ -76,7 +89,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                {t('auth.username')}
+                {t("auth.username")}
               </label>
               <input
                 type="text"
@@ -91,7 +104,7 @@ export default function Login() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                {t('auth.password')}
+                {t("auth.password")}
               </label>
               <input
                 type="password"
@@ -105,11 +118,13 @@ export default function Login() {
             </div>
             {showSecondFactor && (
               <div className="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/10 p-3 space-y-3">
-                <p className="text-xs text-gray-500 dark:text-gray-300">{t('auth.secondFactorHint')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-300">
+                  {t("auth.secondFactorHint")}
+                </p>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    {t('settings.twoFactorCode')}
+                    {t("settings.twoFactorCode")}
                   </label>
                   <input
                     type="text"
@@ -124,7 +139,7 @@ export default function Login() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    {t('auth.recoveryCode')}
+                    {t("auth.recoveryCode")}
                   </label>
                   <input
                     type="text"
@@ -148,7 +163,7 @@ export default function Login() {
               ) : (
                 <>
                   <LogIn size={18} />
-                  {t('auth.loginButton')}
+                  {t("auth.loginButton")}
                 </>
               )}
             </button>

@@ -38,3 +38,22 @@ Excluded families: `gray`, `slate`, `zinc`, `neutral`, `stone`.
 2. No direct palette family utilities in migrated components.
 3. Use semantic tokens for all new/touched styles.
 4. Delete actions may use danger styling; non-delete confirms should stay primary.
+
+## Branding assets vs color tokens
+
+Color tokens are semantic CSS variables used by Tailwind classes.
+Branding assets are persisted visual resources and runtime icon outputs:
+
+- `branding.logoDataUrl` (custom uploaded logo; base64 data URL)
+- fallback logo: `/logo-mark.png`
+- `branding.appIconBackground` (hex input used for generated app icon/favicons)
+
+### Branding fallback logic
+
+1. Custom uploaded logo (`branding.logoDataUrl`) if present.
+2. Default project logo (`/logo-mark.png`) if no custom logo.
+
+App icon background fallback:
+
+1. Valid custom hex (`branding.appIconBackground`)
+2. Default `#0B1020`

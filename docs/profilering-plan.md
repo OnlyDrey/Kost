@@ -87,3 +87,15 @@ Introduce a controlled Profilering system that centralizes theme colors through 
 ### Risk / rollback
 
 - Low runtime risk; mostly developer workflow impact.
+
+## Logo lifecycle + icon generation
+
+- Upload: image file is converted to base64 and stored in `settings.branding.logoDataUrl` (localStorage via settings store).
+- Replace: selecting a new file overwrites the previous stored logo.
+- Delete: clearing `logoDataUrl` restores default logo fallback.
+- Boot: branding is applied early (`applyStoredBrandingEarly`) before React mount to reduce flash.
+- Unified icon runtime:
+  - Header logo source comes from the same branding resolver as favicon/app icon.
+  - Favicon/apple-touch-icon are regenerated at runtime using canvas with:
+    - foreground: current logo source
+    - background: `branding.appIconBackground` hex (or default)

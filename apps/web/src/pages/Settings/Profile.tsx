@@ -49,6 +49,12 @@ import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
 import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
+import {
+  DEFAULT_PROJECT_LOGO_SRC,
+  isValidHexColor,
+  renderIconDataUrl,
+  resolveAppIconBackground,
+} from "../../utils/branding";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -129,12 +135,20 @@ export default function Profile() {
   const [brandingTitle, setBrandingTitle] = useState(
     settings.branding.appTitle,
   );
-  const [brandingLogoUrl, setBrandingLogoUrl] = useState(
-    settings.branding.logoUrl,
+  const brandingLogoInputRef = useRef<HTMLInputElement>(null);
+  const [brandingLogoDataUrl, setBrandingLogoDataUrl] = useState(
+    settings.branding.logoDataUrl,
   );
   const [brandingPreset, setBrandingPreset] = useState<BrandingPreset>(
     settings.branding.primaryPreset,
   );
+  const [brandingAppIconBackground, setBrandingAppIconBackground] = useState(
+    settings.branding.appIconBackground,
+  );
+  const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] = useState(
+    DEFAULT_PROJECT_LOGO_SRC,
+  );
+  const [brandingError, setBrandingError] = useState("");
   const [brandingSaved, setBrandingSaved] = useState(false);
 
   // Profile form
@@ -182,9 +196,25 @@ export default function Profile() {
 
   useEffect(() => {
     setBrandingTitle(settings.branding.appTitle);
-    setBrandingLogoUrl(settings.branding.logoUrl);
+    setBrandingLogoDataUrl(settings.branding.logoDataUrl);
     setBrandingPreset(settings.branding.primaryPreset);
+    setBrandingAppIconBackground(settings.branding.appIconBackground);
   }, [settings.branding]);
+
+  useEffect(() => {
+    const renderPreview = async () => {
+      const logoSrc = brandingLogoDataUrl || DEFAULT_PROJECT_LOGO_SRC;
+      const background = resolveAppIconBackground(brandingAppIconBackground);
+      try {
+        const iconUrl = await renderIconDataUrl(logoSrc, background, 64);
+        setBrandingIconPreviewUrl(iconUrl);
+      } catch {
+        setBrandingIconPreviewUrl(logoSrc);
+      }
+    };
+
+    void renderPreview();
+  }, [brandingLogoDataUrl, brandingAppIconBackground]);
 
   useEffect(() => {
     const tab = searchParams.get("tab") as SettingsPage | null;
@@ -202,13 +232,50 @@ export default function Profile() {
 
   const handleSaveBranding = (e: React.FormEvent) => {
     e.preventDefault();
+    setBrandingError("");
+
+    if (
+      brandingAppIconBackground &&
+      !isValidHexColor(brandingAppIconBackground)
+    ) {
+      setBrandingError(t("settings.brandingInvalidHex"));
+      return;
+    }
+
     setBranding({
       appTitle: brandingTitle.trim() || settings.branding.appTitle,
-      logoUrl: brandingLogoUrl.trim(),
+      logoDataUrl: brandingLogoDataUrl.trim(),
       primaryPreset: brandingPreset,
+      appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
     });
     setBrandingSaved(true);
     window.setTimeout(() => setBrandingSaved(false), 2000);
+  };
+
+  const handleBrandingLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setBrandingError(t("settings.brandingInvalidImage"));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setBrandingLogoDataUrl(reader.result);
+        setBrandingError("");
+      }
+    };
+    reader.onerror = () => setBrandingError(t("settings.brandingInvalidImage"));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleDeleteBrandingLogo = () => {
+    setBrandingLogoDataUrl("");
+    setBrandingError("");
   };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1101,23 +1168,86 @@ export default function Profile() {
                     placeholder={t("app.title")}
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <label className={labelCls}>
-                    {t("settings.brandingLogoUrl")}
+                    {t("settings.brandingLogo")}
                   </label>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={brandingLogoDataUrl || DEFAULT_PROJECT_LOGO_SRC}
+                      alt={t("settings.brandingLogoPreviewAlt")}
+                      className="w-12 h-12 rounded-md object-contain bg-surface-elevated border border-border"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
+                      }}
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => brandingLogoInputRef.current?.click()}
+                        className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        {brandingLogoDataUrl
+                          ? t("settings.brandingReplaceLogo")
+                          : t("settings.brandingUploadLogo")}
+                      </button>
+                      {brandingLogoDataUrl && (
+                        <button
+                          type="button"
+                          onClick={handleDeleteBrandingLogo}
+                          className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                        >
+                          {t("settings.brandingDeleteLogo")}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <input
-                    type="url"
-                    value={brandingLogoUrl}
-                    onChange={(e) => setBrandingLogoUrl(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
-                    placeholder="https://example.com/logo.png"
+                    ref={brandingLogoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBrandingLogoFile}
+                    className="hidden"
                   />
+                  <p className="text-xs text-text-secondary">
+                    {brandingLogoDataUrl
+                      ? t("settings.brandingCustomLogoActive")
+                      : t("settings.brandingDefaultLogoActive")}
+                  </p>
                 </div>
                 <ColorFamilySelect
                   value={brandingPreset}
                   onChange={(next) => setBrandingPreset(next as BrandingPreset)}
                   label={t("settings.brandingPrimaryPreset")}
                 />
+                <div>
+                  <label className={labelCls}>
+                    {t("settings.brandingAppIconBackground")}
+                  </label>
+                  <input
+                    type="text"
+                    value={brandingAppIconBackground}
+                    onChange={(e) =>
+                      setBrandingAppIconBackground(e.target.value)
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                    placeholder="#0B1020"
+                    aria-invalid={
+                      Boolean(brandingAppIconBackground) &&
+                      !isValidHexColor(brandingAppIconBackground)
+                    }
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-text-secondary">
+                    {t("settings.brandingAppIconPreview")}
+                  </span>
+                  <img
+                    src={brandingIconPreviewUrl}
+                    alt={t("settings.brandingAppIconPreview")}
+                    className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
+                  />
+                </div>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-text-secondary">
                     {t("settings.brandingHelp")}
@@ -1129,6 +1259,9 @@ export default function Profile() {
                     {t("common.save")}
                   </button>
                 </div>
+                {brandingError && (
+                  <p className="text-xs text-danger">{brandingError}</p>
+                )}
                 {brandingSaved && (
                   <p className="text-xs text-success">
                     {t("settings.profileUpdated")}
