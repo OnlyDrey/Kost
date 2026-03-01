@@ -17,6 +17,20 @@ async function bootstrap() {
   const trustProxy = Number(process.env.TRUST_PROXY ?? "1");
   const hstsEnabledMode = "prod-only + req.secure guard";
   const expressApp = app.getHttpAdapter().getInstance();
+  const cspDirectives = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "img-src 'self' data:",
+    "style-src 'self' https: 'unsafe-inline'",
+    "font-src 'self' https: data:",
+    "script-src 'self' 'unsafe-inline'",
+    "script-src-attr 'none'",
+  ];
+  const cspHttp = cspDirectives.join("; ");
+  const cspHttps = [...cspDirectives, "upgrade-insecure-requests"].join("; ");
 
   expressApp.set("trust proxy", trustProxy);
 
@@ -38,23 +52,15 @@ async function bootstrap() {
     helmet({
       hsts: false,
       crossOriginResourcePolicy: { policy: "same-site" },
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          baseUri: ["'self'"],
-          formAction: ["'self'"],
-          frameAncestors: ["'self'"],
-          objectSrc: ["'none'"],
-          imgSrc: ["'self'", "data:"],
-          styleSrc: ["'self'", "https:", "'unsafe-inline'"],
-          fontSrc: ["'self'", "https:", "data:"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrcAttr: ["'none'"],
-          upgradeInsecureRequests: [],
-        },
-      },
+      contentSecurityPolicy: false,
     }),
   );
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    const isSecureRequest = req.secure;
+    res.setHeader("Content-Security-Policy", isSecureRequest ? cspHttps : cspHttp);
+    res.setHeader("X-Kost-CSP-Mode", isSecureRequest ? "https" : "http");
+    next();
+  });
   const securityProofHeaderMiddleware = (
     req: Request,
     res: Response,
