@@ -75,7 +75,7 @@
     "category": "Category",
     "categoryPlaceholder": "Select category...",
     "paymentMethod": "Payment Method",
-    "paymentMethodPlaceholder": "Select payment method...",
+    "paymentMethodPlaceholder": "Select …",
     "paidBy": "Paid By",
     "invoiceDate": "Date",
     "dueDate": "Due Date",
@@ -211,7 +211,7 @@
     "brandingTitle": "Branding",
     "brandingAppTitle": "App title",
     "brandingLogoUrl": "Logo URL",
-    "brandingPrimaryPreset": "Primary color preset",
+    "brandingPrimaryPreset": "Primary color",
     "brandingPresetIndigo": "Indigo",
     "brandingPresetEmerald": "Emerald",
     "brandingPresetViolet": "Violet",
@@ -366,7 +366,8 @@
     "remainingAmountHint": "Any remaining amount is split equally among participants without a fixed amount.",
     "amountOnly": "Amount",
     "customAmount": "Custom",
-    "amountPerUser": "Amount per user *"
+    "amountPerUser": "Amount per user *",
+    "generateForPeriod": "Generate for period"
   },
   "common": {
     "loading": "Loading...",

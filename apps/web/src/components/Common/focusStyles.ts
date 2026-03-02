@@ -1,0 +1,8 @@
+export const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
+
+export const FOCUS_RING_STRONG =
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary/45";
+
+export const SELECT_TRIGGER =
+  "appearance-none rounded-lg border border-border bg-surface text-text-primary shadow-sm transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface";

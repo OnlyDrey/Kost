@@ -1,4 +1,5 @@
 import { useCurrencyFormatter } from "../../hooks/useApi";
+import { FOCUS_RING } from "../Common/focusStyles";
 
 interface ShareItem {
   id: string;
@@ -42,7 +43,7 @@ export default function UserSharesGrid({
             key={share.id}
             type="button"
             onClick={() => onSelectShare(share.userId)}
-            className={cls}
+            className={`${cls} ${FOCUS_RING}`}
           >
             <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
               {share.user?.name || unknownLabel}
@@ -57,7 +58,7 @@ export default function UserSharesGrid({
             )}
           </button>
         ) : (
-          <div key={share.id} className={cls}>
+          <div key={share.id} className={`${cls} ${FOCUS_RING}`}>
             <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
               {share.user?.name || unknownLabel}
             </p>

@@ -30,9 +30,10 @@ import UserSharesGrid from "../../components/Invoice/UserSharesGrid";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { FOCUS_RING } from "../../components/Common/focusStyles";
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
+  `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
 const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 export default function InvoiceDetail() {
@@ -194,7 +195,7 @@ export default function InvoiceDetail() {
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate("/invoices")}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+            className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-md ${FOCUS_RING}`}
           >
             <ArrowLeft size={20} />
           </button>
@@ -207,8 +208,13 @@ export default function InvoiceDetail() {
             </span>
           )}
         </div>
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${isPaid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}>
+            {isPaid ? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
+          </span>
         <ActionIconBar
           tight
+          showLabelFromMd
           items={[
             {
               key: "mark-complete",
@@ -234,11 +240,12 @@ export default function InvoiceDetail() {
             },
           ]}
         />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-5 lg:[grid-template-columns:2fr_1fr_1fr]">
         {/* Main info */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
           <div
             className="grid gap-3 items-start"
             style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
@@ -314,7 +321,7 @@ export default function InvoiceDetail() {
         </div>
 
         {/* Shares */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-1">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t("invoice.shares")}
           </h3>
@@ -328,7 +335,7 @@ export default function InvoiceDetail() {
         </div>
 
         {/* Payments */}
-        <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-3 lg:row-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
               {t("invoice.payments")}
@@ -339,7 +346,7 @@ export default function InvoiceDetail() {
                   setShowPayForm(true);
                   setPayAmount(String(remaining / 100));
                 }}
-                className="text-sm font-medium text-primary dark:text-primary hover:underline"
+                className={`text-sm font-medium text-primary dark:text-primary hover:underline rounded-md ${FOCUS_RING}`}
               >
                 {t("invoice.markComplete")}
               </button>
@@ -404,14 +411,14 @@ export default function InvoiceDetail() {
                           <button
                             type="button"
                             onClick={() => setEditingPaymentId(null)}
-                            className="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-700"
+                            className={`px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-700 ${FOCUS_RING}`}
                           >
                             {t("common.cancel")}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleSavePayment(payment.id)}
-                            className="px-2 py-1 text-xs rounded bg-primary text-white inline-flex items-center gap-1"
+                            className={`px-2 py-1 text-xs rounded bg-primary text-white inline-flex items-center gap-1 ${FOCUS_RING}`}
                           >
                             <Save size={12} />
                             {t("common.save")}
@@ -513,14 +520,14 @@ export default function InvoiceDetail() {
                 <button
                   type="button"
                   onClick={() => setShowPayForm(false)}
-                  className="flex-1 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className={`flex-1 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${FOCUS_RING}`}
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={addPayment.isPending}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className={`flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors ${FOCUS_RING}`}
                 >
                   {addPayment.isPending && (
                     <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />

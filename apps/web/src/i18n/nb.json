@@ -75,7 +75,7 @@
     "category": "Kategori",
     "categoryPlaceholder": "Velg kategori...",
     "paymentMethod": "Betalingsmåte",
-    "paymentMethodPlaceholder": "Velg betalingsmåte...",
+    "paymentMethodPlaceholder": "Velg …",
     "paidBy": "Betalt av",
     "invoiceDate": "Dato",
     "dueDate": "Forfallsdato",
@@ -211,7 +211,7 @@
     "brandingTitle": "Profilering",
     "brandingAppTitle": "App-tittel",
     "brandingLogoUrl": "Logo-URL",
-    "brandingPrimaryPreset": "Primærfarge-mal",
+    "brandingPrimaryPreset": "Primærfarge",
     "brandingPresetIndigo": "Indigo",
     "brandingPresetEmerald": "Smaragd",
     "brandingPresetViolet": "Fiolett",
@@ -366,7 +366,8 @@
     "remainingAmountHint": "Resterende beløp fordeles likt på deltakere som ikke har fått fast beløp.",
     "amountOnly": "Beløp",
     "customAmount": "Egendefinert",
-    "amountPerUser": "Beløp per bruker *"
+    "amountPerUser": "Beløp per bruker *",
+    "generateForPeriod": "Generer for periode"
   },
   "common": {
     "loading": "Laster...",

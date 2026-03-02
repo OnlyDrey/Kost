@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { FOCUS_RING } from "./focusStyles";
 
 export interface TileItem {
   key: string;
@@ -19,7 +20,7 @@ export default function TileGrid({ items }: { items: TileItem[] }) {
             key={key}
             type="button"
             onClick={onClick}
-            className={cls + " text-left"}
+            className={cls + ` text-left ${FOCUS_RING}`}
           >
             <div className="flex items-center gap-2 mb-1.5 min-h-7">
               <div

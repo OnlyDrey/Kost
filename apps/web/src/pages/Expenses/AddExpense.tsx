@@ -36,7 +36,7 @@ import { isPeriodClosed } from "../../utils/periodStatus";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
-const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
+const dateInputCls = `${inputCls} h-[46px] w-full min-w-0 max-w-full box-border appearance-none`;
 
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
@@ -758,7 +758,7 @@ export default function AddExpense() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1 lg:pr-6">
+            <div className="grid grid-cols-2 gap-3 md:gap-6 lg:col-start-1 lg:pr-6">
               <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.amount")} *</label>
                 <div className="relative flex items-center">

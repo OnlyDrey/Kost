@@ -8,6 +8,7 @@ import {
   RefreshCw,
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,6 +18,7 @@ import {
   useGenerateSubscriptionInvoices,
   useCurrentPeriod,
   useCurrencyFormatter,
+  usePeriods,
 } from "../../hooks/useApi";
 import { Subscription } from "../../services/api";
 import { formatDate } from "../../utils/date";
@@ -25,6 +27,7 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
+import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
 
 export default function SubscriptionList() {
   const { t } = useTranslation();
@@ -32,6 +35,7 @@ export default function SubscriptionList() {
   const { data: subscriptions = [], isLoading } = useSubscriptions();
   const { settings } = useSettings();
   const { data: currentPeriod } = useCurrentPeriod();
+  const { data: periods = [] } = usePeriods();
 
   const toggleSub = useToggleSubscription();
   const deleteSub = useDeleteSubscription();
@@ -39,13 +43,20 @@ export default function SubscriptionList() {
 
   const [generateResult, setGenerateResult] = React.useState("");
   const [generateError, setGenerateError] = React.useState("");
+  const [generatePeriodId, setGeneratePeriodId] = React.useState("");
+
+
+  React.useEffect(() => {
+    if (generatePeriodId || periods.length === 0) return;
+    setGeneratePeriodId(currentPeriod?.id ?? periods[0].id);
+  }, [currentPeriod?.id, generatePeriodId, periods]);
 
   const handleGenerate = async () => {
-    if (!currentPeriod) return;
+    if (!generatePeriodId) return;
     setGenerateResult("");
     setGenerateError("");
     try {
-      const result = await generateInvoices.mutateAsync(currentPeriod.id);
+      const result = await generateInvoices.mutateAsync(generatePeriodId);
       setGenerateResult(result.message);
     } catch (err: any) {
       setGenerateError(
@@ -73,42 +84,80 @@ export default function SubscriptionList() {
             {t("subscription.title")}
           </h1>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {currentPeriod && (
-              <button
-                onClick={handleGenerate}
-                disabled={generateInvoices.isPending}
-                className="hidden sm:flex items-center gap-2 border border-primary/40 dark:border-primary/40 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {generateInvoices.isPending ? (
-                  <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <RefreshCw size={15} />
-                )}
-                {t("subscription.generate", { period: currentPeriod.id })}
-              </button>
+            {periods.length > 0 && (
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={generatePeriodId}
+                    onChange={(e) => setGeneratePeriodId(e.target.value)}
+                    className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
+                  >
+                    {periods.map((period) => (
+                      <option key={period.id} value={period.id}>
+                        {period.id}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
+                  />
+                </div>
+                <button
+                  onClick={handleGenerate}
+                  disabled={generateInvoices.isPending || !generatePeriodId}
+                  className={`inline-flex items-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+                >
+                  {generateInvoices.isPending ? (
+                    <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <RefreshCw size={15} />
+                  )}
+                  {t("subscription.generateForPeriod")}
+                </button>
+              </div>
             )}
             <button
               onClick={() => navigate("/subscriptions/add")}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              className={`w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               <Plus size={16} />
               {t("subscription.addRecurringExpense")}
             </button>
           </div>
         </div>
-        {currentPeriod && (
-          <button
-            onClick={handleGenerate}
-            disabled={generateInvoices.isPending}
-            className="sm:hidden w-full flex items-center justify-center gap-2 border border-primary/40 dark:border-primary/40 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            {generateInvoices.isPending ? (
-              <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <RefreshCw size={15} />
-            )}
-            {t("subscription.generate", { period: currentPeriod.id })}
-          </button>
+        {periods.length > 0 && (
+          <div className="sm:hidden grid grid-cols-3 gap-2">
+            <div className="relative col-span-1">
+              <select
+                value={generatePeriodId}
+                onChange={(e) => setGeneratePeriodId(e.target.value)}
+                className={`h-10 w-full px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
+              >
+                {periods.map((period) => (
+                  <option key={period.id} value={period.id}>
+                    {period.id}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={14}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
+              />
+            </div>
+            <button
+              onClick={handleGenerate}
+              disabled={generateInvoices.isPending || !generatePeriodId}
+              className={`col-span-2 w-full flex items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+            >
+              {generateInvoices.isPending ? (
+                <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <RefreshCw size={15} />
+              )}
+              {t("subscription.generateForPeriod")}
+            </button>
+          </div>
         )}
       </div>
 
@@ -232,6 +281,7 @@ function SubscriptionCard({
       typeLabel={methodLabel}
       category={sub.category}
       amountLabel={fmt(sub.amountCents)}
+      showPaymentStatusPill={false}
       rightContent={
         sub.nextBillingAt || sub.lastGenerated ? (
           <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">

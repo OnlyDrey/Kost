@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
 import RoleBadge from "../Common/RoleBadge";
+import { FOCUS_RING } from "../Common/focusStyles";
 import {
   getCurrentLogoSource,
   getDefaultLogoUrl,
@@ -42,7 +43,7 @@ function NavLink({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:border-primary focus-visible:bg-primary/15 focus-visible:text-primary dark:focus-visible:bg-primary/25 ${
         active
           ? "border-primary bg-primary/15 text-primary dark:bg-primary/25"
           : "border-transparent text-muted-foreground hover:bg-surface-elevated"
@@ -167,7 +168,7 @@ function Sidebar({
                   aria-label={ariaLabel}
                   title={ariaLabel}
                   onClick={() => setTheme(key)}
-                  className={`flex-1 h-8 rounded-full grid place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  className={`flex-1 h-8 rounded-full grid place-items-center transition ${FOCUS_RING} ${
                     selected
                       ? "bg-primary/20 text-primary dark:bg-primary/25 dark:text-primary"
                       : "text-muted-foreground hover:text-text-primary"
@@ -184,7 +185,7 @@ function Sidebar({
           <button
             type="button"
             onClick={() => onNavigate("/settings?tab=profile")}
-            className="flex-1 flex items-center gap-3 px-2 py-2.5 rounded-lg text-left hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className={`flex-1 flex items-center gap-3 px-2 py-2.5 rounded-lg text-left hover:bg-surface-elevated ${FOCUS_RING}`}
           >
             <UserAvatar
               name={user?.name ?? ""}
@@ -198,6 +199,7 @@ function Sidebar({
               <RoleBadge
                 role={user?.role ?? "ADULT"}
                 label={roleLabel}
+                alwaysShowLabel
                 className="mt-0.5"
               />
             </div>
@@ -205,7 +207,7 @@ function Sidebar({
           <button
             onClick={logout}
             title={t("nav.logout")}
-            className="h-11 w-11 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className={`h-11 w-11 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors ${FOCUS_RING}`}
           >
             <LogOut size={16} />
           </button>

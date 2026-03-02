@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { SELECT_TRIGGER } from "./focusStyles";
 import {
   PRIMARY_COLOR_OPTIONS,
   type PrimaryColorFamily,
@@ -117,7 +118,7 @@ export default function ColorFamilySelect({
       </label>
       <button
         type="button"
-        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm inline-flex items-center justify-between gap-3"
+        className={`w-full px-3.5 py-2.5 pr-10 text-sm inline-flex items-center justify-between gap-3 ${SELECT_TRIGGER}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
@@ -126,7 +127,7 @@ export default function ColorFamilySelect({
       >
         <span className="inline-flex items-center gap-2">
           <span
-            className="h-3.5 w-3.5 rounded-sm border border-border"
+            className="h-4 w-4 rounded-full border border-border"
             style={{ backgroundColor: `rgb(${selected.rgb})` }}
             aria-hidden
           />
@@ -139,7 +140,7 @@ export default function ColorFamilySelect({
         <div
           role="listbox"
           tabIndex={-1}
-          className="max-h-64 overflow-auto rounded-lg border border-border bg-surface-elevated p-1 shadow-lg focus:outline-none"
+          className="max-h-64 overflow-auto rounded-xl border border-border bg-surface p-1.5 shadow-xl focus:outline-none"
           onKeyDown={onListKeyDown}
           aria-label={label}
         >
@@ -152,7 +153,7 @@ export default function ColorFamilySelect({
                 type="button"
                 role="option"
                 aria-selected={selectedOption}
-                className={`w-full text-left px-2.5 py-2 rounded-md text-sm inline-flex items-center justify-between gap-3 ${
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm inline-flex items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60 ${
                   selectedOption
                     ? "bg-primary/20 text-primary"
                     : active
@@ -167,7 +168,7 @@ export default function ColorFamilySelect({
               >
                 <span className="inline-flex items-center gap-2">
                   <span
-                    className="h-3.5 w-3.5 rounded-sm border border-border"
+                    className="h-4 w-4 rounded-full border border-border"
                     style={{ backgroundColor: `rgb(${option.rgb})` }}
                     aria-hidden
                   />

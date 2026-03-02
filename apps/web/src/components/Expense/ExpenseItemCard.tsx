@@ -1,6 +1,7 @@
 import { CheckCircle2, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
+import { FOCUS_RING_STRONG } from "../Common/focusStyles";
 
 import type { ReactNode } from "react";
 
@@ -23,6 +24,9 @@ interface ExpenseItemCardProps {
   paidLabel?: string;
   overdueLabel?: string;
   showPaidIcon?: boolean;
+  selected?: boolean;
+  showPaymentStatusPill?: boolean;
+  focusRingClassName?: string;
 }
 
 export default function ExpenseItemCard({
@@ -44,19 +48,32 @@ export default function ExpenseItemCard({
   paidLabel,
   overdueLabel,
   showPaidIcon = true,
+  selected = false,
+  showPaymentStatusPill = true,
+  focusRingClassName,
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
-  const borderClass = paid
-    ? "border-success/40"
+  const emphasisClass = paid
+    ? "border-success/60 bg-success/5"
     : overdue
-      ? "border-danger/40"
-      : "border-app-border";
+      ? "border-danger/60 bg-danger/5"
+      : selected
+        ? "border-primary/60 bg-primary/5"
+        : "border-app-border";
 
   const amountClass = paid
     ? "text-success"
     : overdue
       ? "text-danger"
       : "text-primary";
+
+  const effectiveFocusRing =
+    focusRingClassName ??
+    (paid
+      ? "focus-visible:ring-success/45"
+      : overdue
+        ? "focus-visible:ring-danger/45"
+        : "focus-visible:ring-primary/45");
 
   const cardBody = (
     <div className="flex flex-col gap-2.5">
@@ -95,15 +112,11 @@ export default function ExpenseItemCard({
       </div>
 
       <div className="w-full flex flex-wrap gap-1">
-        {paid && (
-          <span className="inline-flex items-center gap-1">
-            <TagPill
-              label={paidLabel ?? t("invoice.statusPaid")}
-              variant="success"
-            />
-            {showPaidIcon && (
-              <CheckCircle2 size={12} className="text-success" />
-            )}
+        {showPaymentStatusPill && (
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${paid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}
+          >
+            {paid ? paidLabel ?? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
           </span>
         )}
         {overdue && (
@@ -111,6 +124,11 @@ export default function ExpenseItemCard({
             label={overdueLabel ?? t("invoice.statusOverdue")}
             variant="danger"
           />
+        )}
+        {paid && showPaidIcon && (
+          <span className="inline-flex items-center gap-1 text-success text-xs">
+            <CheckCircle2 size={12} className="text-success" />
+          </span>
         )}
         <TagPill label={typeLabel} variant="type" />
         {category && <TagPill label={category} variant="category" />}
@@ -161,10 +179,13 @@ export default function ExpenseItemCard({
 
   return (
     <div
-      className={`relative bg-app-surface rounded-xl border ${borderClass} shadow-sm hover:shadow-md transition-all`}
+      className={`relative bg-app-surface rounded-xl border ${emphasisClass} shadow-sm hover:shadow-md transition-all`}
     >
       {onClick ? (
-        <button onClick={onClick} className="w-full text-left p-3">
+        <button
+          onClick={onClick}
+          className={`block w-full text-left p-3 rounded-xl ${FOCUS_RING_STRONG} ${effectiveFocusRing}`}
+        >
           {cardBody}
         </button>
       ) : (
