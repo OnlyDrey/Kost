@@ -127,7 +127,7 @@ export default function ColorFamilySelect({
       >
         <span className="inline-flex items-center gap-2">
           <span
-            className="h-3.5 w-3.5 rounded-sm border border-border"
+            className="h-4 w-4 rounded-full border border-border"
             style={{ backgroundColor: `rgb(${selected.rgb})` }}
             aria-hidden
           />
@@ -168,7 +168,7 @@ export default function ColorFamilySelect({
               >
                 <span className="inline-flex items-center gap-2">
                   <span
-                    className="h-3.5 w-3.5 rounded-sm border border-border"
+                    className="h-4 w-4 rounded-full border border-border"
                     style={{ backgroundColor: `rgb(${option.rgb})` }}
                     aria-hidden
                   />

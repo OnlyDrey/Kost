@@ -65,8 +65,8 @@ export default function SpendBreakdownCard({
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {title}
           </h2>
@@ -75,13 +75,13 @@ export default function SpendBreakdownCard({
               type="button"
               onClick={onResetCategory}
               aria-label={t("common.reset")}
-              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${FOCUS_RING} ${
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${FOCUS_RING} ${
                 selectedCategory
                   ? "border-primary/40 text-primary hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
                   : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={16} />
             </button>
           )}
         </div>
@@ -111,7 +111,7 @@ export default function SpendBreakdownCard({
               key={`${mode}-${category}`}
               type="button"
               onClick={() => onSelectCategory?.(category)}
-              className={`w-full px-5 py-3.5 text-left border-l-2 rounded-lg transition-colors ${FOCUS_RING} ${selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
+              className={`w-full px-5 py-3.5 text-left rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60 ${selected ? "border-primary/60 bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
             >
               <div className="flex items-start justify-between mb-1.5 gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">

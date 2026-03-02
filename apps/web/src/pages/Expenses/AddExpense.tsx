@@ -758,7 +758,7 @@ export default function AddExpense() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1 lg:pr-6">
+            <div className="grid grid-cols-2 gap-3 md:gap-6 lg:col-start-1 lg:pr-6">
               <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.amount")} *</label>
                 <div className="relative flex items-center">

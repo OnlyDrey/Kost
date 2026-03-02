@@ -31,7 +31,7 @@ export default function RoleBadge({
       aria-label={label}
     >
       <Icon size={11} />
-      {showLabelOnDesktop ? <span className="hidden md:inline">{label}</span> : null}
+      {showLabelOnDesktop ? <span>{label}</span> : null}
     </span>
   );
 }

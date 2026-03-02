@@ -120,11 +120,11 @@ export default function SubscriptionList() {
           </div>
         </div>
         {periods.length > 0 && (
-          <div className="sm:hidden grid grid-cols-1 gap-2">
+          <div className="sm:hidden grid grid-cols-3 gap-2">
             <select
               value={generatePeriodId}
               onChange={(e) => setGeneratePeriodId(e.target.value)}
-              className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
+              className={`col-span-1 h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
             >
               {periods.map((period) => (
                 <option key={period.id} value={period.id}>
@@ -135,7 +135,7 @@ export default function SubscriptionList() {
             <button
               onClick={handleGenerate}
               disabled={generateInvoices.isPending || !generatePeriodId}
-              className={`w-full flex items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+              className={`col-span-2 w-full flex items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               {generateInvoices.isPending ? (
                 <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
