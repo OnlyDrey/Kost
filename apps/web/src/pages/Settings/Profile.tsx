@@ -11,6 +11,10 @@ import {
   Globe,
   Users,
   Palette,
+  Paintbrush,
+  Tags,
+  CreditCard,
+  Store,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -740,14 +744,21 @@ export default function Profile() {
   const masonryCardClass = isMasonryPage
     ? "md:inline-block md:w-full md:break-inside-avoid md:mb-4"
     : "";
-  const customizationSections: { key: GlobalSettingsSection; label: string }[] =
-    [
-      { key: "customization", label: t("settings.customization") },
-      { key: "branding", label: t("settings.brandingTitle") },
-      { key: "categories", label: t("familySettings.categories") },
-      { key: "payment-methods", label: t("familySettings.paymentMethods") },
-      { key: "vendors", label: t("familySettings.vendors") },
-    ];
+  const customizationSections: {
+    key: GlobalSettingsSection;
+    label: string;
+    icon: typeof Palette;
+  }[] = [
+    { key: "customization", label: t("settings.customization"), icon: Palette },
+    { key: "branding", label: t("settings.brandingTitle"), icon: Paintbrush },
+    { key: "categories", label: t("familySettings.categories"), icon: Tags },
+    {
+      key: "payment-methods",
+      label: t("familySettings.paymentMethods"),
+      icon: CreditCard,
+    },
+    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
+  ];
 
   return (
     <div className="space-y-6">
@@ -813,17 +824,24 @@ export default function Profile() {
             <div className="space-y-1">
               {customizationSections.map((section) => {
                 const selected = globalSection === section.key;
+                const Icon = section.icon;
                 return (
                   <button
                     key={section.key}
                     type="button"
                     onClick={() => selectGlobalSection(section.key)}
-                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors inline-flex items-center gap-2 ${
                       selected
-                        ? "bg-primary text-white"
-                        : "text-text-secondary hover:bg-surface-elevated"
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-text-secondary hover:bg-surface-elevated border border-transparent"
                     }`}
                   >
+                    <Icon
+                      size={15}
+                      className={
+                        selected ? "text-primary" : "text-text-secondary"
+                      }
+                    />
                     {section.label}
                   </button>
                 );

@@ -30,6 +30,7 @@ import {
   getCurrencySymbol,
 } from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
+import UserSingleSelect from "../../components/Distribution/UserSingleSelect";
 import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
 
@@ -553,16 +554,42 @@ export default function AddExpense() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate(backUrl)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {t(titleKey)}
-        </h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(backUrl)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t(titleKey)}
+          </h1>
+        </div>
+        <div className="inline-flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(backUrl)}
+            className="px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            type="submit"
+            form="expense-form"
+            disabled={
+              isPending ||
+              (!isEditing && !isSubscription && !targetPeriodId) ||
+              (!isEditing && !isSubscription && targetPeriodClosed)
+            }
+            className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
+          >
+            {isPending && (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {t("common.save")}
+          </button>
+        </div>
       </div>
 
       {!isEditing && !isSubscription && !targetPeriodId && (
@@ -573,42 +600,13 @@ export default function AddExpense() {
       )}
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm ">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form id="expense-form" onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
               <AlertCircle size={16} className="flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
-
-          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-              {t(titleKey)}
-            </h2>
-            <div className="ml-auto inline-flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(backUrl)}
-                className="px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={
-                  isPending ||
-                  (!isEditing && !isSubscription && !targetPeriodId) ||
-                  (!isEditing && !isSubscription && targetPeriodClosed)
-                }
-                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-              >
-                {isPending && (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                {t("common.save")}
-              </button>
-            </div>
-          </div>
 
           {isSubscription && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
@@ -901,28 +899,27 @@ export default function AddExpense() {
           </div>
 
           {distributionMethod === "PERSONAL" && users && users.length > 0 && (
-            <div className="space-y-2">
-              <label className={labelCls}>{t("invoice.appliesTo")}</label>
-              <select
+            <div className="space-y-2 md:col-start-2">
+              <UserSingleSelect
+                title={t("invoice.appliesTo")}
                 value={personalUserId}
-                onChange={(e) => setPersonalUserId(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">{t("invoice.selectPersonalUser")}</option>
-                {users
-                  .filter((u) => {
-                    if (!currentUser) return false;
-                    if (currentUser.role === "ADMIN") return true;
-                    if (currentUser.role === "ADULT")
-                      return u.id === currentUser.id || u.role === "CHILD";
-                    return u.id === currentUser.id;
-                  })
-                  .map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name}
-                    </option>
-                  ))}
-              </select>
+                onChange={setPersonalUserId}
+                roleLabel={(role) =>
+                  role === "ADMIN"
+                    ? t("users.admin")
+                    : role === "CHILD"
+                      ? t("users.junior")
+                      : t("users.adult")
+                }
+                users={users.filter((u) => {
+                  if (!currentUser) return false;
+                  if (currentUser.role === "ADMIN") return true;
+                  if (currentUser.role === "ADULT") {
+                    return u.id === currentUser.id || u.role === "CHILD";
+                  }
+                  return u.id === currentUser.id;
+                })}
+              />
             </div>
           )}
 

@@ -47,7 +47,7 @@ function NavLink({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         active
-          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+          ? "bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
           : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
       }`}
     >
@@ -174,7 +174,7 @@ function Sidebar({
                   onClick={() => setTheme(key)}
                   className={`flex-1 h-8 rounded-full grid place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
                     selected
-                      ? "bg-indigo-200/80 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-200"
+                      ? "bg-primary/20 text-primary dark:bg-primary/25 dark:text-primary"
                       : "text-slate-500 hover:text-slate-700 dark:text-slate-300/70 dark:hover:text-slate-100"
                   }`}
                 >
