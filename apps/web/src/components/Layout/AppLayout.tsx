@@ -199,6 +199,7 @@ function Sidebar({
               <RoleBadge
                 role={user?.role ?? "ADULT"}
                 label={roleLabel}
+                alwaysShowLabel
                 className="mt-0.5"
               />
             </div>

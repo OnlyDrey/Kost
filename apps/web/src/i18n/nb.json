@@ -75,7 +75,7 @@
     "category": "Kategori",
     "categoryPlaceholder": "Velg kategori...",
     "paymentMethod": "Betalingsmåte",
-    "paymentMethodPlaceholder": "Velg betalingsmåte...",
+    "paymentMethodPlaceholder": "Velg …",
     "paidBy": "Betalt av",
     "invoiceDate": "Dato",
     "dueDate": "Forfallsdato",

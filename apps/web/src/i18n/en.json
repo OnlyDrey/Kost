@@ -75,7 +75,7 @@
     "category": "Category",
     "categoryPlaceholder": "Select category...",
     "paymentMethod": "Payment Method",
-    "paymentMethodPlaceholder": "Select payment method...",
+    "paymentMethodPlaceholder": "Select …",
     "paidBy": "Paid By",
     "invoiceDate": "Date",
     "dueDate": "Due Date",

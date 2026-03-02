@@ -8,6 +8,7 @@ import {
   RefreshCw,
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -85,17 +86,23 @@ export default function SubscriptionList() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {periods.length > 0 && (
               <div className="hidden sm:flex items-center gap-2">
-                <select
-                  value={generatePeriodId}
-                  onChange={(e) => setGeneratePeriodId(e.target.value)}
-                  className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
-                >
-                  {periods.map((period) => (
-                    <option key={period.id} value={period.id}>
-                      {period.id}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={generatePeriodId}
+                    onChange={(e) => setGeneratePeriodId(e.target.value)}
+                    className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
+                  >
+                    {periods.map((period) => (
+                      <option key={period.id} value={period.id}>
+                        {period.id}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
+                  />
+                </div>
                 <button
                   onClick={handleGenerate}
                   disabled={generateInvoices.isPending || !generatePeriodId}
@@ -121,17 +128,23 @@ export default function SubscriptionList() {
         </div>
         {periods.length > 0 && (
           <div className="sm:hidden grid grid-cols-3 gap-2">
-            <select
-              value={generatePeriodId}
-              onChange={(e) => setGeneratePeriodId(e.target.value)}
-              className={`col-span-1 h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
-            >
-              {periods.map((period) => (
-                <option key={period.id} value={period.id}>
-                  {period.id}
-                </option>
-              ))}
-            </select>
+            <div className="relative col-span-1">
+              <select
+                value={generatePeriodId}
+                onChange={(e) => setGeneratePeriodId(e.target.value)}
+                className={`h-10 w-full px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
+              >
+                {periods.map((period) => (
+                  <option key={period.id} value={period.id}>
+                    {period.id}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={14}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
+              />
+            </div>
             <button
               onClick={handleGenerate}
               disabled={generateInvoices.isPending || !generatePeriodId}

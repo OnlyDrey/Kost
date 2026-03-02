@@ -75,7 +75,7 @@ function PeriodSelector({
         </select>
         <ChevronDown
           size={14}
-          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
         />
       </div>
     </div>
@@ -527,24 +527,30 @@ export default function Overview() {
                   {t("invoice.invoices")}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
-                    className={`h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
-                  >
-                    <option value="all">{t("invoice.statusAll")}</option>
-                    <option value="unpaid">{t("invoice.statusUnpaid")}</option>
-                    <option value="remaining">
-                      {t("dashboard.remainingLabel")}
-                    </option>
-                    <option value="partial">
-                      {t("invoice.statusPartiallyPaid")}
-                    </option>
-                    <option value="overdue">
-                      {t("invoice.statusOverdue")}
-                    </option>
-                    <option value="paid">{t("invoice.statusPaid")}</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
+                      className={`h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
+                    >
+                      <option value="all">{t("invoice.statusAll")}</option>
+                      <option value="unpaid">{t("invoice.statusUnpaid")}</option>
+                      <option value="remaining">
+                        {t("dashboard.remainingLabel")}
+                      </option>
+                      <option value="partial">
+                        {t("invoice.statusPartiallyPaid")}
+                      </option>
+                      <option value="overdue">
+                        {t("invoice.statusOverdue")}
+                      </option>
+                      <option value="paid">{t("invoice.statusPaid")}</option>
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
+                    />
+                  </div>
                   <button
                     type="button"
                     disabled={closed}

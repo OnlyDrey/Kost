@@ -14,11 +14,13 @@ export default function RoleBadge({
   role,
   label,
   showLabelOnDesktop = true,
+  alwaysShowLabel = false,
   className = "",
 }: {
   role: User["role"];
   label: string;
   showLabelOnDesktop?: boolean;
+  alwaysShowLabel?: boolean;
   className?: string;
 }) {
   const Icon =
@@ -31,7 +33,7 @@ export default function RoleBadge({
       aria-label={label}
     >
       <Icon size={11} />
-      {showLabelOnDesktop ? <span>{label}</span> : null}
+      {alwaysShowLabel ? <span>{label}</span> : showLabelOnDesktop ? <span className="hidden md:inline">{label}</span> : null}
     </span>
   );
 }
