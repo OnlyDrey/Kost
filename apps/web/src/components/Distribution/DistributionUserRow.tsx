@@ -8,7 +8,7 @@ function RoleIcon({ role }: { role: User["role"] }) {
   if (role === "ADMIN") {
     return (
       <span
-        className={`${base} bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary`}
+        className={`${base} bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30`}
         title="Admin"
       >
         <ShieldCheck size={11} />
@@ -18,7 +18,7 @@ function RoleIcon({ role }: { role: User["role"] }) {
   if (role === "CHILD") {
     return (
       <span
-        className={`${base} bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300`}
+        className={`${base} bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-500/30`}
         title="Junior"
       >
         <Baby size={11} />
@@ -27,7 +27,7 @@ function RoleIcon({ role }: { role: User["role"] }) {
   }
   return (
     <span
-      className={`${base} bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300`}
+      className={`${base} bg-sky-500/20 text-sky-200 ring-1 ring-sky-500/30`}
       title="Adult"
     >
       <UsersRound size={11} />

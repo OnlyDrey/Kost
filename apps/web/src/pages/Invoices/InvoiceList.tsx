@@ -252,7 +252,7 @@ export default function InvoiceList() {
                 label: t("common.edit"),
                 onClick: () => navigate(`/invoices/${invoice.id}/edit`),
                 colorClassName:
-                  "bg-primary/20 text-primary hover:bg-primary/30",
+                  "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
               },
               {
                 key: "delete",

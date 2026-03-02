@@ -218,7 +218,7 @@ function SubscriptionCard({
     sub.status === "ACTIVE"
       ? "bg-green-500 text-white"
       : sub.status === "PAUSED"
-        ? "bg-yellow-500 text-yellow-950"
+        ? "bg-amber-500 text-white"
         : "bg-red-500 text-white";
   const statusLabel =
     sub.status === "ACTIVE"
@@ -266,7 +266,7 @@ function SubscriptionCard({
               icon: Pencil,
               label: t("common.edit"),
               onClick: onEdit,
-              colorClassName: "bg-primary/20 text-primary hover:bg-primary/30",
+              colorClassName: "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
             },
             {
               key: "toggle",

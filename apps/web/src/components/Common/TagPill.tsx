@@ -2,18 +2,31 @@ import type { ReactNode } from "react";
 
 interface TagPillProps {
   label: string;
-  variant?: "type" | "category" | "frequency" | "danger" | "success";
+  variant?:
+    | "type"
+    | "category"
+    | "frequency"
+    | "danger"
+    | "success"
+    | "admin"
+    | "adult"
+    | "child"
+    | "warning";
   shape?: "pill" | "rounded";
   size?: "sm" | "md";
   icon?: ReactNode;
 }
 
 const variantClass: Record<NonNullable<TagPillProps["variant"]>, string> = {
-  type: "bg-muted text-muted-foreground",
-  category: "bg-muted text-muted-foreground",
-  frequency: "bg-secondary text-secondary-foreground",
+  type: "bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-500/30",
+  category: "bg-slate-500/15 text-slate-200 ring-1 ring-slate-500/20",
+  frequency: "bg-violet-500/20 text-violet-200 ring-1 ring-violet-500/30",
   danger: "bg-red-500 text-white",
   success: "bg-green-500 text-white",
+  admin: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30",
+  adult: "bg-sky-500/20 text-sky-200 ring-1 ring-sky-500/30",
+  child: "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-500/30",
+  warning: "bg-amber-500/70 text-white",
 };
 
 export default function TagPill({

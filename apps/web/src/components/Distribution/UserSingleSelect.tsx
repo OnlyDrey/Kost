@@ -4,21 +4,21 @@ import type { User } from "../../services/api";
 function RoleBadge({ role, label }: { role: User["role"]; label: string }) {
   if (role === "ADMIN") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-200 ring-1 ring-amber-500/30">
         <ShieldCheck size={11} /> {label}
       </span>
     );
   }
   if (role === "CHILD") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+      <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 px-2 py-0.5 text-xs text-cyan-200 ring-1 ring-cyan-500/30">
         <Baby size={11} /> {label}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+    <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/20 px-2 py-0.5 text-xs text-sky-200 ring-1 ring-sky-500/30">
       <UsersRound size={11} /> {label}
     </span>
   );

@@ -202,7 +202,13 @@ function Sidebar({
               </p>
               <TagPill
                 label={roleLabel}
-                variant="type"
+                variant={
+                  user?.role === "ADMIN"
+                    ? "admin"
+                    : user?.role === "CHILD"
+                      ? "child"
+                      : "adult"
+                }
                 size="sm"
                 icon={<RoleIcon size={11} />}
               />

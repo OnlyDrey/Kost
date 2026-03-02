@@ -706,7 +706,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         label: t("common.edit"),
                         onClick: () => openEdit(u),
                         colorClassName:
-                          "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25 text-primary dark:text-primary",
+                          "bg-violet-500/10 hover:bg-violet-500/15 dark:bg-violet-500/20 dark:hover:bg-violet-500/25 text-violet-500",
                         hidden:
                           !isAdmin &&
                           !(

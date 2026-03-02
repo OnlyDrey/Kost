@@ -608,7 +608,7 @@ export default function AddExpense() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-5 md:divide-x md:divide-gray-200 md:dark:divide-gray-800">
             {isSubscription && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
                 <div className="min-w-0">
@@ -713,7 +713,7 @@ export default function AddExpense() {
               </div>
             </div>
 
-            <div className="md:col-span-2 md:col-start-1">
+            <div className="md:col-start-1 md:pr-4">
               <label className={labelCls}>{t("invoice.description")}</label>
               <input
                 type="text"
@@ -728,7 +728,7 @@ export default function AddExpense() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1 md:pr-4">
               <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.amount")} *</label>
                 <div className="relative flex items-center">
@@ -754,27 +754,51 @@ export default function AddExpense() {
                   )}
                 </div>
               </div>
-              {!isSubscription && (
-                <div className="min-w-0">
-                  <label className={labelCls}>{t("invoice.dueDate")}</label>
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className={dateInputCls}
-                  />
-                </div>
-              )}
+              <div className="min-w-0">
+                <label className={labelCls}>{t("invoice.paymentMethod")}</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">{t("invoice.paymentMethodPlaceholder")}</option>
+                  {paymentMethods.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            {!isSubscription && (
+              <div className="md:col-start-1 md:pr-4">
+                <label className={labelCls}>{t("invoice.dueDate")}</label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className={dateInputCls}
+                />
+              </div>
+            )}
 
             {isSubscription && (
               <>
-                <div className="space-y-4 md:col-start-2">
+                <div className="md:col-start-2 md:pl-4">
+                  <label className={labelCls}>{t("subscription.startDate")}</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={dateInputCls}
+                  />
+                </div>
+
+                <div className="space-y-4 md:col-start-2 md:pl-4">
                   <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
                     <div>
-                      <label className={labelCls}>
-                        {t("subscription.everyLabel")}
-                      </label>
+                      <label className={labelCls}>{t("subscription.everyLabel")}</label>
                       <input
                         type="number"
                         value={frequencyQuantity}
@@ -785,31 +809,21 @@ export default function AddExpense() {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>
-                        {t("subscription.frequencyLabel")}
-                      </label>
+                      <label className={labelCls}>{t("subscription.frequencyLabel")}</label>
                       <select
                         value={frequencyUnit}
                         onChange={(e) => setFrequencyUnit(e.target.value)}
                         className={inputCls}
                       >
                         <option value="DAY">{t("subscription.unitDay")}</option>
-                        <option value="WEEK">
-                          {t("subscription.unitWeek")}
-                        </option>
-                        <option value="MONTH">
-                          {t("subscription.unitMonth")}
-                        </option>
-                        <option value="YEAR">
-                          {t("subscription.unitYear")}
-                        </option>
+                        <option value="WEEK">{t("subscription.unitWeek")}</option>
+                        <option value="MONTH">{t("subscription.unitMonth")}</option>
+                        <option value="YEAR">{t("subscription.unitYear")}</option>
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls}>
-                      {t("subscription.dayOfMonth")}
-                    </label>
+                    <label className={labelCls}>{t("subscription.dayOfMonth")}</label>
                     <input
                       type="number"
                       value={dayOfMonth}
@@ -821,41 +835,10 @@ export default function AddExpense() {
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-                  <div className="min-w-0 md:col-span-1 lg:col-span-1">
-                    <label className={labelCls}>
-                      {t("subscription.startDate")}
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className={dateInputCls}
-                    />
-                  </div>
-                </div>
               </>
             )}
 
-            <div className="md:col-start-1">
-              <label className={labelCls}>{t("invoice.paymentMethod")}</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">
-                  {t("invoice.paymentMethodPlaceholder")}
-                </option>
-                {paymentMethods.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="md:col-start-2">
+            <div className="md:col-start-2 md:pl-4 md:self-start">
               <label className={labelCls}>
                 {t("invoice.distributionMethod")} *
               </label>
@@ -898,7 +881,7 @@ export default function AddExpense() {
             </div>
 
             {distributionMethod === "PERSONAL" && users && users.length > 0 && (
-              <div className="space-y-2 md:col-start-2">
+              <div className="space-y-2 md:col-start-2 md:pl-4">
                 <UserSingleSelect
                   title={t("invoice.appliesTo")}
                   value={personalUserId}
@@ -925,7 +908,7 @@ export default function AddExpense() {
             {distributionMethod === "BY_INCOME" &&
               users &&
               users.length > 0 && (
-                <div className="space-y-2 md:col-start-2">
+                <div className="space-y-2 md:col-start-2 md:pl-4">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("invoice.selectUsers")}
@@ -983,7 +966,7 @@ export default function AddExpense() {
             {distributionMethod === "BY_PERCENT" &&
               users &&
               users.length > 0 && (
-                <div className="space-y-2 md:col-start-2">
+                <div className="space-y-2 md:col-start-2 md:pl-4">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("subscription.amountPerUser")}
@@ -1060,7 +1043,7 @@ export default function AddExpense() {
               users &&
               users.length > 0 &&
               (fixedMode === "AMOUNT" ? (
-                <div className="space-y-2 md:col-start-2">
+                <div className="space-y-2 md:col-start-2 md:pl-4">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("subscription.fixedAmountPerUser")}
@@ -1125,7 +1108,7 @@ export default function AddExpense() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2 md:col-start-2">
+                <div className="space-y-2 md:col-start-2 md:pl-4">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("invoice.selectUsersEqual")}

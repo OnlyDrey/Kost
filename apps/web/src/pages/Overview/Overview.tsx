@@ -202,17 +202,15 @@ export default function Overview() {
     );
   }, [statusFilteredInvoices, filter, shareUserId]);
 
-  const breakdownInvoices = useMemo(
-    () => shareFilteredInvoices,
-    [shareFilteredInvoices],
-  );
-
-  const listInvoices = useMemo(() => {
+  const filteredInvoices = useMemo(() => {
     if (!categoryFilter) return shareFilteredInvoices;
     return shareFilteredInvoices.filter(
       (invoice) => (invoice.category || t("common.other")) === categoryFilter,
     );
   }, [shareFilteredInvoices, categoryFilter, t]);
+
+  const breakdownInvoices = filteredInvoices;
+  const listInvoices = filteredInvoices;
 
   const now = new Date();
   const grouped = useMemo(
@@ -263,7 +261,7 @@ export default function Overview() {
           paid: [] as any[],
         },
       ),
-    [invoices],
+    [listInvoices, now],
   );
 
   const visibleGroups = [
@@ -638,7 +636,7 @@ export default function Overview() {
                                             `/invoices/${invoice.id}/edit`,
                                           ),
                                         colorClassName:
-                                          "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25 text-primary",
+                                          "bg-violet-500/10 hover:bg-violet-500/15 dark:bg-violet-500/20 dark:hover:bg-violet-500/25 text-violet-500",
                                       },
                                       {
                                         key: "delete",

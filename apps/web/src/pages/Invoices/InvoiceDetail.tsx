@@ -223,7 +223,7 @@ export default function InvoiceDetail() {
               icon: Pencil,
               label: t("common.edit"),
               onClick: () => navigate(`/invoices/${id}/edit`),
-              colorClassName: "bg-primary/20 text-primary hover:bg-primary/30",
+              colorClassName: "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
             },
             {
               key: "delete",
@@ -443,7 +443,7 @@ export default function InvoiceDetail() {
                                 onClick: () => startEditPayment(payment),
                                 hidden: !canManagePayments,
                                 colorClassName:
-                                  "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25 text-primary dark:text-primary",
+                                  "bg-violet-500/10 hover:bg-violet-500/15 dark:bg-violet-500/20 dark:hover:bg-violet-500/25 text-violet-500",
                               },
                               {
                                 key: "delete",
