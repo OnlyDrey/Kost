@@ -292,7 +292,7 @@ export default function InvoiceList() {
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div className="relative">
             <Search
               size={14}
@@ -367,7 +367,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.overdue, "remaining"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.overdue.map(renderInvoice)}
               </div>
             </div>
@@ -383,7 +383,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.partial, "remaining"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.partial.map(renderInvoice)}
               </div>
             </div>
@@ -399,7 +399,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.unpaid, "total"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.unpaid.map(renderInvoice)}
               </div>
             </div>
@@ -415,7 +415,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.paid, "total"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.paid.map(renderInvoice)}
               </div>
             </div>

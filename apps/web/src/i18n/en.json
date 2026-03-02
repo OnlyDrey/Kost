@@ -132,7 +132,10 @@
     "allocationPercentDescription": "Shares split by percentage rules.",
     "allocationFixedDescription": "Fixed amounts assigned per person.",
     "unknownDistributionMethod": "Unknown distribution method",
-    "youPayOfTotal": "You: {{own}} of {{total}}"
+    "youPayOfTotal": "You: {{own}} of {{total}}",
+    "personalExpenseOption": "Personal expense",
+    "appliesTo": "Applies to",
+    "selectPersonalUser": "Select person"
   },
   "period": {
     "title": "Period",

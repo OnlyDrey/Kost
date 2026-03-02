@@ -132,7 +132,10 @@
     "allocationPercentDescription": "Andeler fordeles etter prosentregler.",
     "allocationFixedDescription": "Faste beløp tildeles per person.",
     "unknownDistributionMethod": "Ukjent fordelingsmetode",
-    "youPayOfTotal": "Du: {{own}} av {{total}}"
+    "youPayOfTotal": "Du: {{own}} av {{total}}",
+    "personalExpenseOption": "Personlig utgift",
+    "appliesTo": "Gjelder for",
+    "selectPersonalUser": "Velg person"
   },
   "period": {
     "title": "Periode",

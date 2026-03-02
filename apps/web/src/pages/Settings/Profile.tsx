@@ -95,7 +95,7 @@ function SettingsSectionCard({
 }
 
 type SettingsPage = "profile" | "password" | "users" | "customization";
-type GlobalSettingsSection = "customization" | FamilySetting;
+type GlobalSettingsSection = "customization" | "branding" | FamilySetting;
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -139,6 +139,7 @@ export default function Profile() {
   const [globalSection, setGlobalSection] = useState<GlobalSettingsSection>(
     [
       "customization",
+      "branding",
       "currency",
       "categories",
       "payment-methods",
@@ -270,6 +271,7 @@ export default function Profile() {
       requestedGlobalSection &&
       [
         "customization",
+        "branding",
         "currency",
         "categories",
         "payment-methods",
@@ -741,6 +743,7 @@ export default function Profile() {
   const customizationSections: { key: GlobalSettingsSection; label: string }[] =
     [
       { key: "customization", label: t("settings.customization") },
+      { key: "branding", label: t("settings.brandingTitle") },
       { key: "categories", label: t("familySettings.categories") },
       { key: "payment-methods", label: t("familySettings.paymentMethods") },
       { key: "vendors", label: t("familySettings.vendors") },
@@ -789,6 +792,7 @@ export default function Profile() {
             className={inputCls}
           >
             <option value="customization">{t("settings.customization")}</option>
+            <option value="branding">{t("settings.brandingTitle")}</option>
             <option value="categories">{t("familySettings.categories")}</option>
             <option value="payment-methods">
               {t("familySettings.paymentMethods")}
@@ -1264,7 +1268,8 @@ export default function Profile() {
           {/* Family settings sections (admin only) */}
           {activePage === "customization" &&
             isAdmin &&
-            globalSection !== "customization" && (
+            globalSection !== "customization" &&
+            globalSection !== "branding" && (
               <div className="md:col-span-2 w-full">
                 <FamilySettingsContent
                   activeSection={globalSection as FamilySetting}
@@ -1286,20 +1291,53 @@ export default function Profile() {
                   />
                 </div>
 
-                <div className="md:col-span-2 w-full space-y-4">
+                <div className="md:col-span-2 w-full">
                   <SettingsSectionCard
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.themeSection")}
+                    action={
+                      <button
+                        form="theme-form"
+                        type="submit"
+                        className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        {t("common.save")}
+                      </button>
+                    }
                   >
-                    <ColorFamilySelect
-                      value={brandingPreset}
-                      onChange={(next) =>
-                        setBrandingPreset(next as BrandingPreset)
-                      }
-                      label={t("settings.brandingPrimaryPreset")}
-                    />
+                    <form
+                      id="theme-form"
+                      onSubmit={handleSaveBranding}
+                      className="space-y-2"
+                    >
+                      <ColorFamilySelect
+                        value={brandingPreset}
+                        onChange={(next) =>
+                          setBrandingPreset(next as BrandingPreset)
+                        }
+                        label={t("settings.brandingPrimaryPreset")}
+                      />
+                      {brandingError && (
+                        <p className="mt-2 text-xs text-danger">
+                          {brandingError}
+                        </p>
+                      )}
+                      {brandingSaved && (
+                        <p className="mt-2 text-xs text-success">
+                          {t("settings.profileUpdated")}
+                        </p>
+                      )}
+                    </form>
                   </SettingsSectionCard>
+                </div>
+              </>
+            )}
 
+          {activePage === "customization" &&
+            isAdmin &&
+            globalSection === "branding" && (
+              <>
+                <div className="md:col-span-2 w-full space-y-4">
                   <SettingsSectionCard
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.brandingTitle")}

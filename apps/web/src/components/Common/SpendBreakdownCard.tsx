@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RotateCcw } from "lucide-react";
 import { useCurrencyFormatter } from "../../hooks/useApi";
 import type { Invoice } from "../../services/api";
 
@@ -10,11 +11,17 @@ export default function SpendBreakdownCard({
   currentUserId,
   currency: _currency,
   title,
+  selectedCategory,
+  onSelectCategory,
+  onResetCategory,
 }: {
   invoices: Invoice[];
   currentUserId?: string;
   currency: string;
   title: string;
+  selectedCategory?: string;
+  onSelectCategory?: (category: string) => void;
+  onResetCategory?: () => void;
 }) {
   const { t } = useTranslation();
   const fmt = useCurrencyFormatter();
@@ -27,7 +34,8 @@ export default function SpendBreakdownCard({
       const key = invoice.category || t("common.other");
       totalMap[key] = (totalMap[key] ?? 0) + invoice.totalCents;
       const myShare =
-        invoice.shares?.find((s) => s.userId === currentUserId)?.shareCents ?? 0;
+        invoice.shares?.find((s) => s.userId === currentUserId)?.shareCents ??
+        0;
       shareMap[key] = (shareMap[key] ?? 0) + myShare;
     }
 
@@ -57,9 +65,25 @@ export default function SpendBreakdownCard({
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
       <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-          {title}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </h2>
+          {onResetCategory && (
+            <button
+              type="button"
+              onClick={onResetCategory}
+              aria-label={t("common.reset")}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                selectedCategory
+                  ? "border-indigo-300 text-indigo-500 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                  : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+              }`}
+            >
+              <RotateCcw size={14} />
+            </button>
+          )}
+        </div>
         <div className="inline-flex w-full sm:w-auto rounded-lg border border-gray-200 dark:border-gray-700 p-0.5">
           <button
             onClick={() => setMode("YOUR_SHARE")}
@@ -80,8 +104,14 @@ export default function SpendBreakdownCard({
           const primaryCents = mode === "TOTAL" ? totalCents : shareCents;
           const secondaryCents = mode === "TOTAL" ? shareCents : totalCents;
           const pct = grandTotal > 0 ? (primaryCents / grandTotal) * 100 : 0;
+          const selected = selectedCategory === category;
           return (
-            <div key={`${mode}-${category}`} className="px-5 py-3.5">
+            <button
+              key={`${mode}-${category}`}
+              type="button"
+              onClick={() => onSelectCategory?.(category)}
+              className={`w-full px-5 py-3.5 text-left transition-colors ${selected ? "bg-indigo-50 dark:bg-indigo-950/30" : "hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
+            >
               <div className="flex items-start justify-between mb-1.5 gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">
                   {category}
@@ -107,7 +137,7 @@ export default function SpendBreakdownCard({
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 {pct.toFixed(1)}%
               </p>
-            </div>
+            </button>
           );
         })}
       </div>

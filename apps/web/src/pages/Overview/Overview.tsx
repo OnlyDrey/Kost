@@ -105,6 +105,8 @@ export default function Overview() {
     params.set("period", id);
     params.delete("filter");
     params.delete("shareUser");
+    params.delete("status");
+    params.delete("category");
     setSearchParams(params, { replace: true });
   };
 
@@ -131,12 +133,28 @@ export default function Overview() {
   const filter = searchParams.get("filter") || "all";
   const shareUserId = searchParams.get("shareUser") || "";
   const hasShareSelection = filter === "share-user" && !!shareUserId;
+  const statusFilter = searchParams.get("status") || "all";
+  const categoryFilter = searchParams.get("category") || "";
 
   const setFilter = (nextFilter: string, su?: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("filter", nextFilter);
     if (su) params.set("shareUser", su);
     else params.delete("shareUser");
+    setSearchParams(params, { replace: true });
+  };
+
+  const setStatusFilter = (nextStatus: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (nextStatus === "all") params.delete("status");
+    else params.set("status", nextStatus);
+    setSearchParams(params, { replace: true });
+  };
+
+  const setCategoryFilter = (nextCategory: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (!nextCategory) params.delete("category");
+    else params.set("category", nextCategory);
     setSearchParams(params, { replace: true });
   };
 
@@ -156,10 +174,50 @@ export default function Overview() {
     return { paidCents, owedCents };
   }, [invoices]);
 
+  const statusFilteredInvoices = useMemo(() => {
+    const base = invoices ?? [];
+    return base.filter((invoice) => {
+      const totalPaid = (invoice.payments ?? []).reduce(
+        (sum, p) => sum + p.amountCents,
+        0,
+      );
+      const remaining = Math.max(0, invoice.totalCents - totalPaid);
+      const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
+      const isOverdue = remaining > 0 && !!dueAt && dueAt < new Date();
+      if (statusFilter === "paid") return remaining <= 0;
+      if (statusFilter === "remaining") return remaining > 0;
+      if (statusFilter === "unpaid")
+        return remaining > 0 && totalPaid === 0 && !isOverdue;
+      if (statusFilter === "partial") return remaining > 0 && totalPaid > 0;
+      if (statusFilter === "overdue") return isOverdue;
+      return true;
+    });
+  }, [invoices, statusFilter]);
+
+  const shareFilteredInvoices = useMemo(() => {
+    if (!(filter === "share-user" && shareUserId))
+      return statusFilteredInvoices;
+    return statusFilteredInvoices.filter((invoice) =>
+      (invoice.shares ?? []).some((s: any) => s.userId === shareUserId),
+    );
+  }, [statusFilteredInvoices, filter, shareUserId]);
+
+  const breakdownInvoices = useMemo(
+    () => shareFilteredInvoices,
+    [shareFilteredInvoices],
+  );
+
+  const listInvoices = useMemo(() => {
+    if (!categoryFilter) return shareFilteredInvoices;
+    return shareFilteredInvoices.filter(
+      (invoice) => (invoice.category || t("common.other")) === categoryFilter,
+    );
+  }, [shareFilteredInvoices, categoryFilter, t]);
+
   const now = new Date();
   const grouped = useMemo(
     () =>
-      (invoices ?? []).reduce(
+      listInvoices.reduce(
         (acc, invoice) => {
           const totalPaid = (invoice.payments ?? []).reduce(
             (sum, p) => sum + p.amountCents,
@@ -208,18 +266,11 @@ export default function Overview() {
     [invoices],
   );
 
-  const filterByShare = (list: any[]) =>
-    filter === "share-user"
-      ? list.filter(({ invoice }) =>
-          (invoice.shares ?? []).some((s: any) => s.userId === shareUserId),
-        )
-      : list;
-
   const visibleGroups = [
     {
       key: "overdue",
       title: t("invoice.statusOverdue"),
-      list: filterByShare(grouped.overdue),
+      list: grouped.overdue,
       show:
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-red-200 dark:border-red-900/50",
@@ -229,7 +280,7 @@ export default function Overview() {
     {
       key: "unpaid",
       title: t("invoice.statusUnpaid"),
-      list: filterByShare(grouped.unpaid),
+      list: grouped.unpaid,
       show:
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-gray-200 dark:border-gray-800",
@@ -239,7 +290,7 @@ export default function Overview() {
     {
       key: "partial",
       title: t("invoice.statusPartiallyPaid"),
-      list: filterByShare(grouped.partial),
+      list: grouped.partial,
       show:
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-amber-200 dark:border-amber-900/50",
@@ -249,7 +300,7 @@ export default function Overview() {
     {
       key: "paid",
       title: t("invoice.statusPaid"),
-      list: filterByShare(grouped.paid),
+      list: grouped.paid,
       show: filter === "all" || filter === "paid" || filter === "share-user",
       borderClass: "border-green-200 dark:border-green-900/50",
       titleClass: "text-green-700 dark:text-green-400",
@@ -423,10 +474,15 @@ export default function Overview() {
 
                   {invoices && invoices.length > 0 && (
                     <SpendBreakdownCard
-                      invoices={invoices}
+                      invoices={breakdownInvoices}
                       currentUserId={currentUser?.id}
                       currency={currency}
                       title={t("period.categoryBreakdown")}
+                      selectedCategory={categoryFilter || undefined}
+                      onSelectCategory={(category) =>
+                        setCategoryFilter(category)
+                      }
+                      onResetCategory={() => setCategoryFilter("")}
                     />
                   )}
                 </>
@@ -439,20 +495,37 @@ export default function Overview() {
                 <h2 className="text-[clamp(1.5rem,2.2vw,1.9rem)] font-bold text-gray-900 dark:text-gray-100">
                   {t("invoice.invoices")}
                 </h2>
-                <button
-                  type="button"
-                  disabled={closed}
-                  onClick={() => {
-                    if (closed) return;
-                    navigate(`/invoices/add?period=${resolvedPeriodId}`);
-                  }}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${closed ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-700 text-white"}`}
-                >
-                  <Plus size={15} />
-                  {t("invoice.addInvoice")}
-                </button>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="h-10 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="all">{t("invoice.statusAll")}</option>
+                    <option value="unpaid">{t("invoice.statusUnpaid")}</option>
+                    <option value="partial">
+                      {t("invoice.statusPartiallyPaid")}
+                    </option>
+                    <option value="overdue">
+                      {t("invoice.statusOverdue")}
+                    </option>
+                    <option value="paid">{t("invoice.statusPaid")}</option>
+                  </select>
+                  <button
+                    type="button"
+                    disabled={closed}
+                    onClick={() => {
+                      if (closed) return;
+                      navigate(`/invoices/add?period=${resolvedPeriodId}`);
+                    }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${closed ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-700 text-white"}`}
+                  >
+                    <Plus size={15} />
+                    {t("invoice.addInvoice")}
+                  </button>
+                </div>
               </div>
-              {!invoices || invoices.length === 0 ? (
+              {!listInvoices || listInvoices.length === 0 ? (
                 <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {t("common.noData")}
@@ -476,7 +549,7 @@ export default function Overview() {
                           {fmt(groupSum)}
                         </p>
                       </div>
-                      <div className="grid grid-cols-1 gap-2.5 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
+                      <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-5">
                         {group.list.map(
                           ({ invoice, totalPaid, remaining, displayCents }) => {
                             const isPaid = remaining <= 0;
