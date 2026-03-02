@@ -76,7 +76,7 @@ export default function SpendBreakdownCard({
               aria-label={t("common.reset")}
               className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
                 selectedCategory
-                  ? "border-indigo-300 text-indigo-500 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                  ? "border-primary/40 text-primary hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
                   : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
@@ -87,13 +87,13 @@ export default function SpendBreakdownCard({
         <div className="inline-flex w-full sm:w-auto rounded-lg border border-gray-200 dark:border-gray-700 p-0.5">
           <button
             onClick={() => setMode("YOUR_SHARE")}
-            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "YOUR_SHARE" ? "bg-indigo-500 text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "YOUR_SHARE" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
             {t("dashboard.yourShare")}
           </button>
           <button
             onClick={() => setMode("TOTAL")}
-            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "TOTAL" ? "bg-indigo-500 text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "TOTAL" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
             {t("dashboard.totalAmount")}
           </button>
@@ -110,14 +110,14 @@ export default function SpendBreakdownCard({
               key={`${mode}-${category}`}
               type="button"
               onClick={() => onSelectCategory?.(category)}
-              className={`w-full px-5 py-3.5 text-left transition-colors ${selected ? "bg-indigo-50 dark:bg-indigo-950/30" : "hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
+              className={`w-full px-5 py-3.5 text-left transition-colors ${selected ? "bg-primary/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
             >
               <div className="flex items-start justify-between mb-1.5 gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">
                   {category}
                 </span>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-base font-bold text-indigo-500 dark:text-indigo-400 leading-tight">
+                  <p className="text-base font-bold text-primary leading-tight">
                     {fmt(primaryCents)}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -130,7 +130,7 @@ export default function SpendBreakdownCard({
               </div>
               <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-indigo-500"
+                  className="h-full rounded-full bg-primary"
                   style={{ width: `${Math.min(100, pct).toFixed(1)}%` }}
                 />
               </div>

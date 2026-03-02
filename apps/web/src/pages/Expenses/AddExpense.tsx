@@ -35,7 +35,7 @@ import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm";
 const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 const labelCls =
@@ -608,233 +608,237 @@ export default function AddExpense() {
             </div>
           )}
 
-          {isSubscription && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-              <div className="min-w-0">
-                <label className={labelCls}>{t("subscription.status")}</label>
-                <select
-                  value={subscriptionStatus}
-                  onChange={(e) =>
-                    setSubscriptionStatus(
-                      e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
-                    )
-                  }
-                  className={inputCls}
-                >
-                  <option value="ACTIVE">
-                    {t("subscription.statusActive")}
-                  </option>
-                  <option value="PAUSED">
-                    {t("subscription.statusPaused")}
-                  </option>
-                  <option value="CANCELED">
-                    {t("subscription.statusCanceled")}
-                  </option>
-                </select>
-              </div>
-              <div className="min-w-0">
-                <label className={labelCls}>
-                  {t("subscription.nextBillingAt")}
-                </label>
-                <input
-                  type="date"
-                  value={nextBillingAt}
-                  onChange={(e) => setNextBillingAt(e.target.value)}
-                  className={dateInputCls}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="relative">
-              <label className={labelCls}>{t("invoice.vendor")} *</label>
-              <input
-                type="text"
-                value={vendor}
-                onChange={(e) => {
-                  setVendor(e.target.value);
-                  setShowVendorList(true);
-                }}
-                onFocus={() => setShowVendorList(true)}
-                onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
-                required
-                className={inputCls}
-                placeholder={t("invoice.vendorPlaceholder")}
-              />
-              {showVendorList && vendors.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-                  {vendors
-                    .filter((v) =>
-                      v.name.toLowerCase().includes(vendor.toLowerCase()),
-                    )
-                    .map((v) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        onMouseDown={() => {
-                          setVendor(v.name);
-                          setShowVendorList(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
-                      >
-                        {v.logoUrl && (
-                          <img
-                            src={v.logoUrl}
-                            alt=""
-                            className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                "none";
-                            }}
-                          />
-                        )}
-                        <span>{v.name}</span>
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-            <div>
-              <label className={labelCls}>{t("invoice.category")}</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">{t("invoice.categoryPlaceholder")}</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className={labelCls}>{t("invoice.description")}</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={inputCls}
-              placeholder={
-                isSubscription
-                  ? t("subscription.descriptionPlaceholder")
-                  : t("invoice.descriptionPlaceholder")
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="min-w-0">
-              <label className={labelCls}>{t("invoice.amount")} *</label>
-              <div className="relative flex items-center">
-                {symbolPosition === "Before" && (
-                  <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                    {currencySymbol}
-                  </span>
-                )}
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                  step="0.01"
-                  min="0"
-                  className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
-                  placeholder="0.00"
-                />
-                {symbolPosition === "After" && (
-                  <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                    {currencySymbol}
-                  </span>
-                )}
-              </div>
-            </div>
-            {!isSubscription && (
-              <div className="min-w-0">
-                <label className={labelCls}>{t("invoice.dueDate")}</label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className={dateInputCls}
-                />
-              </div>
-            )}
-          </div>
-
-          {isSubscription && (
-            <>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-                  <div>
-                    <label className={labelCls}>
-                      {t("subscription.everyLabel")}
-                    </label>
-                    <input
-                      type="number"
-                      value={frequencyQuantity}
-                      onChange={(e) => setFrequencyQuantity(e.target.value)}
-                      className={inputCls}
-                      min="1"
-                      placeholder="1"
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>
-                      {t("subscription.frequencyLabel")}
-                    </label>
-                    <select
-                      value={frequencyUnit}
-                      onChange={(e) => setFrequencyUnit(e.target.value)}
-                      className={inputCls}
-                    >
-                      <option value="DAY">{t("subscription.unitDay")}</option>
-                      <option value="WEEK">{t("subscription.unitWeek")}</option>
-                      <option value="MONTH">
-                        {t("subscription.unitMonth")}
-                      </option>
-                      <option value="YEAR">{t("subscription.unitYear")}</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className={labelCls}>
-                    {t("subscription.dayOfMonth")}
-                  </label>
-                  <input
-                    type="number"
-                    value={dayOfMonth}
-                    onChange={(e) => setDayOfMonth(e.target.value)}
+          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-5">
+            {isSubscription && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
+                <div className="min-w-0">
+                  <label className={labelCls}>{t("subscription.status")}</label>
+                  <select
+                    value={subscriptionStatus}
+                    onChange={(e) =>
+                      setSubscriptionStatus(
+                        e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
+                      )
+                    }
                     className={inputCls}
-                    min="1"
-                    max="31"
-                    placeholder="1"
-                  />
+                  >
+                    <option value="ACTIVE">
+                      {t("subscription.statusActive")}
+                    </option>
+                    <option value="PAUSED">
+                      {t("subscription.statusPaused")}
+                    </option>
+                    <option value="CANCELED">
+                      {t("subscription.statusCanceled")}
+                    </option>
+                  </select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="min-w-0 md:col-span-1 lg:col-span-1">
+                <div className="min-w-0">
                   <label className={labelCls}>
-                    {t("subscription.startDate")}
+                    {t("subscription.nextBillingAt")}
                   </label>
                   <input
                     type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    value={nextBillingAt}
+                    onChange={(e) => setNextBillingAt(e.target.value)}
                     className={dateInputCls}
                   />
                 </div>
               </div>
-            </>
-          )}
+            )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-            <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
+              <div className="relative">
+                <label className={labelCls}>{t("invoice.vendor")} *</label>
+                <input
+                  type="text"
+                  value={vendor}
+                  onChange={(e) => {
+                    setVendor(e.target.value);
+                    setShowVendorList(true);
+                  }}
+                  onFocus={() => setShowVendorList(true)}
+                  onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
+                  required
+                  className={inputCls}
+                  placeholder={t("invoice.vendorPlaceholder")}
+                />
+                {showVendorList && vendors.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                    {vendors
+                      .filter((v) =>
+                        v.name.toLowerCase().includes(vendor.toLowerCase()),
+                      )
+                      .map((v) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onMouseDown={() => {
+                            setVendor(v.name);
+                            setShowVendorList(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
+                        >
+                          {v.logoUrl && (
+                            <img
+                              src={v.logoUrl}
+                              alt=""
+                              className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          )}
+                          <span>{v.name}</span>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className={labelCls}>{t("invoice.category")}</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">{t("invoice.categoryPlaceholder")}</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 md:col-start-1">
+              <label className={labelCls}>{t("invoice.description")}</label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className={inputCls}
+                placeholder={
+                  isSubscription
+                    ? t("subscription.descriptionPlaceholder")
+                    : t("invoice.descriptionPlaceholder")
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
+              <div className="min-w-0">
+                <label className={labelCls}>{t("invoice.amount")} *</label>
+                <div className="relative flex items-center">
+                  {symbolPosition === "Before" && (
+                    <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
+                      {currencySymbol}
+                    </span>
+                  )}
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    step="0.01"
+                    min="0"
+                    className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
+                    placeholder="0.00"
+                  />
+                  {symbolPosition === "After" && (
+                    <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
+                      {currencySymbol}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {!isSubscription && (
+                <div className="min-w-0">
+                  <label className={labelCls}>{t("invoice.dueDate")}</label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className={dateInputCls}
+                  />
+                </div>
+              )}
+            </div>
+
+            {isSubscription && (
+              <>
+                <div className="space-y-4 md:col-start-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                    <div>
+                      <label className={labelCls}>
+                        {t("subscription.everyLabel")}
+                      </label>
+                      <input
+                        type="number"
+                        value={frequencyQuantity}
+                        onChange={(e) => setFrequencyQuantity(e.target.value)}
+                        className={inputCls}
+                        min="1"
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>
+                        {t("subscription.frequencyLabel")}
+                      </label>
+                      <select
+                        value={frequencyUnit}
+                        onChange={(e) => setFrequencyUnit(e.target.value)}
+                        className={inputCls}
+                      >
+                        <option value="DAY">{t("subscription.unitDay")}</option>
+                        <option value="WEEK">
+                          {t("subscription.unitWeek")}
+                        </option>
+                        <option value="MONTH">
+                          {t("subscription.unitMonth")}
+                        </option>
+                        <option value="YEAR">
+                          {t("subscription.unitYear")}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>
+                      {t("subscription.dayOfMonth")}
+                    </label>
+                    <input
+                      type="number"
+                      value={dayOfMonth}
+                      onChange={(e) => setDayOfMonth(e.target.value)}
+                      className={inputCls}
+                      min="1"
+                      max="31"
+                      placeholder="1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="min-w-0 md:col-span-1 lg:col-span-1">
+                    <label className={labelCls}>
+                      {t("subscription.startDate")}
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className={dateInputCls}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="md:col-start-1">
               <label className={labelCls}>{t("invoice.paymentMethod")}</label>
               <select
                 value={paymentMethod}
@@ -851,11 +855,7 @@ export default function AddExpense() {
                 ))}
               </select>
             </div>
-            <div
-              className={
-                isSubscription ? "sm:col-span-2 md:col-span-2" : "md:col-span-2"
-              }
-            >
+            <div className="md:col-start-2">
               <label className={labelCls}>
                 {t("invoice.distributionMethod")} *
               </label>
@@ -896,268 +896,276 @@ export default function AddExpense() {
                 </option>
               </select>
             </div>
-          </div>
 
-          {distributionMethod === "PERSONAL" && users && users.length > 0 && (
-            <div className="space-y-2 md:col-start-2">
-              <UserSingleSelect
-                title={t("invoice.appliesTo")}
-                value={personalUserId}
-                onChange={setPersonalUserId}
-                roleLabel={(role) =>
-                  role === "ADMIN"
-                    ? t("users.admin")
-                    : role === "CHILD"
-                      ? t("users.junior")
-                      : t("users.adult")
-                }
-                users={users.filter((u) => {
-                  if (!currentUser) return false;
-                  if (currentUser.role === "ADMIN") return true;
-                  if (currentUser.role === "ADULT") {
-                    return u.id === currentUser.id || u.role === "CHILD";
+            {distributionMethod === "PERSONAL" && users && users.length > 0 && (
+              <div className="space-y-2 md:col-start-2">
+                <UserSingleSelect
+                  title={t("invoice.appliesTo")}
+                  value={personalUserId}
+                  onChange={setPersonalUserId}
+                  roleLabel={(role) =>
+                    role === "ADMIN"
+                      ? t("users.admin")
+                      : role === "CHILD"
+                        ? t("users.junior")
+                        : t("users.adult")
                   }
-                  return u.id === currentUser.id;
-                })}
-              />
-            </div>
-          )}
-
-          {distributionMethod === "BY_INCOME" && users && users.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={labelCls + " mb-0"}>
-                  {t("invoice.selectUsers")}
-                </label>
-                {totalIncome === 0 && (
-                  <span className="text-xs text-amber-500 dark:text-amber-400">
-                    {t("invoice.noIncome")}
-                  </span>
-                )}
+                  users={users.filter((u) => {
+                    if (!currentUser) return false;
+                    if (currentUser.role === "ADMIN") return true;
+                    if (currentUser.role === "ADULT") {
+                      return u.id === currentUser.id || u.role === "CHILD";
+                    }
+                    return u.id === currentUser.id;
+                  })}
+                />
               </div>
-              <UserSelectionCards
-                users={users}
-                selectedIds={incomeUserIds}
-                onToggle={handleToggleIncomeUser}
-                roleLabel={(role) =>
-                  role === "ADMIN"
-                    ? t("users.admin")
-                    : role === "CHILD"
-                      ? t("users.junior")
-                      : t("users.adult")
-                }
-                ariaLabel={(u, selected) =>
-                  `${t("invoice.selectUsers")}: ${u.name}`
-                }
-                inlineContent={(u, selected) => {
-                  const pct = incomePercent(u.id);
-                  const hasIncome = activeIncomes.some(
-                    (i) => i.userId === u.id,
-                  );
-                  if (selected && pct !== null) {
-                    return (
-                      <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
-                        {pct}%
-                      </span>
-                    );
-                  }
-                  if (selected && !hasIncome) {
-                    return (
-                      <span className="text-xs text-amber-500">
-                        {t("invoice.noIncomeShort")}
-                      </span>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              {selectedUserIds.length === 0 && (
-                <p className="text-sm text-amber-500 dark:text-amber-400">
-                  {t("invoice.atLeastOneUser")}
-                </p>
-              )}
-            </div>
-          )}
+            )}
 
-          {distributionMethod === "BY_PERCENT" && users && users.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={labelCls + " mb-0"}>
-                  {t("subscription.amountPerUser")}
-                </label>
-                <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
-                  {t("invoice.totalLabel")}{" "}
-                  {symbolPosition === "Before" ? `${currencySymbol}\u00A0` : ""}
-                  {centsToAmount(customAmountTotalCents)}
-                  {symbolPosition === "After" ? `\u00A0${currencySymbol}` : ""}
-                </span>
-              </div>
-              <UserSelectionCards
-                users={users}
-                selectedIds={incomeUserIds}
-                onToggle={handleToggleIncomeUser}
-                roleLabel={(role) =>
-                  role === "ADMIN"
-                    ? t("users.admin")
-                    : role === "CHILD"
-                      ? t("users.junior")
-                      : t("users.adult")
-                }
-                ariaLabel={(u, selected) =>
-                  `${t("invoice.selectUsers")}: ${u.name}`
-                }
-                inlineContent={(u, _selected) => (
-                  <div
-                    className="flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="relative flex items-center">
-                      {symbolPosition === "Before" && (
-                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
-                          {currencySymbol}
-                        </span>
-                      )}
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        disabled={!_selected}
-                        value={userPercents[u.id] ?? ""}
-                        onChange={(e) =>
-                          setUserPercents((prev) => ({
-                            ...prev,
-                            [u.id]: e.target.value,
-                          }))
-                        }
-                        className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
-                        placeholder="0"
-                      />
-                      {symbolPosition === "After" && (
-                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
-                          {currencySymbol}
-                        </span>
-                      )}
-                    </div>
+            {distributionMethod === "BY_INCOME" &&
+              users &&
+              users.length > 0 && (
+                <div className="space-y-2 md:col-start-2">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("invoice.selectUsers")}
+                    </label>
+                    {totalIncome === 0 && (
+                      <span className="text-xs text-amber-500 dark:text-amber-400">
+                        {t("invoice.noIncome")}
+                      </span>
+                    )}
                   </div>
-                )}
-              />
-              {selectedUserIds.length === 0 && (
-                <p className="text-sm text-amber-500 dark:text-amber-400">
-                  {t("invoice.atLeastOneUser")}
-                </p>
-              )}
-            </div>
-          )}
-
-          {distributionMethod === "FIXED" &&
-            users &&
-            users.length > 0 &&
-            (fixedMode === "AMOUNT" ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className={labelCls + " mb-0"}>
-                    {t("subscription.fixedAmountPerUser")}
-                  </label>
-                  <span
-                    className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-indigo-500 dark:text-indigo-400" : "text-red-500 dark:text-red-400"}`}
-                  >
-                    {t("subscription.remainingAmount", {
-                      amount:
-                        symbolPosition === "Before"
-                          ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
-                          : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
-                    })}
-                  </span>
-                </div>
-                <UserSelectionCards
-                  users={users}
-                  selectedIds={incomeUserIds}
-                  onToggle={handleToggleIncomeUser}
-                  roleLabel={(role) =>
-                    role === "ADMIN"
-                      ? t("users.admin")
-                      : role === "CHILD"
-                        ? t("users.junior")
-                        : t("users.adult")
-                  }
-                  ariaLabel={(u) =>
-                    `${t("subscription.fixedAmountPerUser")}: ${u.name}`
-                  }
-                  inlineContent={(u, _selected) => (
-                    <div className="relative flex items-center">
-                      {symbolPosition === "Before" && (
-                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
-                          {currencySymbol}
-                        </span>
-                      )}
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        disabled={!_selected}
-                        value={userFixedAmounts[u.id] ?? ""}
-                        onChange={(e) =>
-                          setUserFixedAmounts((prev) => ({
-                            ...prev,
-                            [u.id]: e.target.value,
-                          }))
-                        }
-                        className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
-                        placeholder="0"
-                      />
-                      {symbolPosition === "After" && (
-                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
-                          {currencySymbol}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("subscription.remainingAmountHint")}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className={labelCls + " mb-0"}>
-                    {t("invoice.selectUsersEqual")}
-                  </label>
-                  {equalPercent ? (
-                    <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
-                      {equalPercent}
-                      {t("invoice.eachPct")}
-                    </span>
-                  ) : (
-                    <span className="text-sm text-amber-500">
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u, selected) =>
+                      `${t("invoice.selectUsers")}: ${u.name}`
+                    }
+                    inlineContent={(u, selected) => {
+                      const pct = incomePercent(u.id);
+                      const hasIncome = activeIncomes.some(
+                        (i) => i.userId === u.id,
+                      );
+                      if (selected && pct !== null) {
+                        return (
+                          <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                            {pct}%
+                          </span>
+                        );
+                      }
+                      if (selected && !hasIncome) {
+                        return (
+                          <span className="text-xs text-amber-500">
+                            {t("invoice.noIncomeShort")}
+                          </span>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  {selectedUserIds.length === 0 && (
+                    <p className="text-sm text-amber-500 dark:text-amber-400">
                       {t("invoice.atLeastOneUser")}
-                    </span>
+                    </p>
                   )}
                 </div>
-                <UserSelectionCards
-                  users={users}
-                  selectedIds={incomeUserIds}
-                  onToggle={handleToggleIncomeUser}
-                  roleLabel={(role) =>
-                    role === "ADMIN"
-                      ? t("users.admin")
-                      : role === "CHILD"
-                        ? t("users.junior")
-                        : t("users.adult")
-                  }
-                  ariaLabel={(u) =>
-                    `${t("invoice.selectUsersEqual")}: ${u.name}`
-                  }
-                  inlineContent={(_u, selected) =>
-                    selected && equalPercent ? (
-                      <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
-                        {equalPercent}%
+              )}
+
+            {distributionMethod === "BY_PERCENT" &&
+              users &&
+              users.length > 0 && (
+                <div className="space-y-2 md:col-start-2">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("subscription.amountPerUser")}
+                    </label>
+                    <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
+                      {t("invoice.totalLabel")}{" "}
+                      {symbolPosition === "Before"
+                        ? `${currencySymbol}\u00A0`
+                        : ""}
+                      {centsToAmount(customAmountTotalCents)}
+                      {symbolPosition === "After"
+                        ? `\u00A0${currencySymbol}`
+                        : ""}
+                    </span>
+                  </div>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u, selected) =>
+                      `${t("invoice.selectUsers")}: ${u.name}`
+                    }
+                    inlineContent={(u, _selected) => (
+                      <div
+                        className="flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="relative flex items-center">
+                          {symbolPosition === "Before" && (
+                            <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                              {currencySymbol}
+                            </span>
+                          )}
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            disabled={!_selected}
+                            value={userPercents[u.id] ?? ""}
+                            onChange={(e) =>
+                              setUserPercents((prev) => ({
+                                ...prev,
+                                [u.id]: e.target.value,
+                              }))
+                            }
+                            className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
+                            placeholder="0"
+                          />
+                          {symbolPosition === "After" && (
+                            <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                              {currencySymbol}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  />
+                  {selectedUserIds.length === 0 && (
+                    <p className="text-sm text-amber-500 dark:text-amber-400">
+                      {t("invoice.atLeastOneUser")}
+                    </p>
+                  )}
+                </div>
+              )}
+
+            {distributionMethod === "FIXED" &&
+              users &&
+              users.length > 0 &&
+              (fixedMode === "AMOUNT" ? (
+                <div className="space-y-2 md:col-start-2">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("subscription.fixedAmountPerUser")}
+                    </label>
+                    <span
+                      className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-indigo-500 dark:text-indigo-400" : "text-red-500 dark:text-red-400"}`}
+                    >
+                      {t("subscription.remainingAmount", {
+                        amount:
+                          symbolPosition === "Before"
+                            ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
+                            : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
+                      })}
+                    </span>
+                  </div>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u) =>
+                      `${t("subscription.fixedAmountPerUser")}: ${u.name}`
+                    }
+                    inlineContent={(u, _selected) => (
+                      <div className="relative flex items-center">
+                        {symbolPosition === "Before" && (
+                          <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                            {currencySymbol}
+                          </span>
+                        )}
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          disabled={!_selected}
+                          value={userFixedAmounts[u.id] ?? ""}
+                          onChange={(e) =>
+                            setUserFixedAmounts((prev) => ({
+                              ...prev,
+                              [u.id]: e.target.value,
+                            }))
+                          }
+                          className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
+                          placeholder="0"
+                        />
+                        {symbolPosition === "After" && (
+                          <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                            {currencySymbol}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("subscription.remainingAmountHint")}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 md:col-start-2">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("invoice.selectUsersEqual")}
+                    </label>
+                    {equalPercent ? (
+                      <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
+                        {equalPercent}
+                        {t("invoice.eachPct")}
                       </span>
-                    ) : null
-                  }
-                />
-              </div>
-            ))}
+                    ) : (
+                      <span className="text-sm text-amber-500">
+                        {t("invoice.atLeastOneUser")}
+                      </span>
+                    )}
+                  </div>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u) =>
+                      `${t("invoice.selectUsersEqual")}: ${u.name}`
+                    }
+                    inlineContent={(_u, selected) =>
+                      selected && equalPercent ? (
+                        <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                          {equalPercent}%
+                        </span>
+                      ) : null
+                    }
+                  />
+                </div>
+              ))}
+          </div>
         </form>
       </div>
     </div>
