@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,6 +13,7 @@ import {
   useCreateSubscription,
   useUpdateSubscription,
   useCurrentPeriod,
+  usePeriod,
   useUsers,
   useInvoice,
   useSubscription,
@@ -24,6 +30,7 @@ import {
   getCurrencySymbol,
 } from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
+import { isPeriodClosed } from "../../utils/periodStatus";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -37,6 +44,7 @@ export default function AddExpense() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   // Determine type from URL pathname
   const isSubscription = location.pathname.includes("/subscriptions/");
@@ -48,6 +56,13 @@ export default function AddExpense() {
   const updateSubscription = useUpdateSubscription();
 
   const { data: currentPeriod } = useCurrentPeriod();
+  const selectedPeriodId = searchParams.get("period") ?? "";
+  const { data: selectedPeriod } = usePeriod(selectedPeriodId);
+  const targetPeriodId = selectedPeriodId || currentPeriod?.id || "";
+  const targetPeriodClosed = selectedPeriod
+    ? isPeriodClosed(selectedPeriod)
+    : false;
+
   const { data: users } = useUsers();
   const { data: existingInvoice } = useInvoice(
     isEditing && !isSubscription ? id! : "",
@@ -55,7 +70,7 @@ export default function AddExpense() {
   const { data: existingSubscription } = useSubscription(
     isEditing && isSubscription ? id! : "",
   );
-  const { data: periodIncomes } = useUserIncomes(currentPeriod?.id ?? "");
+  const { data: periodIncomes } = useUserIncomes(targetPeriodId);
   const { data: categories = [] } = useCategories();
   const { data: paymentMethods = [] } = usePaymentMethods();
   const { data: vendors = [] } = useVendors();
@@ -339,8 +354,12 @@ export default function AddExpense() {
     e.preventDefault();
     setError("");
 
-    if (!isEditing && !isSubscription && !currentPeriod) {
+    if (!isEditing && !isSubscription && !targetPeriodId) {
       setError(t("invoice.noPeriodWarning"));
+      return;
+    }
+    if (!isEditing && !isSubscription && targetPeriodClosed) {
+      setError(t("invoice.closedPeriodAddBlocked"));
       return;
     }
     if (!vendor.trim()) {
@@ -482,7 +501,7 @@ export default function AddExpense() {
           await updateInvoice.mutateAsync({ id: id!, data: invoiceData });
         } else {
           await createInvoice.mutateAsync({
-            periodId: currentPeriod!.id,
+            periodId: targetPeriodId,
             ...invoiceData,
           });
         }
@@ -502,7 +521,11 @@ export default function AddExpense() {
     createSubscription.isPending ||
     updateSubscription.isPending;
 
-  const backUrl = isSubscription ? "/subscriptions" : "/invoices";
+  const backUrl = isSubscription
+    ? "/subscriptions"
+    : selectedPeriodId
+      ? `/overview?period=${selectedPeriodId}`
+      : "/invoices";
   const titleKey = isSubscription
     ? isEditing
       ? "subscription.edit"
@@ -525,7 +548,7 @@ export default function AddExpense() {
         </h1>
       </div>
 
-      {!isEditing && !isSubscription && !currentPeriod && (
+      {!isEditing && !isSubscription && !targetPeriodId && (
         <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 rounded-lg px-4 py-3 text-sm">
           <AlertCircle size={16} className="flex-shrink-0" />
           <span>{t("invoice.noPeriodWarning")}</span>
@@ -556,7 +579,9 @@ export default function AddExpense() {
               <button
                 type="submit"
                 disabled={
-                  isPending || (!isEditing && !isSubscription && !currentPeriod)
+                  isPending ||
+                  (!isEditing && !isSubscription && !targetPeriodId) ||
+                  (!isEditing && !isSubscription && targetPeriodClosed)
                 }
                 className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
               >

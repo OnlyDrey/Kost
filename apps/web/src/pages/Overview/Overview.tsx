@@ -375,216 +375,224 @@ export default function Overview() {
             ]}
           />
 
-          {/* Charts */}
-          {((stats?.userShares && stats.userShares.length > 0) ||
-            (invoices && invoices.length > 0)) && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
-              <div>
-                {stats?.userShares && stats.userShares.length > 0 && (
-                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {t("period.userShares")}
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => setFilter("all")}
-                        aria-label={t("common.reset")}
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
-                          hasShareSelection
-                            ? "border-indigo-300 text-indigo-500 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
-                            : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        <RotateCcw size={16} />
-                      </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div className="space-y-4 md:col-span-1">
+              {/* Charts */}
+              {((stats?.userShares && stats.userShares.length > 0) ||
+                (invoices && invoices.length > 0)) && (
+                <>
+                  {stats?.userShares && stats.userShares.length > 0 && (
+                    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+                      <div className="mb-3 flex items-center justify-between gap-2">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                          {t("period.userShares")}
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => setFilter("all")}
+                          aria-label={t("common.reset")}
+                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
+                            hasShareSelection
+                              ? "border-indigo-300 text-indigo-500 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                              : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          <RotateCcw size={16} />
+                        </button>
+                      </div>
+                      <UserSharesGrid
+                        shares={stats.userShares.map((share) => ({
+                          id: share.userId,
+                          userId: share.userId,
+                          shareCents: share.totalShareCents,
+                          user: { name: share.userName },
+                        }))}
+                        totalCents={stats?.totalAmountCents ?? 0}
+                        currency={currency}
+                        emptyLabel={t("common.noData")}
+                        unknownLabel={t("invoice.unknown")}
+                        onSelectShare={(userId) =>
+                          setFilter("share-user", userId)
+                        }
+                        selectedUserId={
+                          hasShareSelection ? shareUserId : undefined
+                        }
+                      />
                     </div>
-                    <UserSharesGrid
-                      shares={stats.userShares.map((share) => ({
-                        id: share.userId,
-                        userId: share.userId,
-                        shareCents: share.totalShareCents,
-                        user: { name: share.userName },
-                      }))}
-                      totalCents={stats?.totalAmountCents ?? 0}
+                  )}
+
+                  {invoices && invoices.length > 0 && (
+                    <SpendBreakdownCard
+                      invoices={invoices}
+                      currentUserId={currentUser?.id}
                       currency={currency}
-                      emptyLabel={t("common.noData")}
-                      unknownLabel={t("invoice.unknown")}
-                      onSelectShare={(userId) =>
-                        setFilter("share-user", userId)
-                      }
-                      selectedUserId={
-                        hasShareSelection ? shareUserId : undefined
-                      }
+                      title={t("period.categoryBreakdown")}
                     />
-                  </div>
-                )}
-              </div>
-              <div>
-                {invoices && invoices.length > 0 && (
-                  <SpendBreakdownCard
-                    invoices={invoices}
-                    currentUserId={currentUser?.id}
-                    currency={currency}
-                    title={t("period.categoryBreakdown")}
-                  />
-                )}
-              </div>
+                  )}
+                </>
+              )}
             </div>
-          )}
 
-          {/* Expense list */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <h2 className="text-[clamp(1.5rem,2.2vw,1.9rem)] font-bold text-gray-900 dark:text-gray-100">
-                {t("invoice.invoices")}
-              </h2>
-              <button
-                onClick={() => navigate("/invoices/add")}
-                className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
-              >
-                <Plus size={15} />
-                {t("invoice.addInvoice")}
-              </button>
-            </div>
-            {!invoices || invoices.length === 0 ? (
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {t("common.noData")}
-                </p>
+            <div className="space-y-4 md:col-span-2">
+              {/* Expense list */}
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h2 className="text-[clamp(1.5rem,2.2vw,1.9rem)] font-bold text-gray-900 dark:text-gray-100">
+                  {t("invoice.invoices")}
+                </h2>
+                <button
+                  type="button"
+                  disabled={closed}
+                  onClick={() => {
+                    if (closed) return;
+                    navigate(`/invoices/add?period=${resolvedPeriodId}`);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${closed ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-700 text-white"}`}
+                >
+                  <Plus size={15} />
+                  {t("invoice.addInvoice")}
+                </button>
               </div>
-            ) : (
-              visibleGroups.map((group) => {
-                if (group.list.length === 0) return null;
-                const groupSum = group.list.reduce(
-                  (sum, item) => sum + item.displayCents,
-                  0,
-                );
-                return (
-                  <div
-                    key={group.key}
-                    className={`bg-white dark:bg-gray-900 rounded-xl border ${group.borderClass} p-4 sm:p-5 shadow-sm`}
-                  >
-                    <div className="mb-3">
-                      <p className={`text-base ${group.amountClass} mt-0.5`}>
-                        <span className="font-semibold">{group.title}</span> -{" "}
-                        {fmt(groupSum)}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2.5 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
-                      {group.list.map(
-                        ({ invoice, totalPaid, remaining, displayCents }) => {
-                          const isPaid = remaining <= 0;
-                          const isPartiallyPaid = totalPaid > 0 && !isPaid;
-                          const dueAt = invoice.dueDate
-                            ? new Date(invoice.dueDate)
-                            : null;
-                          const overdue =
-                            !isPaid && !!dueAt && dueAt < new Date();
-                          const userShareEntry =
-                            filter === "share-user"
-                              ? (invoice.shares ?? []).find(
-                                  (sh: any) => sh.userId === shareUserId,
-                                )
+              {!invoices || invoices.length === 0 ? (
+                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("common.noData")}
+                  </p>
+                </div>
+              ) : (
+                visibleGroups.map((group) => {
+                  if (group.list.length === 0) return null;
+                  const groupSum = group.list.reduce(
+                    (sum, item) => sum + item.displayCents,
+                    0,
+                  );
+                  return (
+                    <div
+                      key={group.key}
+                      className={`bg-white dark:bg-gray-900 rounded-xl border ${group.borderClass} p-4 sm:p-5 shadow-sm`}
+                    >
+                      <div className="mb-3">
+                        <p className={`text-base ${group.amountClass} mt-0.5`}>
+                          <span className="font-semibold">{group.title}</span> -{" "}
+                          {fmt(groupSum)}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2.5 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
+                        {group.list.map(
+                          ({ invoice, totalPaid, remaining, displayCents }) => {
+                            const isPaid = remaining <= 0;
+                            const isPartiallyPaid = totalPaid > 0 && !isPaid;
+                            const dueAt = invoice.dueDate
+                              ? new Date(invoice.dueDate)
+                              : null;
+                            const overdue =
+                              !isPaid && !!dueAt && dueAt < new Date();
+                            const userShareEntry =
+                              filter === "share-user"
+                                ? (invoice.shares ?? []).find(
+                                    (sh: any) => sh.userId === shareUserId,
+                                  )
+                                : undefined;
+                            const primaryAmount = userShareEntry
+                              ? fmt(userShareEntry.shareCents)
+                              : fmt(displayCents);
+                            const secondaryLabel = userShareEntry
+                              ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
                               : undefined;
-                          const primaryAmount = userShareEntry
-                            ? fmt(userShareEntry.shareCents)
-                            : fmt(displayCents);
-                          const secondaryLabel = userShareEntry
-                            ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
-                            : undefined;
 
-                          return (
-                            <ExpenseItemCard
-                              key={invoice.id}
-                              vendor={invoice.vendor}
-                              description={invoice.description}
-                              logoUrl={getVendorLogo(invoice.vendor)}
-                              amountLabel={primaryAmount}
-                              shareLabel={secondaryLabel}
-                              typeLabel={distributionLabel(
-                                invoice.distributionMethod,
-                                settings.locale,
-                                invoice.distribution as any,
-                              )}
-                              category={invoice.category}
-                              dateLabel={formatDate(invoice.createdAt)}
-                              paid={isPaid}
-                              overdue={overdue}
-                              paidLabel={t("invoice.statusPaid")}
-                              overdueLabel={t("invoice.statusOverdue")}
-                              onClick={() =>
-                                navigate(`/invoices/${invoice.id}`)
-                              }
-                              rightContent={
-                                isPartiallyPaid ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                    <Clock size={10} />{" "}
-                                    {t("invoice.amountPaid")}: {fmt(totalPaid)}
-                                  </span>
-                                ) : undefined
-                              }
-                              actionButton={
-                                <ActionIconBar
-                                  stopPropagation
-                                  items={[
-                                    {
-                                      key: "pay",
-                                      icon: CircleCheckBig,
-                                      label: t("invoice.markPaid"),
-                                      onClick: () => {
-                                        if (!currentUser || remaining <= 0)
-                                          return;
-                                        addPayment.mutate({
-                                          invoiceId: invoice.id,
-                                          data: {
-                                            paidById: currentUser.id,
-                                            amountCents: remaining,
-                                            paidAt: new Date().toISOString(),
-                                          },
-                                        });
+                            return (
+                              <ExpenseItemCard
+                                key={invoice.id}
+                                vendor={invoice.vendor}
+                                description={invoice.description}
+                                logoUrl={getVendorLogo(invoice.vendor)}
+                                amountLabel={primaryAmount}
+                                shareLabel={secondaryLabel}
+                                typeLabel={distributionLabel(
+                                  invoice.distributionMethod,
+                                  settings.locale,
+                                  invoice.distribution as any,
+                                )}
+                                category={invoice.category}
+                                dateLabel={formatDate(invoice.createdAt)}
+                                paid={isPaid}
+                                overdue={overdue}
+                                paidLabel={t("invoice.statusPaid")}
+                                overdueLabel={t("invoice.statusOverdue")}
+                                onClick={() =>
+                                  navigate(`/invoices/${invoice.id}`)
+                                }
+                                rightContent={
+                                  isPartiallyPaid ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                      <Clock size={10} />{" "}
+                                      {t("invoice.amountPaid")}:{" "}
+                                      {fmt(totalPaid)}
+                                    </span>
+                                  ) : undefined
+                                }
+                                actionButton={
+                                  <ActionIconBar
+                                    stopPropagation
+                                    items={[
+                                      {
+                                        key: "pay",
+                                        icon: CircleCheckBig,
+                                        label: t("invoice.markPaid"),
+                                        onClick: () => {
+                                          if (!currentUser || remaining <= 0)
+                                            return;
+                                          addPayment.mutate({
+                                            invoiceId: invoice.id,
+                                            data: {
+                                              paidById: currentUser.id,
+                                              amountCents: remaining,
+                                              paidAt: new Date().toISOString(),
+                                            },
+                                          });
+                                        },
+                                        disabled:
+                                          remaining <= 0 ||
+                                          addPayment.isPending,
+                                        colorClassName:
+                                          "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
                                       },
-                                      disabled:
-                                        remaining <= 0 || addPayment.isPending,
-                                      colorClassName:
-                                        "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
-                                    },
-                                    {
-                                      key: "edit",
-                                      icon: Pencil,
-                                      label: t("common.edit"),
-                                      onClick: () =>
-                                        navigate(
-                                          `/invoices/${invoice.id}/edit`,
+                                      {
+                                        key: "edit",
+                                        icon: Pencil,
+                                        label: t("common.edit"),
+                                        onClick: () =>
+                                          navigate(
+                                            `/invoices/${invoice.id}/edit`,
+                                          ),
+                                        colorClassName:
+                                          "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400",
+                                      },
+                                      {
+                                        key: "delete",
+                                        icon: Trash2,
+                                        label: t("common.delete"),
+                                        onClick: () =>
+                                          deleteInvoice.mutate(invoice.id),
+                                        destructive: true,
+                                        confirmMessage: t(
+                                          "invoice.confirmDelete",
                                         ),
-                                      colorClassName:
-                                        "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400",
-                                    },
-                                    {
-                                      key: "delete",
-                                      icon: Trash2,
-                                      label: t("common.delete"),
-                                      onClick: () =>
-                                        deleteInvoice.mutate(invoice.id),
-                                      destructive: true,
-                                      confirmMessage: t(
-                                        "invoice.confirmDelete",
-                                      ),
-                                      colorClassName:
-                                        "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400",
-                                    },
-                                  ]}
-                                />
-                              }
-                            />
-                          );
-                        },
-                      )}
+                                        colorClassName:
+                                          "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400",
+                                      },
+                                    ]}
+                                  />
+                                }
+                              />
+                            );
+                          },
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
+            </div>
           </div>
         </>
       )}

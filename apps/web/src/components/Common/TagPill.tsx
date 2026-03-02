@@ -9,9 +9,9 @@ interface TagPillProps {
 }
 
 const variantClass: Record<NonNullable<TagPillProps["variant"]>, string> = {
-  type: "bg-info/15 text-info",
+  type: "bg-blue-300 text-blue-950",
   category: "bg-surface-elevated text-text-secondary",
-  frequency: "bg-neutral/20 text-text-secondary",
+  frequency: "bg-sky-300 text-sky-950",
   danger: "bg-danger/15 text-danger",
   success: "bg-success/15 text-success",
 };

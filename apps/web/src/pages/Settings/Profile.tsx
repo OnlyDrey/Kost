@@ -780,7 +780,7 @@ export default function Profile() {
 
       {activePage === "customization" && isAdmin && (
         <div className="max-w-sm md:hidden">
-          <label className={labelCls}>{t("settings.section")}</label>
+          <label className={labelCls}>{t("settings.sectionSettings")}</label>
           <select
             value={globalSection}
             onChange={(e) =>
@@ -804,7 +804,7 @@ export default function Profile() {
         {isCustomizationAdmin && (
           <aside className="hidden md:block md:col-span-1 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              {t("settings.section")}
+              {t("settings.sectionSettings")}
             </p>
             <div className="space-y-1">
               {customizationSections.map((section) => {
@@ -1286,7 +1286,20 @@ export default function Profile() {
                   />
                 </div>
 
-                <div className="md:col-span-2 w-full">
+                <div className="md:col-span-2 w-full space-y-4">
+                  <SettingsSectionCard
+                    icon={<Palette size={18} className="text-primary" />}
+                    title={t("settings.themeSection")}
+                  >
+                    <ColorFamilySelect
+                      value={brandingPreset}
+                      onChange={(next) =>
+                        setBrandingPreset(next as BrandingPreset)
+                      }
+                      label={t("settings.brandingPrimaryPreset")}
+                    />
+                  </SettingsSectionCard>
+
                   <SettingsSectionCard
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.brandingTitle")}
@@ -1396,13 +1409,6 @@ export default function Profile() {
                           </p>
                         )}
                       </div>
-                      <ColorFamilySelect
-                        value={brandingPreset}
-                        onChange={(next) =>
-                          setBrandingPreset(next as BrandingPreset)
-                        }
-                        label={t("settings.brandingPrimaryPreset")}
-                      />
                       <div>
                         <label className={labelCls}>
                           {t("settings.brandingAppIconBackground")}

@@ -63,6 +63,7 @@
     "title": "Expense",
     "invoices": "Expenses",
     "addInvoice": "Add Expense",
+    "closedPeriodAddBlocked": "Cannot add expense to a closed period.",
     "editInvoice": "Edit Expense",
     "vendor": "Vendor",
     "vendorPlaceholder": "e.g. Sparebank 1",
@@ -227,6 +228,8 @@
     "brandingInvalidLogoUrl": "Use a valid logo URL.",
     "brandingLogoLoadFailed": "Could not load the external logo URL. Showing default logo.",
     "section": "Section",
+    "sectionSettings": "Settings",
+    "themeSection": "Theme",
     "brandingIconGenerationFailed": "Could not generate app icon preview. Using fallback icon.",
     "brandingPwaCacheNote": "For updated installed app icons, you may need to remove and reinstall the app.",
     "brandingResetDefault": "Reset to default"
@@ -301,11 +304,13 @@
     "deleteSelected": "Delete selected",
     "confirmDeleteItem": "Delete \"{{item}}\"?",
     "confirmDeleteSelected": "Delete {{count}} selected items?",
+    "currencyPosition": "Currency Position",
     "currencySymbolPosition": "Currency symbol position",
     "currencySymbolPositionDesc": "Choose whether the currency symbol appears before or after the amount.",
     "symbolBefore": "Before amount",
     "symbolAfter": "After amount",
-    "currencySymbolPositionUpdated": "Currency symbol position updated"
+    "currencySymbolPositionUpdated": "Currency symbol position updated",
+    "itemsPerPage": "Per page"
   },
   "subscription": {
     "title": "Recurring Expenses",

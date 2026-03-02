@@ -216,10 +216,10 @@ function SubscriptionCard({
   );
   const statusClassName =
     sub.status === "ACTIVE"
-      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+      ? "bg-green-500 text-white"
       : sub.status === "PAUSED"
-        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+        ? "bg-yellow-500 text-yellow-950"
+        : "bg-red-500 text-white";
   const statusLabel =
     sub.status === "ACTIVE"
       ? t("subscription.statusActive")
@@ -296,7 +296,7 @@ function SubscriptionCard({
           >
             {statusLabel}
           </span>
-          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
+          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-300 text-sky-950">
             {freqLabel(sub.frequency)}
           </span>
         </div>
