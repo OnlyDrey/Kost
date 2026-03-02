@@ -366,7 +366,8 @@
     "remainingAmountHint": "Any remaining amount is split equally among participants without a fixed amount.",
     "amountOnly": "Amount",
     "customAmount": "Custom",
-    "amountPerUser": "Amount per user *"
+    "amountPerUser": "Amount per user *",
+    "generateForPeriod": "Generate for period"
   },
   "common": {
     "loading": "Loading...",

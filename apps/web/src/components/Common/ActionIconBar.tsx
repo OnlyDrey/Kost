@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { useConfirmDialog } from "./ConfirmDialogProvider";
+import { FOCUS_RING } from "./focusStyles";
 
 export interface ActionIconItem {
   key: string;
@@ -19,11 +20,13 @@ export default function ActionIconBar({
   tight = false,
   className = "",
   stopPropagation = false,
+  showLabelFromMd = false,
 }: {
   items: ActionIconItem[];
   tight?: boolean;
   className?: string;
   stopPropagation?: boolean;
+  showLabelFromMd?: boolean;
 }) {
   const { confirm } = useConfirmDialog();
   const visibleItems = items.filter((item) => !item.hidden);
@@ -63,12 +66,13 @@ export default function ActionIconBar({
               }
               await item.onClick();
             }}
-            className={`h-10 w-10 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:ring-offset-surface ${item.disabled ? "cursor-not-allowed" : ""}`}
+            className={`inline-flex h-10 ${showLabelFromMd ? "md:w-auto md:px-3" : "w-10"} items-center justify-center rounded-full transition-colors ${FOCUS_RING} ${item.disabled ? "cursor-not-allowed" : ""}`}
           >
             <span
-              className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-colors ${colorClass}`}
+              className={`h-7 ${showLabelFromMd ? "w-7 md:w-auto md:px-2" : "w-7"} rounded-full inline-flex items-center justify-center transition-colors gap-1.5 ${colorClass}`}
             >
               <Icon size={16} />
+              {showLabelFromMd && <span className="hidden md:inline text-xs font-medium">{item.label}</span>}
             </span>
           </button>
         );

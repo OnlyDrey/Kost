@@ -24,9 +24,10 @@ import { formatDate } from "../../utils/date";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { FOCUS_RING } from "../../components/Common/focusStyles";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
+  `w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
 
 export default function PeriodList() {
   const { t } = useTranslation();
@@ -219,7 +220,7 @@ export default function PeriodList() {
         {isAdmin && (
           <button
             onClick={handleOpenDialog}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            className={`w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 border border-primary/70 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors ${FOCUS_RING}`}
           >
             <Plus size={16} />
             {t("period.createPeriod")}
@@ -235,7 +236,7 @@ export default function PeriodList() {
               setSelectedYear(e.target.value);
               setSelectedMonth("all");
             }}
-            className="px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary appearance-none"
+            className={`px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm appearance-none ${FOCUS_RING}`}
           >
             <option value="all">{t("overview.allYears")}</option>
             {years.map((year) => (
@@ -253,7 +254,7 @@ export default function PeriodList() {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary appearance-none"
+            className={`px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm appearance-none ${FOCUS_RING}`}
           >
             <option value="all">{t("overview.allMonths")}</option>
             {months.map((month) => (
@@ -331,6 +332,8 @@ export default function PeriodList() {
                             label: t("period.stats"),
                             onClick: () =>
                               navigate(`/overview?period=${period.id}`),
+                            colorClassName:
+                              "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600",
                           },
                           {
                             key: "period-lock-state",
@@ -567,7 +570,7 @@ export default function PeriodList() {
                   value={deletionPassword}
                   onChange={(e) => setDeletionPassword(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleConfirmDelete()}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                  className={`w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`}
                   placeholder={t("period.passwordPlaceholder")}
                   autoFocus
                 />

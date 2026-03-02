@@ -366,7 +366,8 @@
     "remainingAmountHint": "Resterende beløp fordeles likt på deltakere som ikke har fått fast beløp.",
     "amountOnly": "Beløp",
     "customAmount": "Egendefinert",
-    "amountPerUser": "Beløp per bruker *"
+    "amountPerUser": "Beløp per bruker *",
+    "generateForPeriod": "Generer for periode"
   },
   "common": {
     "loading": "Laster...",
