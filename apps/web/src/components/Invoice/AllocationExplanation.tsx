@@ -16,7 +16,7 @@ export default function AllocationExplanation({ invoice }: AllocationExplanation
     return (
       <div className="mt-2 space-y-1">
         {invoice.shares.map((share) => (
-          <p key={share.id} className="text-xs text-gray-600 dark:text-gray-400">
+          <p key={share.id} className="text-xs text-gray-500 dark:text-gray-400">
             {share.user?.name}: {invoice.totalCents > 0 ? ((share.shareCents / invoice.totalCents) * 100).toFixed(1) : '0'}% = {fmt(share.shareCents)}
           </p>
         ))}

@@ -28,11 +28,9 @@ import {
   useCurrencyFormatter,
 } from "../../hooks/useApi";
 import { User, UserIncome } from "../../services/api";
-import {
-  amountToCents,
-  centsToAmount,
-} from "../../utils/currency";
+import { amountToCents, centsToAmount } from "../../utils/currency";
 import { useSettings } from "../../stores/settings.context";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { useAuth } from "../../stores/auth.context";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 
@@ -60,7 +58,7 @@ function UserAvatar({
   const cls = `w-${size} h-${size}`;
   return (
     <div
-      className={`${cls} rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}
+      className={`${cls} rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}
     >
       {avatarUrl ? (
         <img
@@ -156,7 +154,7 @@ function UserModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
           >
             <X size={18} />
           </button>
@@ -174,7 +172,7 @@ function UserModal({
             {user && (
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
                     {localAvatarUrl ? (
                       <img
                         src={localAvatarUrl}
@@ -217,13 +215,13 @@ function UserModal({
                       type="button"
                       onClick={handleRemoveAvatar}
                       disabled={removeAvatar.isPending}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-60"
                     >
                       <Trash2 size={12} /> {t("users.removePhoto")}
                     </button>
                   )}
                   {avatarErr && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
+                    <p className="text-xs text-red-500 dark:text-red-400">
                       {avatarErr}
                     </p>
                   )}
@@ -303,7 +301,7 @@ function UserModal({
             <button
               type="submit"
               disabled={isPending}
-              className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -379,7 +377,7 @@ function IncomeModal({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
           >
             <X size={18} />
           </button>
@@ -431,7 +429,7 @@ function IncomeModal({
             <button
               type="submit"
               disabled={upsertIncome.isPending}
-              className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {upsertIncome.isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -447,6 +445,7 @@ function IncomeModal({
 
 export default function Users({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
+  const { notify } = useConfirmDialog();
   const { isAdmin, user: currentUser } = useAuth();
   const { data: users, isLoading } = useUsers();
   const { data: currentPeriod } = useCurrentPeriod();
@@ -464,7 +463,9 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
   const [modalError, setModalError] = useState("");
   const [incomeModalUser, setIncomeModalUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"ALL" | "ADMIN" | "ADULT" | "CHILD">("ALL");
+  const [roleFilter, setRoleFilter] = useState<
+    "ALL" | "ADMIN" | "ADULT" | "CHILD"
+  >("ALL");
 
   const filteredUsers = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -507,7 +508,9 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
         };
         if (
           isAdmin ||
-          (currentUser?.role === "ADULT" && editingUser.role === "CHILD" && data.role === "ADULT")
+          (currentUser?.role === "ADULT" &&
+            editingUser.role === "CHILD" &&
+            data.role === "ADULT")
         ) {
           updateData.role = data.role;
         }
@@ -536,14 +539,14 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
     try {
       await deleteUser.mutateAsync(u.id);
     } catch {
-      alert(t("errors.serverError"));
+      await notify(t("errors.serverError"), t("common.error"));
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -553,7 +556,10 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
       <div className="flex items-center justify-between gap-3">
         {embedded ? (
           <div className="flex items-center gap-2 min-w-0">
-            <UsersIcon size={18} className="text-indigo-600 dark:text-indigo-400" />
+            <UsersIcon
+              size={18}
+              className="text-indigo-500 dark:text-indigo-400"
+            />
             <h2 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
               {t("users.title")}
             </h2>
@@ -566,7 +572,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
         {isAdmin && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
+            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
           >
             <Plus size={16} />
             {t("users.addUser")}
@@ -577,7 +583,10 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-2">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -587,7 +596,11 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
           </div>
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as "ALL" | "ADMIN" | "ADULT" | "CHILD")}
+            onChange={(e) =>
+              setRoleFilter(
+                e.target.value as "ALL" | "ADMIN" | "ADULT" | "CHILD",
+              )
+            }
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             <option value="ALL">{t("users.roleAll")}</option>
@@ -606,7 +619,9 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
         </div>
       ) : filteredUsers.length === 0 ? (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center shadow-sm">
-          <p className="text-sm text-gray-500 dark:text-gray-400">{t("users.noMatches")}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {t("users.noMatches")}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-3">
@@ -626,14 +641,26 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                           {u.name}
                         </p>
                         <span
-                          title={u.role === "ADMIN" ? t("users.admin") : u.role === "CHILD" ? t("users.junior") : t("users.adult")}
-                          aria-label={u.role === "ADMIN" ? t("users.admin") : u.role === "CHILD" ? t("users.junior") : t("users.adult")}
+                          title={
+                            u.role === "ADMIN"
+                              ? t("users.admin")
+                              : u.role === "CHILD"
+                                ? t("users.junior")
+                                : t("users.adult")
+                          }
+                          aria-label={
+                            u.role === "ADMIN"
+                              ? t("users.admin")
+                              : u.role === "CHILD"
+                                ? t("users.junior")
+                                : t("users.adult")
+                          }
                           className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
                             u.role === "ADMIN"
                               ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                               : u.role === "CHILD"
                                 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
                           }`}
                         >
                           {u.role === "ADMIN" ? (
@@ -649,7 +676,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         @{u.username}
                       </p>
                       {userIncome && (
-                        <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">
                           {userIncome.inputType === "ANNUAL_GROSS"
                             ? t("users.incomeAnnual")
                             : t("users.incomeMonthly")}
@@ -657,7 +684,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         </p>
                       )}
                       {!userIncome && currentPeriod && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                        <p className="text-xs text-amber-500 dark:text-amber-400 mt-0.5">
                           {t("income.noneRecorded")}
                         </p>
                       )}
@@ -674,30 +701,32 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         onClick: () => setIncomeModalUser(u),
                         hidden: !currentPeriod,
                         colorClassName:
-                          "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400",
+                          "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
                       },
                       {
                         key: "edit",
                         icon: Pencil,
                         label: t("common.edit"),
-                                      onClick: () => openEdit(u),
-                                      colorClassName:
-                                        "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400",
-                                      hidden:
-                                        !isAdmin &&
-                                        !(currentUser?.role === "ADULT" && u.role === "CHILD"),
-                                    },
-                                    {
-                                      key: "delete",
+                        onClick: () => openEdit(u),
+                        colorClassName:
+                          "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400",
+                        hidden:
+                          !isAdmin &&
+                          !(
+                            currentUser?.role === "ADULT" && u.role === "CHILD"
+                          ),
+                      },
+                      {
+                        key: "delete",
                         icon: Trash2,
                         label: t("common.delete"),
                         onClick: () => handleDelete(u),
                         destructive: true,
                         confirmMessage: t("users.confirmDelete"),
-                                      colorClassName:
-                                        "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400",
-                                      hidden: !isAdmin,
-                                    },
+                        colorClassName:
+                          "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400",
+                        hidden: !isAdmin,
+                      },
                     ]}
                   />
                 </div>
@@ -708,26 +737,26 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
       )}
 
       {modalOpen && (
-          <UserModal
-            user={editingUser}
-            onClose={closeModal}
-            onSave={handleSave}
-            isPending={createUser.isPending || updateUser.isPending}
-            error={modalError}
-            canEditRole={
-              isAdmin ||
-              (!!editingUser &&
-                currentUser?.role === "ADULT" &&
-                editingUser.role === "CHILD")
-            }
-            roleOptions={
-              isAdmin
-                ? ["ADULT", "ADMIN", "CHILD"]
-                : editingUser?.role === "CHILD"
-                  ? ["CHILD", "ADULT"]
-                  : [editingUser?.role === "ADMIN" ? "ADMIN" : "ADULT"]
-            }
-          />
+        <UserModal
+          user={editingUser}
+          onClose={closeModal}
+          onSave={handleSave}
+          isPending={createUser.isPending || updateUser.isPending}
+          error={modalError}
+          canEditRole={
+            isAdmin ||
+            (!!editingUser &&
+              currentUser?.role === "ADULT" &&
+              editingUser.role === "CHILD")
+          }
+          roleOptions={
+            isAdmin
+              ? ["ADULT", "ADMIN", "CHILD"]
+              : editingUser?.role === "CHILD"
+                ? ["CHILD", "ADULT"]
+                : [editingUser?.role === "ADMIN" ? "ADMIN" : "ADULT"]
+          }
+        />
       )}
 
       {incomeModalUser && currentPeriod && (

@@ -273,7 +273,7 @@ export default function AddInvoice() {
               <div className="flex items-center justify-between">
                 <label className={labelCls + ' mb-0'}>{t('invoice.selectUsers')}</label>
                 {totalIncome === 0 && (
-                  <span className="text-xs text-amber-600 dark:text-amber-400">{t('invoice.noIncome')}</span>
+                  <span className="text-xs text-amber-500 dark:text-amber-400">{t('invoice.noIncome')}</span>
                 )}
               </div>
               <div className="space-y-2">
@@ -293,19 +293,19 @@ export default function AddInvoice() {
                           : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? 'bg-indigo-600' : 'bg-gray-400'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? 'bg-indigo-500' : 'bg-gray-400'}`}>
                         {u.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
                       {isJunior && (
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
+                        <span className="text-xs font-medium text-amber-500 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
                       )}
                       {checked && pct !== null ? (
-                        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{pct}%</span>
+                        <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 flex-shrink-0">{pct}%</span>
                       ) : checked && !hasIncome ? (
                         <span className="text-xs text-amber-500 flex-shrink-0">{t('invoice.noIncomeShort')}</span>
                       ) : null}
-                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
+                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-500 border-indigo-500' : 'border-gray-400'}`}>
                         {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                       </span>
                     </button>
@@ -320,26 +320,26 @@ export default function AddInvoice() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className={labelCls + ' mb-0'}>{t('invoice.percentPerUser')} *</label>
-                <span className={`text-sm font-medium ${Math.abs(totalPercent - 100) < 0.01 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                <span className={`text-sm font-medium ${Math.abs(totalPercent - 100) < 0.01 ? 'text-green-500 dark:text-green-400' : 'text-orange-500 dark:text-orange-400'}`}>
                   {t('invoice.totalLabel')} {totalPercent.toFixed(1)}%
                 </span>
               </div>
               <div className="space-y-2">
                 {users.map((u) => (
                   <div key={u.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
-                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                       {u.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
                     {u.role === 'CHILD' && (
-                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
+                      <span className="text-xs font-medium text-amber-500 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
                     )}
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <input
                         type="number" min="0" max="100" step="0.1"
                         value={userPercents[u.id] ?? ''}
                         onChange={(e) => setUserPercents(prev => ({ ...prev, [u.id]: e.target.value }))}
-                        className="w-16 px-2 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-2 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                         placeholder="0"
                       />
                       <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
@@ -356,7 +356,7 @@ export default function AddInvoice() {
               <div className="flex items-center justify-between">
                 <label className={labelCls + ' mb-0'}>{t('invoice.selectUsersEqual')}</label>
                 {equalPercent && (
-                  <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{equalPercent}{t('invoice.eachPct')}</span>
+                  <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">{equalPercent}{t('invoice.eachPct')}</span>
                 )}
               </div>
               <div className="space-y-2">
@@ -374,17 +374,17 @@ export default function AddInvoice() {
                           : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? 'bg-indigo-600' : 'bg-gray-400'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? 'bg-indigo-500' : 'bg-gray-400'}`}>
                         {u.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{u.name}</span>
                       {isJunior && (
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
+                        <span className="text-xs font-medium text-amber-500 dark:text-amber-400 flex-shrink-0">{t('users.junior')}</span>
                       )}
                       {checked && equalPercent && (
-                        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{equalPercent}%</span>
+                        <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 flex-shrink-0">{equalPercent}%</span>
                       )}
-                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
+                      <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? 'bg-indigo-500 border-indigo-500' : 'border-gray-400'}`}>
                         {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                       </span>
                     </button>
@@ -398,7 +398,7 @@ export default function AddInvoice() {
             <button type="button" onClick={() => navigate('/invoices')} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               {t('common.cancel')}
             </button>
-            <button type="submit" disabled={isPending || (!isEditing && !currentPeriod)} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
+            <button type="submit" disabled={isPending || (!isEditing && !currentPeriod)} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors">
               {isPending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {t('invoice.save')}
             </button>

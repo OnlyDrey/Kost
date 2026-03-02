@@ -47,19 +47,19 @@ export default function ExpenseItemCard({
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
   const borderClass = paid
-    ? "border-green-300 dark:border-green-700"
+    ? "border-success/40"
     : overdue
-      ? "border-red-300 dark:border-red-700"
-      : "border-gray-200 dark:border-gray-800";
+      ? "border-danger/40"
+      : "border-app-border";
 
   const amountClass = paid
-    ? "text-green-600 dark:text-green-400"
+    ? "text-success"
     : overdue
-      ? "text-red-600 dark:text-red-400"
-      : "text-indigo-600 dark:text-indigo-400";
+      ? "text-danger"
+      : "text-primary";
 
   const cardBody = (
-    <div className={`flex flex-col gap-3 ${actionButton ? "pt-12" : ""}`}>
+    <div className="flex flex-col gap-2.5">
       <div className="flex items-start gap-3">
         {logoUrl ? (
           <img
@@ -77,11 +77,17 @@ export default function ExpenseItemCard({
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 line-clamp-2" title={vendor}>
+          <p
+            className="text-[15px] font-semibold text-app-text-primary line-clamp-2"
+            title={vendor}
+          >
             {vendor}
           </p>
           {description && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5" title={description ?? undefined}>
+            <p
+              className="text-sm text-app-text-secondary line-clamp-2 mt-0"
+              title={description ?? undefined}
+            >
               {description}
             </p>
           )}
@@ -96,10 +102,7 @@ export default function ExpenseItemCard({
               variant="success"
             />
             {showPaidIcon && (
-              <CheckCircle2
-                size={12}
-                className="text-green-600 dark:text-green-400"
-              />
+              <CheckCircle2 size={12} className="text-success" />
             )}
           </span>
         )}
@@ -116,36 +119,40 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel) && (
-        <div className="flex items-center justify-between gap-2 min-w-0">
-          <div className="min-w-0 flex-1">
-            {amountLabel && (
-              <p className={`text-3xl leading-none font-bold m-0 ${amountClass}`}>
-                {amountLabel}
-              </p>
-            )}
-            {shareLabel && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                {shareLabel}
-              </p>
-            )}
-            {dateLabel && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                {dateLabel}
-              </p>
+      {(amountLabel || rightContent || dateLabel || actionButton) && (
+        <div className="min-w-0 space-y-0.5">
+          <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 min-w-0">
+            <div className="min-w-0 flex-1">
+              {amountLabel && (
+                <p
+                  className={`text-2xl sm:text-3xl leading-none font-bold m-0 ${amountClass}`}
+                >
+                  {amountLabel}
+                </p>
+              )}
+              {shareLabel && (
+                <p className="text-xs text-app-text-secondary mt-0">
+                  {shareLabel}
+                </p>
+              )}
+            </div>
+
+            {(rightContent || actionButton) && (
+              <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+                {rightContent && <div className="shrink-0">{rightContent}</div>}
+                {actionButton && <div className="shrink-0">{actionButton}</div>}
+              </div>
             )}
           </div>
 
-          {rightContent && (
-            <div className="ml-3 flex items-center justify-end gap-[5px] flex-nowrap shrink-0">
-              <div className="shrink-0">{rightContent}</div>
-            </div>
+          {dateLabel && (
+            <p className="text-xs text-app-text-secondary">{dateLabel}</p>
           )}
         </div>
       )}
 
       {footerContent && (
-        <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+        <div className="pt-1.5 border-t border-gray-100 dark:border-gray-800">
           {footerContent}
         </div>
       )}
@@ -154,7 +161,7 @@ export default function ExpenseItemCard({
 
   return (
     <div
-      className={`relative bg-white dark:bg-gray-900 rounded-xl border ${borderClass} shadow-sm hover:shadow-md transition-all`}
+      className={`relative bg-app-surface rounded-xl border ${borderClass} shadow-sm hover:shadow-md transition-all`}
     >
       {onClick ? (
         <button onClick={onClick} className="w-full text-left p-3">
@@ -162,11 +169,6 @@ export default function ExpenseItemCard({
         </button>
       ) : (
         <div className="p-3">{cardBody}</div>
-      )}
-      {actionButton && (
-        <div className="absolute top-3 right-3 flex items-center gap-[5px] z-10">
-          {actionButton}
-        </div>
       )}
     </div>
   );

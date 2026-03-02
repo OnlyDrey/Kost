@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Lock, AlertCircle, X, Trash2, BarChart3, LockOpen, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  Lock,
+  AlertCircle,
+  X,
+  Trash2,
+  BarChart3,
+  LockOpen,
+  ChevronDown,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   usePeriods,
@@ -14,6 +23,7 @@ import { useAuth } from "../../stores/auth.context";
 import { formatDate } from "../../utils/date";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -23,6 +33,7 @@ export default function PeriodList() {
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
   const canManageOpenPeriod = isAdmin || user?.role === "ADULT";
+  const { confirm, notify } = useConfirmDialog();
 
   const { data: periods, isLoading } = usePeriods();
   const createPeriod = useCreatePeriod();
@@ -48,9 +59,9 @@ export default function PeriodList() {
 
   const years = useMemo(() => {
     if (!periods) return [];
-    return Array.from(new Set(periods.map((period) => period.id.split("-")[0]))).sort(
-      (a, b) => b.localeCompare(a),
-    );
+    return Array.from(
+      new Set(periods.map((period) => period.id.split("-")[0])),
+    ).sort((a, b) => b.localeCompare(a));
   }, [periods]);
 
   const months = useMemo(() => {
@@ -59,19 +70,25 @@ export default function PeriodList() {
       selectedYear === "all"
         ? periods
         : periods.filter((period) => period.id.startsWith(`${selectedYear}-`));
-    return Array.from(new Set(source.map((period) => period.id.split("-")[1]))).sort(
-      (a, b) => b.localeCompare(a),
-    );
+    return Array.from(
+      new Set(source.map((period) => period.id.split("-")[1])),
+    ).sort((a, b) => b.localeCompare(a));
   }, [periods, selectedYear]);
 
   const filteredPeriods = useMemo(() => {
     if (!periods) return [];
     return periods
       .filter((period) => {
-        if (selectedYear !== "all" && !period.id.startsWith(`${selectedYear}-`)) {
+        if (
+          selectedYear !== "all" &&
+          !period.id.startsWith(`${selectedYear}-`)
+        ) {
           return false;
         }
-        if (selectedMonth !== "all" && !period.id.endsWith(`-${selectedMonth}`)) {
+        if (
+          selectedMonth !== "all" &&
+          !period.id.endsWith(`-${selectedMonth}`)
+        ) {
           return false;
         }
         return true;
@@ -126,10 +143,22 @@ export default function PeriodList() {
   };
 
   const handleClose = async (id: string) => {
+    const accepted = await confirm({
+      title: t("period.closePeriod"),
+      message: t("period.confirmClose"),
+      confirmLabel: t("period.closePeriod"),
+      cancelLabel: t("common.cancel"),
+      tone: "default",
+    });
+
+    if (!accepted) {
+      return;
+    }
+
     try {
       await closePeriod.mutateAsync(id);
     } catch {
-      alert(t("errors.serverError"));
+      await notify(t("errors.serverError"), t("common.error"));
     }
   };
 
@@ -144,7 +173,7 @@ export default function PeriodList() {
       setReopenModalOpen(false);
       setReopenPeriodId("");
     } catch {
-      alert(t("errors.serverError"));
+      await notify(t("errors.serverError"), t("common.error"));
     }
   };
 
@@ -176,7 +205,7 @@ export default function PeriodList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -190,7 +219,7 @@ export default function PeriodList() {
         {isAdmin && (
           <button
             onClick={handleOpenDialog}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             <Plus size={16} />
             {t("period.createPeriod")}
@@ -267,11 +296,15 @@ export default function PeriodList() {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               !closed
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                ? "bg-success/20 text-success"
+                                : "bg-danger/20 text-danger"
                             }`}
                           >
-                            {!closed ? <LockOpen size={11} /> : <Lock size={11} />}
+                            {!closed ? (
+                              <LockOpen size={11} />
+                            ) : (
+                              <Lock size={11} />
+                            )}
                             {!closed ? t("period.open") : t("period.closed")}
                           </span>
                         </div>
@@ -296,13 +329,16 @@ export default function PeriodList() {
                             key: "stats",
                             icon: BarChart3,
                             label: t("period.stats"),
-                            onClick: () => navigate(`/overview?period=${period.id}`),
+                            onClick: () =>
+                              navigate(`/overview?period=${period.id}`),
                           },
                           {
                             key: "period-lock-state",
                             icon: closed ? LockOpen : Lock,
                             label: closed
-                              ? (isAdmin ? "Gjenåpne periode" : "Kun admin kan gjenåpne periode")
+                              ? isAdmin
+                                ? "Gjenåpne periode"
+                                : "Kun admin kan gjenåpne periode"
                               : t("period.closePeriod"),
                             onClick: () => {
                               if (closed) {
@@ -314,14 +350,17 @@ export default function PeriodList() {
                             },
                             colorClassName: closed
                               ? isAdmin
-                                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                                ? "bg-success/20 text-success hover:bg-success/30"
                                 : "bg-slate-400/15 text-slate-300 hover:bg-slate-400/25"
-                              : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
+                              : "bg-warning/20 text-warning hover:bg-warning/30",
                             hidden: !closed && !canManageOpenPeriod,
                             disabled: closed && !isAdmin,
-                            disabledClassName: "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
-                            destructive: !closed,
-                            confirmMessage: !closed ? t("period.confirmClose") : undefined,
+                            disabledClassName:
+                              "bg-slate-400/15 text-slate-300 opacity-40 cursor-not-allowed pointer-events-none",
+                            destructive: false,
+                            confirmMessage: !closed
+                              ? t("period.confirmClose")
+                              : undefined,
                           },
                           {
                             key: "delete",
@@ -329,7 +368,7 @@ export default function PeriodList() {
                             label: t("common.delete"),
                             onClick: () => handleOpenDeletionModal(period.id),
                             colorClassName:
-                              "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50",
+                              "bg-danger/20 text-danger hover:bg-danger/30",
                             hidden: !isAdmin,
                             disabled: deletePeriod.isPending,
                           },
@@ -354,7 +393,7 @@ export default function PeriodList() {
               </h2>
               <button
                 onClick={() => setDialogOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -408,7 +447,7 @@ export default function PeriodList() {
               <button
                 onClick={handleCreate}
                 disabled={createPeriod.isPending}
-                className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 {createPeriod.isPending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -420,23 +459,25 @@ export default function PeriodList() {
         </div>
       )}
 
-
       {/* Reopen period confirmation modal */}
       {reopenModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Gjenåpne periode?</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                Gjenåpne periode?
+              </h2>
               <button
                 onClick={() => setReopenModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
             <div className="px-6 py-5">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Ønsker du å gjenåpne denne perioden slik at endringer kan gjøres?
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                Ønsker du å gjenåpne denne perioden slik at endringer kan
+                gjøres?
               </p>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
@@ -449,7 +490,7 @@ export default function PeriodList() {
               <button
                 onClick={handleConfirmReopen}
                 disabled={reopenPeriod.isPending}
-                className="flex items-center gap-2 text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 {reopenPeriod.isPending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -469,13 +510,13 @@ export default function PeriodList() {
               <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <AlertCircle
                   size={18}
-                  className="text-red-600 dark:text-red-400"
+                  className="text-red-500 dark:text-red-400"
                 />
                 {t("period.deletePeriodTitle")}
               </h2>
               <button
                 onClick={() => setDeletionModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -489,7 +530,7 @@ export default function PeriodList() {
               )}
               <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 space-y-3">
                 <div>
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     {t("period.title")}
                   </p>
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
@@ -499,7 +540,7 @@ export default function PeriodList() {
                 {deletionInfo && (
                   <>
                     <div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                         {t("period.invoicesToDelete")}
                       </p>
                       <p className="text-sm font-semibold text-red-700 dark:text-red-400 mt-0.5">
@@ -507,7 +548,7 @@ export default function PeriodList() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                         {t("period.incomesToDelete")}
                       </p>
                       <p className="text-sm font-semibold text-red-700 dark:text-red-400 mt-0.5">
@@ -542,7 +583,7 @@ export default function PeriodList() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deletePeriod.isPending || !deletionPassword}
-                className="flex items-center gap-2 text-sm font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold bg-red-500 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 {deletePeriod.isPending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

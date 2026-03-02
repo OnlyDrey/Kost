@@ -24,7 +24,8 @@
     "prepare": "[ -d .git ] && husky install || true",
     "postinstall": "[ -z \"${CI}\" ] && bash check-system.sh || true",
     "audit": "npm audit --omit=dev",
-    "check": "bash check-system.sh"
+    "check": "bash check-system.sh",
+    "check:color-guard": "bash scripts/check-color-guard.sh"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

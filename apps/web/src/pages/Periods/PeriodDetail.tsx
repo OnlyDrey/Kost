@@ -73,7 +73,7 @@ export default function PeriodDetail() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -100,22 +100,50 @@ export default function PeriodDetail() {
   const now = new Date();
   const grouped = (invoices ?? []).reduce(
     (acc, invoice) => {
-      const totalPaid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amountCents, 0);
+      const totalPaid = (invoice.payments ?? []).reduce(
+        (sum, p) => sum + p.amountCents,
+        0,
+      );
       const remaining = Math.max(0, invoice.totalCents - totalPaid);
       const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
       const isOverdue = remaining > 0 && !!dueAt && dueAt < now;
       if (remaining <= 0) {
-        acc.paid.push({ invoice, totalPaid, remaining, displayCents: totalPaid });
+        acc.paid.push({
+          invoice,
+          totalPaid,
+          remaining,
+          displayCents: totalPaid,
+        });
       } else if (isOverdue) {
-        acc.overdue.push({ invoice, totalPaid, remaining, displayCents: remaining });
+        acc.overdue.push({
+          invoice,
+          totalPaid,
+          remaining,
+          displayCents: remaining,
+        });
       } else if (totalPaid > 0) {
-        acc.partial.push({ invoice, totalPaid, remaining, displayCents: remaining });
+        acc.partial.push({
+          invoice,
+          totalPaid,
+          remaining,
+          displayCents: remaining,
+        });
       } else {
-        acc.unpaid.push({ invoice, totalPaid, remaining, displayCents: invoice.totalCents });
+        acc.unpaid.push({
+          invoice,
+          totalPaid,
+          remaining,
+          displayCents: invoice.totalCents,
+        });
       }
       return acc;
     },
-    { overdue: [] as any[], unpaid: [] as any[], partial: [] as any[], paid: [] as any[] },
+    {
+      overdue: [] as any[],
+      unpaid: [] as any[],
+      partial: [] as any[],
+      paid: [] as any[],
+    },
   );
 
   const filterByShare = (list: any[]) =>
@@ -130,7 +158,8 @@ export default function PeriodDetail() {
       key: "overdue",
       title: t("invoice.statusOverdue"),
       list: filterByShare(grouped.overdue),
-      show: filter === "all" || filter === "remaining" || filter === "share-user",
+      show:
+        filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-red-200 dark:border-red-900/50",
       titleClass: "text-red-700 dark:text-red-400",
       amountClass: "text-red-500 dark:text-red-400/80",
@@ -139,16 +168,18 @@ export default function PeriodDetail() {
       key: "unpaid",
       title: t("invoice.statusUnpaid"),
       list: filterByShare(grouped.unpaid),
-      show: filter === "all" || filter === "remaining" || filter === "share-user",
+      show:
+        filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
-      amountClass: "text-indigo-600 dark:text-indigo-400",
+      amountClass: "text-indigo-500 dark:text-indigo-400",
     },
     {
       key: "partial",
       title: t("invoice.statusPartiallyPaid"),
       list: filterByShare(grouped.partial),
-      show: filter === "all" || filter === "remaining" || filter === "share-user",
+      show:
+        filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-amber-200 dark:border-amber-900/50",
       titleClass: "text-amber-700 dark:text-amber-400",
       amountClass: "text-amber-500 dark:text-amber-400/80",
@@ -186,7 +217,7 @@ export default function PeriodDetail() {
               className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                 !closed
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
               }`}
             >
               {!closed ? t("period.open") : t("period.closed")}
@@ -253,7 +284,8 @@ export default function PeriodDetail() {
         ]}
       />
 
-      {((stats?.userShares && stats.userShares.length > 0) || (invoices && invoices.length > 0)) && (
+      {((stats?.userShares && stats.userShares.length > 0) ||
+        (invoices && invoices.length > 0)) && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
           <div>
             {invoices && invoices.length > 0 && (
@@ -284,7 +316,9 @@ export default function PeriodDetail() {
                   emptyLabel={t("common.noData")}
                   unknownLabel={t("invoice.unknown")}
                   onSelectShare={(userId) => setFilter("share-user", userId)}
-                  selectedUserId={filter === "share-user" ? shareUserId : undefined}
+                  selectedUserId={
+                    filter === "share-user" ? shareUserId : undefined
+                  }
                 />
               </div>
             )}
@@ -295,83 +329,139 @@ export default function PeriodDetail() {
       )}
 
       <div className="space-y-4">
-        <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t("invoice.invoices")}</h2>
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          {t("invoice.invoices")}
+        </h2>
         {!invoices || invoices.length === 0 ? (
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t("common.noData")}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t("common.noData")}
+            </p>
           </div>
         ) : (
           visibleGroups.map((group) => {
             if (group.list.length === 0) return null;
-            const groupSum = group.list.reduce((sum, item) => sum + item.displayCents, 0);
+            const groupSum = group.list.reduce(
+              (sum, item) => sum + item.displayCents,
+              0,
+            );
             return (
-              <div key={group.key} className={`bg-white dark:bg-gray-900 rounded-xl border ${group.borderClass} p-4 sm:p-5 shadow-sm`}>
+              <div
+                key={group.key}
+                className={`bg-white dark:bg-gray-900 rounded-xl border ${group.borderClass} p-4 sm:p-5 shadow-sm`}
+              >
                 <div className="mb-3">
-                  <h3 className={`text-base font-semibold ${group.titleClass}`}>{group.title}</h3>
-                  <p className={`text-sm font-medium ${group.amountClass} mt-0.5`}>
+                  <h3 className={`text-base font-semibold ${group.titleClass}`}>
+                    {group.title}
+                  </h3>
+                  <p
+                    className={`text-sm font-medium ${group.amountClass} mt-0.5`}
+                  >
                     {fmt(groupSum)}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-2.5">
-                  {group.list.map(({ invoice, totalPaid, remaining, displayCents }) => {
-                    const isPaid = remaining <= 0;
-                    const isPartiallyPaid = totalPaid > 0 && !isPaid;
-                    const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
-                    const overdue = !isPaid && !!dueAt && dueAt < new Date();
-                    const userShareEntry = filter === "share-user"
-                      ? (invoice.shares ?? []).find((sh: any) => sh.userId === shareUserId)
-                      : undefined;
-                    // When "Your Share" mode is active: primary = share, secondary = total
-                    const primaryAmount = userShareEntry
-                      ? fmt(userShareEntry.shareCents)
-                      : fmt(displayCents);
-                    const secondaryLabel = userShareEntry
-                      ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
-                      : undefined;
-                    return (
-                      <ExpenseItemCard
-                        key={invoice.id}
-                        vendor={invoice.vendor}
-                        description={invoice.description}
-                        logoUrl={getVendorLogo(invoice.vendor)}
-                        amountLabel={primaryAmount}
-                        shareLabel={secondaryLabel}
-                        typeLabel={distributionLabel(invoice.distributionMethod, settings.locale, invoice.distribution as any)}
-                        category={invoice.category}
-                        dateLabel={formatDate(invoice.createdAt)}
-                        paid={isPaid}
-                        overdue={overdue}
-                        paidLabel={t("invoice.statusPaid")}
-                        overdueLabel={t("invoice.statusOverdue")}
-                        onClick={() => navigate(`/invoices/${invoice.id}`)}
-                        rightContent={isPartiallyPaid ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                            <Clock size={10} /> {t("invoice.amountPaid")}: {fmt(totalPaid)}
-                          </span>
-                        ) : undefined}
-                        actionButton={
-                          <ActionIconBar
-                            stopPropagation
-                            items={[
-                              {
-                                key: "pay",
-                                icon: CircleCheckBig,
-                                label: t("invoice.markPaid"),
-                                onClick: () => {
-                                  if (!currentUser || remaining <= 0) return;
-                                  addPayment.mutate({ invoiceId: invoice.id, data: { paidById: currentUser.id, amountCents: remaining, paidAt: new Date().toISOString() } });
+                  {group.list.map(
+                    ({ invoice, totalPaid, remaining, displayCents }) => {
+                      const isPaid = remaining <= 0;
+                      const isPartiallyPaid = totalPaid > 0 && !isPaid;
+                      const dueAt = invoice.dueDate
+                        ? new Date(invoice.dueDate)
+                        : null;
+                      const overdue = !isPaid && !!dueAt && dueAt < new Date();
+                      const userShareEntry =
+                        filter === "share-user"
+                          ? (invoice.shares ?? []).find(
+                              (sh: any) => sh.userId === shareUserId,
+                            )
+                          : undefined;
+                      // When "Your Share" mode is active: primary = share, secondary = total
+                      const primaryAmount = userShareEntry
+                        ? fmt(userShareEntry.shareCents)
+                        : fmt(displayCents);
+                      const secondaryLabel = userShareEntry
+                        ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
+                        : undefined;
+                      return (
+                        <ExpenseItemCard
+                          key={invoice.id}
+                          vendor={invoice.vendor}
+                          description={invoice.description}
+                          logoUrl={getVendorLogo(invoice.vendor)}
+                          amountLabel={primaryAmount}
+                          shareLabel={secondaryLabel}
+                          typeLabel={distributionLabel(
+                            invoice.distributionMethod,
+                            settings.locale,
+                            invoice.distribution as any,
+                          )}
+                          category={invoice.category}
+                          dateLabel={formatDate(invoice.createdAt)}
+                          paid={isPaid}
+                          overdue={overdue}
+                          paidLabel={t("invoice.statusPaid")}
+                          overdueLabel={t("invoice.statusOverdue")}
+                          onClick={() => navigate(`/invoices/${invoice.id}`)}
+                          rightContent={
+                            isPartiallyPaid ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                <Clock size={10} /> {t("invoice.amountPaid")}:{" "}
+                                {fmt(totalPaid)}
+                              </span>
+                            ) : undefined
+                          }
+                          actionButton={
+                            <ActionIconBar
+                              tight
+                              stopPropagation
+                              items={[
+                                {
+                                  key: "pay",
+                                  icon: CircleCheckBig,
+                                  label: t("invoice.markPaid"),
+                                  onClick: () => {
+                                    if (!currentUser || remaining <= 0) return;
+                                    addPayment.mutate({
+                                      invoiceId: invoice.id,
+                                      data: {
+                                        paidById: currentUser.id,
+                                        amountCents: remaining,
+                                        paidAt: new Date().toISOString(),
+                                      },
+                                    });
+                                  },
+                                  disabled:
+                                    remaining <= 0 || addPayment.isPending,
+                                  colorClassName:
+                                    "bg-success/20 hover:bg-success/30 text-success",
                                 },
-                                disabled: remaining <= 0 || addPayment.isPending,
-                                colorClassName: "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400",
-                              },
-                              { key: "edit", icon: Pencil, label: t("common.edit"), onClick: () => navigate(`/invoices/${invoice.id}/edit`), colorClassName: "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400" },
-                              { key: "delete", icon: Trash2, label: t("common.delete"), onClick: () => deleteInvoice.mutate(invoice.id), destructive: true, confirmMessage: t("invoice.confirmDelete"), colorClassName: "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400" },
-                            ]}
-                          />
-                        }
-                      />
-                    );
-                  })}
+                                {
+                                  key: "edit",
+                                  icon: Pencil,
+                                  label: t("common.edit"),
+                                  onClick: () =>
+                                    navigate(`/invoices/${invoice.id}/edit`),
+                                  colorClassName:
+                                    "bg-primary/20 hover:bg-primary/30 text-primary",
+                                },
+                                {
+                                  key: "delete",
+                                  icon: Trash2,
+                                  label: t("common.delete"),
+                                  onClick: () =>
+                                    deleteInvoice.mutate(invoice.id),
+                                  destructive: true,
+                                  confirmMessage: t("invoice.confirmDelete"),
+                                  colorClassName:
+                                    "bg-danger/20 hover:bg-danger/30 text-danger",
+                                },
+                              ]}
+                            />
+                          }
+                        />
+                      );
+                    },
+                  )}
                 </div>
               </div>
             );

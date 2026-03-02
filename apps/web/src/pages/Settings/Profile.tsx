@@ -9,15 +9,17 @@ import {
   Trash2,
   ShieldCheck,
   Globe,
-  Tag,
-  CreditCard,
-  Store,
   Users,
+  Palette,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/auth.context";
-import { useSettings } from "../../stores/settings.context";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import {
+  useSettings,
+  type BrandingPreset,
+} from "../../stores/settings.context";
 import {
   useUpdateUser,
   useChangePassword,
@@ -35,10 +37,17 @@ import {
   useDisableTwoFactor,
   useRegenerateRecoveryCodes,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
+import {
+  amountToCents,
+  centsToAmount,
+  getCurrencySymbol,
+} from "../../utils/currency";
 import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
+import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
+import { isValidHexColor, renderIconDataUrl, resolveAppIconBackground } from "../../utils/branding";
+import { getCurrentLogoSource, getDefaultLogoUrl } from "../../branding/brandingAssets";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -48,7 +57,8 @@ const labelCls =
 const settingsCardCls =
   "bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm";
 const settingsHeaderCls = "flex items-center gap-2 mb-4";
-const settingsTitleCls = "text-base font-semibold text-gray-900 dark:text-gray-100";
+const settingsTitleCls =
+  "text-base font-semibold text-gray-900 dark:text-gray-100";
 
 function SettingsSectionCard({
   icon,
@@ -77,14 +87,16 @@ function SettingsSectionCard({
   );
 }
 
-type SettingsPage = "profile" | "password" | "users" | "family";
+type SettingsPage = "profile" | "password" | "users" | "customization";
+type GlobalSettingsSection = "customization" | FamilySetting;
 
 export default function Profile() {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, login, logout, isAdmin } = useAuth();
-  const { settings, setLocale } = useSettings();
+  const { settings, setLocale, setBranding } = useSettings();
   const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
   const uploadAvatar = useUploadAvatar();
@@ -102,16 +114,54 @@ export default function Profile() {
   const upsertIncome = useUpsertUserIncome();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const initialTab = searchParams.get("tab") as SettingsPage | null;
+  const initialTab = searchParams.get("tab") as SettingsPage | "family" | null;
+  const normalizedInitialTab =
+    initialTab === "family" ? "customization" : initialTab;
   const [activePage, setActivePage] = useState<SettingsPage>(
-    initialTab && ["profile", "password", "users", "family"].includes(initialTab)
-      ? initialTab
+    normalizedInitialTab &&
+      ["profile", "password", "users", "customization"].includes(
+        normalizedInitialTab,
+      )
+      ? (normalizedInitialTab as SettingsPage)
       : "profile",
   );
   const currencySymbol = getCurrencySymbol(currency);
-  const [activeFamilySection, setActiveFamilySection] =
-    useState<FamilySetting>("currency");
+  const initialGlobalSection =
+    (searchParams.get("globalSection") as GlobalSettingsSection | null) ??
+    "customization";
+  const [globalSection, setGlobalSection] = useState<GlobalSettingsSection>(
+    ["customization", "currency", "categories", "payment-methods", "vendors"].includes(
+      initialGlobalSection,
+    )
+      ? initialGlobalSection
+      : "customization",
+  );
   const [familyPageSize, setFamilyPageSize] = useState(5);
+
+  const [brandingTitle, setBrandingTitle] = useState(
+    settings.branding.appTitle,
+  );
+  const brandingLogoInputRef = useRef<HTMLInputElement>(null);
+  const [brandingLogoDataUrl, setBrandingLogoDataUrl] = useState(
+    settings.branding.logoDataUrl,
+  );
+  const [brandingLogoUrl, setBrandingLogoUrl] = useState(
+    settings.branding.logoUrl,
+  );
+  const [brandingLogoUrlError, setBrandingLogoUrlError] = useState("");
+  const [brandingPreset, setBrandingPreset] = useState<BrandingPreset>(
+    settings.branding.primaryPreset,
+  );
+  const [brandingAppIconBackground, setBrandingAppIconBackground] = useState(
+    settings.branding.appIconBackground,
+  );
+  const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] = useState(
+    getDefaultLogoUrl(),
+  );
+  const [brandingError, setBrandingError] = useState("");
+  const [brandingSaved, setBrandingSaved] = useState(false);
+  const [brandingLogoLoadWarning, setBrandingLogoLoadWarning] = useState("");
+  const [brandingIconWarning, setBrandingIconWarning] = useState("");
 
   // Profile form
   const [name, setName] = useState(user?.name ?? "");
@@ -157,9 +207,61 @@ export default function Profile() {
   }, [myIncome?.id]);
 
   useEffect(() => {
-    const tab = searchParams.get("tab") as SettingsPage | null;
-    if (tab && ["profile", "password", "users", "family"].includes(tab)) {
-      setActivePage(tab);
+    setBrandingTitle(settings.branding.appTitle);
+    setBrandingLogoDataUrl(settings.branding.logoDataUrl);
+    setBrandingLogoUrl(settings.branding.logoUrl);
+    setBrandingPreset(settings.branding.primaryPreset);
+    setBrandingAppIconBackground(settings.branding.appIconBackground);
+  }, [settings.branding]);
+
+  useEffect(() => {
+    const renderPreview = async () => {
+      const logoSrc = getCurrentLogoSource({
+        logoDataUrl: brandingLogoDataUrl,
+        logoUrl: brandingLogoUrl,
+      }).src;
+      const background = resolveAppIconBackground(brandingAppIconBackground);
+      try {
+        const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
+        setBrandingIconPreviewUrl(iconUrl);
+        setBrandingIconWarning("");
+      } catch {
+        try {
+          const fallbackIcon = await renderIconDataUrl(
+            getDefaultLogoUrl(),
+            background,
+            64,
+          );
+          setBrandingIconPreviewUrl(fallbackIcon);
+        } catch {
+          setBrandingIconPreviewUrl(getDefaultLogoUrl());
+        }
+        setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
+      }
+    };
+
+    void renderPreview();
+  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab") as SettingsPage | "family" | null;
+    const normalizedTab = tab === "family" ? "customization" : tab;
+    if (
+      normalizedTab &&
+      ["profile", "password", "users", "customization"].includes(normalizedTab)
+    ) {
+      setActivePage(normalizedTab as SettingsPage);
+    }
+
+    const requestedGlobalSection =
+      searchParams.get("globalSection") as GlobalSettingsSection | null;
+    if (
+      requestedGlobalSection &&
+      ["customization", "currency", "categories", "payment-methods", "vendors"].includes(
+        requestedGlobalSection,
+      )
+    ) {
+      setGlobalSection(requestedGlobalSection);
     }
   }, [searchParams]);
 
@@ -170,6 +272,77 @@ export default function Profile() {
     setSearchParams(params, { replace: true });
   };
 
+  const selectGlobalSection = (section: GlobalSettingsSection) => {
+    setGlobalSection(section);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", "customization");
+    params.set("globalSection", section);
+    setSearchParams(params, { replace: true });
+  };
+
+  const handleSaveBranding = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBrandingError("");
+
+    if (
+      brandingAppIconBackground &&
+      !isValidHexColor(brandingAppIconBackground)
+    ) {
+      setBrandingError(t("settings.brandingInvalidHex"));
+      return;
+    }
+
+    if (brandingLogoUrl.trim()) {
+      try {
+        new URL(brandingLogoUrl.trim());
+      } catch {
+        setBrandingLogoUrlError(t("settings.brandingInvalidLogoUrl"));
+        return;
+      }
+    }
+
+    setBranding({
+      appTitle: brandingTitle.trim() || settings.branding.appTitle,
+      logoDataUrl: brandingLogoDataUrl.trim(),
+      logoUrl: brandingLogoUrl.trim(),
+      primaryPreset: brandingPreset,
+      appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
+    });
+    setBrandingSaved(true);
+    window.setTimeout(() => setBrandingSaved(false), 2000);
+  };
+
+  const handleBrandingLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (
+      !file.type.startsWith("image/") ||
+      !/\.(svg|png|jpe?g|webp)$/i.test(file.name)
+    ) {
+      setBrandingError(t("settings.brandingInvalidImage"));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setBrandingLogoDataUrl(reader.result);
+        setBrandingError("");
+      }
+    };
+    reader.onerror = () => setBrandingError(t("settings.brandingInvalidImage"));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleDeleteBrandingLogo = () => {
+    setBrandingLogoDataUrl("");
+    setBrandingLogoUrl("");
+    setBrandingLogoUrlError("");
+    setBrandingLogoLoadWarning("");
+    setBrandingError("");
+  };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -211,7 +384,11 @@ export default function Profile() {
       setIncomeError(t("validation.invalidAmount"));
       return;
     }
-    if (!confirm(t("income.confirmSave"))) return;
+    const shouldSaveIncome = await confirm({
+      message: t("income.confirmSave"),
+      confirmLabel: t("common.confirm"),
+    });
+    if (!shouldSaveIncome) return;
     try {
       await upsertIncome.mutateAsync({
         userId: user.id,
@@ -349,7 +526,13 @@ export default function Profile() {
       return;
     }
 
-    if (!confirm(t("settings.deleteAccountFinalConfirm"))) {
+    const shouldDelete = await confirm({
+      title: t("common.delete"),
+      message: t("settings.deleteAccountFinalConfirm"),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!shouldDelete) {
       return;
     }
 
@@ -374,25 +557,18 @@ export default function Profile() {
     { key: "profile", label: t("settings.profile"), icon: User },
     { key: "password", label: t("settings.password"), icon: KeyRound },
     { key: "users", label: t("users.title"), icon: Users },
-    { key: "family", label: t("familySettings.title"), icon: Store, hidden: !isAdmin },
+    {
+      key: "customization",
+      label: t("settings.customization"),
+      icon: Palette,
+      hidden: !isAdmin,
+    },
   ];
-
-  const familyNavItems: {
-    key: FamilySetting;
-    label: string;
-    icon: React.ElementType;
-  }[] = [
-    { key: "currency", label: t("familySettings.currency"), icon: Globe },
-    { key: "categories", label: t("familySettings.categories"), icon: Tag },
-    { key: "payment-methods", label: t("familySettings.paymentMethods"), icon: CreditCard },
-    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
-  ];
-
 
   // ---- Avatar block ----
   const AvatarBlock = () => (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
+      <div className="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
         {user?.avatarUrl ? (
           <img
             src={user.avatarUrl}
@@ -418,8 +594,16 @@ export default function Profile() {
           type="button"
           onClick={() => avatarInputRef.current?.click()}
           disabled={uploadAvatar.isPending}
-          aria-label={user?.avatarUrl ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          title={user?.avatarUrl ? t("settings.changePhoto") : t("settings.choosePhoto")}
+          aria-label={
+            user?.avatarUrl
+              ? t("settings.changePhoto")
+              : t("settings.choosePhoto")
+          }
+          title={
+            user?.avatarUrl
+              ? t("settings.changePhoto")
+              : t("settings.choosePhoto")
+          }
           className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
         >
           {uploadAvatar.isPending ? (
@@ -435,7 +619,7 @@ export default function Profile() {
             disabled={removeAvatar.isPending}
             aria-label={t("settings.removePhoto")}
             title={t("settings.removePhoto")}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-60"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-60"
           >
             {removeAvatar.isPending ? (
               <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
@@ -447,7 +631,9 @@ export default function Profile() {
       </div>
       <div className="flex flex-col gap-1.5">
         {avatarError && (
-          <p className="text-xs text-red-600 dark:text-red-400">{avatarError}</p>
+          <p className="text-xs text-red-500 dark:text-red-400">
+            {avatarError}
+          </p>
         )}
         <p className="text-xs text-gray-400 dark:text-gray-500">
           {t("settings.photoHint")}
@@ -478,7 +664,11 @@ export default function Profile() {
               <span>{t("income.saved")}</span>
             </div>
           )}
-          <form id="income-form" onSubmit={handleSaveIncome} className="space-y-4">
+          <form
+            id="income-form"
+            onSubmit={handleSaveIncome}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>{t("income.type")}</label>
@@ -534,62 +724,74 @@ export default function Profile() {
         {t("settings.title")}
       </h1>
 
-      <div className="overflow-x-auto pb-1 -mb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-nowrap gap-2 min-w-max pr-1">
-        {pageNavItems.filter((item) => !item.hidden).map((item) => {
-          const Icon = item.icon;
-          const isActive = activePage === item.key;
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => selectPage(item.key)}
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${
-                isActive
-                  ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                  : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Icon size={14} />
-              {item.label}
-            </button>
-          );
-        })}
+      <div className="overflow-x-auto pb-1">
+        <div className="inline-flex min-w-full gap-2">
+          {pageNavItems
+            .filter((item) => !item.hidden)
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = activePage === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => selectPage(item.key)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                    isActive
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </button>
+              );
+            })}
         </div>
       </div>
 
-      {activePage === "family" && isAdmin && (
+      {activePage === "customization" && isAdmin && (
         <div className="max-w-sm">
-          <label className={labelCls}>{t("familySettings.title")}</label>
+          <label className={labelCls}>{t("settings.section")}</label>
           <select
-            value={activeFamilySection}
-            onChange={(e) => setActiveFamilySection(e.target.value as FamilySetting)}
+            value={globalSection}
+            onChange={(e) =>
+              selectGlobalSection(e.target.value as GlobalSettingsSection)
+            }
             className={inputCls}
           >
-            {familyNavItems.map((item) => (
-              <option key={item.key} value={item.key}>
-                {item.label}
-              </option>
-            ))}
+            <option value="customization">{t("settings.customization")}</option>
+            <option value="categories">{t("familySettings.categories")}</option>
+            <option value="payment-methods">{t("familySettings.paymentMethods")}</option>
+            <option value="vendors">{t("familySettings.vendors")}</option>
           </select>
         </div>
       )}
 
-      <div className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}>
-        <div className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}>
+      <div
+        className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
+      >
+        <div
+          className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
+        >
           {/* ---- Profile section: avatar-left + income alongside on desktop ---- */}
           {activePage === "profile" && (
             <div className="space-y-4 lg:contents">
               {/* Profile card with avatar-left layout */}
               <SettingsSectionCard
-                icon={<User size={18} className="text-indigo-600 dark:text-indigo-400" />}
+                icon={
+                  <User
+                    size={18}
+                    className="text-indigo-500 dark:text-indigo-400"
+                  />
+                }
                 title={t("settings.profile")}
                 action={
                   <button
                     type="submit"
                     form="profile-form"
                     disabled={updateUser.isPending}
-                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                   >
                     {updateUser.isPending && (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -598,7 +800,6 @@ export default function Profile() {
                   </button>
                 }
               >
-
                 <div className="grid grid-cols-1 min-[380px]:grid-cols-[minmax(96px,1fr)_minmax(0,2fr)] gap-4 items-start">
                   <AvatarBlock />
 
@@ -615,7 +816,11 @@ export default function Profile() {
                         <span>{profileSuccess}</span>
                       </div>
                     )}
-                    <form id="profile-form" onSubmit={handleProfileSubmit} className="space-y-4">
+                    <form
+                      id="profile-form"
+                      onSubmit={handleProfileSubmit}
+                      className="space-y-4"
+                    >
                       <div>
                         <label className={labelCls}>{t("users.name")}</label>
                         <input
@@ -627,7 +832,9 @@ export default function Profile() {
                         />
                       </div>
                       <div>
-                        <label className={labelCls}>{t("users.username")}</label>
+                        <label className={labelCls}>
+                          {t("users.username")}
+                        </label>
                         <input
                           type="text"
                           value={username}
@@ -640,20 +847,24 @@ export default function Profile() {
                   </div>
                 </div>
               </SettingsSectionCard>
-
             </div>
           )}
 
           {activePage === "profile" && (
             <SettingsSectionCard
-              icon={<TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <TrendingUp
+                  size={18}
+                  className="text-indigo-500 dark:text-indigo-400"
+                />
+              }
               title={t("settings.myIncome")}
               action={
                 <button
                   type="submit"
                   form="income-form"
                   disabled={upsertIncome.isPending || !currentPeriod}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {upsertIncome.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -669,12 +880,16 @@ export default function Profile() {
           {/* Language section */}
           {activePage === "profile" && (
             <SettingsSectionCard
-              icon={<Globe size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <Globe
+                  size={18}
+                  className="text-indigo-500 dark:text-indigo-400"
+                />
+              }
               title={t("settings.language")}
             >
-
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t("settings.languageDescription")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -691,7 +906,7 @@ export default function Profile() {
                     {settings.locale === "en" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-600 dark:text-indigo-400"
+                        className="ml-auto text-indigo-500 dark:text-indigo-400"
                       />
                     )}
                   </button>
@@ -708,7 +923,7 @@ export default function Profile() {
                     {settings.locale === "nb" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-600 dark:text-indigo-400"
+                        className="ml-auto text-indigo-500 dark:text-indigo-400"
                       />
                     )}
                   </button>
@@ -720,14 +935,19 @@ export default function Profile() {
           {/* Change password section */}
           {activePage === "password" && (
             <SettingsSectionCard
-              icon={<KeyRound size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <KeyRound
+                  size={18}
+                  className="text-indigo-500 dark:text-indigo-400"
+                />
+              }
               title={t("settings.changePassword")}
               action={
                 <button
                   type="submit"
                   form="password-form"
                   disabled={changePassword.isPending}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {changePassword.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -736,7 +956,6 @@ export default function Profile() {
                 </button>
               }
             >
-
               {pwError && (
                 <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
                   <AlertCircle size={15} className="flex-shrink-0" />
@@ -750,9 +969,15 @@ export default function Profile() {
                 </div>
               )}
 
-              <form id="password-form" onSubmit={handlePasswordSubmit} className="space-y-4">
+              <form
+                id="password-form"
+                onSubmit={handlePasswordSubmit}
+                className="space-y-4"
+              >
                 <div>
-                  <label className={labelCls}>{t("settings.currentPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.currentPassword")}
+                  </label>
                   <input
                     type="password"
                     value={currentPassword}
@@ -762,7 +987,9 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>{t("settings.newPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.newPassword")}
+                  </label>
                   <input
                     type="password"
                     value={newPassword}
@@ -773,7 +1000,9 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>{t("settings.confirmPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.confirmPassword")}
+                  </label>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -790,7 +1019,12 @@ export default function Profile() {
           {/* Two-factor authentication */}
           {activePage === "password" && (
             <SettingsSectionCard
-              icon={<ShieldCheck size={18} className="text-indigo-600 dark:text-indigo-400" />}
+              icon={
+                <ShieldCheck
+                  size={18}
+                  className="text-indigo-500 dark:text-indigo-400"
+                />
+              }
               title={t("settings.twoFactorTitle")}
             >
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
@@ -810,7 +1044,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={handleSetupTwoFactor}
-                  className="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                 >
                   {t("settings.setupTwoFactor")}
                 </button>
@@ -826,7 +1060,9 @@ export default function Profile() {
                     {setupPayload.otpauthUrl}
                   </p>
                   <div>
-                    <label className={labelCls}>{t("settings.twoFactorCode")}</label>
+                    <label className={labelCls}>
+                      {t("settings.twoFactorCode")}
+                    </label>
                     <input
                       type="text"
                       value={twoFactorCode}
@@ -838,7 +1074,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={handleEnableTwoFactor}
-                    className="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 text-white rounded-lg transition-colors"
                   >
                     {t("settings.enableTwoFactor")}
                   </button>
@@ -860,7 +1096,9 @@ export default function Profile() {
               {twoFactorStatus?.enabled && (
                 <div className="space-y-3">
                   <div>
-                    <label className={labelCls}>{t("settings.currentPassword")}</label>
+                    <label className={labelCls}>
+                      {t("settings.currentPassword")}
+                    </label>
                     <input
                       type="password"
                       value={twoFactorPassword}
@@ -879,7 +1117,7 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={handleDisableTwoFactor}
-                      className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-semibold bg-red-500 hover:bg-red-700 text-white rounded-lg transition-colors"
                     >
                       {t("settings.disableTwoFactor")}
                     </button>
@@ -898,11 +1136,16 @@ export default function Profile() {
           {/* Danger zone */}
           {activePage === "password" && (
             <SettingsSectionCard
-              icon={<AlertCircle size={18} className="text-red-700 dark:text-red-400" />}
+              icon={
+                <AlertCircle
+                  size={18}
+                  className="text-red-700 dark:text-red-400"
+                />
+              }
               title={t("settings.deleteAccountTitle")}
               className="border-red-200 dark:border-red-900"
             >
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-sm text-gray-500 dark:text-gray-300 mb-4">
                 {t("settings.deleteAccountWarning")}
               </p>
 
@@ -915,7 +1158,9 @@ export default function Profile() {
 
               <form onSubmit={handleDeleteAccount} className="space-y-4">
                 <div>
-                  <label className={labelCls}>{t("settings.currentPassword")}</label>
+                  <label className={labelCls}>
+                    {t("settings.currentPassword")}
+                  </label>
                   <input
                     type="password"
                     value={deletePassword}
@@ -942,7 +1187,7 @@ export default function Profile() {
                   <button
                     type="submit"
                     disabled={deleteMyAccount.isPending}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-red-500 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg transition-colors"
                   >
                     {deleteMyAccount.isPending && (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -955,12 +1200,195 @@ export default function Profile() {
           )}
 
           {/* Family settings sections (admin only) */}
-          {activePage === "family" && isAdmin && (
+          {activePage === "customization" && isAdmin && globalSection !== "customization" && (
             <FamilySettingsContent
-              activeSection={activeFamilySection}
+              activeSection={globalSection as FamilySetting}
               pageSize={familyPageSize}
               onPageSizeChange={setFamilyPageSize}
             />
+          )}
+
+          {activePage === "customization" && isAdmin && globalSection === "customization" && (
+            <>
+              <FamilySettingsContent
+                activeSection={"currency" as FamilySetting}
+                pageSize={familyPageSize}
+                onPageSizeChange={setFamilyPageSize}
+              />
+
+            <SettingsSectionCard
+              icon={<Palette size={18} className="text-primary" />}
+              title={t("settings.brandingTitle")}
+            >
+              <form onSubmit={handleSaveBranding} className="space-y-4">
+                <div>
+                  <label className={labelCls}>
+                    {t("settings.brandingAppTitle")}
+                  </label>
+                  <input
+                    type="text"
+                    value={brandingTitle}
+                    onChange={(e) => setBrandingTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                    placeholder={t("app.title")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={labelCls}>
+                    {t("settings.brandingLogo")}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={
+                        getCurrentLogoSource({
+                        logoDataUrl: brandingLogoDataUrl,
+                        logoUrl: brandingLogoUrl,
+                      }).src
+                      }
+                      alt={t("settings.brandingLogoPreviewAlt")}
+                      className="w-12 h-12 object-contain"
+                      onError={(event) => {
+                        if (brandingLogoUrl) {
+                          setBrandingLogoLoadWarning(
+                            t("settings.brandingLogoLoadFailed"),
+                          );
+                        }
+                        event.currentTarget.src = getDefaultLogoUrl();
+                      }}
+                      onLoad={() => setBrandingLogoLoadWarning("")}
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => brandingLogoInputRef.current?.click()}
+                        className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        {brandingLogoDataUrl || brandingLogoUrl
+                          ? t("settings.brandingReplaceLogo")
+                          : t("settings.brandingUploadLogo")}
+                      </button>
+                      {(brandingLogoDataUrl || brandingLogoUrl) && (
+                        <button
+                          type="button"
+                          onClick={handleDeleteBrandingLogo}
+                          className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                        >
+                          {t("settings.brandingDeleteLogo")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleDeleteBrandingLogo}
+                        className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        {t("settings.brandingResetDefault")}
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    ref={brandingLogoInputRef}
+                    type="file"
+                    accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
+                    onChange={handleBrandingLogoFile}
+                    className="hidden"
+                  />
+                  <div>
+                    <label className={labelCls}>
+                      {t("settings.brandingLogoUrl")}
+                    </label>
+                    <input
+                      type="url"
+                      value={brandingLogoUrl}
+                      onChange={(e) => {
+                        setBrandingLogoUrl(e.target.value);
+                        setBrandingLogoUrlError("");
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                      placeholder="https://example.com/logo.svg"
+                    />
+                    {brandingLogoUrlError && (
+                      <p className="text-xs text-danger mt-1">
+                        {brandingLogoUrlError}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-secondary">
+                    {brandingLogoDataUrl || brandingLogoUrl
+                      ? t("settings.brandingCustomLogoActive")
+                      : t("settings.brandingDefaultLogoActive")}
+                  </p>
+                  {brandingLogoLoadWarning && (
+                    <p className="text-xs text-warning">
+                      {brandingLogoLoadWarning}
+                    </p>
+                  )}
+                </div>
+                <ColorFamilySelect
+                  value={brandingPreset}
+                  onChange={(next) => setBrandingPreset(next as BrandingPreset)}
+                  label={t("settings.brandingPrimaryPreset")}
+                />
+                <div>
+                  <label className={labelCls}>
+                    {t("settings.brandingAppIconBackground")}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={resolveAppIconBackground(
+                        brandingAppIconBackground,
+                      )}
+                      onChange={(e) =>
+                        setBrandingAppIconBackground(
+                          e.target.value.toUpperCase(),
+                        )
+                      }
+                      className="h-10 w-12 rounded border border-border bg-surface p-1 focus:outline-none focus:ring-2 focus:ring-focus"
+                      aria-label={t("settings.brandingAppIconBackground")}
+                    />
+                    <span className="text-sm text-text-secondary">
+                      {resolveAppIconBackground(brandingAppIconBackground)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-text-secondary">
+                    {t("settings.brandingAppIconPreview")}
+                  </span>
+                  <img
+                    src={brandingIconPreviewUrl}
+                    alt={t("settings.brandingAppIconPreview")}
+                    className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
+                  />
+                </div>
+                {brandingIconWarning && (
+                  <p className="text-xs text-warning">{brandingIconWarning}</p>
+                )}
+                <p className="text-xs text-text-secondary">
+                  {t("settings.brandingPwaCacheNote")}
+                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs text-text-secondary">
+                    {t("settings.brandingHelp")}
+                  </p>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  >
+                    {t("common.save")}
+                  </button>
+                </div>
+                {brandingError && (
+                  <p className="text-xs text-danger">{brandingError}</p>
+                )}
+                {brandingSaved && (
+                  <p className="text-xs text-success">
+                    {t("settings.profileUpdated")}
+                  </p>
+                )}
+              </form>
+            </SettingsSectionCard>
+            </>
           )}
         </div>
       </div>

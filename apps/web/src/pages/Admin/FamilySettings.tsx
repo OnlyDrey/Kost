@@ -39,6 +39,7 @@ import {
   useUploadVendorLogo,
   useRemoveVendorsBulk,
 } from "../../hooks/useApi";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const inputCls =
   "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -57,7 +58,11 @@ const SUPPORTED_CURRENCIES = [
   { code: "GBP", label: "British Pound (GBP)" },
 ];
 
-export type FamilySetting = "currency" | "categories" | "payment-methods" | "vendors";
+export type FamilySetting =
+  | "currency"
+  | "categories"
+  | "payment-methods"
+  | "vendors";
 
 function Pagination({
   page,
@@ -130,6 +135,7 @@ function ManagedList({
   onPageSizeChange: (size: number) => void;
 }) {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const [newItem, setNewItem] = useState("");
   const [error, setError] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -180,23 +186,30 @@ function ManagedList({
     );
   };
 
-  const handleRemoveOne = (item: string) => {
-    if (!confirm(t("familySettings.confirmDeleteItem", { item }))) return;
+  const handleRemoveOne = async (item: string) => {
+    const accepted = await confirm({
+      title: t("common.delete"),
+      message: t("familySettings.confirmDeleteItem", { item }),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!accepted) return;
     onRemove(item);
     setSelectedItems((prev) => prev.filter((value) => value !== item));
     if (pageItems.length === 1 && currentPage > 1) setPage(currentPage - 1);
   };
 
-  const handleRemoveSelected = () => {
+  const handleRemoveSelected = async () => {
     if (!selectedItems.length) return;
-    if (
-      !confirm(
-        t("familySettings.confirmDeleteSelected", {
-          count: selectedItems.length,
-        }),
-      )
-    )
-      return;
+    const accepted = await confirm({
+      title: t("common.delete"),
+      message: t("familySettings.confirmDeleteSelected", {
+        count: selectedItems.length,
+      }),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!accepted) return;
     if (onRemoveMany) {
       onRemoveMany(selectedItems);
     } else {
@@ -236,7 +249,7 @@ function ManagedList({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-indigo-600 dark:text-indigo-400">{icon}</span>
+          <span className="text-indigo-500 dark:text-indigo-400">{icon}</span>
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {title}
           </h2>
@@ -251,7 +264,9 @@ function ManagedList({
             className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
         </label>
@@ -283,7 +298,7 @@ function ManagedList({
         <button
           type="submit"
           disabled={isPendingAdd}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
         >
           {isPendingAdd ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -297,7 +312,10 @@ function ManagedList({
       {/* Search */}
       {items.length > 0 && (
         <div className="relative mb-3">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
           <input
             type="text"
             value={search}
@@ -316,7 +334,7 @@ function ManagedList({
           <button
             onClick={handleRemoveSelected}
             disabled={isPendingRemove}
-            className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
           >
             <Trash2 size={13} />
             {t("familySettings.deleteSelected")}
@@ -326,11 +344,13 @@ function ManagedList({
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
-          {search ? t("common.noResults", { defaultValue: "No results found." }) : t("familySettings.noneAdded")}
+          {search
+            ? t("common.noResults", { defaultValue: "No results found." })
+            : t("familySettings.noneAdded")}
         </p>
       ) : (
         <>
@@ -349,7 +369,7 @@ function ManagedList({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleSelected(item)}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
                     />
                     {editing ? (
                       <input
@@ -371,7 +391,7 @@ function ManagedList({
                         <button
                           onClick={submitEdit}
                           disabled={isPendingEdit}
-                          className="p-1 text-gray-500 hover:text-emerald-600 disabled:opacity-50"
+                          className="p-1 text-gray-500 hover:text-emerald-500 disabled:opacity-50"
                         >
                           <Check size={14} />
                         </button>
@@ -481,7 +501,7 @@ function LogoPicker({
             type="button"
             onClick={() => onUrlSave(urlValue.trim())}
             disabled={isPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
           >
             <Check size={12} />
           </button>
@@ -509,7 +529,7 @@ function LogoPicker({
             {t("familySettings.chooseFile")}
           </button>
           {uploadErr && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
               {uploadErr}
             </p>
           )}
@@ -538,6 +558,7 @@ function VendorRow({
   isPending: boolean;
 }) {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(vendor.name);
 
@@ -573,14 +594,14 @@ function VendorRow({
           <div className="flex gap-2 justify-end">
             <button
               onClick={handleCancel}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               <X size={13} /> {t("common.cancel")}
             </button>
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
             >
               <Check size={13} /> {t("familySettings.saveName")}
             </button>
@@ -593,19 +614,19 @@ function VendorRow({
               type="checkbox"
               checked={checked}
               onChange={onToggle}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
             />
             {vendor.logoUrl ? (
               <img
                 src={vendor.logoUrl}
                 alt={vendor.name}
-                className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-600 flex-shrink-0"
+                className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-500 flex-shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}
               />
             ) : (
-              <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-500 flex items-center justify-center flex-shrink-0">
                 <Store size={12} className="text-gray-500" />
               </div>
             )}
@@ -621,15 +642,16 @@ function VendorRow({
               <Pencil size={14} />
             </button>
             <button
-              onClick={() => {
-                if (
-                  confirm(
-                    t("familySettings.confirmDeleteItem", {
-                      item: vendor.name,
-                    }),
-                  )
-                )
-                  onRemove(vendor.id);
+              onClick={async () => {
+                const accepted = await confirm({
+                  title: t("common.delete"),
+                  message: t("familySettings.confirmDeleteItem", {
+                    item: vendor.name,
+                  }),
+                  confirmLabel: t("common.delete"),
+                  tone: "danger",
+                });
+                if (accepted) onRemove(vendor.id);
               }}
               disabled={isPending}
               className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
@@ -651,6 +673,7 @@ function VendorManager({
   onPageSizeChange: (size: number) => void;
 }) {
   const { t } = useTranslation();
+  const { confirm } = useConfirmDialog();
   const { data: vendors = [], isLoading } = useVendors();
   const addVendor = useAddVendor();
   const updateVendor = useUpdateVendor();
@@ -716,16 +739,17 @@ function VendorManager({
     );
   };
 
-  const removeSelectedVendors = () => {
+  const removeSelectedVendors = async () => {
     if (!selectedVendorIds.length) return;
-    if (
-      !confirm(
-        t("familySettings.confirmDeleteSelected", {
-          count: selectedVendorIds.length,
-        }),
-      )
-    )
-      return;
+    const accepted = await confirm({
+      title: t("common.delete"),
+      message: t("familySettings.confirmDeleteSelected", {
+        count: selectedVendorIds.length,
+      }),
+      confirmLabel: t("common.delete"),
+      tone: "danger",
+    });
+    if (!accepted) return;
     removeVendorsBulk.mutate(selectedVendorIds, {
       onSuccess: () => {
         setSelectedVendorIds([]);
@@ -743,7 +767,7 @@ function VendorManager({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
-          <Store size={18} className="text-indigo-600 dark:text-indigo-400" />
+          <Store size={18} className="text-indigo-500 dark:text-indigo-400" />
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {t("familySettings.vendors")}
           </h2>
@@ -758,7 +782,9 @@ function VendorManager({
             className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
         </label>
@@ -788,7 +814,7 @@ function VendorManager({
         <button
           type="submit"
           disabled={addVendor.isPending}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
         >
           {addVendor.isPending ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -802,7 +828,10 @@ function VendorManager({
       {/* Search */}
       {vendors.length > 0 && (
         <div className="relative mb-3">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
           <input
             type="text"
             value={search}
@@ -826,7 +855,7 @@ function VendorManager({
           <button
             onClick={removeSelectedVendors}
             disabled={pending}
-            className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
           >
             <Trash2 size={13} />
             {t("familySettings.deleteSelected")}
@@ -836,11 +865,13 @@ function VendorManager({
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
-          {search ? t("common.noResults", { defaultValue: "No results found." }) : t("familySettings.noVendors")}
+          {search
+            ? t("common.noResults", { defaultValue: "No results found." })
+            : t("familySettings.noVendors")}
         </p>
       ) : (
         <>
@@ -871,8 +902,10 @@ function VendorManager({
 
 function CurrencySettings() {
   const { t } = useTranslation();
-  const { data: currentCurrency = "NOK", isLoading: loadingCurrency } = useCurrency();
-  const { data: currentPosition = "Before", isLoading: loadingPosition } = useCurrencySymbolPosition();
+  const { data: currentCurrency = "NOK", isLoading: loadingCurrency } =
+    useCurrency();
+  const { data: currentPosition = "Before", isLoading: loadingPosition } =
+    useCurrencySymbolPosition();
   const updateCurrency = useUpdateCurrency();
   const updatePosition = useUpdateCurrencySymbolPosition();
   const [selected, setSelected] = useState<string>("");
@@ -898,7 +931,7 @@ function CurrencySettings() {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
-        <Globe size={18} className="text-indigo-600 dark:text-indigo-400" />
+        <Globe size={18} className="text-indigo-500 dark:text-indigo-400" />
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">
           {t("familySettings.currency")}
         </h2>
@@ -915,7 +948,7 @@ function CurrencySettings() {
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="space-y-4">
@@ -938,7 +971,7 @@ function CurrencySettings() {
             <button
               onClick={handleSaveCurrency}
               disabled={updateCurrency.isPending || value === currentCurrency}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
             >
               {updateCurrency.isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -950,7 +983,9 @@ function CurrencySettings() {
           {/* Currency position */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t("familySettings.currencyPosition", { defaultValue: "Currency Position" })}
+              {t("familySettings.currencyPosition", {
+                defaultValue: "Currency Position",
+              })}
             </label>
             {successPosition && (
               <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-3 py-2 text-sm mb-2">
@@ -984,7 +1019,8 @@ export function FamilySettingsContent({
 }) {
   const { t } = useTranslation();
   const { data: categories = [], isLoading: loadingCats } = useCategories();
-  const { data: paymentMethods = [], isLoading: loadingMethods } = usePaymentMethods();
+  const { data: paymentMethods = [], isLoading: loadingMethods } =
+    usePaymentMethods();
   const addCategory = useAddCategory();
   const removeCategory = useRemoveCategory();
   const removeCategoriesBulk = useRemoveCategoriesBulk();
@@ -996,47 +1032,58 @@ export function FamilySettingsContent({
 
   if (activeSection === "currency") return <CurrencySettings />;
 
-  if (activeSection === "categories") return (
-    <ManagedList
-      icon={<Tag size={18} />}
-      title={t("familySettings.categories")}
-      description={t("familySettings.categoriesDesc")}
-      items={categories}
-      isLoading={loadingCats}
-      onAdd={(name) => addCategory.mutate(name)}
-      onRemove={(name) => removeCategory.mutate(name)}
-      onRename={(oldName, newName) => renameCategory.mutate({ oldName, newName })}
-      isPendingAdd={addCategory.isPending}
-      isPendingRemove={removeCategory.isPending || removeCategoriesBulk.isPending}
-      isPendingEdit={renameCategory.isPending}
-      onRemoveMany={(names) => removeCategoriesBulk.mutate(names)}
-      pageSize={pageSize}
-      onPageSizeChange={onPageSizeChange}
-    />
-  );
+  if (activeSection === "categories")
+    return (
+      <ManagedList
+        icon={<Tag size={18} />}
+        title={t("familySettings.categories")}
+        description={t("familySettings.categoriesDesc")}
+        items={categories}
+        isLoading={loadingCats}
+        onAdd={(name) => addCategory.mutate(name)}
+        onRemove={(name) => removeCategory.mutate(name)}
+        onRename={(oldName, newName) =>
+          renameCategory.mutate({ oldName, newName })
+        }
+        isPendingAdd={addCategory.isPending}
+        isPendingRemove={
+          removeCategory.isPending || removeCategoriesBulk.isPending
+        }
+        isPendingEdit={renameCategory.isPending}
+        onRemoveMany={(names) => removeCategoriesBulk.mutate(names)}
+        pageSize={pageSize}
+        onPageSizeChange={onPageSizeChange}
+      />
+    );
 
-  if (activeSection === "payment-methods") return (
-    <ManagedList
-      icon={<CreditCard size={18} />}
-      title={t("familySettings.paymentMethods")}
-      description={t("familySettings.paymentMethodsDesc")}
-      items={paymentMethods}
-      isLoading={loadingMethods}
-      onAdd={(name) => addPaymentMethod.mutate(name)}
-      onRemove={(name) => removePaymentMethod.mutate(name)}
-      onRename={(oldName, newName) => renamePaymentMethod.mutate({ oldName, newName })}
-      isPendingAdd={addPaymentMethod.isPending}
-      isPendingRemove={removePaymentMethod.isPending || removePaymentMethodsBulk.isPending}
-      isPendingEdit={renamePaymentMethod.isPending}
-      onRemoveMany={(names) => removePaymentMethodsBulk.mutate(names)}
-      pageSize={pageSize}
-      onPageSizeChange={onPageSizeChange}
-    />
-  );
+  if (activeSection === "payment-methods")
+    return (
+      <ManagedList
+        icon={<CreditCard size={18} />}
+        title={t("familySettings.paymentMethods")}
+        description={t("familySettings.paymentMethodsDesc")}
+        items={paymentMethods}
+        isLoading={loadingMethods}
+        onAdd={(name) => addPaymentMethod.mutate(name)}
+        onRemove={(name) => removePaymentMethod.mutate(name)}
+        onRename={(oldName, newName) =>
+          renamePaymentMethod.mutate({ oldName, newName })
+        }
+        isPendingAdd={addPaymentMethod.isPending}
+        isPendingRemove={
+          removePaymentMethod.isPending || removePaymentMethodsBulk.isPending
+        }
+        isPendingEdit={renamePaymentMethod.isPending}
+        onRemoveMany={(names) => removePaymentMethodsBulk.mutate(names)}
+        pageSize={pageSize}
+        onPageSizeChange={onPageSizeChange}
+      />
+    );
 
-  if (activeSection === "vendors") return (
-    <VendorManager pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
-  );
+  if (activeSection === "vendors")
+    return (
+      <VendorManager pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
+    );
 
   return null;
 }
@@ -1047,10 +1094,18 @@ export default function FamilySettings() {
   const [activeSection, setActiveSection] = useState<FamilySetting>("currency");
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const navItems: { key: FamilySetting; label: string; icon: React.ElementType }[] = [
+  const navItems: {
+    key: FamilySetting;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
     { key: "currency", label: t("familySettings.currency"), icon: Globe },
     { key: "categories", label: t("familySettings.categories"), icon: Tag },
-    { key: "payment-methods", label: t("familySettings.paymentMethods"), icon: CreditCard },
+    {
+      key: "payment-methods",
+      label: t("familySettings.paymentMethods"),
+      icon: CreditCard,
+    },
     { key: "vendors", label: t("familySettings.vendors"), icon: Store },
   ];
 
@@ -1088,7 +1143,7 @@ export default function FamilySettings() {
                 className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors ${
                   isActive
                     ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                 }`}
               >
                 <Icon size={15} />

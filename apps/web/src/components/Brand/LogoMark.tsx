@@ -3,15 +3,18 @@ type LogoMarkProps = {
   title?: string;
 };
 
-export default function LogoMark({ className = 'w-7 h-7', title = 'Kost logo' }: LogoMarkProps) {
+export default function LogoMark({
+  className = "w-7 h-7",
+  title = "Kost logo",
+}: LogoMarkProps) {
   return (
     <img
-      src="/logo-mark.png"
+      src="/logo-mark.svg"
       alt={title}
       className={className}
       loading="eager"
       onError={(event) => {
-        (event.currentTarget as HTMLImageElement).src = '/logo-mark.svg';
+        (event.currentTarget as HTMLImageElement).src = "/logo-mark.svg";
       }}
     />
   );
