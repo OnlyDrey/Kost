@@ -135,7 +135,7 @@ export default function SubscriptionList() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+          <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
             {active.map((sub) => (
               <SubscriptionCard
                 key={sub.id}
@@ -158,7 +158,7 @@ export default function SubscriptionList() {
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             {t("subscription.inactiveSection", { count: inactive.length })}
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+          <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
             {inactive.map((sub) => (
               <SubscriptionCard
                 key={sub.id}

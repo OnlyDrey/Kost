@@ -19,7 +19,10 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
 import TagPill from "../Common/TagPill";
-import { getCurrentLogoSource, getDefaultLogoUrl } from "../../branding/brandingAssets";
+import {
+  getCurrentLogoSource,
+  getDefaultLogoUrl,
+} from "../../branding/brandingAssets";
 
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
@@ -281,7 +284,7 @@ export default function AppLayout() {
             <span className="text-lg font-bold text-primary">{appTitle}</span>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 md:pl-12 lg:pl-16">
           <Outlet />
         </main>
       </div>

@@ -108,15 +108,12 @@ export default function Overview() {
     setSearchParams(params, { replace: true });
   };
 
-  const { data: period, isLoading: periodLoading } = usePeriod(
-    resolvedPeriodId,
-  );
-  const { data: stats, isLoading: statsLoading } = usePeriodStats(
-    resolvedPeriodId,
-  );
-  const { data: invoices, isLoading: invoicesLoading } = useInvoices(
-    resolvedPeriodId,
-  );
+  const { data: period, isLoading: periodLoading } =
+    usePeriod(resolvedPeriodId);
+  const { data: stats, isLoading: statsLoading } =
+    usePeriodStats(resolvedPeriodId);
+  const { data: invoices, isLoading: invoicesLoading } =
+    useInvoices(resolvedPeriodId);
   const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
@@ -172,11 +169,26 @@ export default function Overview() {
           const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
           const isOverdue = remaining > 0 && !!dueAt && dueAt < now;
           if (remaining <= 0)
-            acc.paid.push({ invoice, totalPaid, remaining, displayCents: totalPaid });
+            acc.paid.push({
+              invoice,
+              totalPaid,
+              remaining,
+              displayCents: totalPaid,
+            });
           else if (isOverdue)
-            acc.overdue.push({ invoice, totalPaid, remaining, displayCents: remaining });
+            acc.overdue.push({
+              invoice,
+              totalPaid,
+              remaining,
+              displayCents: remaining,
+            });
           else if (totalPaid > 0)
-            acc.partial.push({ invoice, totalPaid, remaining, displayCents: remaining });
+            acc.partial.push({
+              invoice,
+              totalPaid,
+              remaining,
+              displayCents: remaining,
+            });
           else
             acc.unpaid.push({
               invoice,
@@ -318,8 +330,7 @@ export default function Overview() {
                 label: t("dashboard.yourShare"),
                 value: fmt(userShare?.totalShareCents ?? 0),
                 colorClass: "bg-amber-500",
-                onClick: () =>
-                  setFilter("share-user", currentUser?.id),
+                onClick: () => setFilter("share-user", currentUser?.id),
               },
               {
                 key: "total",
@@ -359,8 +370,7 @@ export default function Overview() {
                 label: t("period.userShares"),
                 value: stats?.userShares?.length ?? 0,
                 colorClass: "bg-sky-500",
-                onClick: () =>
-                  setFilter("share-user", currentUser?.id),
+                onClick: () => setFilter("share-user", currentUser?.id),
               },
             ]}
           />
@@ -403,7 +413,9 @@ export default function Overview() {
                       onSelectShare={(userId) =>
                         setFilter("share-user", userId)
                       }
-                      selectedUserId={hasShareSelection ? shareUserId : undefined}
+                      selectedUserId={
+                        hasShareSelection ? shareUserId : undefined
+                      }
                     />
                   </div>
                 )}
@@ -455,17 +467,13 @@ export default function Overview() {
                   >
                     <div className="mb-3">
                       <p className={`text-base ${group.amountClass} mt-0.5`}>
-                        <span className="font-semibold">{group.title}</span> - {fmt(groupSum)}
+                        <span className="font-semibold">{group.title}</span> -{" "}
+                        {fmt(groupSum)}
                       </p>
                     </div>
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-2.5">
+                    <div className="grid grid-cols-1 gap-2.5 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
                       {group.list.map(
-                        ({
-                          invoice,
-                          totalPaid,
-                          remaining,
-                          displayCents,
-                        }) => {
+                        ({ invoice, totalPaid, remaining, displayCents }) => {
                           const isPaid = remaining <= 0;
                           const isPartiallyPaid = totalPaid > 0 && !isPaid;
                           const dueAt = invoice.dueDate
@@ -512,8 +520,7 @@ export default function Overview() {
                                 isPartiallyPaid ? (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                     <Clock size={10} />{" "}
-                                    {t("invoice.amountPaid")}:{" "}
-                                    {fmt(totalPaid)}
+                                    {t("invoice.amountPaid")}: {fmt(totalPaid)}
                                   </span>
                                 ) : undefined
                               }
@@ -526,24 +533,19 @@ export default function Overview() {
                                       icon: CircleCheckBig,
                                       label: t("invoice.markPaid"),
                                       onClick: () => {
-                                        if (
-                                          !currentUser ||
-                                          remaining <= 0
-                                        )
+                                        if (!currentUser || remaining <= 0)
                                           return;
                                         addPayment.mutate({
                                           invoiceId: invoice.id,
                                           data: {
                                             paidById: currentUser.id,
                                             amountCents: remaining,
-                                            paidAt:
-                                              new Date().toISOString(),
+                                            paidAt: new Date().toISOString(),
                                           },
                                         });
                                       },
                                       disabled:
-                                        remaining <= 0 ||
-                                        addPayment.isPending,
+                                        remaining <= 0 || addPayment.isPending,
                                       colorClassName:
                                         "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
                                     },

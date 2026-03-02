@@ -276,7 +276,7 @@ export default function PeriodList() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+        <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
           {filteredPeriods.map((period) => (
             <div
               key={period.id}
