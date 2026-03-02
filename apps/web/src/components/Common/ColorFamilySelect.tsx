@@ -117,7 +117,7 @@ export default function ColorFamilySelect({
       </label>
       <button
         type="button"
-        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm inline-flex items-center justify-between gap-3"
+        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm inline-flex items-center justify-between gap-3"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
@@ -153,9 +153,11 @@ export default function ColorFamilySelect({
                 role="option"
                 aria-selected={selectedOption}
                 className={`w-full text-left px-2.5 py-2 rounded-md text-sm inline-flex items-center justify-between gap-3 ${
-                  active
-                    ? "bg-primary/10 text-text-primary"
-                    : "text-text-secondary hover:bg-surface"
+                  selectedOption
+                    ? "bg-primary/20 text-primary"
+                    : active
+                      ? "bg-primary/10 text-text-primary"
+                      : "text-text-secondary hover:bg-primary/10"
                 }`}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => {

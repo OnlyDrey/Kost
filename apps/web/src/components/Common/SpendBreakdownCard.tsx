@@ -110,7 +110,7 @@ export default function SpendBreakdownCard({
               key={`${mode}-${category}`}
               type="button"
               onClick={() => onSelectCategory?.(category)}
-              className={`w-full px-5 py-3.5 text-left transition-colors ${selected ? "bg-primary/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
+              className={`w-full px-5 py-3.5 text-left border-l-2 transition-colors ${selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
             >
               <div className="flex items-start justify-between mb-1.5 gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">
