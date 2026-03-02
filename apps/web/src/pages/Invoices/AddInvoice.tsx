@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -40,6 +40,10 @@ export default function AddInvoice() {
   const { data: existingInvoice } = useInvoice(isEditing ? id! : "");
   const { data: periodIncomes } = useUserIncomes(currentPeriod?.id ?? "");
   const { data: categories = [] } = useCategories();
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [categories],
+  );
   const { data: paymentMethods = [] } = usePaymentMethods();
   const { data: vendors = [] } = useVendors();
   const { data: currency = "NOK" } = useCurrency();
@@ -324,7 +328,7 @@ export default function AddInvoice() {
                 className={inputCls}
               >
                 <option value="">{t("invoice.categoryPlaceholder")}</option>
-                {categories.map((c) => (
+                {sortedCategories.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

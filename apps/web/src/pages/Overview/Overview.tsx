@@ -133,12 +133,47 @@ export default function Overview() {
   const filter = searchParams.get("filter") || "all";
   const shareUserId = searchParams.get("shareUser") || "";
   const hasShareSelection = filter === "share-user" && !!shareUserId;
-  const statusFilter = searchParams.get("status") || "all";
+  const statusParam = searchParams.get("status");
+  const statusFilter =
+    statusParam ||
+    (filter === "paid" ||
+    filter === "remaining" ||
+    filter === "unpaid" ||
+    filter === "partial" ||
+    filter === "overdue"
+      ? filter
+      : "all");
   const categoryFilter = searchParams.get("category") || "";
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    let changed = false;
+    if (
+      !statusParam &&
+      (filter === "paid" ||
+        filter === "remaining" ||
+        filter === "unpaid" ||
+        filter === "partial" ||
+        filter === "overdue")
+    ) {
+      params.set("status", filter);
+      params.delete("filter");
+      changed = true;
+    }
+    if (statusParam && filter !== "all" && filter !== "share-user") {
+      params.delete("filter");
+      changed = true;
+    }
+    if (changed) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [filter, searchParams, setSearchParams, statusParam]);
 
   const setFilter = (nextFilter: string, su?: string) => {
     const params = new URLSearchParams(searchParams);
-    params.set("filter", nextFilter);
+    if (nextFilter === "all") params.delete("filter");
+    else params.set("filter", nextFilter);
     if (su) params.set("shareUser", su);
     else params.delete("shareUser");
     setSearchParams(params, { replace: true });
@@ -148,6 +183,9 @@ export default function Overview() {
     const params = new URLSearchParams(searchParams);
     if (nextStatus === "all") params.delete("status");
     else params.set("status", nextStatus);
+    if (params.get("filter") !== "share-user") {
+      params.delete("filter");
+    }
     setSearchParams(params, { replace: true });
   };
 
@@ -276,8 +314,9 @@ export default function Overview() {
       title: t("invoice.statusOverdue"),
       list: grouped.overdue,
       show:
-        (filter === "all" || filter === "remaining" || filter === "share-user") &&
-        (statusFilter === "all" || statusFilter === "overdue"),
+        statusFilter === "all" ||
+        statusFilter === "remaining" ||
+        statusFilter === "overdue",
       borderClass: "border-red-200 dark:border-red-900/50",
       titleClass: "text-red-700 dark:text-red-400",
       amountClass: "text-red-500 dark:text-red-400/80",
@@ -287,8 +326,9 @@ export default function Overview() {
       title: t("invoice.statusUnpaid"),
       list: grouped.unpaid,
       show:
-        (filter === "all" || filter === "remaining" || filter === "share-user") &&
-        (statusFilter === "all" || statusFilter === "unpaid"),
+        statusFilter === "all" ||
+        statusFilter === "remaining" ||
+        statusFilter === "unpaid",
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
       amountClass: "text-primary",
@@ -298,8 +338,9 @@ export default function Overview() {
       title: t("invoice.statusPartiallyPaid"),
       list: grouped.partial,
       show:
-        (filter === "all" || filter === "remaining" || filter === "share-user") &&
-        (statusFilter === "all" || statusFilter === "partial"),
+        statusFilter === "all" ||
+        statusFilter === "remaining" ||
+        statusFilter === "partial",
       borderClass: "border-amber-200 dark:border-amber-900/50",
       titleClass: "text-amber-700 dark:text-amber-400",
       amountClass: "text-amber-500 dark:text-amber-400/80",
@@ -309,8 +350,7 @@ export default function Overview() {
       title: t("invoice.statusPaid"),
       list: grouped.paid,
       show:
-        (filter === "all" || filter === "paid" || filter === "share-user") &&
-        (statusFilter === "all" || statusFilter === "paid"),
+        statusFilter === "all" || statusFilter === "paid",
       borderClass: "border-green-200 dark:border-green-900/50",
       titleClass: "text-green-700 dark:text-green-400",
       amountClass: "text-green-500 dark:text-green-400/80",
@@ -406,7 +446,7 @@ export default function Overview() {
                 label: t("dashboard.paidLabel"),
                 value: fmt(paidUnpaid.paidCents),
                 colorClass: "bg-green-500",
-                onClick: () => setFilter("paid"),
+                onClick: () => setStatusFilter("paid"),
               },
               {
                 key: "remaining",
@@ -414,7 +454,7 @@ export default function Overview() {
                 label: t("dashboard.remainingLabel"),
                 value: fmt(paidUnpaid.owedCents),
                 colorClass: "bg-red-500",
-                onClick: () => setFilter("remaining"),
+                onClick: () => setStatusFilter("remaining"),
               },
               {
                 key: "invoices",
@@ -512,6 +552,9 @@ export default function Overview() {
                   >
                     <option value="all">{t("invoice.statusAll")}</option>
                     <option value="unpaid">{t("invoice.statusUnpaid")}</option>
+                    <option value="remaining">
+                      {t("dashboard.remainingLabel")}
+                    </option>
                     <option value="partial">
                       {t("invoice.statusPartiallyPaid")}
                     </option>

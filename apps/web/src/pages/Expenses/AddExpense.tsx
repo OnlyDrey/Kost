@@ -75,6 +75,10 @@ export default function AddExpense() {
   );
   const { data: periodIncomes } = useUserIncomes(targetPeriodId);
   const { data: categories = [] } = useCategories();
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [categories],
+  );
   const { data: paymentMethods = [] } = usePaymentMethods();
   const { data: vendors = [] } = useVendors();
   const { data: currency = "NOK" } = useCurrency();
@@ -608,9 +612,10 @@ export default function AddExpense() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-5 md:divide-x md:divide-gray-200 md:dark:divide-gray-800">
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-5">
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-gray-200 dark:bg-gray-800 lg:block" />
             {isSubscription && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1">
                 <div className="min-w-0">
                   <label className={labelCls}>{t("subscription.status")}</label>
                   <select
@@ -647,7 +652,7 @@ export default function AddExpense() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1">
               <div className="relative">
                 <label className={labelCls}>{t("invoice.vendor")} *</label>
                 <input
@@ -704,7 +709,7 @@ export default function AddExpense() {
                   className={inputCls}
                 >
                   <option value="">{t("invoice.categoryPlaceholder")}</option>
-                  {categories.map((c) => (
+                  {sortedCategories.map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
@@ -713,7 +718,7 @@ export default function AddExpense() {
               </div>
             </div>
 
-            <div className="md:col-start-1 md:pr-4">
+            <div className="lg:col-start-1 lg:pr-6">
               <label className={labelCls}>{t("invoice.description")}</label>
               <input
                 type="text"
@@ -728,7 +733,7 @@ export default function AddExpense() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 md:col-start-1 md:pr-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1 lg:pr-6">
               <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.amount")} *</label>
                 <div className="relative flex items-center">
@@ -772,7 +777,7 @@ export default function AddExpense() {
             </div>
 
             {!isSubscription && (
-              <div className="md:col-start-1 md:pr-4">
+              <div className="lg:col-start-1 lg:pr-6">
                 <label className={labelCls}>{t("invoice.dueDate")}</label>
                 <input
                   type="date"
@@ -785,7 +790,7 @@ export default function AddExpense() {
 
             {isSubscription && (
               <>
-                <div className="md:col-start-2 md:pl-4">
+                <div className="lg:col-start-2 lg:pl-6">
                   <label className={labelCls}>{t("subscription.startDate")}</label>
                   <input
                     type="date"
@@ -795,7 +800,7 @@ export default function AddExpense() {
                   />
                 </div>
 
-                <div className="space-y-4 md:col-start-2 md:pl-4">
+                <div className="space-y-4 lg:col-start-2 lg:pl-6">
                   <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
                     <div>
                       <label className={labelCls}>{t("subscription.everyLabel")}</label>
@@ -838,7 +843,7 @@ export default function AddExpense() {
               </>
             )}
 
-            <div className="md:col-start-2 md:pl-4 md:self-start">
+            <div className="lg:col-start-2 lg:pl-6 lg:self-start">
               <label className={labelCls}>
                 {t("invoice.distributionMethod")} *
               </label>
@@ -881,7 +886,7 @@ export default function AddExpense() {
             </div>
 
             {distributionMethod === "PERSONAL" && users && users.length > 0 && (
-              <div className="space-y-2 md:col-start-2 md:pl-4">
+              <div className="space-y-2 lg:col-start-2 lg:pl-6">
                 <UserSingleSelect
                   title={t("invoice.appliesTo")}
                   value={personalUserId}
@@ -908,7 +913,7 @@ export default function AddExpense() {
             {distributionMethod === "BY_INCOME" &&
               users &&
               users.length > 0 && (
-                <div className="space-y-2 md:col-start-2 md:pl-4">
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("invoice.selectUsers")}
@@ -966,7 +971,7 @@ export default function AddExpense() {
             {distributionMethod === "BY_PERCENT" &&
               users &&
               users.length > 0 && (
-                <div className="space-y-2 md:col-start-2 md:pl-4">
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("subscription.amountPerUser")}
@@ -1043,7 +1048,7 @@ export default function AddExpense() {
               users &&
               users.length > 0 &&
               (fixedMode === "AMOUNT" ? (
-                <div className="space-y-2 md:col-start-2 md:pl-4">
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("subscription.fixedAmountPerUser")}
@@ -1108,7 +1113,7 @@ export default function AddExpense() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2 md:col-start-2 md:pl-4">
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
                   <div className="flex items-center justify-between">
                     <label className={labelCls + " mb-0"}>
                       {t("invoice.selectUsersEqual")}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -77,6 +77,11 @@ export default function InvoiceList() {
     new Set(
       (invoices ?? []).map((invoice) => invoice.category).filter(Boolean),
     ),
+  );
+
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [categories],
   );
 
   const filteredInvoices = invoices?.filter((invoice) => {
@@ -329,7 +334,7 @@ export default function InvoiceList() {
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="ALL">{t("invoice.categoryFilter")}</option>
-            {categories.map((category) => (
+            {sortedCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
