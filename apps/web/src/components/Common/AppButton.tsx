@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { FOCUS_RING } from "./focusStyles";
+import { CONTROL_HEIGHT, FOCUS_RING } from "./focusStyles";
 
 type AppButtonVariant =
   | "primary"
@@ -59,7 +59,7 @@ export default function AppButton({
     <button
       type="button"
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING} ${variantClass} ${className}`.trim()}
+      className={`inline-flex ${CONTROL_HEIGHT} items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING} ${variantClass} ${className}`.trim()}
       {...props}
     >
       {loading && (

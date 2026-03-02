@@ -124,7 +124,10 @@ export class InvoicesController {
   @Post(":id/payments")
   @ApiOperation({ summary: "Add a payment to an invoice" })
   @ApiResponse({ status: 201, description: "Payment added successfully" })
-  @ApiResponse({ status: 400, description: "Payment exceeds invoice total" })
+  @ApiResponse({
+    status: 400,
+    description: "Payment exceeds invoice total or period is closed",
+  })
   @ApiResponse({ status: 404, description: "Invoice or user not found" })
   addPayment(
     @Param("id") id: string,

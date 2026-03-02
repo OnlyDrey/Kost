@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AppSelect from "../../components/Common/AppSelect";
 import {
   useInvoices,
   useCurrentPeriod,
@@ -28,6 +29,7 @@ import { useAuth } from "../../stores/auth.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { isPeriodClosed } from "../../utils/periodStatus";
 
 const METHOD_OPTIONS = [
   "ALL",
@@ -67,6 +69,7 @@ export default function InvoiceList() {
   const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
+  const periodClosed = currentPeriod ? isPeriodClosed(currentPeriod) : false;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMethod, setFilterMethod] = useState("ALL");
@@ -188,6 +191,10 @@ export default function InvoiceList() {
 
     const handleMarkPaidInFull = async () => {
       if (!user || remaining <= 0) return;
+      if (periodClosed) {
+        await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+        return;
+      }
       try {
         await addPayment.mutateAsync({
           invoiceId: invoice.id,
@@ -247,7 +254,8 @@ export default function InvoiceList() {
                 icon: CheckCircle2,
                 label: t("invoice.markPaid"),
                 onClick: handleMarkPaidInFull,
-                disabled: remaining <= 0 || addPayment.isPending,
+                disabled: periodClosed || remaining <= 0 || addPayment.isPending,
+                hidden: periodClosed,
                 colorClassName:
                   "bg-success/20 text-success hover:bg-success/30",
               },
@@ -311,7 +319,7 @@ export default function InvoiceList() {
               className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
-          <select
+          <AppSelect
             value={filterMethod}
             onChange={(e) => setFilterMethod(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -327,8 +335,8 @@ export default function InvoiceList() {
                       : distributionLabel(m, settings.locale)}
               </option>
             ))}
-          </select>
-          <select
+          </AppSelect>
+          <AppSelect
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -339,8 +347,8 @@ export default function InvoiceList() {
                 {category}
               </option>
             ))}
-          </select>
-          <select
+          </AppSelect>
+          <AppSelect
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
@@ -350,7 +358,7 @@ export default function InvoiceList() {
                 {STATUS_LABELS[s]}
               </option>
             ))}
-          </select>
+          </AppSelect>
         </div>
       </div>
 

@@ -7,8 +7,7 @@ import {
   Power,
   RefreshCw,
   AlertCircle,
-  CheckCircle2,
-  ChevronDown,
+  CheckCircle2
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,6 +27,7 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
 import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
+import AppSelect from "../../components/Common/AppSelect";
 
 export default function SubscriptionList() {
   const { t } = useTranslation();
@@ -44,12 +44,25 @@ export default function SubscriptionList() {
   const [generateResult, setGenerateResult] = React.useState("");
   const [generateError, setGenerateError] = React.useState("");
   const [generatePeriodId, setGeneratePeriodId] = React.useState("");
-
+  const openPeriods = React.useMemo(
+    () => periods.filter((period) => period.status === "OPEN"),
+    [periods],
+  );
 
   React.useEffect(() => {
-    if (generatePeriodId || periods.length === 0) return;
-    setGeneratePeriodId(currentPeriod?.id ?? periods[0].id);
-  }, [currentPeriod?.id, generatePeriodId, periods]);
+    if (generatePeriodId || openPeriods.length === 0) return;
+    const fallbackPeriod =
+      openPeriods.find((period) => period.id === currentPeriod?.id)?.id ??
+      openPeriods[0].id;
+    setGeneratePeriodId(fallbackPeriod);
+  }, [currentPeriod?.id, generatePeriodId, openPeriods]);
+
+  React.useEffect(() => {
+    if (!generatePeriodId) return;
+    if (openPeriods.some((period) => period.id === generatePeriodId)) return;
+    setGenerateError(t("subscription.closedPeriodError"));
+    setGeneratePeriodId(openPeriods[0]?.id ?? "");
+  }, [generatePeriodId, openPeriods, t]);
 
   const handleGenerate = async () => {
     if (!generatePeriodId) return;
@@ -84,25 +97,19 @@ export default function SubscriptionList() {
             {t("subscription.title")}
           </h1>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {periods.length > 0 && (
+            {openPeriods.length > 0 && (
               <div className="hidden sm:flex items-center gap-2">
-                <div className="relative">
-                  <select
-                    value={generatePeriodId}
-                    onChange={(e) => setGeneratePeriodId(e.target.value)}
-                    className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
-                  >
-                    {periods.map((period) => (
-                      <option key={period.id} value={period.id}>
-                        {period.id}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={14}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
-                  />
-                </div>
+                <AppSelect
+                  value={generatePeriodId}
+                  onChange={(e) => setGeneratePeriodId(e.target.value)}
+                  className={`h-10 ${SELECT_TRIGGER}`}
+                >
+                  {openPeriods.map((period) => (
+                    <option key={period.id} value={period.id}>
+                      {period.id}
+                    </option>
+                  ))}
+                </AppSelect>
                 <button
                   onClick={handleGenerate}
                   disabled={generateInvoices.isPending || !generatePeriodId}
@@ -126,25 +133,20 @@ export default function SubscriptionList() {
             </button>
           </div>
         </div>
-        {periods.length > 0 && (
+        {openPeriods.length > 0 && (
           <div className="sm:hidden grid grid-cols-3 gap-2">
-            <div className="relative col-span-1">
-              <select
-                value={generatePeriodId}
-                onChange={(e) => setGeneratePeriodId(e.target.value)}
-                className={`h-10 w-full px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
-              >
-                {periods.map((period) => (
-                  <option key={period.id} value={period.id}>
-                    {period.id}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={14}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
-              />
-            </div>
+            <AppSelect
+              value={generatePeriodId}
+              onChange={(e) => setGeneratePeriodId(e.target.value)}
+              className={`h-10 w-full ${SELECT_TRIGGER}`}
+              wrapperClassName="col-span-1"
+            >
+              {openPeriods.map((period) => (
+                <option key={period.id} value={period.id}>
+                  {period.id}
+                </option>
+              ))}
+            </AppSelect>
             <button
               onClick={handleGenerate}
               disabled={generateInvoices.isPending || !generatePeriodId}

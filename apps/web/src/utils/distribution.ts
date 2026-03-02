@@ -11,7 +11,7 @@ const labels: Record<DistributionMethod, { en: string; nb: string }> = {
   BY_INCOME: { en: "Income-Based", nb: "Inntektsbasert fordeling" },
   BY_PERCENT: { en: "Custom", nb: "Egendefinert" },
   FIXED: { en: "Equal Split", nb: "Lik fordeling" },
-  PERSONAL: { en: "Personal Expense", nb: "Personlig utgift" },
+  PERSONAL: { en: "Personal", nb: "Personlig" },
 };
 
 const fixedAmountLabels = { en: "Amount", nb: "Beløp" };

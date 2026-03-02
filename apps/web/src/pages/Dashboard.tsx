@@ -20,6 +20,7 @@ import { useAuth } from "../stores/auth.context";
 import TileGrid from "../components/Common/TileGrid";
 import SpendBreakdownCard from "../components/Common/SpendBreakdownCard";
 import UserSharesGrid from "../components/Invoice/UserSharesGrid";
+import PeriodStatusPill from "../components/Common/PeriodStatusPill";
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -84,17 +85,10 @@ export default function Dashboard() {
             {currentPeriod?.id || t("common.noData")}
           </span>
           {currentPeriod && (
-            <span
-              className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                currentPeriod.status === "OPEN"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-              }`}
-            >
-              {currentPeriod.status === "OPEN"
-                ? t("period.open")
-                : t("period.closed")}
-            </span>
+            <PeriodStatusPill
+              isClosed={currentPeriod.status !== "OPEN"}
+              className="ml-2 rounded-full px-2 py-0.5 text-xs"
+            />
           )}
         </p>
       </div>

@@ -8,7 +8,6 @@ import {
   Users,
   CircleCheckBig,
   CircleAlert,
-  Clock,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -33,6 +32,9 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 
 export default function PeriodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +53,7 @@ export default function PeriodDetail() {
   const isLoading = periodLoading || statsLoading || invoicesLoading;
   const { data: currency = "NOK" } = useCurrency();
   const fmt = useCurrencyFormatter();
+  const { notify } = useConfirmDialog();
 
   const paidUnpaid = useMemo(() => {
     const list = invoices ?? [];
@@ -89,6 +92,10 @@ export default function PeriodDetail() {
 
   const filter = searchParams.get("filter") || "all";
   const shareUserId = searchParams.get("shareUser") || currentUser?.id || "";
+  const hasShareSelection = filter === "share-user" && Boolean(shareUserId);
+  const selectedShareUser = hasShareSelection
+    ? stats?.userShares?.find((share) => share.userId === shareUserId)
+    : undefined;
   const setFilter = (nextFilter: string, shareUserId?: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("filter", nextFilter);
@@ -149,7 +156,7 @@ export default function PeriodDetail() {
   const filterByShare = (list: any[]) =>
     filter === "share-user"
       ? list.filter(({ invoice }) =>
-          (invoice.shares ?? []).some((s: any) => s.userId === shareUserId),
+          (invoice.shares ?? []).some((s: { userId: string }) => s.userId === shareUserId),
         )
       : list;
 
@@ -213,15 +220,10 @@ export default function PeriodDetail() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {period.id}
             </h1>
-            <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                !closed
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-              }`}
-            >
-              {!closed ? t("period.open") : t("period.closed")}
-            </span>
+            <PeriodStatusPill
+              isClosed={closed}
+              className="rounded-full px-2 py-0.5 text-xs"
+            />
           </div>
           {period.closedAt && (
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -292,6 +294,8 @@ export default function PeriodDetail() {
               <SpendBreakdownCard
                 invoices={invoices}
                 currentUserId={currentUser?.id}
+                selectedShareUserId={hasShareSelection ? shareUserId : undefined}
+                selectedShareUserName={selectedShareUser?.userName}
                 currency={currency}
                 title={t("period.categoryBreakdown")}
               />
@@ -379,9 +383,13 @@ export default function PeriodDetail() {
                       const primaryAmount = userShareEntry
                         ? fmt(userShareEntry.shareCents)
                         : fmt(displayCents);
-                      const secondaryLabel = userShareEntry
-                        ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
-                        : undefined;
+                      const secondaryLabel = isPartiallyPaid
+                        ? t("invoice.totalWithAmount", {
+                            amount: fmt(invoice.totalCents),
+                          })
+                        : userShareEntry
+                          ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
+                          : undefined;
                       return (
                         <ExpenseItemCard
                           key={invoice.id}
@@ -402,14 +410,7 @@ export default function PeriodDetail() {
                           paidLabel={t("invoice.statusPaid")}
                           overdueLabel={t("invoice.statusOverdue")}
                           onClick={() => navigate(`/invoices/${invoice.id}`)}
-                          rightContent={
-                            isPartiallyPaid ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                <Clock size={10} /> {t("invoice.amountPaid")}:{" "}
-                                {fmt(totalPaid)}
-                              </span>
-                            ) : undefined
-                          }
+                          amountTone={isPartiallyPaid ? "partial" : "default"}
                           actionButton={
                             <ActionIconBar
                               tight
@@ -418,20 +419,32 @@ export default function PeriodDetail() {
                                 {
                                   key: "pay",
                                   icon: CircleCheckBig,
-                                  label: t("invoice.markPaid"),
-                                  onClick: () => {
+                                  label: t("invoice.registerPayment"),
+                                  onClick: async () => {
                                     if (!currentUser || remaining <= 0) return;
-                                    addPayment.mutate({
-                                      invoiceId: invoice.id,
-                                      data: {
-                                        paidById: currentUser.id,
-                                        amountCents: remaining,
-                                        paidAt: new Date().toISOString(),
-                                      },
-                                    });
+                                    if (closed) {
+                                      await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+                                      return;
+                                    }
+                                    try {
+                                      await addPayment.mutateAsync({
+                                        invoiceId: invoice.id,
+                                        data: {
+                                          paidById: currentUser.id,
+                                          amountCents: remaining,
+                                          paidAt: new Date().toISOString(),
+                                        },
+                                      });
+                                    } catch (error: unknown) {
+                                      await notify(
+                                        getApiErrorMessage(t, error),
+                                        t("common.error"),
+                                      );
+                                    }
                                   },
                                   disabled:
-                                    remaining <= 0 || addPayment.isPending,
+                                    closed || remaining <= 0 || addPayment.isPending,
+                                  hidden: closed,
                                   colorClassName:
                                     "bg-success/20 hover:bg-success/30 text-success",
                                 },
