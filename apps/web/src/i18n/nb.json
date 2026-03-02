@@ -227,7 +227,9 @@
     "brandingInvalidLogoUrl": "Bruk en gyldig logo-URL.",
     "brandingLogoLoadFailed": "Kunne ikke laste ekstern logo-URL. Viser standardlogo.",
     "section": "Seksjon",
-    "brandingIconGenerationFailed": "Kunne ikke generere forhåndsvisning av app-ikon. Viser reserveikon."
+    "brandingIconGenerationFailed": "Kunne ikke generere forhåndsvisning av app-ikon. Viser reserveikon.",
+    "brandingPwaCacheNote": "For oppdatert installert app-ikon kan det være nødvendig å fjerne og installere appen på nytt.",
+    "brandingResetDefault": "Tilbakestill til standard"
   },
   "users": {
     "title": "Brukere",

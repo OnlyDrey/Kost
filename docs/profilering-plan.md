@@ -99,3 +99,6 @@ Introduce a controlled Profilering system that centralizes theme colors through 
   - Favicon/apple-touch-icon are regenerated at runtime using canvas with:
     - foreground: current logo source
     - background: `branding.appIconBackground` hex (or default)
+
+- Canonical logo source is resolved in `apps/web/src/branding/brandingAssets.ts` (`default` -> `upload` -> `url`) so header logo, settings preview and runtime icons share one source of truth.
+- Runtime icons are generated as PNG data URLs in `apps/web/src/utils/branding.ts` for 32/180/192/512 and applied to `rel=icon`, `rel=shortcut icon`, and `rel=apple-touch-icon`.

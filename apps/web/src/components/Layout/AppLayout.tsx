@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
 import TagPill from "../Common/TagPill";
-import { DEFAULT_PROJECT_LOGO_SRC, getCurrentLogo } from "../../utils/branding";
+import { getCurrentLogoSource, getDefaultLogoUrl } from "../../branding/brandingAssets";
 
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
@@ -135,7 +135,7 @@ function Sidebar({
             alt={appTitle}
             className="w-7 h-7 object-contain flex-shrink-0"
             onError={(event) => {
-              event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
+              event.currentTarget.src = getDefaultLogoUrl();
             }}
           />
           <span className="text-xl font-bold text-primary">{appTitle}</span>
@@ -223,7 +223,7 @@ export default function AppLayout() {
   const { settings } = useSettings();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appTitle = settings.branding.appTitle?.trim() || "Kost";
-  const appLogoSrc = getCurrentLogo(settings.branding);
+  const appLogoSrc = getCurrentLogoSource(settings.branding).src;
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -275,7 +275,7 @@ export default function AppLayout() {
               alt={appTitle}
               className="w-6 h-6 object-contain flex-shrink-0"
               onError={(event) => {
-                event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
+                event.currentTarget.src = getDefaultLogoUrl();
               }}
             />
             <span className="text-lg font-bold text-primary">{appTitle}</span>

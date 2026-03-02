@@ -6,7 +6,7 @@ import { LogIn, AlertCircle } from "lucide-react";
 import authService from "../services/auth";
 import { useAuth } from "../stores/auth.context";
 import { useSettings } from "../stores/settings.context";
-import { DEFAULT_PROJECT_LOGO_SRC, getCurrentLogo } from "../utils/branding";
+import { getCurrentLogoSource, getDefaultLogoUrl } from "../branding/brandingAssets";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -62,11 +62,11 @@ export default function Login() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-1">
             <img
-              src={getCurrentLogo(settings.branding)}
+              src={getCurrentLogoSource(settings.branding).src}
               alt={settings.branding.appTitle || "Kost"}
               className="w-10 h-10 object-contain"
               onError={(event) => {
-                event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
+                event.currentTarget.src = getDefaultLogoUrl();
               }}
             />
             <h1 className="text-4xl font-bold text-indigo-500 dark:text-indigo-400">

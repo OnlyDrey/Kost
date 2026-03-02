@@ -227,7 +227,9 @@
     "brandingInvalidLogoUrl": "Use a valid logo URL.",
     "brandingLogoLoadFailed": "Could not load the external logo URL. Showing default logo.",
     "section": "Section",
-    "brandingIconGenerationFailed": "Could not generate app icon preview. Using fallback icon."
+    "brandingIconGenerationFailed": "Could not generate app icon preview. Using fallback icon.",
+    "brandingPwaCacheNote": "For updated installed app icons, you may need to remove and reinstall the app.",
+    "brandingResetDefault": "Reset to default"
   },
   "users": {
     "title": "Users",

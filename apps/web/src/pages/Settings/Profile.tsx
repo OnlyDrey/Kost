@@ -46,12 +46,8 @@ import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
 import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
-import {
-  DEFAULT_PROJECT_LOGO_SRC,
-  isValidHexColor,
-  renderIconDataUrl,
-  resolveAppIconBackground,
-} from "../../utils/branding";
+import { isValidHexColor, renderIconDataUrl, resolveAppIconBackground } from "../../utils/branding";
+import { getCurrentLogoSource, getDefaultLogoUrl } from "../../branding/brandingAssets";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
@@ -92,6 +88,7 @@ function SettingsSectionCard({
 }
 
 type SettingsPage = "profile" | "password" | "users" | "customization";
+type GlobalSettingsSection = "customization" | FamilySetting;
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -129,6 +126,16 @@ export default function Profile() {
       : "profile",
   );
   const currencySymbol = getCurrencySymbol(currency);
+  const initialGlobalSection =
+    (searchParams.get("globalSection") as GlobalSettingsSection | null) ??
+    "customization";
+  const [globalSection, setGlobalSection] = useState<GlobalSettingsSection>(
+    ["customization", "currency", "categories", "payment-methods", "vendors"].includes(
+      initialGlobalSection,
+    )
+      ? initialGlobalSection
+      : "customization",
+  );
   const [familyPageSize, setFamilyPageSize] = useState(5);
 
   const [brandingTitle, setBrandingTitle] = useState(
@@ -149,7 +156,7 @@ export default function Profile() {
     settings.branding.appIconBackground,
   );
   const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] = useState(
-    DEFAULT_PROJECT_LOGO_SRC,
+    getDefaultLogoUrl(),
   );
   const [brandingError, setBrandingError] = useState("");
   const [brandingSaved, setBrandingSaved] = useState(false);
@@ -209,23 +216,25 @@ export default function Profile() {
 
   useEffect(() => {
     const renderPreview = async () => {
-      const logoSrc =
-        brandingLogoDataUrl || brandingLogoUrl || DEFAULT_PROJECT_LOGO_SRC;
+      const logoSrc = getCurrentLogoSource({
+        logoDataUrl: brandingLogoDataUrl,
+        logoUrl: brandingLogoUrl,
+      }).src;
       const background = resolveAppIconBackground(brandingAppIconBackground);
       try {
-        const iconUrl = await renderIconDataUrl(logoSrc, background, 64);
+        const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
         setBrandingIconPreviewUrl(iconUrl);
         setBrandingIconWarning("");
       } catch {
         try {
           const fallbackIcon = await renderIconDataUrl(
-            DEFAULT_PROJECT_LOGO_SRC,
+            getDefaultLogoUrl(),
             background,
             64,
           );
           setBrandingIconPreviewUrl(fallbackIcon);
         } catch {
-          setBrandingIconPreviewUrl(DEFAULT_PROJECT_LOGO_SRC);
+          setBrandingIconPreviewUrl(getDefaultLogoUrl());
         }
         setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
       }
@@ -243,12 +252,31 @@ export default function Profile() {
     ) {
       setActivePage(normalizedTab as SettingsPage);
     }
+
+    const requestedGlobalSection =
+      searchParams.get("globalSection") as GlobalSettingsSection | null;
+    if (
+      requestedGlobalSection &&
+      ["customization", "currency", "categories", "payment-methods", "vendors"].includes(
+        requestedGlobalSection,
+      )
+    ) {
+      setGlobalSection(requestedGlobalSection);
+    }
   }, [searchParams]);
 
   const selectPage = (page: SettingsPage) => {
     setActivePage(page);
     const params = new URLSearchParams(searchParams);
     params.set("tab", page);
+    setSearchParams(params, { replace: true });
+  };
+
+  const selectGlobalSection = (section: GlobalSettingsSection) => {
+    setGlobalSection(section);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", "customization");
+    params.set("globalSection", section);
     setSearchParams(params, { replace: true });
   };
 
@@ -696,22 +724,49 @@ export default function Profile() {
         {t("settings.title")}
       </h1>
 
-      <div className="max-w-sm">
-        <label className={labelCls}>{t("settings.section")}</label>
-        <select
-          value={activePage}
-          onChange={(e) => selectPage(e.target.value as SettingsPage)}
-          className={inputCls}
-        >
+      <div className="overflow-x-auto pb-1">
+        <div className="inline-flex min-w-full gap-2">
           {pageNavItems
             .filter((item) => !item.hidden)
-            .map((item) => (
-              <option key={item.key} value={item.key}>
-                {item.label}
-              </option>
-            ))}
-        </select>
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = activePage === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => selectPage(item.key)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                    isActive
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </button>
+              );
+            })}
+        </div>
       </div>
+
+      {activePage === "customization" && isAdmin && (
+        <div className="max-w-sm">
+          <label className={labelCls}>{t("settings.section")}</label>
+          <select
+            value={globalSection}
+            onChange={(e) =>
+              selectGlobalSection(e.target.value as GlobalSettingsSection)
+            }
+            className={inputCls}
+          >
+            <option value="customization">{t("settings.customization")}</option>
+            <option value="categories">{t("familySettings.categories")}</option>
+            <option value="payment-methods">{t("familySettings.paymentMethods")}</option>
+            <option value="vendors">{t("familySettings.vendors")}</option>
+          </select>
+        </div>
+      )}
 
       <div
         className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
@@ -1145,15 +1200,22 @@ export default function Profile() {
           )}
 
           {/* Family settings sections (admin only) */}
-          {activePage === "customization" && isAdmin && (
+          {activePage === "customization" && isAdmin && globalSection !== "customization" && (
             <FamilySettingsContent
-              activeSection={"currency" as FamilySetting}
+              activeSection={globalSection as FamilySetting}
               pageSize={familyPageSize}
               onPageSizeChange={setFamilyPageSize}
             />
           )}
 
-          {activePage === "customization" && isAdmin && (
+          {activePage === "customization" && isAdmin && globalSection === "customization" && (
+            <>
+              <FamilySettingsContent
+                activeSection={"currency" as FamilySetting}
+                pageSize={familyPageSize}
+                onPageSizeChange={setFamilyPageSize}
+              />
+
             <SettingsSectionCard
               icon={<Palette size={18} className="text-primary" />}
               title={t("settings.brandingTitle")}
@@ -1178,9 +1240,10 @@ export default function Profile() {
                   <div className="flex items-center gap-3">
                     <img
                       src={
-                        brandingLogoDataUrl ||
-                        brandingLogoUrl ||
-                        DEFAULT_PROJECT_LOGO_SRC
+                        getCurrentLogoSource({
+                        logoDataUrl: brandingLogoDataUrl,
+                        logoUrl: brandingLogoUrl,
+                      }).src
                       }
                       alt={t("settings.brandingLogoPreviewAlt")}
                       className="w-12 h-12 object-contain"
@@ -1190,7 +1253,7 @@ export default function Profile() {
                             t("settings.brandingLogoLoadFailed"),
                           );
                         }
-                        event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
+                        event.currentTarget.src = getDefaultLogoUrl();
                       }}
                       onLoad={() => setBrandingLogoLoadWarning("")}
                     />
@@ -1213,6 +1276,13 @@ export default function Profile() {
                           {t("settings.brandingDeleteLogo")}
                         </button>
                       )}
+                      <button
+                        type="button"
+                        onClick={handleDeleteBrandingLogo}
+                        className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        {t("settings.brandingResetDefault")}
+                      </button>
                     </div>
                   </div>
                   <input
@@ -1294,6 +1364,9 @@ export default function Profile() {
                 {brandingIconWarning && (
                   <p className="text-xs text-warning">{brandingIconWarning}</p>
                 )}
+                <p className="text-xs text-text-secondary">
+                  {t("settings.brandingPwaCacheNote")}
+                </p>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-text-secondary">
                     {t("settings.brandingHelp")}
@@ -1315,6 +1388,7 @@ export default function Profile() {
                 )}
               </form>
             </SettingsSectionCard>
+            </>
           )}
         </div>
       </div>

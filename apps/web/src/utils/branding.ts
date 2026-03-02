@@ -1,14 +1,21 @@
-export const DEFAULT_PROJECT_LOGO_SRC = "/logo-mark.svg";
-export const DEFAULT_APP_ICON_BACKGROUND = "#0B1020";
+import {
+  DEFAULT_CANONICAL_ICON_BACKGROUND,
+  getCurrentIconBackground,
+  getCurrentLogoSource,
+  getDefaultLogoUrl,
+  type BrandingVisualConfig,
+} from "../branding/brandingAssets";
 
-export interface BrandingVisualConfig {
-  appTitle?: string;
-  logoDataUrl?: string;
-  logoUrl?: string;
-  appIconBackground?: string;
-}
+export const DEFAULT_PROJECT_LOGO_SRC = getDefaultLogoUrl();
+export const DEFAULT_APP_ICON_BACKGROUND = DEFAULT_CANONICAL_ICON_BACKGROUND;
 
 const HEX_COLOR_REGEX = /^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+const ICON_SIZES = {
+  favicon: 32,
+  appleTouch: 180,
+  pwa192: 192,
+  pwa512: 512,
+} as const;
 
 export function isValidHexColor(value: string) {
   return HEX_COLOR_REGEX.test(value.trim());
@@ -16,15 +23,11 @@ export function isValidHexColor(value: string) {
 
 export function resolveAppIconBackground(color?: string) {
   if (!color) return DEFAULT_APP_ICON_BACKGROUND;
-  return isValidHexColor(color) ? color.trim() : DEFAULT_APP_ICON_BACKGROUND;
+  return isValidHexColor(color) ? color.trim().toUpperCase() : DEFAULT_APP_ICON_BACKGROUND;
 }
 
 export function getCurrentLogo(branding?: BrandingVisualConfig) {
-  return (
-    branding?.logoDataUrl?.trim() ||
-    branding?.logoUrl?.trim() ||
-    DEFAULT_PROJECT_LOGO_SRC
-  );
+  return getCurrentLogoSource(branding).src;
 }
 
 export function getFaviconSource(branding?: BrandingVisualConfig) {
@@ -34,6 +37,13 @@ export function getFaviconSource(branding?: BrandingVisualConfig) {
 export function getAppIconSource(branding?: BrandingVisualConfig) {
   return getCurrentLogo(branding);
 }
+
+type IconBundle = {
+  favicon32: string;
+  apple180: string;
+  pwa192: string;
+  pwa512: string;
+};
 
 function upsertLinkTag(rel: string, href: string, sizes?: string) {
   const head = document.head;
@@ -48,19 +58,45 @@ function upsertLinkTag(rel: string, href: string, sizes?: string) {
     head.appendChild(link);
   }
   link.href = href;
+  return link;
 }
 
-function upsertIconLinks(href: string) {
-  upsertLinkTag("icon", href);
-  upsertLinkTag("shortcut icon", href);
-  upsertLinkTag("apple-touch-icon", href, "180x180");
+function updateIconLinks(bundle: IconBundle) {
+  const updated: string[] = [];
+
+  const iconLinks = Array.from(
+    document.head.querySelectorAll<HTMLLinkElement>('link[rel="icon"]'),
+  );
+  if (iconLinks.length === 0) {
+    upsertLinkTag("icon", bundle.favicon32);
+    updated.push('link[rel="icon"] (created)');
+  } else {
+    iconLinks.forEach((link) => {
+      link.href = bundle.favicon32;
+      updated.push('link[rel="icon"]');
+    });
+  }
+
+  upsertLinkTag("shortcut icon", bundle.favicon32);
+  updated.push('link[rel="shortcut icon"]');
+
+  upsertLinkTag("apple-touch-icon", bundle.apple180, "180x180");
+  updated.push('link[rel="apple-touch-icon"]');
 
   const maskIcon = document.head.querySelector<HTMLLinkElement>(
     'link[rel="mask-icon"]',
   );
   if (maskIcon) {
-    maskIcon.href = href;
+    maskIcon.href = bundle.apple180;
+    updated.push('link[rel="mask-icon"]');
   }
+
+  upsertLinkTag("icon", bundle.pwa192, "192x192");
+  upsertLinkTag("icon", bundle.pwa512, "512x512");
+  updated.push('link[rel="icon"][sizes="192x192"]');
+  updated.push('link[rel="icon"][sizes="512x512"]');
+
+  return updated;
 }
 
 function isSvgSource(src: string) {
@@ -129,12 +165,24 @@ export async function renderIconDataUrl(
   return canvas.toDataURL("image/png");
 }
 
+export async function generateBrandingIconBundle(
+  branding?: BrandingVisualConfig,
+): Promise<IconBundle> {
+  const logoSource = getCurrentLogoSource(branding).src;
+  const background = getCurrentIconBackground(branding);
+
+  return {
+    favicon32: await renderIconDataUrl(logoSource, background, ICON_SIZES.favicon),
+    apple180: await renderIconDataUrl(logoSource, background, ICON_SIZES.appleTouch),
+    pwa192: await renderIconDataUrl(logoSource, background, ICON_SIZES.pwa192),
+    pwa512: await renderIconDataUrl(logoSource, background, ICON_SIZES.pwa512),
+  };
+}
+
 export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
   if (typeof document === "undefined") return;
 
   const appTitle = branding?.appTitle?.trim() || "Kost";
-  const logoSrc = getCurrentLogo(branding);
-  const iconBackground = resolveAppIconBackground(branding?.appIconBackground);
 
   document.title = appTitle;
   const webAppTitle = document.querySelector<HTMLMetaElement>(
@@ -144,13 +192,27 @@ export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
     webAppTitle.content = appTitle;
   }
 
+  const source = getCurrentLogoSource(branding);
+
   try {
-    const iconDataUrl = await renderIconDataUrl(logoSrc, iconBackground, 180);
-    if (!iconDataUrl.startsWith("data:image/")) {
-      throw new Error("Invalid icon data");
+    const bundle = await generateBrandingIconBundle(branding);
+    const updatedLinks = updateIconLinks(bundle);
+
+    if (import.meta.env.DEV) {
+      console.info("[BrandingIcons] Applied", {
+        logoSourceType: source.type,
+        sizes: Object.values(ICON_SIZES),
+        links: updatedLinks,
+      });
     }
-    upsertIconLinks(iconDataUrl);
   } catch {
-    upsertIconLinks(getFaviconSource(branding));
+    const fallbackLogo = getDefaultLogoUrl();
+    upsertLinkTag("icon", fallbackLogo);
+    upsertLinkTag("shortcut icon", fallbackLogo);
+    upsertLinkTag("apple-touch-icon", fallbackLogo, "180x180");
+
+    if (import.meta.env.DEV) {
+      console.warn("[BrandingIcons] Failed to generate icons, using default logo");
+    }
   }
 }
