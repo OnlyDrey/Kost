@@ -764,7 +764,7 @@ export default function Profile() {
                   key={item.key}
                   type="button"
                   onClick={() => selectPage(item.key)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
                     isActive
                       ? "border-primary bg-primary text-white"
                       : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
@@ -829,7 +829,7 @@ export default function Profile() {
         )}
 
         <div
-          className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""} ${isMasonryPage ? "md:columns-3 md:gap-4 md:block" : ""} ${isCustomizationAdmin ? "md:col-span-4 md:grid md:grid-cols-4" : ""}`}
+          className={`min-w-0 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:col-span-2 lg:grid-cols-2" : ""} ${isMasonryPage ? "md:columns-3 md:gap-4 md:block" : ""} ${isCustomizationAdmin ? "md:col-span-4 lg:col-span-4 md:grid md:grid-cols-4" : ""}`}
         >
           {/* ---- Profile section: avatar-left + income alongside on desktop ---- */}
           {activePage === "profile" && (
@@ -1265,7 +1265,7 @@ export default function Profile() {
           {activePage === "customization" &&
             isAdmin &&
             globalSection !== "customization" && (
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 w-full">
                 <FamilySettingsContent
                   activeSection={globalSection as FamilySetting}
                   pageSize={familyPageSize}
@@ -1278,7 +1278,7 @@ export default function Profile() {
             isAdmin &&
             globalSection === "customization" && (
               <>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 w-full">
                   <FamilySettingsContent
                     activeSection={"currency" as FamilySetting}
                     pageSize={familyPageSize}
@@ -1286,7 +1286,7 @@ export default function Profile() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 w-full">
                   <SettingsSectionCard
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.brandingTitle")}

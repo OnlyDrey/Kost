@@ -18,7 +18,11 @@ import {
   useCurrency,
   useCurrencySymbolPosition,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
+import {
+  amountToCents,
+  centsToAmount,
+  getCurrencySymbol,
+} from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
 
 const inputCls =
@@ -113,7 +117,9 @@ export default function AddExpense() {
       if (rules?.userIds && Array.isArray(rules.userIds)) {
         setIncomeUserIds(new Set(rules.userIds));
       } else if (existingInvoice.shares && existingInvoice.shares.length > 0) {
-        setIncomeUserIds(new Set(existingInvoice.shares.map((s: any) => s.userId)));
+        setIncomeUserIds(
+          new Set(existingInvoice.shares.map((s: any) => s.userId)),
+        );
       } else {
         setIncomeUserIds(new Set());
       }
@@ -126,7 +132,10 @@ export default function AddExpense() {
           });
         } else if (existingInvoice.shares && existingInvoice.totalCents > 0) {
           existingInvoice.shares.forEach((share: any) => {
-            const percentage = ((share.shareCents / existingInvoice.totalCents) * 100).toFixed(1);
+            const percentage = (
+              (share.shareCents / existingInvoice.totalCents) *
+              100
+            ).toFixed(1);
             percents[share.userId] = percentage;
           });
         }
@@ -260,11 +269,18 @@ export default function AddExpense() {
         setUserFixedAmounts({});
       }
     }
-  }, [isEditing, isSubscription, existingSubscription?.id, existingSubscription?.updatedAt]);
+  }, [
+    isEditing,
+    isSubscription,
+    existingSubscription?.id,
+    existingSubscription?.updatedAt,
+  ]);
 
   const customAmountTotalCents = Object.entries(userPercents).reduce(
     (sum, [userId, value]) =>
-      incomeUserIds.has(userId) ? sum + amountToCents(parseFloat(value) || 0) : sum,
+      incomeUserIds.has(userId)
+        ? sum + amountToCents(parseFloat(value) || 0)
+        : sum,
     0,
   );
   const fixedTotalCents = Object.values(userFixedAmounts).reduce(
@@ -351,16 +367,23 @@ export default function AddExpense() {
       const amountRules = Object.entries(userPercents)
         .filter(
           ([userId, v]) =>
-            selectedUserIds.includes(userId) && amountToCents(parseFloat(v)) > 0,
+            selectedUserIds.includes(userId) &&
+            amountToCents(parseFloat(v)) > 0,
         )
-        .map(([userId, v]) => ({ userId, amountCents: amountToCents(parseFloat(v)) }));
+        .map(([userId, v]) => ({
+          userId,
+          amountCents: amountToCents(parseFloat(v)),
+        }));
 
       if (amountRules.length === 0) {
         setError(t("subscription.fixedAmountPerUser"));
         return;
       }
 
-      const totalCustom = amountRules.reduce((sum, rule) => sum + rule.amountCents, 0);
+      const totalCustom = amountRules.reduce(
+        (sum, rule) => sum + rule.amountCents,
+        0,
+      );
       if (totalCustom <= 0) {
         setError(t("validation.invalidAmount"));
         return;
@@ -368,7 +391,9 @@ export default function AddExpense() {
 
       const percentRules = amountRules.map((rule) => ({
         userId: rule.userId,
-        percentBasisPoints: Math.round((rule.amountCents / totalCustom) * 10000),
+        percentBasisPoints: Math.round(
+          (rule.amountCents / totalCustom) * 10000,
+        ),
       }));
       distributionRules = { percentRules, userIds: selectedUserIds };
     }
@@ -450,7 +475,8 @@ export default function AddExpense() {
         if (description.trim()) invoiceData.description = description.trim();
         if (dueDate) invoiceData.dueDate = dueDate;
         if (paymentMethod) invoiceData.paymentMethod = paymentMethod;
-        if (distributionRules) invoiceData.distributionRules = distributionRules;
+        if (distributionRules)
+          invoiceData.distributionRules = distributionRules;
 
         if (isEditing) {
           await updateInvoice.mutateAsync({ id: id!, data: invoiceData });
@@ -506,7 +532,7 @@ export default function AddExpense() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm md:max-w-5xl lg:max-w-6xl md:mx-auto">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
@@ -516,7 +542,9 @@ export default function AddExpense() {
           )}
 
           <div className="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+              {t(titleKey)}
+            </h2>
             <div className="ml-auto inline-flex items-center gap-2">
               <button
                 type="button"
@@ -527,7 +555,9 @@ export default function AddExpense() {
               </button>
               <button
                 type="submit"
-                disabled={isPending || (!isEditing && !isSubscription && !currentPeriod)}
+                disabled={
+                  isPending || (!isEditing && !isSubscription && !currentPeriod)
+                }
                 className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
               >
                 {isPending && (
@@ -539,7 +569,7 @@ export default function AddExpense() {
           </div>
 
           {isSubscription && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
               <div className="min-w-0">
                 <label className={labelCls}>{t("subscription.status")}</label>
                 <select
@@ -576,7 +606,7 @@ export default function AddExpense() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
             <div className="relative">
               <label className={labelCls}>{t("invoice.vendor")} *</label>
               <input
@@ -642,7 +672,7 @@ export default function AddExpense() {
             </div>
           </div>
 
-          <div>
+          <div className="md:col-span-3 lg:col-span-4">
             <label className={labelCls}>{t("invoice.description")}</label>
             <input
               type="text"
@@ -657,7 +687,7 @@ export default function AddExpense() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
             <div className="min-w-0">
               <label className={labelCls}>{t("invoice.amount")} *</label>
               <div className="relative flex items-center">
@@ -717,7 +747,7 @@ export default function AddExpense() {
           {isSubscription && (
             <>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
                   <div>
                     <label className={labelCls}>
                       {t("subscription.everyLabel")}
@@ -763,8 +793,8 @@ export default function AddExpense() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="min-w-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+                <div className="min-w-0 md:col-span-1 lg:col-span-1">
                   <label className={labelCls}>
                     {t("subscription.startDate")}
                   </label>
@@ -779,7 +809,7 @@ export default function AddExpense() {
             </>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
             {!isSubscription && (
               <div>
                 <label className={labelCls}>{t("invoice.paymentMethod")}</label>
@@ -799,7 +829,13 @@ export default function AddExpense() {
                 </select>
               </div>
             )}
-            <div className={isSubscription ? "sm:col-span-2" : ""}>
+            <div
+              className={
+                isSubscription
+                  ? "sm:col-span-2 md:col-span-3 lg:col-span-4"
+                  : "md:col-span-2 lg:col-span-3"
+              }
+            >
               <label className={labelCls}>
                 {t("invoice.distributionMethod")} *
               </label>
@@ -826,9 +862,13 @@ export default function AddExpense() {
                 className={inputCls}
               >
                 <option value="BY_INCOME">{t("invoice.incomeBased")}</option>
-                <option value="BY_PERCENT">{t("subscription.customAmount")}</option>
+                <option value="BY_PERCENT">
+                  {t("subscription.customAmount")}
+                </option>
                 <option value="FIXED_EQUAL">{t("invoice.equal")}</option>
-                <option value="FIXED_AMOUNT">{t("subscription.amountOnly")}</option>
+                <option value="FIXED_AMOUNT">
+                  {t("subscription.amountOnly")}
+                </option>
               </select>
             </div>
           </div>
@@ -836,31 +876,55 @@ export default function AddExpense() {
           {distributionMethod === "BY_INCOME" && users && users.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className={labelCls + " mb-0"}>{t("invoice.selectUsers")}</label>
+                <label className={labelCls + " mb-0"}>
+                  {t("invoice.selectUsers")}
+                </label>
                 {totalIncome === 0 && (
-                  <span className="text-xs text-amber-500 dark:text-amber-400">{t("invoice.noIncome")}</span>
+                  <span className="text-xs text-amber-500 dark:text-amber-400">
+                    {t("invoice.noIncome")}
+                  </span>
                 )}
               </div>
               <UserSelectionCards
                 users={users}
                 selectedIds={incomeUserIds}
                 onToggle={handleToggleIncomeUser}
-                roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                ariaLabel={(u, selected) => `${t("invoice.selectUsers")}: ${u.name}`}
+                roleLabel={(role) =>
+                  role === "ADMIN"
+                    ? t("users.admin")
+                    : role === "CHILD"
+                      ? t("users.junior")
+                      : t("users.adult")
+                }
+                ariaLabel={(u, selected) =>
+                  `${t("invoice.selectUsers")}: ${u.name}`
+                }
                 inlineContent={(u, selected) => {
                   const pct = incomePercent(u.id);
-                  const hasIncome = activeIncomes.some((i) => i.userId === u.id);
+                  const hasIncome = activeIncomes.some(
+                    (i) => i.userId === u.id,
+                  );
                   if (selected && pct !== null) {
-                    return <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">{pct}%</span>;
+                    return (
+                      <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                        {pct}%
+                      </span>
+                    );
                   }
                   if (selected && !hasIncome) {
-                    return <span className="text-xs text-amber-500">{t("invoice.noIncomeShort")}</span>;
+                    return (
+                      <span className="text-xs text-amber-500">
+                        {t("invoice.noIncomeShort")}
+                      </span>
+                    );
                   }
                   return null;
                 }}
               />
               {selectedUserIds.length === 0 && (
-                <p className="text-sm text-amber-500 dark:text-amber-400">{t("invoice.atLeastOneUser")}</p>
+                <p className="text-sm text-amber-500 dark:text-amber-400">
+                  {t("invoice.atLeastOneUser")}
+                </p>
               )}
             </div>
           )}
@@ -868,7 +932,9 @@ export default function AddExpense() {
           {distributionMethod === "BY_PERCENT" && users && users.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className={labelCls + " mb-0"}>{t("subscription.amountPerUser")}</label>
+                <label className={labelCls + " mb-0"}>
+                  {t("subscription.amountPerUser")}
+                </label>
                 <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
                   {t("invoice.totalLabel")}{" "}
                   {symbolPosition === "Before" ? `${currencySymbol}\u00A0` : ""}
@@ -880,13 +946,26 @@ export default function AddExpense() {
                 users={users}
                 selectedIds={incomeUserIds}
                 onToggle={handleToggleIncomeUser}
-                roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                ariaLabel={(u, selected) => `${t("invoice.selectUsers")}: ${u.name}`}
+                roleLabel={(role) =>
+                  role === "ADMIN"
+                    ? t("users.admin")
+                    : role === "CHILD"
+                      ? t("users.junior")
+                      : t("users.adult")
+                }
+                ariaLabel={(u, selected) =>
+                  `${t("invoice.selectUsers")}: ${u.name}`
+                }
                 inlineContent={(u, _selected) => (
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="relative flex items-center">
                       {symbolPosition === "Before" && (
-                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
+                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                          {currencySymbol}
+                        </span>
                       )}
                       <input
                         type="number"
@@ -904,19 +983,25 @@ export default function AddExpense() {
                         placeholder="0"
                       />
                       {symbolPosition === "After" && (
-                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
+                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                          {currencySymbol}
+                        </span>
                       )}
                     </div>
                   </div>
                 )}
               />
               {selectedUserIds.length === 0 && (
-                <p className="text-sm text-amber-500 dark:text-amber-400">{t("invoice.atLeastOneUser")}</p>
+                <p className="text-sm text-amber-500 dark:text-amber-400">
+                  {t("invoice.atLeastOneUser")}
+                </p>
               )}
             </div>
           )}
 
-          {distributionMethod === "FIXED" && users && users.length > 0 &&
+          {distributionMethod === "FIXED" &&
+            users &&
+            users.length > 0 &&
             (fixedMode === "AMOUNT" ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -927,9 +1012,10 @@ export default function AddExpense() {
                     className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-indigo-500 dark:text-indigo-400" : "text-red-500 dark:text-red-400"}`}
                   >
                     {t("subscription.remainingAmount", {
-                      amount: symbolPosition === "Before"
-                        ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
-                        : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
+                      amount:
+                        symbolPosition === "Before"
+                          ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
+                          : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
                     })}
                   </span>
                 </div>
@@ -937,12 +1023,22 @@ export default function AddExpense() {
                   users={users}
                   selectedIds={incomeUserIds}
                   onToggle={handleToggleIncomeUser}
-                  roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                  ariaLabel={(u) => `${t("subscription.fixedAmountPerUser")}: ${u.name}`}
+                  roleLabel={(role) =>
+                    role === "ADMIN"
+                      ? t("users.admin")
+                      : role === "CHILD"
+                        ? t("users.junior")
+                        : t("users.adult")
+                  }
+                  ariaLabel={(u) =>
+                    `${t("subscription.fixedAmountPerUser")}: ${u.name}`
+                  }
                   inlineContent={(u, _selected) => (
                     <div className="relative flex items-center">
                       {symbolPosition === "Before" && (
-                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
+                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                          {currencySymbol}
+                        </span>
                       )}
                       <input
                         type="number"
@@ -960,7 +1056,9 @@ export default function AddExpense() {
                         placeholder="0"
                       />
                       {symbolPosition === "After" && (
-                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
+                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                          {currencySymbol}
+                        </span>
                       )}
                     </div>
                   )}
@@ -981,23 +1079,36 @@ export default function AddExpense() {
                       {t("invoice.eachPct")}
                     </span>
                   ) : (
-                    <span className="text-sm text-amber-500">{t("invoice.atLeastOneUser")}</span>
+                    <span className="text-sm text-amber-500">
+                      {t("invoice.atLeastOneUser")}
+                    </span>
                   )}
                 </div>
                 <UserSelectionCards
                   users={users}
                   selectedIds={incomeUserIds}
                   onToggle={handleToggleIncomeUser}
-                  roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                  ariaLabel={(u) => `${t("invoice.selectUsersEqual")}: ${u.name}`}
-                  inlineContent={(_u, selected) => selected && equalPercent ? (
-                    <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">{equalPercent}%</span>
-                  ) : null}
+                  roleLabel={(role) =>
+                    role === "ADMIN"
+                      ? t("users.admin")
+                      : role === "CHILD"
+                        ? t("users.junior")
+                        : t("users.adult")
+                  }
+                  ariaLabel={(u) =>
+                    `${t("invoice.selectUsersEqual")}: ${u.name}`
+                  }
+                  inlineContent={(_u, selected) =>
+                    selected && equalPercent ? (
+                      <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                        {equalPercent}%
+                      </span>
+                    ) : null
+                  }
                 />
               </div>
             ))}
-
-                  </form>
+        </form>
       </div>
     </div>
   );
