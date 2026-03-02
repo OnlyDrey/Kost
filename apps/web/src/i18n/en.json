@@ -137,7 +137,8 @@
     "personalExpenseOption": "Personal",
     "appliesTo": "Applies to",
     "selectPersonalUser": "Select person",
-    "closedPeriodPaymentBlocked": "Cannot mark expense as paid in a closed period."
+    "closedPeriodPaymentBlocked": "Cannot mark expense as paid in a closed period.",
+    "totalWithAmount": "Total: {{amount}}"
   },
   "period": {
     "title": "Period",
@@ -404,6 +405,11 @@
     "serverError": "Server error. Please try again later.",
     "notFound": "Not found",
     "unauthorized": "Unauthorized. Please log in.",
-    "forbidden": "You don't have permission to perform this action."
+    "forbidden": "You don't have permission to perform this action.",
+    "PERIOD_CLOSED": "Cannot update expense in a closed period",
+    "AMOUNT_LESS_THAN_PAID": "Total amount cannot be lower than amount already paid",
+    "PAYMENT_EXCEEDS_TOTAL": "Payment exceeds total amount",
+    "INTERNAL_ERROR": "Something went wrong. Please try again.",
+    "UNKNOWN": "Something went wrong. Please try again."
   }
 }

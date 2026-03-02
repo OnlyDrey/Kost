@@ -33,6 +33,7 @@ import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider"
 import { FOCUS_RING } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 
 
 const inputCls =
@@ -84,7 +85,7 @@ export default function InvoiceDetail() {
     navigate("/invoices");
   };
 
-  const startEditPayment = (payment: any) => {
+  const startEditPayment = (payment: { id: string; amountCents: number; paidAt: string | Date; paidById: string; note?: string | null }) => {
     setEditingPaymentId(payment.id);
     setEditAmount(String(payment.amountCents / 100));
     setEditPaidAt(
@@ -113,11 +114,8 @@ export default function InvoiceDetail() {
         },
       });
       setEditingPaymentId(null);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setEditError(
-        Array.isArray(msg) ? msg.join(", ") : msg || t("errors.serverError"),
-      );
+    } catch (err: unknown) {
+      setEditError(getApiErrorMessage(t, err));
     }
   };
 
@@ -147,11 +145,8 @@ export default function InvoiceDetail() {
       setShowPayForm(false);
       setPayAmount("");
       setPayNote("");
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setPayError(
-        Array.isArray(msg) ? msg.join(", ") : msg || t("errors.serverError"),
-      );
+    } catch (err: unknown) {
+      setPayError(getApiErrorMessage(t, err));
     }
   };
 
@@ -171,8 +166,8 @@ export default function InvoiceDetail() {
           note: undefined,
         },
       });
-    } catch {
-      await notify(t("errors.serverError"), t("common.error"));
+    } catch (error: unknown) {
+      await notify(getApiErrorMessage(t, error), t("common.error"));
     }
   };
 
@@ -196,8 +191,9 @@ export default function InvoiceDetail() {
     (sum, p) => sum + p.amountCents,
     0,
   );
-  const remaining = invoice.totalCents - totalPaid;
+  const remaining = Math.max(0, invoice.totalCents - totalPaid);
   const isPaid = remaining <= 0;
+  const isPartial = totalPaid > 0 && remaining > 0;
   const vendorLogo = vendors.find(
     (v) => v.name.toLowerCase() === invoice.vendor.toLowerCase(),
   )?.logoUrl;
@@ -233,7 +229,7 @@ export default function InvoiceDetail() {
             {
               key: "mark-complete",
               icon: CheckCircle2,
-              label: t("invoice.markComplete"),
+              label: t("invoice.registerPayment"),
               onClick: handleMarkFullyPaid,
               disabled: periodClosed || isPaid || addPayment.isPending,
               hidden: periodClosed,
@@ -305,16 +301,21 @@ export default function InvoiceDetail() {
             {invoice.category && (
               <TagPill label={invoice.category} variant="category" />
             )}
-            {isPaid && (
-              <TagPill label={t("invoice.statusPaid")} variant="success" />
-            )}
+            {isPaid && <TagPill label={t("invoice.statusPaid")} variant="success" />}
           </div>
 
           <div className="pt-1">
             <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-              <p className="text-2xl sm:text-[2rem] font-bold text-primary leading-none m-0">
-                {fmt(invoice.totalCents)}
-              </p>
+              <div className="min-w-0">
+                <p className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}>
+                  {fmt(isPartial ? remaining : invoice.totalCents)}
+                </p>
+                {isPartial && (
+                  <p className="text-xs text-app-text-secondary mt-1">
+                    {t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) })}
+                  </p>
+                )}
+              </div>
               <div className="min-w-0 text-right leading-tight">
                 <p className="text-sm text-app-text-secondary truncate">
                   {formatDate(invoice.createdAt)}
@@ -363,7 +364,7 @@ export default function InvoiceDetail() {
                 }}
                 className={`text-sm font-medium text-primary dark:text-primary hover:underline rounded-md ${FOCUS_RING}`}
               >
-                {t("invoice.markComplete")}
+                {t("invoice.registerPayment")}
               </button>
             )}
           </div>
@@ -547,7 +548,7 @@ export default function InvoiceDetail() {
                   {addPayment.isPending && (
                     <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   )}
-                  {t("invoice.markComplete")}
+                  {t("invoice.registerPayment")}
                 </button>
               </div>
             </form>

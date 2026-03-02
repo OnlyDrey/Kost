@@ -137,7 +137,8 @@
     "personalExpenseOption": "Personlig",
     "appliesTo": "Gjelder for",
     "selectPersonalUser": "Velg person",
-    "closedPeriodPaymentBlocked": "Kan ikke markere utgift som betalt i en lukket periode."
+    "closedPeriodPaymentBlocked": "Kan ikke markere utgift som betalt i en lukket periode.",
+    "totalWithAmount": "Total: {{amount}}"
   },
   "period": {
     "title": "Periode",
@@ -404,6 +405,11 @@
     "serverError": "Serverfeil. Vennligst prøv igjen senere.",
     "notFound": "Ikke funnet",
     "unauthorized": "Uautorisert. Vennligst logg inn.",
-    "forbidden": "Du har ikke tillatelse til å utføre denne handlingen."
+    "forbidden": "Du har ikke tillatelse til å utføre denne handlingen.",
+    "PERIOD_CLOSED": "Kan ikke oppdatere utgift i en lukket periode",
+    "AMOUNT_LESS_THAN_PAID": "Totalbeløp kan ikke være lavere enn allerede betalt beløp",
+    "PAYMENT_EXCEEDS_TOTAL": "Betaling overstiger totalbeløpet",
+    "INTERNAL_ERROR": "Noe gikk galt. Prøv igjen.",
+    "UNKNOWN": "Noe gikk galt. Prøv igjen."
   }
 }

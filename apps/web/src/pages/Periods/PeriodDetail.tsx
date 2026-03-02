@@ -8,7 +8,6 @@ import {
   Users,
   CircleCheckBig,
   CircleAlert,
-  Clock,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -35,6 +34,7 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 
 export default function PeriodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -383,9 +383,13 @@ export default function PeriodDetail() {
                       const primaryAmount = userShareEntry
                         ? fmt(userShareEntry.shareCents)
                         : fmt(displayCents);
-                      const secondaryLabel = userShareEntry
-                        ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
-                        : undefined;
+                      const secondaryLabel = isPartiallyPaid
+                        ? t("invoice.totalWithAmount", {
+                            amount: fmt(invoice.totalCents),
+                          })
+                        : userShareEntry
+                          ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
+                          : undefined;
                       return (
                         <ExpenseItemCard
                           key={invoice.id}
@@ -406,14 +410,7 @@ export default function PeriodDetail() {
                           paidLabel={t("invoice.statusPaid")}
                           overdueLabel={t("invoice.statusOverdue")}
                           onClick={() => navigate(`/invoices/${invoice.id}`)}
-                          rightContent={
-                            isPartiallyPaid ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                <Clock size={10} /> {t("invoice.amountPaid")}:{" "}
-                                {fmt(totalPaid)}
-                              </span>
-                            ) : undefined
-                          }
+                          amountTone={isPartiallyPaid ? "partial" : "default"}
                           actionButton={
                             <ActionIconBar
                               tight
@@ -422,7 +419,7 @@ export default function PeriodDetail() {
                                 {
                                   key: "pay",
                                   icon: CircleCheckBig,
-                                  label: t("invoice.markPaid"),
+                                  label: t("invoice.registerPayment"),
                                   onClick: async () => {
                                     if (!currentUser || remaining <= 0) return;
                                     if (closed) {
@@ -439,16 +436,8 @@ export default function PeriodDetail() {
                                         },
                                       });
                                     } catch (error: unknown) {
-                                      const message =
-                                        typeof error === "object" &&
-                                        error !== null &&
-                                        "response" in error
-                                          ? (error as { response?: { data?: { message?: string | string[] } } }).response?.data?.message
-                                          : undefined;
                                       await notify(
-                                        Array.isArray(message)
-                                          ? message.join(", ")
-                                          : message || t("errors.serverError"),
+                                        getApiErrorMessage(t, error),
                                         t("common.error"),
                                       );
                                     }

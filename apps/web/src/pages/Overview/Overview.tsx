@@ -7,7 +7,6 @@ import {
   CircleCheckBig,
   CircleAlert,
   Users,
-  Clock,
   Pencil,
   Trash2,
   Plus,
@@ -41,6 +40,7 @@ import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles"
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 
 // ------- Period Selector -------
 
@@ -589,9 +589,13 @@ export default function Overview() {
                             const primaryAmount = userShareEntry
                               ? fmt(userShareEntry.shareCents)
                               : fmt(displayCents);
-                            const secondaryLabel = userShareEntry
-                              ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
-                              : undefined;
+                            const secondaryLabel = isPartiallyPaid
+                              ? t("invoice.totalWithAmount", {
+                                  amount: fmt(invoice.totalCents),
+                                })
+                              : userShareEntry
+                                ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
+                                : undefined;
 
                             return (
                               <ExpenseItemCard
@@ -625,15 +629,7 @@ export default function Overview() {
                                 onClick={() =>
                                   navigate(`/invoices/${invoice.id}`)
                                 }
-                                rightContent={
-                                  isPartiallyPaid ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                      <Clock size={10} />{" "}
-                                      {t("invoice.amountPaid")}:{" "}
-                                      {fmt(totalPaid)}
-                                    </span>
-                                  ) : undefined
-                                }
+                                amountTone={isPartiallyPaid ? "partial" : "default"}
                                 actionButton={
                                   <ActionIconBar
                                     stopPropagation
@@ -641,7 +637,7 @@ export default function Overview() {
                                       {
                                         key: "pay",
                                         icon: CircleCheckBig,
-                                        label: t("invoice.markPaid"),
+                                        label: t("invoice.registerPayment"),
                                         onClick: async () => {
                                           if (!currentUser || remaining <= 0) return;
                                           if (closed) {
@@ -658,16 +654,8 @@ export default function Overview() {
                                               },
                                             });
                                           } catch (error: unknown) {
-                                            const message =
-                                              typeof error === "object" &&
-                                              error !== null &&
-                                              "response" in error
-                                                ? (error as { response?: { data?: { message?: string | string[] } } }).response?.data?.message
-                                                : undefined;
                                             await notify(
-                                              Array.isArray(message)
-                                                ? message.join(", ")
-                                                : message || t("errors.serverError"),
+                                              getApiErrorMessage(t, error),
                                               t("common.error"),
                                             );
                                           }

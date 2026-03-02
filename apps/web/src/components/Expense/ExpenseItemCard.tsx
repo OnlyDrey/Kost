@@ -27,6 +27,7 @@ interface ExpenseItemCardProps {
   selected?: boolean;
   showPaymentStatusPill?: boolean;
   focusRingClassName?: string;
+  amountTone?: "default" | "partial";
 }
 
 export default function ExpenseItemCard({
@@ -51,6 +52,7 @@ export default function ExpenseItemCard({
   selected = false,
   showPaymentStatusPill = true,
   focusRingClassName,
+  amountTone = "default",
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
   const emphasisClass = paid
@@ -65,7 +67,9 @@ export default function ExpenseItemCard({
     ? "text-success"
     : overdue
       ? "text-danger"
-      : "text-primary";
+      : amountTone === "partial"
+        ? "text-warning"
+        : "text-primary";
 
   const effectiveFocusRing =
     focusRingClassName ??
