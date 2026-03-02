@@ -9,9 +9,6 @@ import {
   Trash2,
   ShieldCheck,
   Globe,
-  Tag,
-  CreditCard,
-  Store,
   Users,
   Palette,
 } from "lucide-react";
@@ -94,7 +91,7 @@ function SettingsSectionCard({
   );
 }
 
-type SettingsPage = "profile" | "password" | "users" | "family";
+type SettingsPage = "profile" | "password" | "users" | "customization";
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -120,16 +117,18 @@ export default function Profile() {
   const upsertIncome = useUpsertUserIncome();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const initialTab = searchParams.get("tab") as SettingsPage | null;
+  const initialTab = searchParams.get("tab") as SettingsPage | "family" | null;
+  const normalizedInitialTab =
+    initialTab === "family" ? "customization" : initialTab;
   const [activePage, setActivePage] = useState<SettingsPage>(
-    initialTab &&
-      ["profile", "password", "users", "family"].includes(initialTab)
-      ? initialTab
+    normalizedInitialTab &&
+      ["profile", "password", "users", "customization"].includes(
+        normalizedInitialTab,
+      )
+      ? (normalizedInitialTab as SettingsPage)
       : "profile",
   );
   const currencySymbol = getCurrencySymbol(currency);
-  const [activeFamilySection, setActiveFamilySection] =
-    useState<FamilySetting>("currency");
   const [familyPageSize, setFamilyPageSize] = useState(5);
 
   const [brandingTitle, setBrandingTitle] = useState(
@@ -139,6 +138,10 @@ export default function Profile() {
   const [brandingLogoDataUrl, setBrandingLogoDataUrl] = useState(
     settings.branding.logoDataUrl,
   );
+  const [brandingLogoUrl, setBrandingLogoUrl] = useState(
+    settings.branding.logoUrl,
+  );
+  const [brandingLogoUrlError, setBrandingLogoUrlError] = useState("");
   const [brandingPreset, setBrandingPreset] = useState<BrandingPreset>(
     settings.branding.primaryPreset,
   );
@@ -150,6 +153,7 @@ export default function Profile() {
   );
   const [brandingError, setBrandingError] = useState("");
   const [brandingSaved, setBrandingSaved] = useState(false);
+  const [brandingLogoLoadWarning, setBrandingLogoLoadWarning] = useState("");
 
   // Profile form
   const [name, setName] = useState(user?.name ?? "");
@@ -197,13 +201,15 @@ export default function Profile() {
   useEffect(() => {
     setBrandingTitle(settings.branding.appTitle);
     setBrandingLogoDataUrl(settings.branding.logoDataUrl);
+    setBrandingLogoUrl(settings.branding.logoUrl);
     setBrandingPreset(settings.branding.primaryPreset);
     setBrandingAppIconBackground(settings.branding.appIconBackground);
   }, [settings.branding]);
 
   useEffect(() => {
     const renderPreview = async () => {
-      const logoSrc = brandingLogoDataUrl || DEFAULT_PROJECT_LOGO_SRC;
+      const logoSrc =
+        brandingLogoDataUrl || brandingLogoUrl || DEFAULT_PROJECT_LOGO_SRC;
       const background = resolveAppIconBackground(brandingAppIconBackground);
       try {
         const iconUrl = await renderIconDataUrl(logoSrc, background, 64);
@@ -214,12 +220,16 @@ export default function Profile() {
     };
 
     void renderPreview();
-  }, [brandingLogoDataUrl, brandingAppIconBackground]);
+  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground]);
 
   useEffect(() => {
-    const tab = searchParams.get("tab") as SettingsPage | null;
-    if (tab && ["profile", "password", "users", "family"].includes(tab)) {
-      setActivePage(tab);
+    const tab = searchParams.get("tab") as SettingsPage | "family" | null;
+    const normalizedTab = tab === "family" ? "customization" : tab;
+    if (
+      normalizedTab &&
+      ["profile", "password", "users", "customization"].includes(normalizedTab)
+    ) {
+      setActivePage(normalizedTab as SettingsPage);
     }
   }, [searchParams]);
 
@@ -242,9 +252,19 @@ export default function Profile() {
       return;
     }
 
+    if (brandingLogoUrl.trim()) {
+      try {
+        new URL(brandingLogoUrl.trim());
+      } catch {
+        setBrandingLogoUrlError(t("settings.brandingInvalidLogoUrl"));
+        return;
+      }
+    }
+
     setBranding({
       appTitle: brandingTitle.trim() || settings.branding.appTitle,
       logoDataUrl: brandingLogoDataUrl.trim(),
+      logoUrl: brandingLogoUrl.trim(),
       primaryPreset: brandingPreset,
       appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
     });
@@ -256,7 +276,10 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+    if (
+      !file.type.startsWith("image/") ||
+      !/\.(svg|png|jpe?g|webp)$/i.test(file.name)
+    ) {
       setBrandingError(t("settings.brandingInvalidImage"));
       return;
     }
@@ -275,6 +298,9 @@ export default function Profile() {
 
   const handleDeleteBrandingLogo = () => {
     setBrandingLogoDataUrl("");
+    setBrandingLogoUrl("");
+    setBrandingLogoUrlError("");
+    setBrandingLogoLoadWarning("");
     setBrandingError("");
   };
 
@@ -492,26 +518,11 @@ export default function Profile() {
     { key: "password", label: t("settings.password"), icon: KeyRound },
     { key: "users", label: t("users.title"), icon: Users },
     {
-      key: "family",
-      label: t("familySettings.title"),
-      icon: Store,
+      key: "customization",
+      label: t("settings.customization"),
+      icon: Palette,
       hidden: !isAdmin,
     },
-  ];
-
-  const familyNavItems: {
-    key: FamilySetting;
-    label: string;
-    icon: React.ElementType;
-  }[] = [
-    { key: "currency", label: t("familySettings.currency"), icon: Globe },
-    { key: "categories", label: t("familySettings.categories"), icon: Tag },
-    {
-      key: "payment-methods",
-      label: t("familySettings.paymentMethods"),
-      icon: CreditCard,
-    },
-    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
   ];
 
   // ---- Avatar block ----
@@ -698,25 +709,6 @@ export default function Profile() {
             })}
         </div>
       </div>
-
-      {activePage === "family" && isAdmin && (
-        <div className="max-w-sm">
-          <label className={labelCls}>{t("familySettings.title")}</label>
-          <select
-            value={activeFamilySection}
-            onChange={(e) =>
-              setActiveFamilySection(e.target.value as FamilySetting)
-            }
-            className={inputCls}
-          >
-            {familyNavItems.map((item) => (
-              <option key={item.key} value={item.key}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       <div
         className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
@@ -1150,7 +1142,15 @@ export default function Profile() {
           )}
 
           {/* Family settings sections (admin only) */}
-          {activePage === "family" && isAdmin && (
+          {activePage === "customization" && isAdmin && (
+            <FamilySettingsContent
+              activeSection={"currency" as FamilySetting}
+              pageSize={familyPageSize}
+              onPageSizeChange={setFamilyPageSize}
+            />
+          )}
+
+          {activePage === "customization" && isAdmin && (
             <SettingsSectionCard
               icon={<Palette size={18} className="text-primary" />}
               title={t("settings.brandingTitle")}
@@ -1174,12 +1174,22 @@ export default function Profile() {
                   </label>
                   <div className="flex items-center gap-3">
                     <img
-                      src={brandingLogoDataUrl || DEFAULT_PROJECT_LOGO_SRC}
+                      src={
+                        brandingLogoDataUrl ||
+                        brandingLogoUrl ||
+                        DEFAULT_PROJECT_LOGO_SRC
+                      }
                       alt={t("settings.brandingLogoPreviewAlt")}
                       className="w-12 h-12 rounded-md object-contain bg-surface-elevated border border-border"
                       onError={(event) => {
+                        if (brandingLogoUrl) {
+                          setBrandingLogoLoadWarning(
+                            t("settings.brandingLogoLoadFailed"),
+                          );
+                        }
                         event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
                       }}
+                      onLoad={() => setBrandingLogoLoadWarning("")}
                     />
                     <div className="flex flex-wrap items-center gap-2">
                       <button
@@ -1187,11 +1197,11 @@ export default function Profile() {
                         onClick={() => brandingLogoInputRef.current?.click()}
                         className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                       >
-                        {brandingLogoDataUrl
+                        {brandingLogoDataUrl || brandingLogoUrl
                           ? t("settings.brandingReplaceLogo")
                           : t("settings.brandingUploadLogo")}
                       </button>
-                      {brandingLogoDataUrl && (
+                      {(brandingLogoDataUrl || brandingLogoUrl) && (
                         <button
                           type="button"
                           onClick={handleDeleteBrandingLogo}
@@ -1205,15 +1215,40 @@ export default function Profile() {
                   <input
                     ref={brandingLogoInputRef}
                     type="file"
-                    accept="image/*"
+                    accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
                     onChange={handleBrandingLogoFile}
                     className="hidden"
                   />
+                  <div>
+                    <label className={labelCls}>
+                      {t("settings.brandingLogoUrl")}
+                    </label>
+                    <input
+                      type="url"
+                      value={brandingLogoUrl}
+                      onChange={(e) => {
+                        setBrandingLogoUrl(e.target.value);
+                        setBrandingLogoUrlError("");
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
+                      placeholder="https://example.com/logo.svg"
+                    />
+                    {brandingLogoUrlError && (
+                      <p className="text-xs text-danger mt-1">
+                        {brandingLogoUrlError}
+                      </p>
+                    )}
+                  </div>
                   <p className="text-xs text-text-secondary">
-                    {brandingLogoDataUrl
+                    {brandingLogoDataUrl || brandingLogoUrl
                       ? t("settings.brandingCustomLogoActive")
                       : t("settings.brandingDefaultLogoActive")}
                   </p>
+                  {brandingLogoLoadWarning && (
+                    <p className="text-xs text-warning">
+                      {brandingLogoLoadWarning}
+                    </p>
+                  )}
                 </div>
                 <ColorFamilySelect
                   value={brandingPreset}
@@ -1224,19 +1259,24 @@ export default function Profile() {
                   <label className={labelCls}>
                     {t("settings.brandingAppIconBackground")}
                   </label>
-                  <input
-                    type="text"
-                    value={brandingAppIconBackground}
-                    onChange={(e) =>
-                      setBrandingAppIconBackground(e.target.value)
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
-                    placeholder="#0B1020"
-                    aria-invalid={
-                      Boolean(brandingAppIconBackground) &&
-                      !isValidHexColor(brandingAppIconBackground)
-                    }
-                  />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={resolveAppIconBackground(
+                        brandingAppIconBackground,
+                      )}
+                      onChange={(e) =>
+                        setBrandingAppIconBackground(
+                          e.target.value.toUpperCase(),
+                        )
+                      }
+                      className="h-10 w-12 rounded border border-border bg-surface p-1 focus:outline-none focus:ring-2 focus:ring-focus"
+                      aria-label={t("settings.brandingAppIconBackground")}
+                    />
+                    <span className="text-sm text-text-secondary">
+                      {resolveAppIconBackground(brandingAppIconBackground)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-text-secondary">
@@ -1269,14 +1309,6 @@ export default function Profile() {
                 )}
               </form>
             </SettingsSectionCard>
-          )}
-
-          {activePage === "family" && isAdmin && (
-            <FamilySettingsContent
-              activeSection={activeFamilySection}
-              pageSize={familyPageSize}
-              onPageSizeChange={setFamilyPageSize}
-            />
           )}
         </div>
       </div>

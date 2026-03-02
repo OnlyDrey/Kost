@@ -1,9 +1,10 @@
-export const DEFAULT_PROJECT_LOGO_SRC = "/logo-mark.png";
+export const DEFAULT_PROJECT_LOGO_SRC = "/logo-mark.svg";
 export const DEFAULT_APP_ICON_BACKGROUND = "#0B1020";
 
 export interface BrandingVisualConfig {
   appTitle?: string;
   logoDataUrl?: string;
+  logoUrl?: string;
   appIconBackground?: string;
 }
 
@@ -19,7 +20,11 @@ export function resolveAppIconBackground(color?: string) {
 }
 
 export function getCurrentLogo(branding?: BrandingVisualConfig) {
-  return branding?.logoDataUrl?.trim() || DEFAULT_PROJECT_LOGO_SRC;
+  return (
+    branding?.logoDataUrl?.trim() ||
+    branding?.logoUrl?.trim() ||
+    DEFAULT_PROJECT_LOGO_SRC
+  );
 }
 
 export function getFaviconSource(branding?: BrandingVisualConfig) {

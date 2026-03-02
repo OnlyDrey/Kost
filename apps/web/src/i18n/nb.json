@@ -222,7 +222,10 @@
     "brandingAppIconBackground": "Bakgrunnsfarge for app-ikon",
     "brandingAppIconPreview": "Forhåndsvisning av app-ikon",
     "brandingInvalidHex": "Bruk en gyldig hex-farge (#RGB eller #RRGGBB).",
-    "brandingInvalidImage": "Velg en gyldig bildefil."
+    "brandingInvalidImage": "Velg en gyldig bildefil.",
+    "customization": "Tilpasning",
+    "brandingInvalidLogoUrl": "Bruk en gyldig logo-URL.",
+    "brandingLogoLoadFailed": "Kunne ikke laste ekstern logo-URL. Viser standardlogo."
   },
   "users": {
     "title": "Brukere",

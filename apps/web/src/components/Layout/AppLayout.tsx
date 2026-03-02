@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
 import TagPill from "../Common/TagPill";
-import { getCurrentLogo } from "../../utils/branding";
+import { DEFAULT_PROJECT_LOGO_SRC, getCurrentLogo } from "../../utils/branding";
 
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
@@ -135,7 +135,7 @@ function Sidebar({
             alt={appTitle}
             className="w-7 h-7 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
             onError={(event) => {
-              event.currentTarget.src = "/logo-mark.png";
+              event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
             }}
           />
           <span className="text-xl font-bold text-primary">{appTitle}</span>
@@ -275,7 +275,7 @@ export default function AppLayout() {
               alt={appTitle}
               className="w-6 h-6 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
               onError={(event) => {
-                event.currentTarget.src = "/logo-mark.png";
+                event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
               }}
             />
             <span className="text-lg font-bold text-primary">{appTitle}</span>

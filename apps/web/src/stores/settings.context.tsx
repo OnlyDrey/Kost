@@ -24,6 +24,7 @@ export type BrandingPreset = PrimaryColorFamily;
 export interface BrandingSettings {
   appTitle: string;
   logoDataUrl: string;
+  logoUrl: string;
   primaryPreset: BrandingPreset;
   appIconBackground: string;
 }
@@ -45,6 +46,7 @@ interface SettingsContextType {
 const defaultBranding: BrandingSettings = {
   appTitle: "Kost",
   logoDataUrl: "",
+  logoUrl: "",
   primaryPreset: DEFAULT_PRIMARY_COLOR_FAMILY,
   appIconBackground: DEFAULT_APP_ICON_BACKGROUND,
 };
@@ -60,12 +62,12 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 );
 
 function normalizeBrandingSettings(
-  branding?: Partial<BrandingSettings> & { logoUrl?: string },
+  branding?: Partial<BrandingSettings>,
 ): BrandingSettings {
   return {
     appTitle: branding?.appTitle?.trim() || defaultBranding.appTitle,
-    logoDataUrl:
-      branding?.logoDataUrl?.trim() || branding?.logoUrl?.trim() || "",
+    logoDataUrl: branding?.logoDataUrl?.trim() || "",
+    logoUrl: branding?.logoUrl?.trim() || "",
     primaryPreset:
       branding?.primaryPreset &&
       branding.primaryPreset in PRIMARY_COLOR_FAMILIES
@@ -112,7 +114,7 @@ function resolveInitialSettings(): Settings {
         ...defaultSettings,
         ...parsed,
         branding: normalizeBrandingSettings(
-          parsed.branding as Partial<BrandingSettings> & { logoUrl?: string },
+          parsed.branding as Partial<BrandingSettings>,
         ),
       };
     } catch {

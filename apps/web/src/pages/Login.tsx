@@ -6,7 +6,7 @@ import { LogIn, AlertCircle } from "lucide-react";
 import authService from "../services/auth";
 import { useAuth } from "../stores/auth.context";
 import { useSettings } from "../stores/settings.context";
-import { getCurrentLogo } from "../utils/branding";
+import { DEFAULT_PROJECT_LOGO_SRC, getCurrentLogo } from "../utils/branding";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -66,7 +66,7 @@ export default function Login() {
               alt={settings.branding.appTitle || "Kost"}
               className="w-10 h-10 rounded-md object-contain bg-surface-elevated border border-border"
               onError={(event) => {
-                event.currentTarget.src = "/logo-mark.png";
+                event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
               }}
             />
             <h1 className="text-4xl font-bold text-indigo-500 dark:text-indigo-400">

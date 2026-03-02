@@ -120,32 +120,33 @@ export default function ExpenseItemCard({
       </div>
 
       {(amountLabel || rightContent || dateLabel || actionButton) && (
-        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 min-w-0">
-          <div className="min-w-0 flex-1">
-            {amountLabel && (
-              <p
-                className={`text-2xl sm:text-3xl leading-none font-bold m-0 ${amountClass}`}
-              >
-                {amountLabel}
-              </p>
-            )}
-            {shareLabel && (
-              <p className="text-xs text-app-text-secondary mt-0.5">
-                {shareLabel}
-              </p>
-            )}
-            {dateLabel && (
-              <p className="text-xs text-app-text-secondary mt-1">
-                {dateLabel}
-              </p>
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 min-w-0">
+            <div className="min-w-0 flex-1">
+              {amountLabel && (
+                <p
+                  className={`text-2xl sm:text-3xl leading-none font-bold m-0 ${amountClass}`}
+                >
+                  {amountLabel}
+                </p>
+              )}
+              {shareLabel && (
+                <p className="text-xs text-app-text-secondary mt-0.5">
+                  {shareLabel}
+                </p>
+              )}
+            </div>
+
+            {(rightContent || actionButton) && (
+              <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+                {rightContent && <div className="shrink-0">{rightContent}</div>}
+                {actionButton && <div className="shrink-0">{actionButton}</div>}
+              </div>
             )}
           </div>
 
-          {(rightContent || actionButton) && (
-            <div className="ml-auto flex min-w-0 flex-col items-end gap-1">
-              {rightContent && <div className="shrink-0">{rightContent}</div>}
-              {actionButton && <div className="shrink-0">{actionButton}</div>}
-            </div>
+          {dateLabel && (
+            <p className="text-xs text-app-text-secondary">{dateLabel}</p>
           )}
         </div>
       )}

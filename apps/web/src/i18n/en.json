@@ -222,7 +222,10 @@
     "brandingAppIconBackground": "App icon background color",
     "brandingAppIconPreview": "App icon preview",
     "brandingInvalidHex": "Use a valid hex color (#RGB or #RRGGBB).",
-    "brandingInvalidImage": "Please select a valid image file."
+    "brandingInvalidImage": "Please select a valid image file.",
+    "customization": "Customization",
+    "brandingInvalidLogoUrl": "Use a valid logo URL.",
+    "brandingLogoLoadFailed": "Could not load the external logo URL. Showing default logo."
   },
   "users": {
     "title": "Users",
