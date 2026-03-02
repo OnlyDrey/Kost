@@ -41,8 +41,17 @@ export default function UserSingleSelect({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
-                <RoleBadge role={user.role} label={roleLabel(user.role)} />
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
+                  <RoleBadge
+                    role={user.role}
+                    label={roleLabel(user.role)}
+                    className="shrink-0"
+                  />
+                </div>
+                {user.username ? (
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">@{user.username}</p>
+                ) : null}
               </div>
               <span className={`h-6 w-6 rounded-full border inline-flex items-center justify-center flex-shrink-0 ${selected ? "border-primary bg-primary/15" : "border-gray-400 dark:border-gray-600"}`}>
                 {selected ? <span className="h-2.5 w-2.5 rounded-full bg-primary" /> : null}

@@ -568,6 +568,7 @@ export default function AddExpense() {
   const notFound = isEditing &&
     ((isSubscription && subscriptionNotFound) ||
       (!isSubscription && invoiceNotFound));
+  const showInlineSubscriptionActions = isSubscription && isEditing;
 
   return (
     <div className="space-y-5">
@@ -583,30 +584,32 @@ export default function AddExpense() {
             {t(titleKey)}
           </h1>
         </div>
-        <div className="inline-flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate(backUrl)}
-            className="px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="submit"
-            form="expense-form"
-            disabled={
-              isPending ||
-              (!isEditing && !isSubscription && !targetPeriodId) ||
-              (!isEditing && !isSubscription && targetPeriodClosed)
-            }
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
-          >
-            {isPending && (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            )}
-            {t("common.save")}
-          </button>
-        </div>
+        {!showInlineSubscriptionActions && (
+          <div className="inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate(backUrl)}
+              className="h-10 px-3.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="submit"
+              form="expense-form"
+              disabled={
+                isPending ||
+                (!isEditing && !isSubscription && !targetPeriodId) ||
+                (!isEditing && !isSubscription && targetPeriodClosed)
+              }
+              className="flex h-10 items-center gap-2 px-3.5 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
+            >
+              {isPending && (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              {t("common.save")}
+            </button>
+          </div>
+        )}
       </div>
 
       {!isEditing && !isSubscription && !targetPeriodId && (
@@ -641,33 +644,65 @@ export default function AddExpense() {
           <div className="relative grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-5">
             <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-gray-200 dark:bg-gray-800 lg:block" />
             {isSubscription && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1">
+              <div className="space-y-4 md:space-y-6 lg:col-start-1">
+                {showInlineSubscriptionActions ? (
+                  <div className="grid grid-cols-12 gap-3">
+                    <div className="col-span-6 min-w-0">
+                      <label className={labelCls}>{t("subscription.status")}</label>
+                      <AppSelect
+                        value={subscriptionStatus}
+                        onChange={(e) =>
+                          setSubscriptionStatus(
+                            e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
+                          )
+                        }
+                        className={inputCls}
+                      >
+                        <option value="ACTIVE">{t("subscription.statusActive")}</option>
+                        <option value="PAUSED">{t("subscription.statusPaused")}</option>
+                        <option value="CANCELED">{t("subscription.statusCanceled")}</option>
+                      </AppSelect>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate(backUrl)}
+                      className="col-span-3 mt-7 h-10 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      {t("common.cancel")}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPending}
+                      className="col-span-3 mt-7 flex h-10 items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
+                    >
+                      {isPending && (
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      )}
+                      {t("common.save")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="min-w-0">
+                      <label className={labelCls}>{t("subscription.status")}</label>
+                      <AppSelect
+                        value={subscriptionStatus}
+                        onChange={(e) =>
+                          setSubscriptionStatus(
+                            e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
+                          )
+                        }
+                        className={inputCls}
+                      >
+                        <option value="ACTIVE">{t("subscription.statusActive")}</option>
+                        <option value="PAUSED">{t("subscription.statusPaused")}</option>
+                        <option value="CANCELED">{t("subscription.statusCanceled")}</option>
+                      </AppSelect>
+                    </div>
+                  </div>
+                )}
                 <div className="min-w-0">
-                  <label className={labelCls}>{t("subscription.status")}</label>
-                  <AppSelect
-                    value={subscriptionStatus}
-                    onChange={(e) =>
-                      setSubscriptionStatus(
-                        e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
-                      )
-                    }
-                    className={inputCls}
-                  >
-                    <option value="ACTIVE">
-                      {t("subscription.statusActive")}
-                    </option>
-                    <option value="PAUSED">
-                      {t("subscription.statusPaused")}
-                    </option>
-                    <option value="CANCELED">
-                      {t("subscription.statusCanceled")}
-                    </option>
-                  </AppSelect>
-                </div>
-                <div className="min-w-0">
-                  <label className={labelCls}>
-                    {t("subscription.nextBillingAt")}
-                  </label>
+                  <label className={labelCls}>{t("subscription.nextBillingAt")}</label>
                   <input
                     type="date"
                     value={nextBillingAt}

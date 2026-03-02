@@ -134,7 +134,7 @@
     "allocationFixedDescription": "Fixed amounts assigned per person.",
     "unknownDistributionMethod": "Unknown distribution method",
     "youPayOfTotal": "You: {{own}} of {{total}}",
-    "personalExpenseOption": "Personal expense",
+    "personalExpenseOption": "Personal",
     "appliesTo": "Applies to",
     "selectPersonalUser": "Select person"
   },

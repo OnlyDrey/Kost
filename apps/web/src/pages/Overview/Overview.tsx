@@ -39,6 +39,7 @@ import { isPeriodClosed } from "../../utils/periodStatus";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
+import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
 
 // ------- Period Selector -------
 
@@ -381,17 +382,7 @@ export default function Overview() {
             selectedPeriodId={resolvedPeriodId}
             onSelect={handleSelectPeriod}
           />
-          {period && (
-            <span
-              className={`inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium ${
-                !closed
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                  : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-              }`}
-            >
-              {!closed ? t("period.open") : t("period.closed")}
-            </span>
-          )}
+          {period && <PeriodStatusPill isClosed={closed} className="h-10 px-4" />}
         </div>
       </div>
 

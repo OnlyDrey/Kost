@@ -134,7 +134,7 @@
     "allocationFixedDescription": "Faste beløp tildeles per person.",
     "unknownDistributionMethod": "Ukjent fordelingsmetode",
     "youPayOfTotal": "Du: {{own}} av {{total}}",
-    "personalExpenseOption": "Personlig utgift",
+    "personalExpenseOption": "Personlig",
     "appliesTo": "Gjelder for",
     "selectPersonalUser": "Velg person"
   },

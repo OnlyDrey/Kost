@@ -33,6 +33,7 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
 
 export default function PeriodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -217,15 +218,10 @@ export default function PeriodDetail() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {period.id}
             </h1>
-            <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                !closed
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-              }`}
-            >
-              {!closed ? t("period.open") : t("period.closed")}
-            </span>
+            <PeriodStatusPill
+              isClosed={closed}
+              className="rounded-full px-2 py-0.5 text-xs"
+            />
           </div>
           {period.closedAt && (
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
