@@ -57,7 +57,8 @@
     "owedLabel": "Skyldig",
     "paidLabel": "Betalt",
     "owedBacklog": "Utestående utgifter",
-    "remainingLabel": "Gjenstår"
+    "remainingLabel": "Gjenstår",
+    "userShare": "{{name}} sin andel"
   },
   "invoice": {
     "title": "Utgift",
@@ -367,7 +368,8 @@
     "amountOnly": "Beløp",
     "customAmount": "Egendefinert",
     "amountPerUser": "Beløp per bruker *",
-    "generateForPeriod": "Generer for periode"
+    "generateForPeriod": "Generer for periode",
+    "closedPeriodError": "Lukkede perioder kan ikke brukes til generering. Velg en åpen periode."
   },
   "common": {
     "loading": "Laster...",

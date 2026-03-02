@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AppSelect from "../../components/Common/AppSelect";
 import {
   useCreateInvoice,
   useUpdateInvoice,
@@ -322,7 +323,7 @@ export default function AddInvoice() {
             </div>
             <div>
               <label className={labelCls}>{t("invoice.category")}</label>
-              <select
+              <AppSelect
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className={inputCls}
@@ -333,7 +334,7 @@ export default function AddInvoice() {
                     {c}
                   </option>
                 ))}
-              </select>
+              </AppSelect>
             </div>
           </div>
 
@@ -379,7 +380,7 @@ export default function AddInvoice() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t("invoice.paymentMethod")}</label>
-              <select
+              <AppSelect
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className={inputCls}
@@ -392,7 +393,7 @@ export default function AddInvoice() {
                     {m}
                   </option>
                 ))}
-              </select>
+              </AppSelect>
             </div>
           </div>
 
@@ -400,7 +401,7 @@ export default function AddInvoice() {
             <label className={labelCls}>
               {t("invoice.distributionMethod")} *
             </label>
-            <select
+            <AppSelect
               value={distributionMethod}
               onChange={(e) =>
                 setDistributionMethod(
@@ -416,7 +417,7 @@ export default function AddInvoice() {
               <option value="BY_INCOME">{t("invoice.incomeBased")}</option>
               <option value="BY_PERCENT">{t("invoice.custom")}</option>
               <option value="FIXED">{t("invoice.equal")}</option>
-            </select>
+            </AppSelect>
           </div>
 
           {/* BY_INCOME: user selection with income percentages */}

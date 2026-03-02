@@ -57,7 +57,8 @@
     "owedLabel": "Owed",
     "paidLabel": "Paid",
     "owedBacklog": "Outstanding expenses",
-    "remainingLabel": "Remaining"
+    "remainingLabel": "Remaining",
+    "userShare": "{{name}}'s share"
   },
   "invoice": {
     "title": "Expense",
@@ -367,7 +368,8 @@
     "amountOnly": "Amount",
     "customAmount": "Custom",
     "amountPerUser": "Amount per user *",
-    "generateForPeriod": "Generate for period"
+    "generateForPeriod": "Generate for period",
+    "closedPeriodError": "Closed periods cannot be used for generation. Please select an open period."
   },
   "common": {
     "loading": "Loading...",

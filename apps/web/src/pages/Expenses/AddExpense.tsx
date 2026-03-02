@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AppSelect from "../../components/Common/AppSelect";
 import {
   useCreateInvoice,
   useUpdateInvoice,
@@ -643,7 +644,7 @@ export default function AddExpense() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1">
                 <div className="min-w-0">
                   <label className={labelCls}>{t("subscription.status")}</label>
-                  <select
+                  <AppSelect
                     value={subscriptionStatus}
                     onChange={(e) =>
                       setSubscriptionStatus(
@@ -661,7 +662,7 @@ export default function AddExpense() {
                     <option value="CANCELED">
                       {t("subscription.statusCanceled")}
                     </option>
-                  </select>
+                  </AppSelect>
                 </div>
                 <div className="min-w-0">
                   <label className={labelCls}>
@@ -728,7 +729,7 @@ export default function AddExpense() {
               </div>
               <div>
                 <label className={labelCls}>{t("invoice.category")}</label>
-                <select
+                <AppSelect
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className={inputCls}
@@ -739,7 +740,7 @@ export default function AddExpense() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </AppSelect>
               </div>
             </div>
 
@@ -786,7 +787,7 @@ export default function AddExpense() {
               </div>
               <div className="min-w-0">
                 <label className={labelCls}>{t("invoice.paymentMethod")}</label>
-                <select
+                <AppSelect
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className={inputCls}
@@ -797,7 +798,7 @@ export default function AddExpense() {
                       {m}
                     </option>
                   ))}
-                </select>
+                </AppSelect>
               </div>
             </div>
 
@@ -840,7 +841,7 @@ export default function AddExpense() {
                     </div>
                     <div>
                       <label className={labelCls}>{t("subscription.frequencyLabel")}</label>
-                      <select
+                      <AppSelect
                         value={frequencyUnit}
                         onChange={(e) => setFrequencyUnit(e.target.value)}
                         className={inputCls}
@@ -849,7 +850,7 @@ export default function AddExpense() {
                         <option value="WEEK">{t("subscription.unitWeek")}</option>
                         <option value="MONTH">{t("subscription.unitMonth")}</option>
                         <option value="YEAR">{t("subscription.unitYear")}</option>
-                      </select>
+                      </AppSelect>
                     </div>
                   </div>
                   <div>
@@ -872,7 +873,7 @@ export default function AddExpense() {
               <label className={labelCls}>
                 {t("invoice.distributionMethod")} *
               </label>
-              <select
+              <AppSelect
                 value={
                   distributionMethod === "FIXED"
                     ? fixedMode === "AMOUNT"
@@ -907,7 +908,7 @@ export default function AddExpense() {
                 <option value="PERSONAL">
                   {t("invoice.personalExpenseOption")}
                 </option>
-              </select>
+              </AppSelect>
             </div>
 
             {distributionMethod === "PERSONAL" && users && users.length > 0 && (

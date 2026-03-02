@@ -29,6 +29,8 @@ import { amountToCents, centsToAmount } from "../../utils/currency";
 import { useSettings } from "../../stores/settings.context";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { useAuth } from "../../stores/auth.context";
+import AppSelect from "../../components/Common/AppSelect";
+import { sortRoles } from "../../utils/roles";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import RoleBadge from "../../components/Common/RoleBadge";
 
@@ -250,7 +252,7 @@ function UserModal({
             </div>
             <div>
               <label className={labelCls}>{t("users.role")}</label>
-              <select
+              <AppSelect
                 value={role}
                 onChange={(e) =>
                   setRole(e.target.value as "ADMIN" | "ADULT" | "CHILD")
@@ -267,7 +269,7 @@ function UserModal({
                         : t("users.adult")}
                   </option>
                 ))}
-              </select>
+              </AppSelect>
             </div>
             <div>
               <label className={labelCls}>
@@ -391,14 +393,14 @@ function IncomeModal({
             )}
             <div>
               <label className={labelCls}>{t("income.type")}</label>
-              <select
+              <AppSelect
                 value={incomeType}
                 onChange={(e) => setIncomeType(e.target.value)}
                 className={inputCls}
               >
                 <option value="ANNUAL_GROSS">{t("income.annual")}</option>
                 <option value="MONTHLY_GROSS">{t("income.monthly")}</option>
-              </select>
+              </AppSelect>
             </div>
             <div>
               <label className={labelCls}>{t("income.amount")}</label>
@@ -590,7 +592,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
               className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
-          <select
+          <AppSelect
             value={roleFilter}
             onChange={(e) =>
               setRoleFilter(
@@ -603,7 +605,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
             <option value="ADMIN">{t("users.admin")}</option>
             <option value="ADULT">{t("users.adult")}</option>
             <option value="CHILD">{t("users.junior")}</option>
-          </select>
+          </AppSelect>
         </div>
       </div>
 
@@ -726,11 +728,13 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
               editingUser.role === "CHILD")
           }
           roleOptions={
-            isAdmin
-              ? ["ADULT", "ADMIN", "CHILD"]
-              : editingUser?.role === "CHILD"
-                ? ["CHILD", "ADULT"]
-                : [editingUser?.role === "ADMIN" ? "ADMIN" : "ADULT"]
+            sortRoles(
+              isAdmin
+                ? ["ADMIN", "ADULT", "CHILD"]
+                : editingUser?.role === "CHILD"
+                  ? ["ADULT", "CHILD"]
+                  : [editingUser?.role === "ADMIN" ? "ADMIN" : "ADULT"],
+            )
           }
         />
       )}

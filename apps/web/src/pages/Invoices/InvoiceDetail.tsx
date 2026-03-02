@@ -31,6 +31,8 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { FOCUS_RING } from "../../components/Common/focusStyles";
+import AppSelect from "../../components/Common/AppSelect";
+
 
 const inputCls =
   `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
@@ -388,7 +390,7 @@ export default function InvoiceDetail() {
                               className={dateInputCls}
                             />
                           </div>
-                          <select
+                          <AppSelect
                             value={editPaidById}
                             onChange={(e) => setEditPaidById(e.target.value)}
                             className={inputCls}
@@ -398,7 +400,7 @@ export default function InvoiceDetail() {
                                 {u.name}
                               </option>
                             ))}
-                          </select>
+                          </AppSelect>
                           <input
                             type="text"
                             value={editNote}

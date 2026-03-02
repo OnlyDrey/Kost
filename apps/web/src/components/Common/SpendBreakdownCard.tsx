@@ -10,6 +10,8 @@ type Mode = "YOUR_SHARE" | "TOTAL";
 export default function SpendBreakdownCard({
   invoices,
   currentUserId,
+  selectedShareUserId,
+  selectedShareUserName,
   currency: _currency,
   title,
   selectedCategory,
@@ -18,6 +20,8 @@ export default function SpendBreakdownCard({
 }: {
   invoices: Invoice[];
   currentUserId?: string;
+  selectedShareUserId?: string;
+  selectedShareUserName?: string;
   currency: string;
   title: string;
   selectedCategory?: string;
@@ -27,6 +31,11 @@ export default function SpendBreakdownCard({
   const { t } = useTranslation();
   const fmt = useCurrencyFormatter();
   const [mode, setMode] = useState<Mode>("YOUR_SHARE");
+  const effectiveShareUserId = selectedShareUserId || currentUserId;
+  const shareLabel =
+    selectedShareUserName && selectedShareUserId
+      ? t("dashboard.userShare", { name: selectedShareUserName })
+      : t("dashboard.yourShare");
 
   const rows = useMemo(() => {
     const shareMap: Record<string, number> = {};
@@ -35,8 +44,8 @@ export default function SpendBreakdownCard({
       const key = invoice.category || t("common.other");
       totalMap[key] = (totalMap[key] ?? 0) + invoice.totalCents;
       const myShare =
-        invoice.shares?.find((s) => s.userId === currentUserId)?.shareCents ??
-        0;
+        invoice.shares?.find((s) => s.userId === effectiveShareUserId)
+          ?.shareCents ?? 0;
       shareMap[key] = (shareMap[key] ?? 0) + myShare;
     }
 
@@ -54,7 +63,7 @@ export default function SpendBreakdownCard({
           ? b.totalCents - a.totalCents
           : b.shareCents - a.shareCents,
       );
-  }, [invoices, currentUserId, t, mode]);
+  }, [invoices, effectiveShareUserId, t, mode]);
 
   const grandTotal = rows.reduce(
     (sum, r) => sum + (mode === "TOTAL" ? r.totalCents : r.shareCents),
@@ -90,7 +99,7 @@ export default function SpendBreakdownCard({
             onClick={() => setMode("YOUR_SHARE")}
             className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${FOCUS_RING} ${mode === "YOUR_SHARE" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
-            {t("dashboard.yourShare")}
+            {shareLabel}
           </button>
           <button
             onClick={() => setMode("TOTAL")}
@@ -123,7 +132,7 @@ export default function SpendBreakdownCard({
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                     {mode === "TOTAL"
-                      ? t("dashboard.yourShare")
+                      ? shareLabel
                       : t("dashboard.totalAmount")}
                     : {fmt(secondaryCents)}
                   </p>

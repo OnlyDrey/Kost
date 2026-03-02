@@ -10,7 +10,6 @@ import {
   Clock,
   Pencil,
   Trash2,
-  ChevronDown,
   Plus,
   RotateCcw,
 } from "lucide-react";
@@ -39,6 +38,7 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
+import AppSelect from "../../components/Common/AppSelect";
 
 // ------- Period Selector -------
 
@@ -61,23 +61,18 @@ function PeriodSelector({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative">
-        <select
-          value={selectedPeriodId}
-          onChange={(e) => onSelect(e.target.value)}
-          className={`${inputCls} w-28 min-w-[7rem]`}
-        >
-          {sortedPeriods.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.id}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={14}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
-        />
-      </div>
+      <AppSelect
+        value={selectedPeriodId}
+        onChange={(e) => onSelect(e.target.value)}
+        className={`${inputCls} w-28 min-w-[7rem]`}
+        wrapperClassName="w-28 min-w-[7rem]"
+      >
+        {sortedPeriods.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.id}
+          </option>
+        ))}
+      </AppSelect>
     </div>
   );
 }
@@ -143,6 +138,9 @@ export default function Overview() {
   const filter = normalizedQuery.filter;
   const shareUserId = normalizedQuery.shareUserId;
   const hasShareSelection = filter === "share-user" && !!shareUserId;
+  const selectedShareUser = hasShareSelection
+    ? stats?.userShares?.find((share) => share.userId === shareUserId)
+    : undefined;
   const statusFilter: OverviewStatus = normalizedQuery.status;
   const categoryFilter = searchParams.get("category") || "";
 
@@ -218,7 +216,7 @@ export default function Overview() {
     if (!(filter === "share-user" && shareUserId))
       return statusFilteredInvoices;
     return statusFilteredInvoices.filter((invoice) =>
-      (invoice.shares ?? []).some((s: any) => s.userId === shareUserId),
+      (invoice.shares ?? []).some((s) => s.userId === shareUserId),
     );
   }, [statusFilteredInvoices, filter, shareUserId]);
 
@@ -507,6 +505,8 @@ export default function Overview() {
                     <SpendBreakdownCard
                       invoices={breakdownInvoices}
                       currentUserId={currentUser?.id}
+                      selectedShareUserId={hasShareSelection ? shareUserId : undefined}
+                      selectedShareUserName={selectedShareUser?.userName}
                       currency={currency}
                       title={t("period.categoryBreakdown")}
                       selectedCategory={categoryFilter || undefined}
@@ -527,30 +527,18 @@ export default function Overview() {
                   {t("invoice.invoices")}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
-                      className={`h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
-                    >
-                      <option value="all">{t("invoice.statusAll")}</option>
-                      <option value="unpaid">{t("invoice.statusUnpaid")}</option>
-                      <option value="remaining">
-                        {t("dashboard.remainingLabel")}
-                      </option>
-                      <option value="partial">
-                        {t("invoice.statusPartiallyPaid")}
-                      </option>
-                      <option value="overdue">
-                        {t("invoice.statusOverdue")}
-                      </option>
-                      <option value="paid">{t("invoice.statusPaid")}</option>
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
-                    />
-                  </div>
+                  <AppSelect
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
+                    className={`h-10 rounded-lg ${SELECT_TRIGGER}`}
+                  >
+                    <option value="all">{t("invoice.statusAll")}</option>
+                    <option value="unpaid">{t("invoice.statusUnpaid")}</option>
+                    <option value="remaining">{t("dashboard.remainingLabel")}</option>
+                    <option value="partial">{t("invoice.statusPartiallyPaid")}</option>
+                    <option value="overdue">{t("invoice.statusOverdue")}</option>
+                    <option value="paid">{t("invoice.statusPaid")}</option>
+                  </AppSelect>
                   <button
                     type="button"
                     disabled={closed}

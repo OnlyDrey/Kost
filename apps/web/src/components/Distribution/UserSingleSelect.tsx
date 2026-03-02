@@ -1,4 +1,3 @@
-import { Circle } from "lucide-react";
 import type { User } from "../../services/api";
 import RoleBadge from "../Common/RoleBadge";
 
@@ -46,7 +45,7 @@ export default function UserSingleSelect({
                 <RoleBadge role={user.role} label={roleLabel(user.role)} />
               </div>
               <span className={`h-6 w-6 rounded-full border inline-flex items-center justify-center flex-shrink-0 ${selected ? "border-primary bg-primary/15" : "border-gray-400 dark:border-gray-600"}`}>
-                {selected ? <span className="h-2.5 w-2.5 rounded-full bg-primary" /> : <Circle size={16} className="text-gray-500 dark:text-gray-400" />}
+                {selected ? <span className="h-2.5 w-2.5 rounded-full bg-primary" /> : null}
               </span>
             </div>
           </button>

@@ -17,6 +17,7 @@ import {
   Store,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AppSelect from "../../components/Common/AppSelect";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/auth.context";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
@@ -693,14 +694,14 @@ export default function Profile() {
             <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>{t("income.type")}</label>
-                <select
+                <AppSelect
                   value={incomeType}
                   onChange={(e) => setIncomeType(e.target.value)}
                   className={inputCls}
                 >
                   <option value="ANNUAL_GROSS">{t("income.annual")}</option>
                   <option value="MONTHLY_GROSS">{t("income.monthly")}</option>
-                </select>
+                </AppSelect>
               </div>
               <div>
                 <label className={labelCls}>{t("income.amount")}</label>
@@ -795,7 +796,7 @@ export default function Profile() {
       {activePage === "customization" && isAdmin && (
         <div className="max-w-sm md:hidden">
           <label className={labelCls}>{t("settings.sectionSettings")}</label>
-          <select
+          <AppSelect
             value={globalSection}
             onChange={(e) =>
               selectGlobalSection(e.target.value as GlobalSettingsSection)
@@ -809,7 +810,7 @@ export default function Profile() {
               {t("familySettings.paymentMethods")}
             </option>
             <option value="vendors">{t("familySettings.vendors")}</option>
-          </select>
+          </AppSelect>
         </div>
       )}
 

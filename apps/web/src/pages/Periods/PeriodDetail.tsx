@@ -89,6 +89,10 @@ export default function PeriodDetail() {
 
   const filter = searchParams.get("filter") || "all";
   const shareUserId = searchParams.get("shareUser") || currentUser?.id || "";
+  const hasShareSelection = filter === "share-user" && Boolean(shareUserId);
+  const selectedShareUser = hasShareSelection
+    ? stats?.userShares?.find((share) => share.userId === shareUserId)
+    : undefined;
   const setFilter = (nextFilter: string, shareUserId?: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("filter", nextFilter);
@@ -149,7 +153,7 @@ export default function PeriodDetail() {
   const filterByShare = (list: any[]) =>
     filter === "share-user"
       ? list.filter(({ invoice }) =>
-          (invoice.shares ?? []).some((s: any) => s.userId === shareUserId),
+          (invoice.shares ?? []).some((s: { userId: string }) => s.userId === shareUserId),
         )
       : list;
 
@@ -292,6 +296,8 @@ export default function PeriodDetail() {
               <SpendBreakdownCard
                 invoices={invoices}
                 currentUserId={currentUser?.id}
+                selectedShareUserId={hasShareSelection ? shareUserId : undefined}
+                selectedShareUserName={selectedShareUser?.userName}
                 currency={currency}
                 title={t("period.categoryBreakdown")}
               />

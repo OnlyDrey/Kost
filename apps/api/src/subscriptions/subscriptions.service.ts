@@ -193,10 +193,15 @@ export class SubscriptionsService {
 
   async generateInvoicesForPeriod(periodId: string, familyId: string) {
     const period = await this.prisma.period.findFirst({
-      where: { id: periodId, familyId, status: "OPEN" },
+      where: { id: periodId, familyId },
     });
     if (!period) {
-      throw new NotFoundException(`Open period ${periodId} not found`);
+      throw new NotFoundException(`Period ${periodId} not found`);
+    }
+    if (period.status !== "OPEN") {
+      throw new BadRequestException(
+        "Cannot generate invoices for a closed period",
+      );
     }
 
     const subscriptions = await this.prisma.subscription.findMany({
