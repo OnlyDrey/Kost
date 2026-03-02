@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AllocationService } from "../invoices/allocation.service";
@@ -40,11 +41,40 @@ export class SubscriptionsService {
     return subscription;
   }
 
-  async create(createSubscriptionDto: CreateSubscriptionDto, familyId: string) {
-    const { startDate, endDate, nextBillingAt, distributionRules, status, ...subscriptionData } =
-      createSubscriptionDto;
+  async create(
+    createSubscriptionDto: CreateSubscriptionDto,
+    familyId: string,
+    currentUserId: string,
+    currentUserRole: string,
+  ) {
+    const {
+      startDate,
+      endDate,
+      nextBillingAt,
+      distributionRules,
+      status,
+      personalUserId,
+      ...subscriptionData
+    } = createSubscriptionDto;
 
     const normalizedStatus = status ?? SubscriptionStatus.ACTIVE;
+
+    const isPersonalDistribution =
+      createSubscriptionDto.distributionMethod === DistributionMethod.PERSONAL;
+    const effectivePersonalUserId = personalUserId ?? undefined;
+    if (isPersonalDistribution) {
+      if (!effectivePersonalUserId) {
+        throw new BadRequestException(
+          "personalUserId is required for PERSONAL distribution",
+        );
+      }
+      await this.assertPersonalTargetAllowed(
+        familyId,
+        currentUserId,
+        currentUserRole,
+        effectivePersonalUserId,
+      );
+    }
 
     return this.prisma.subscription.create({
       data: {
@@ -54,12 +84,19 @@ export class SubscriptionsService {
         endDate: endDate ? new Date(endDate) : null,
         nextBillingAt: nextBillingAt
           ? new Date(nextBillingAt)
-          : (createSubscriptionDto.dayOfMonth
-              ? this.buildNextBillingDate(createSubscriptionDto.dayOfMonth)
-              : new Date(startDate)),
+          : createSubscriptionDto.dayOfMonth
+            ? this.buildNextBillingDate(createSubscriptionDto.dayOfMonth)
+            : new Date(startDate),
         status: normalizedStatus,
-        distributionRules: this.normalizeDistributionRules(distributionRules) as any,
-        active: normalizedStatus === SubscriptionStatus.ACTIVE && (createSubscriptionDto.active ?? true),
+        distributionRules: this.normalizeDistributionRules(
+          distributionRules,
+          isPersonalDistribution ? effectivePersonalUserId : undefined,
+        ) as any,
+        isPersonal: isPersonalDistribution,
+        ownerUserId: isPersonalDistribution ? effectivePersonalUserId : null,
+        active:
+          normalizedStatus === SubscriptionStatus.ACTIVE &&
+          (createSubscriptionDto.active ?? true),
       } as any,
     });
   }
@@ -68,13 +105,42 @@ export class SubscriptionsService {
     id: string,
     updateSubscriptionDto: UpdateSubscriptionDto,
     familyId: string,
+    currentUserId: string,
+    currentUserRole: string,
   ) {
     await this.findOne(id, familyId);
 
-    const { startDate, endDate, nextBillingAt, distributionRules, status, ...updateData } =
-      updateSubscriptionDto;
+    const {
+      startDate,
+      endDate,
+      nextBillingAt,
+      distributionRules,
+      status,
+      personalUserId,
+      ...updateData
+    } = updateSubscriptionDto;
 
     const normalizedStatus = status;
+
+    const existing = await this.findOne(id, familyId);
+    const effectiveMethod =
+      updateSubscriptionDto.distributionMethod ?? existing.distributionMethod;
+    const isPersonalDistribution =
+      effectiveMethod === DistributionMethod.PERSONAL;
+    const effectivePersonalUserId = personalUserId ?? undefined;
+    if (isPersonalDistribution) {
+      if (!effectivePersonalUserId) {
+        throw new BadRequestException(
+          "personalUserId is required for PERSONAL distribution",
+        );
+      }
+      await this.assertPersonalTargetAllowed(
+        familyId,
+        currentUserId,
+        currentUserRole,
+        effectivePersonalUserId,
+      );
+    }
 
     return this.prisma.subscription.update({
       where: { id },
@@ -92,7 +158,14 @@ export class SubscriptionsService {
           active: normalizedStatus === SubscriptionStatus.ACTIVE,
         }),
         ...(distributionRules !== undefined && {
-          distributionRules: this.normalizeDistributionRules(distributionRules) as any,
+          distributionRules: this.normalizeDistributionRules(
+            distributionRules,
+            isPersonalDistribution ? effectivePersonalUserId : undefined,
+          ) as any,
+        }),
+        ...(updateSubscriptionDto.distributionMethod !== undefined && {
+          isPersonal: isPersonalDistribution,
+          ownerUserId: isPersonalDistribution ? effectivePersonalUserId : null,
         }),
       },
     });
@@ -105,7 +178,9 @@ export class SubscriptionsService {
       where: { id },
       data: {
         active: nextActive,
-        status: nextActive ? SubscriptionStatus.ACTIVE : SubscriptionStatus.PAUSED,
+        status: nextActive
+          ? SubscriptionStatus.ACTIVE
+          : SubscriptionStatus.PAUSED,
       },
     });
   }
@@ -153,7 +228,9 @@ export class SubscriptionsService {
 
     for (const subscription of subscriptions) {
       const startDate = new Date(subscription.startDate);
-      const endDate = subscription.endDate ? new Date(subscription.endDate) : null;
+      const endDate = subscription.endDate
+        ? new Date(subscription.endDate)
+        : null;
 
       if (startDate > periodDate) continue;
       if (endDate && endDate < periodDate) continue;
@@ -180,6 +257,7 @@ export class SubscriptionsService {
         subscription.distributionMethod,
         distributionRules,
         participants,
+        subscription.ownerUserId || undefined,
       );
 
       const invoice = await this.prisma.invoice.create({
@@ -191,6 +269,13 @@ export class SubscriptionsService {
           description: `${subscription.name} - ${subscription.frequency}`,
           totalCents: subscription.amountCents,
           distributionMethod: subscription.distributionMethod,
+          paymentMethod: subscription.paymentMethod ?? null,
+          isPersonal:
+            subscription.distributionMethod === DistributionMethod.PERSONAL,
+          ownerUserId:
+            subscription.distributionMethod === DistributionMethod.PERSONAL
+              ? subscription.ownerUserId
+              : null,
           shares: {
             create: shares.map((share) => ({
               userId: share.userId,
@@ -215,26 +300,39 @@ export class SubscriptionsService {
     };
   }
 
-
-  private normalizeDistributionRules(distributionRules: any) {
+  private normalizeDistributionRules(
+    distributionRules: any,
+    personalUserId?: string,
+  ) {
     const rules = (distributionRules ?? {}) as Record<string, any>;
     const normalized: Record<string, any> = { ...rules };
 
-    if ((!Array.isArray(normalized.userIds) || normalized.userIds.length === 0) && Array.isArray(normalized.percentRules)) {
-      normalized.userIds = normalized.percentRules.map((rule: any) => rule.userId);
+    if (
+      (!Array.isArray(normalized.userIds) || normalized.userIds.length === 0) &&
+      Array.isArray(normalized.percentRules)
+    ) {
+      normalized.userIds = normalized.percentRules.map(
+        (rule: any) => rule.userId,
+      );
     }
 
     if (Array.isArray(normalized.userIds)) {
       normalized.userIds = [...new Set(normalized.userIds.filter(Boolean))];
     }
 
+    if (personalUserId) {
+      normalized.userIds = [personalUserId];
+    }
     return normalized;
   }
 
-
   private buildNextBillingDate(dayOfMonth: number) {
     const now = new Date();
-    const billing = new Date(now.getFullYear(), now.getMonth(), Math.min(Math.max(dayOfMonth, 1), 28));
+    const billing = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      Math.min(Math.max(dayOfMonth, 1), 28),
+    );
     if (billing < now) {
       billing.setMonth(billing.getMonth() + 1);
     }
@@ -250,6 +348,7 @@ export class SubscriptionsService {
       userName: string;
       normalizedMonthlyGrossCents: number;
     }>,
+    personalUserId?: string,
   ) {
     switch (distributionMethod) {
       case DistributionMethod.BY_PERCENT:
@@ -264,12 +363,23 @@ export class SubscriptionsService {
         );
       case DistributionMethod.BY_INCOME:
         return this.allocationService.splitByIncome(totalCents, participants);
+      case DistributionMethod.PERSONAL:
+        if (!personalUserId) {
+          throw new BadRequestException(
+            "personalUserId is required for PERSONAL distribution",
+          );
+        }
+        return [
+          {
+            userId: personalUserId,
+            shareCents: totalCents,
+            explanation: "Personal expense",
+          },
+        ];
       case DistributionMethod.FIXED:
         if (!distributionRules?.fixedRules?.length) {
           if (participants.length === 0) {
-            throw new BadRequestException(
-              "No participants for equal split.",
-            );
+            throw new BadRequestException("No participants for equal split.");
           }
           return this.allocationService.splitEqual(totalCents, participants);
         }
@@ -283,6 +393,36 @@ export class SubscriptionsService {
         throw new BadRequestException(
           `Unsupported distribution method: ${distributionMethod}`,
         );
+    }
+  }
+
+  private async assertPersonalTargetAllowed(
+    familyId: string,
+    currentUserId: string,
+    currentUserRole: string,
+    personalUserId: string,
+  ) {
+    const target = await this.prisma.user.findFirst({
+      where: { id: personalUserId, familyId },
+    });
+    if (!target)
+      throw new BadRequestException(
+        "Selected personal user not found in family",
+      );
+
+    if (currentUserRole === "ADMIN") return;
+    if (currentUserRole === "ADULT") {
+      if (personalUserId !== currentUserId && target.role !== "CHILD") {
+        throw new ForbiddenException(
+          "Adults can only assign personal recurring expenses to self or children",
+        );
+      }
+      return;
+    }
+    if (personalUserId !== currentUserId) {
+      throw new ForbiddenException(
+        "Children can only assign personal recurring expenses to self",
+      );
     }
   }
 }

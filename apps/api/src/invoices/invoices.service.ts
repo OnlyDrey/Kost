@@ -117,6 +117,7 @@ export class InvoicesService {
     createInvoiceDto: CreateInvoiceDto,
     familyId: string,
     currentUserId: string,
+    currentUserRole: string,
   ) {
     const {
       periodId,
@@ -124,6 +125,7 @@ export class InvoicesService {
       lines,
       distributionRules,
       isPersonal,
+      personalUserId,
       ...invoiceData
     } = createInvoiceDto;
 
@@ -138,6 +140,25 @@ export class InvoicesService {
 
     if (period.status === PeriodStatus.CLOSED) {
       throw new BadRequestException("Cannot add invoice to a closed period");
+    }
+
+    const isPersonalDistribution =
+      distributionMethod === DistributionMethod.PERSONAL || !!isPersonal;
+    const personalTargetUserId =
+      personalUserId || (isPersonal ? currentUserId : null);
+
+    if (isPersonalDistribution) {
+      if (!personalTargetUserId) {
+        throw new BadRequestException(
+          "personalUserId is required for PERSONAL distribution",
+        );
+      }
+      await this.assertPersonalTargetAllowed(
+        familyId,
+        currentUserId,
+        currentUserRole,
+        personalTargetUserId,
+      );
     }
 
     // Validate lines sum to total if provided
@@ -173,8 +194,12 @@ export class InvoicesService {
       normalizedMonthlyGrossCents: number;
     }>;
 
+    if (isPersonalDistribution) {
+      allParticipants = [];
+      participants = [];
+    }
     // If specific users are selected (including manual child selection), include them even without incomes
-    if (selectedUserIds && selectedUserIds.length > 0) {
+    else if (selectedUserIds && selectedUserIds.length > 0) {
       // When users are explicitly selected, we need to include them even if they don't have incomes
       // This allows manually selecting children (CHILD users) for expense distribution
       const incomesMap = new Map(incomes.map((inc) => [inc.userId, inc]));
@@ -219,7 +244,11 @@ export class InvoicesService {
     } else {
       // Default behavior: use users with incomes, excluding CHILD users
       // However, if explicit percentRules or fixedRules are provided, we can use selected users even without incomes
-      if (incomes.length === 0 && !distributionRules?.percentRules && !distributionRules?.fixedRules) {
+      if (
+        incomes.length === 0 &&
+        !distributionRules?.percentRules &&
+        !distributionRules?.fixedRules
+      ) {
         throw new BadRequestException(
           "No users with income found for this period. Add incomes first.",
         );
@@ -247,6 +276,7 @@ export class InvoicesService {
       distributionMethod,
       distributionRules,
       participants,
+      personalTargetUserId || undefined,
     );
 
     // Create invoice with lines, distribution rules, and shares in a transaction
@@ -260,10 +290,12 @@ export class InvoicesService {
           description: invoiceData.description,
           dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : null,
           totalCents: createInvoiceDto.totalCents,
-          distributionMethod,
+          distributionMethod: isPersonalDistribution
+            ? DistributionMethod.PERSONAL
+            : distributionMethod,
           paymentMethod: invoiceData.paymentMethod ?? null,
-          isPersonal: !!isPersonal,
-          ownerUserId: isPersonal ? currentUserId : null,
+          isPersonal: isPersonalDistribution,
+          ownerUserId: isPersonalDistribution ? personalTargetUserId : null,
           lines: lines
             ? {
                 create: lines.map((line) => ({
@@ -323,6 +355,7 @@ export class InvoicesService {
     updateInvoiceDto: UpdateInvoiceDto,
     familyId: string,
     currentUserId: string,
+    currentUserRole: string,
   ) {
     const existingInvoice = await this.findOne(id, familyId, currentUserId);
 
@@ -349,6 +382,13 @@ export class InvoicesService {
       ...restUpdateData,
       ...(dueDate !== undefined && {
         dueDate: dueDate ? new Date(dueDate) : null,
+      }),
+      ...(updateInvoiceDto.personalUserId !== undefined && {
+        ownerUserId: updateInvoiceDto.personalUserId || null,
+      }),
+      ...(updateInvoiceDto.distributionMethod !== undefined && {
+        isPersonal:
+          updateInvoiceDto.distributionMethod === DistributionMethod.PERSONAL,
       }),
       ...(updateInvoiceDto.isPersonal !== undefined && {
         isPersonal: updateInvoiceDto.isPersonal,
@@ -425,7 +465,7 @@ export class InvoicesService {
 
         // For FIXED distribution, we can proceed even with no income users
         // For other methods, validate at least one user has income
-        if (method !== "FIXED") {
+        if (method !== "FIXED" && method !== DistributionMethod.PERSONAL) {
           const hasIncome = allParticipants.some(
             (p) => p.normalizedMonthlyGrossCents > 0,
           );
@@ -448,11 +488,27 @@ export class InvoicesService {
         participants = allParticipants.filter((p) => p.role !== "CHILD");
       }
 
+      const personalTargetUserId = updateInvoiceDto.personalUserId;
+      if (method === DistributionMethod.PERSONAL) {
+        if (!personalTargetUserId) {
+          throw new BadRequestException(
+            "personalUserId is required for PERSONAL distribution",
+          );
+        }
+        await this.assertPersonalTargetAllowed(
+          familyId,
+          currentUserId,
+          currentUserRole,
+          personalTargetUserId,
+        );
+      }
+
       const shares = await this.calculateShares(
         totalCents,
         method,
         distributionRules,
         participants,
+        personalTargetUserId,
       );
 
       // Update in transaction
@@ -472,6 +528,13 @@ export class InvoicesService {
             }),
             ...(updateInvoiceDto.distributionMethod !== undefined && {
               distributionMethod: updateInvoiceDto.distributionMethod,
+            }),
+            ...(updateInvoiceDto.personalUserId !== undefined && {
+              ownerUserId: updateInvoiceDto.personalUserId,
+              isPersonal:
+                (updateInvoiceDto.distributionMethod ??
+                  existingInvoice.distributionMethod) ===
+                DistributionMethod.PERSONAL,
             }),
             shares: {
               create: shares.map((share) => ({
@@ -620,6 +683,7 @@ export class InvoicesService {
       userName: string;
       normalizedMonthlyGrossCents: number;
     }>,
+    personalUserId?: string,
   ) {
     switch (distributionMethod) {
       case DistributionMethod.BY_PERCENT:
@@ -638,6 +702,20 @@ export class InvoicesService {
 
       case DistributionMethod.BY_INCOME:
         return this.allocationService.splitByIncome(totalCents, participants);
+
+      case DistributionMethod.PERSONAL:
+        if (!personalUserId) {
+          throw new BadRequestException(
+            "personalUserId is required for PERSONAL distribution",
+          );
+        }
+        return [
+          {
+            userId: personalUserId,
+            shareCents: totalCents,
+            explanation: "Personal expense",
+          },
+        ];
 
       case DistributionMethod.FIXED:
         // No fixedRules → equal split among participants (selected via userIds)
@@ -668,6 +746,37 @@ export class InvoicesService {
         throw new BadRequestException(
           `Unsupported distribution method: ${distributionMethod}`,
         );
+    }
+  }
+
+  private async assertPersonalTargetAllowed(
+    familyId: string,
+    currentUserId: string,
+    currentUserRole: string,
+    personalUserId: string,
+  ) {
+    const target = await this.prisma.user.findFirst({
+      where: { id: personalUserId, familyId },
+    });
+    if (!target)
+      throw new BadRequestException(
+        "Selected personal user not found in family",
+      );
+
+    if (currentUserRole === "ADMIN") return;
+    if (currentUserRole === "ADULT") {
+      if (personalUserId !== currentUserId && target.role !== "CHILD") {
+        throw new ForbiddenException(
+          "Adults can only assign personal expenses to self or children",
+        );
+      }
+      return;
+    }
+
+    if (personalUserId !== currentUserId) {
+      throw new ForbiddenException(
+        "Children can only assign personal expenses to self",
+      );
     }
   }
 }

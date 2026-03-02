@@ -74,18 +74,32 @@ export class CreateSubscriptionDto {
   @IsOptional()
   distributionRules?: Record<string, unknown>;
 
-
   @ApiPropertyOptional({ example: "Premium" })
   @IsString()
   @IsOptional()
   plan?: string;
+
+  @ApiPropertyOptional({ example: "Faktura" })
+  @IsString()
+  @IsOptional()
+  paymentMethod?: string;
+
+  @ApiPropertyOptional({
+    description: "User id for personal recurring expense owner",
+  })
+  @IsString()
+  @IsOptional()
+  personalUserId?: string;
 
   @ApiPropertyOptional({ example: "2026-03-01" })
   @IsDateString()
   @IsOptional()
   nextBillingAt?: string;
 
-  @ApiPropertyOptional({ enum: SubscriptionStatus, example: SubscriptionStatus.ACTIVE })
+  @ApiPropertyOptional({
+    enum: SubscriptionStatus,
+    example: SubscriptionStatus.ACTIVE,
+  })
   @IsEnum(SubscriptionStatus)
   @IsOptional()
   status?: SubscriptionStatus;

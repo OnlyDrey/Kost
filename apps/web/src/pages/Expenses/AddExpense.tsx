@@ -30,6 +30,7 @@ import {
   getCurrencySymbol,
 } from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
+import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
 
 const inputCls =
@@ -42,6 +43,7 @@ const labelCls =
 export default function AddExpense() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const { id } = useParams<{ id?: string }>();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -86,7 +88,7 @@ export default function AddExpense() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [amount, setAmount] = useState("");
   const [distributionMethod, setDistributionMethod] = useState<
-    "BY_INCOME" | "BY_PERCENT" | "FIXED"
+    "BY_INCOME" | "BY_PERCENT" | "FIXED" | "PERSONAL"
   >("BY_INCOME");
   const [fixedMode, setFixedMode] = useState<"EQUAL" | "AMOUNT">("EQUAL");
   const [dueDate, setDueDate] = useState("");
@@ -101,7 +103,7 @@ export default function AddExpense() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<
     "ACTIVE" | "PAUSED" | "CANCELED"
   >("ACTIVE");
-  const [isPersonal, setIsPersonal] = useState(false);
+  const [personalUserId, setPersonalUserId] = useState("");
   const [error, setError] = useState("");
   const [userPercents, setUserPercents] = useState<Record<string, string>>({});
   const [userFixedAmounts, setUserFixedAmounts] = useState<
@@ -126,7 +128,7 @@ export default function AddExpense() {
       setPaymentMethod(existingInvoice.paymentMethod ?? "");
       if (existingInvoice.dueDate)
         setDueDate(existingInvoice.dueDate.slice(0, 10));
-      setIsPersonal(!!existingInvoice.isPersonal);
+      setPersonalUserId(existingInvoice.ownerUserId ?? "");
 
       const rules = existingInvoice.distribution as any;
       if (rules?.userIds && Array.isArray(rules.userIds)) {
@@ -208,7 +210,8 @@ export default function AddExpense() {
       setDescription(existingSubscription.description || "");
       setCategory(existingSubscription.category ?? "");
       setAmount(String(centsToAmount(existingSubscription.amountCents)));
-      setDistributionMethod(existingSubscription.distributionMethod);
+      setDistributionMethod(existingSubscription.distributionMethod as any);
+      setPersonalUserId((existingSubscription as any).personalUserId ?? "");
       if (existingSubscription.distributionMethod !== "FIXED") {
         setFixedMode("EQUAL");
       }
@@ -327,9 +330,13 @@ export default function AddExpense() {
     .map(([userId]) => userId);
 
   const selectedUserIds =
-    distributionMethod === "FIXED" && fixedMode === "AMOUNT"
-      ? fixedAmountUserIds
-      : participantUserIds;
+    distributionMethod === "PERSONAL"
+      ? personalUserId
+        ? [personalUserId]
+        : []
+      : distributionMethod === "FIXED" && fixedMode === "AMOUNT"
+        ? fixedAmountUserIds
+        : participantUserIds;
 
   const equalPercent =
     distributionMethod === "FIXED" && fixedMode === "EQUAL"
@@ -362,6 +369,11 @@ export default function AddExpense() {
       setError(t("invoice.closedPeriodAddBlocked"));
       return;
     }
+    if (distributionMethod === "PERSONAL" && !personalUserId) {
+      setError(t("invoice.selectPersonalUser"));
+      return;
+    }
+
     if (!vendor.trim()) {
       setError(t("validation.required"));
       return;
@@ -469,6 +481,9 @@ export default function AddExpense() {
           description: description.trim() || undefined,
           amountCents: totalCents,
           distributionMethod,
+          paymentMethod: paymentMethod || undefined,
+          personalUserId:
+            distributionMethod === "PERSONAL" ? personalUserId : undefined,
           frequency: actualFrequency,
           dayOfMonth: parseInt(dayOfMonth) || undefined,
           startDate,
@@ -488,7 +503,9 @@ export default function AddExpense() {
           vendor: vendor.trim(),
           totalCents,
           distributionMethod,
-          isPersonal,
+          paymentMethod: paymentMethod || undefined,
+          personalUserId:
+            distributionMethod === "PERSONAL" ? personalUserId : undefined,
         };
         if (category.trim()) invoiceData.category = category.trim();
         if (description.trim()) invoiceData.description = description.trim();
@@ -555,7 +572,7 @@ export default function AddExpense() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm md:max-w-5xl lg:max-w-6xl md:mx-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm ">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
@@ -594,7 +611,7 @@ export default function AddExpense() {
           </div>
 
           {isSubscription && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
               <div className="min-w-0">
                 <label className={labelCls}>{t("subscription.status")}</label>
                 <select
@@ -631,7 +648,7 @@ export default function AddExpense() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
             <div className="relative">
               <label className={labelCls}>{t("invoice.vendor")} *</label>
               <input
@@ -697,7 +714,7 @@ export default function AddExpense() {
             </div>
           </div>
 
-          <div className="md:col-span-3 lg:col-span-4">
+          <div className="md:col-span-2">
             <label className={labelCls}>{t("invoice.description")}</label>
             <input
               type="text"
@@ -712,7 +729,7 @@ export default function AddExpense() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
             <div className="min-w-0">
               <label className={labelCls}>{t("invoice.amount")} *</label>
               <div className="relative flex items-center">
@@ -751,28 +768,10 @@ export default function AddExpense() {
             )}
           </div>
 
-          {!isSubscription && (
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-              <input
-                type="checkbox"
-                id="isPersonal"
-                checked={isPersonal}
-                onChange={(e) => setIsPersonal(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-              />
-              <label
-                htmlFor="isPersonal"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-              >
-                {t("invoice.personalExpense")}
-              </label>
-            </div>
-          )}
-
           {isSubscription && (
             <>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
                     <label className={labelCls}>
                       {t("subscription.everyLabel")}
@@ -787,7 +786,9 @@ export default function AddExpense() {
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>{t("subscription.unit")}</label>
+                    <label className={labelCls}>
+                      {t("subscription.frequencyLabel")}
+                    </label>
                     <select
                       value={frequencyUnit}
                       onChange={(e) => setFrequencyUnit(e.target.value)}
@@ -818,7 +819,7 @@ export default function AddExpense() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
                 <div className="min-w-0 md:col-span-1 lg:col-span-1">
                   <label className={labelCls}>
                     {t("subscription.startDate")}
@@ -834,31 +835,27 @@ export default function AddExpense() {
             </>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
-            {!isSubscription && (
-              <div>
-                <label className={labelCls}>{t("invoice.paymentMethod")}</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">
-                    {t("invoice.paymentMethodPlaceholder")}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+            <div>
+              <label className={labelCls}>{t("invoice.paymentMethod")}</label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">
+                  {t("invoice.paymentMethodPlaceholder")}
+                </option>
+                {paymentMethods.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
                   </option>
-                  {paymentMethods.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+                ))}
+              </select>
+            </div>
             <div
               className={
-                isSubscription
-                  ? "sm:col-span-2 md:col-span-3 lg:col-span-4"
-                  : "md:col-span-2 lg:col-span-3"
+                isSubscription ? "sm:col-span-2 md:col-span-2" : "md:col-span-2"
               }
             >
               <label className={labelCls}>
@@ -881,7 +878,9 @@ export default function AddExpense() {
                     setDistributionMethod("FIXED");
                     setFixedMode("AMOUNT");
                   } else {
-                    setDistributionMethod(value as "BY_INCOME" | "BY_PERCENT");
+                    setDistributionMethod(
+                      value as "BY_INCOME" | "BY_PERCENT" | "PERSONAL",
+                    );
                   }
                 }}
                 className={inputCls}
@@ -894,9 +893,38 @@ export default function AddExpense() {
                 <option value="FIXED_AMOUNT">
                   {t("subscription.amountOnly")}
                 </option>
+                <option value="PERSONAL">
+                  {t("invoice.personalExpenseOption")}
+                </option>
               </select>
             </div>
           </div>
+
+          {distributionMethod === "PERSONAL" && users && users.length > 0 && (
+            <div className="space-y-2">
+              <label className={labelCls}>{t("invoice.appliesTo")}</label>
+              <select
+                value={personalUserId}
+                onChange={(e) => setPersonalUserId(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">{t("invoice.selectPersonalUser")}</option>
+                {users
+                  .filter((u) => {
+                    if (!currentUser) return false;
+                    if (currentUser.role === "ADMIN") return true;
+                    if (currentUser.role === "ADULT")
+                      return u.id === currentUser.id || u.role === "CHILD";
+                    return u.id === currentUser.id;
+                  })
+                  .map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {distributionMethod === "BY_INCOME" && users && users.length > 0 && (
             <div className="space-y-2">

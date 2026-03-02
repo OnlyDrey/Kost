@@ -349,6 +349,7 @@
     "statusPaused": "Satt på pause",
     "statusCanceled": "Avsluttet",
     "unit": "Enhet",
+    "frequencyLabel": "Frekvens",
     "unitDay": "Dag",
     "unitWeek": "Uke",
     "unitMonth": "Måned",

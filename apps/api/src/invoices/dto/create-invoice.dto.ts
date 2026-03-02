@@ -139,8 +139,13 @@ export class CreateInvoiceDto {
   @IsOptional()
   paymentMethod?: string;
 
+  @ApiPropertyOptional({ description: "User id for personal expense owner" })
+  @IsString()
+  @IsOptional()
+  personalUserId?: string;
+
   @ApiPropertyOptional({
-    description: "Mark invoice as personal/private to current user",
+    description: "Legacy personal flag; mapped to PERSONAL distribution",
     default: false,
   })
   @IsBoolean()
