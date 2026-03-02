@@ -38,6 +38,7 @@ import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
+import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
 
 // ------- Period Selector -------
 
@@ -56,7 +57,7 @@ function PeriodSelector({
   );
 
   const inputCls =
-    "h-10 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary";
+    `h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -64,7 +65,7 @@ function PeriodSelector({
         <select
           value={selectedPeriodId}
           onChange={(e) => onSelect(e.target.value)}
-          className={`${inputCls} pr-7 appearance-none w-28 min-w-[7rem]`}
+          className={`${inputCls} w-28 min-w-[7rem]`}
         >
           {sortedPeriods.map((p) => (
             <option key={p.id} value={p.id}>
@@ -472,7 +473,7 @@ export default function Overview() {
                           type="button"
                           onClick={() => setFilter("all")}
                           aria-label={t("common.reset")}
-                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
+                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${FOCUS_RING} ${
                             hasShareSelection
                               ? "border-primary/40 text-primary hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
                               : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -529,7 +530,7 @@ export default function Overview() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
-                    className="h-10 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    className={`h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
                   >
                     <option value="all">{t("invoice.statusAll")}</option>
                     <option value="unpaid">{t("invoice.statusUnpaid")}</option>
@@ -624,6 +625,16 @@ export default function Overview() {
                                 overdue={overdue}
                                 paidLabel={t("invoice.statusPaid")}
                                 overdueLabel={t("invoice.statusOverdue")}
+                                showPaymentStatusPill={false}
+                                focusRingClassName={
+                                  isPaid
+                                    ? "focus-visible:ring-success/45"
+                                    : overdue
+                                      ? "focus-visible:ring-danger/45"
+                                      : isPartiallyPaid
+                                        ? "focus-visible:ring-warning/45"
+                                        : "focus-visible:ring-danger/45"
+                                }
                                 onClick={() =>
                                   navigate(`/invoices/${invoice.id}`)
                                 }

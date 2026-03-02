@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { RotateCcw } from "lucide-react";
 import { useCurrencyFormatter } from "../../hooks/useApi";
 import type { Invoice } from "../../services/api";
+import { FOCUS_RING } from "./focusStyles";
 
 type Mode = "YOUR_SHARE" | "TOTAL";
 
@@ -74,7 +75,7 @@ export default function SpendBreakdownCard({
               type="button"
               onClick={onResetCategory}
               aria-label={t("common.reset")}
-              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${FOCUS_RING} ${
                 selectedCategory
                   ? "border-primary/40 text-primary hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
                   : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -87,13 +88,13 @@ export default function SpendBreakdownCard({
         <div className="inline-flex w-full sm:w-auto rounded-lg border border-gray-200 dark:border-gray-700 p-0.5">
           <button
             onClick={() => setMode("YOUR_SHARE")}
-            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "YOUR_SHARE" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${FOCUS_RING} ${mode === "YOUR_SHARE" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
             {t("dashboard.yourShare")}
           </button>
           <button
             onClick={() => setMode("TOTAL")}
-            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${mode === "TOTAL" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+            className={`flex-1 sm:flex-initial px-2.5 py-1 text-xs rounded-md transition-colors ${FOCUS_RING} ${mode === "TOTAL" ? "bg-primary text-white font-semibold" : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
           >
             {t("dashboard.totalAmount")}
           </button>
@@ -110,7 +111,7 @@ export default function SpendBreakdownCard({
               key={`${mode}-${category}`}
               type="button"
               onClick={() => onSelectCategory?.(category)}
-              className={`w-full px-5 py-3.5 text-left border-l-2 transition-colors ${selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
+              className={`w-full px-5 py-3.5 text-left border-l-2 rounded-lg transition-colors ${FOCUS_RING} ${selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
             >
               <div className="flex items-start justify-between mb-1.5 gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">

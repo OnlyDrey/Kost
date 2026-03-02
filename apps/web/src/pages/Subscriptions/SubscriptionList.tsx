@@ -26,7 +26,7 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
-import { FOCUS_RING } from "../../components/Common/focusStyles";
+import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
 
 export default function SubscriptionList() {
   const { t } = useTranslation();
@@ -88,7 +88,7 @@ export default function SubscriptionList() {
                 <select
                   value={generatePeriodId}
                   onChange={(e) => setGeneratePeriodId(e.target.value)}
-                  className={`h-10 px-3 rounded-lg border border-border bg-surface text-sm ${FOCUS_RING}`}
+                  className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
                 >
                   {periods.map((period) => (
                     <option key={period.id} value={period.id}>
@@ -124,7 +124,7 @@ export default function SubscriptionList() {
             <select
               value={generatePeriodId}
               onChange={(e) => setGeneratePeriodId(e.target.value)}
-              className={`h-10 px-3 rounded-lg border border-border bg-surface text-sm ${FOCUS_RING}`}
+              className={`h-10 px-3 pr-10 text-sm ${SELECT_TRIGGER}`}
             >
               {periods.map((period) => (
                 <option key={period.id} value={period.id}>
@@ -268,6 +268,7 @@ function SubscriptionCard({
       typeLabel={methodLabel}
       category={sub.category}
       amountLabel={fmt(sub.amountCents)}
+      showPaymentStatusPill={false}
       rightContent={
         sub.nextBillingAt || sub.lastGenerated ? (
           <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">

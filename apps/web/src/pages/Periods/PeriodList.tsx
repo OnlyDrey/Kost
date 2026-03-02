@@ -24,7 +24,7 @@ import { formatDate } from "../../utils/date";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
-import { FOCUS_RING } from "../../components/Common/focusStyles";
+import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
 
 const inputCls =
   `w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
@@ -236,7 +236,7 @@ export default function PeriodList() {
               setSelectedYear(e.target.value);
               setSelectedMonth("all");
             }}
-            className={`px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm appearance-none ${FOCUS_RING}`}
+            className={`px-3 py-2 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
           >
             <option value="all">{t("overview.allYears")}</option>
             {years.map((year) => (
@@ -254,7 +254,7 @@ export default function PeriodList() {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className={`px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm appearance-none ${FOCUS_RING}`}
+            className={`px-3 py-2 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
           >
             <option value="all">{t("overview.allMonths")}</option>
             {months.map((month) => (

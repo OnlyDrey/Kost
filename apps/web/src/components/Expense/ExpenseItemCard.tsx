@@ -1,7 +1,7 @@
 import { CheckCircle2, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
-import { FOCUS_RING } from "../Common/focusStyles";
+import { FOCUS_RING_STRONG } from "../Common/focusStyles";
 
 import type { ReactNode } from "react";
 
@@ -25,6 +25,8 @@ interface ExpenseItemCardProps {
   overdueLabel?: string;
   showPaidIcon?: boolean;
   selected?: boolean;
+  showPaymentStatusPill?: boolean;
+  focusRingClassName?: string;
 }
 
 export default function ExpenseItemCard({
@@ -47,6 +49,8 @@ export default function ExpenseItemCard({
   overdueLabel,
   showPaidIcon = true,
   selected = false,
+  showPaymentStatusPill = true,
+  focusRingClassName,
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
   const emphasisClass = paid
@@ -63,58 +67,58 @@ export default function ExpenseItemCard({
       ? "text-danger"
       : "text-primary";
 
-  const statusPill = (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${paid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}
-    >
-      {paid ? paidLabel ?? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
-    </span>
-  );
+  const effectiveFocusRing =
+    focusRingClassName ??
+    (paid
+      ? "focus-visible:ring-success/45"
+      : overdue
+        ? "focus-visible:ring-danger/45"
+        : "focus-visible:ring-primary/45");
 
   const cardBody = (
     <div className="flex flex-col gap-2.5">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-3 min-w-0">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt=""
-              className="w-12 h-12 rounded-md object-contain object-center bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0">
-              <Store size={18} className="text-gray-400" />
-            </div>
-          )}
-
-          <div className="min-w-0 flex-1">
-            <p
-              className="text-[15px] font-semibold text-app-text-primary line-clamp-2"
-              title={vendor}
-            >
-              {vendor}
-            </p>
-            {description && (
-              <p
-                className="text-sm text-app-text-secondary line-clamp-2 mt-0"
-                title={description ?? undefined}
-              >
-                {description}
-              </p>
-            )}
+      <div className="flex items-start gap-3">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt=""
+            className="w-12 h-12 rounded-md object-contain object-center bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0">
+            <Store size={18} className="text-gray-400" />
           </div>
-        </div>
+        )}
 
-        <div className="flex items-start gap-2">
-          {statusPill}
-          {actionButton && <div className="shrink-0">{actionButton}</div>}
+        <div className="min-w-0 flex-1">
+          <p
+            className="text-[15px] font-semibold text-app-text-primary line-clamp-2"
+            title={vendor}
+          >
+            {vendor}
+          </p>
+          {description && (
+            <p
+              className="text-sm text-app-text-secondary line-clamp-2 mt-0"
+              title={description ?? undefined}
+            >
+              {description}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="w-full flex flex-wrap gap-1">
+        {showPaymentStatusPill && (
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${paid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}
+          >
+            {paid ? paidLabel ?? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
+          </span>
+        )}
         {overdue && (
           <TagPill
             label={overdueLabel ?? t("invoice.statusOverdue")}
@@ -133,7 +137,7 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel) && (
+      {(amountLabel || rightContent || dateLabel || actionButton) && (
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 min-w-0">
             <div className="min-w-0 flex-1">
@@ -150,7 +154,13 @@ export default function ExpenseItemCard({
                 </p>
               )}
             </div>
-            {rightContent && <div className="shrink-0">{rightContent}</div>}
+
+            {(rightContent || actionButton) && (
+              <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+                {rightContent && <div className="shrink-0">{rightContent}</div>}
+                {actionButton && <div className="shrink-0">{actionButton}</div>}
+              </div>
+            )}
           </div>
 
           {dateLabel && (
@@ -172,7 +182,10 @@ export default function ExpenseItemCard({
       className={`relative bg-app-surface rounded-xl border ${emphasisClass} shadow-sm hover:shadow-md transition-all`}
     >
       {onClick ? (
-        <button onClick={onClick} className={`w-full text-left p-3 rounded-xl ${FOCUS_RING}`}>
+        <button
+          onClick={onClick}
+          className={`block w-full text-left p-3 rounded-xl ${FOCUS_RING_STRONG} ${effectiveFocusRing}`}
+        >
           {cardBody}
         </button>
       ) : (

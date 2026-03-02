@@ -43,7 +43,7 @@ function NavLink({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${FOCUS_RING} ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:border-primary focus-visible:bg-primary/15 focus-visible:text-primary dark:focus-visible:bg-primary/25 ${
         active
           ? "border-primary bg-primary/15 text-primary dark:bg-primary/25"
           : "border-transparent text-muted-foreground hover:bg-surface-elevated"
