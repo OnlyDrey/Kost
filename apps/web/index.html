@@ -3,203 +3,227 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo-mark.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="description" content="Shared expense tracking application" />
     <meta name="theme-color" content="#0B1020" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="Kost" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
     <script>
       try {
-        const s = localStorage.getItem('settings');
+        const s = localStorage.getItem("settings");
         const theme = s ? JSON.parse(s).theme : null;
-        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
+        if (
+          theme === "dark" ||
+          (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
         }
-      } catch(e) {}
+      } catch (e) {}
+    </script>
+
+    <script type="module">
+      window.__KOST_DEBUG_MODE__ =
+        String(import.meta.env.VITE_DEBUG_MODE ?? "false").toLowerCase() ===
+        "true";
     </script>
 
     <script>
-    window.__KOST_DEBUG_MODE__ = (function () {
-      var raw = "%VITE_DEBUG_MODE%";
-      if (!raw || raw === "%VITE_DEBUG_MODE%") {
-        return false;
-      }
-      return String(raw).toLowerCase() === "true";
-    })();
+      (function () {
+        if (!window.__KOST_DEBUG_MODE__) {
+          return;
+        }
+
+        function show(msg) {
+          try {
+            var el = document.getElementById("kost-crash");
+            if (!el) {
+              el = document.createElement("pre");
+              el.id = "kost-crash";
+              el.style.cssText =
+                "position:fixed;inset:0;z-index:99999;overflow:auto;background:#0b1020;color:#fff;padding:16px;white-space:pre-wrap;font:12px/1.4 monospace;";
+              document.body.appendChild(el);
+            }
+            el.textContent = msg;
+          } catch (_) {}
+        }
+
+        window.addEventListener("error", function (e) {
+          show(
+            "[window.error]\n" +
+              (e && e.message ? e.message : String(e)) +
+              "\n" +
+              (e && e.error && e.error.stack ? e.error.stack : ""),
+          );
+        });
+
+        window.addEventListener("unhandledrejection", function (e) {
+          var r = e && e.reason;
+          show(
+            "[unhandledrejection]\n" +
+              (r && r.message ? r.message : String(r)) +
+              "\n" +
+              (r && r.stack ? r.stack : ""),
+          );
+        });
+      })();
     </script>
 
     <script>
-    (function () {
-      if (!window.__KOST_DEBUG_MODE__) {
-        return;
-      }
-
-      function show(msg) {
-        try {
-          var el = document.getElementById('kost-crash');
+      window.__KOST_DIAG__ = window.__KOST_DIAG__ || {
+        module: "pending",
+        moduleError: "",
+      };
+      (function () {
+        if (!window.__KOST_DEBUG_MODE__) {
+          return;
+        }
+        function ensureBanner() {
+          var el = document.getElementById("kost-diag");
           if (!el) {
-            el = document.createElement('pre');
-            el.id = 'kost-crash';
+            el = document.createElement("pre");
+            el.id = "kost-diag";
             el.style.cssText =
-              'position:fixed;inset:0;z-index:99999;overflow:auto;background:#0b1020;color:#fff;padding:16px;white-space:pre-wrap;font:12px/1.4 monospace;';
+              "position:fixed;top:8px;left:8px;z-index:99998;background:rgba(11,16,32,.9);color:#9ef;padding:8px 10px;margin:0;white-space:pre-wrap;font:12px/1.4 monospace;border:1px solid #2a335c;border-radius:6px;max-width:calc(100vw - 16px);";
             document.body.appendChild(el);
           }
-          el.textContent = msg;
-        } catch (_) {}
-      }
-
-      window.addEventListener('error', function (e) {
-        show(
-          '[window.error]\n' +
-            (e && e.message ? e.message : String(e)) +
-            '\n' +
-            (e && e.error && e.error.stack ? e.error.stack : '')
-        );
-      });
-
-      window.addEventListener('unhandledrejection', function (e) {
-        var r = e && e.reason;
-        show(
-          '[unhandledrejection]\n' +
-            (r && r.message ? r.message : String(r)) +
-            '\n' +
-            (r && r.stack ? r.stack : '')
-        );
-      });
-    })();
-    </script>
-
-
-    <script>
-    window.__KOST_DIAG__ = window.__KOST_DIAG__ || { module: "pending", moduleError: "" };
-    (function () {
-      if (!window.__KOST_DEBUG_MODE__) {
-        return;
-      }
-      function ensureBanner() {
-        var el = document.getElementById('kost-diag');
-        if (!el) {
-          el = document.createElement('pre');
-          el.id = 'kost-diag';
-          el.style.cssText =
-            'position:fixed;top:8px;left:8px;z-index:99998;background:rgba(11,16,32,.9);color:#9ef;padding:8px 10px;margin:0;white-space:pre-wrap;font:12px/1.4 monospace;border:1px solid #2a335c;border-radius:6px;max-width:calc(100vw - 16px);';
-          document.body.appendChild(el);
-        }
-        return el;
-      }
-
-      function getRootStatus() {
-        var root = document.getElementById('root');
-        if (!root) {
-          return 'missing';
-        }
-        return root.childNodes && root.childNodes.length > 0 ? 'mounted' : 'empty';
-      }
-
-      function getModuleLine() {
-        var diag = window.__KOST_DIAG__ || { module: 'pending', moduleError: '' };
-        if (diag.module === 'error' && diag.moduleError) {
-          return 'module: error (' + diag.moduleError + ')';
-        }
-        if (diag.module === 'pending' && diag.moduleError) {
-          return 'module: pending (' + diag.moduleError + ')';
-        }
-        return 'module: ' + diag.module;
-      }
-
-      function render(rootLine) {
-        var lines = [
-          'Kost diagnostics active',
-          'location: ' + window.location.pathname,
-          getModuleLine(),
-          'root: ' + rootLine,
-        ];
-
-        var diag = window.__KOST_DIAG__ || { module: 'pending', moduleError: '' };
-        if (diag.module === 'loaded' && rootLine === 'still empty after 5s') {
-          lines.push(
-            'hint: module loaded but root empty → likely app init/auth/router dead-end or silent crash',
-          );
+          return el;
         }
 
-        ensureBanner().textContent = lines.join('\n');
-      }
+        function getRootStatus() {
+          var root = document.getElementById("root");
+          if (!root) {
+            return "missing";
+          }
+          return root.childNodes && root.childNodes.length > 0
+            ? "mounted"
+            : "empty";
+        }
 
-      document.addEventListener('DOMContentLoaded', function () {
-        render(getRootStatus());
+        function getModuleLine() {
+          var diag = window.__KOST_DIAG__ || {
+            module: "pending",
+            moduleError: "",
+          };
+          if (diag.module === "error" && diag.moduleError) {
+            return "module: error (" + diag.moduleError + ")";
+          }
+          if (diag.module === "pending" && diag.moduleError) {
+            return "module: pending (" + diag.moduleError + ")";
+          }
+          return "module: " + diag.module;
+        }
 
-        [1000, 3000, 5000].forEach(function (delay) {
+        function render(rootLine) {
+          var lines = [
+            "Kost diagnostics active",
+            "location: " + window.location.pathname,
+            getModuleLine(),
+            "root: " + rootLine,
+          ];
+
+          var diag = window.__KOST_DIAG__ || {
+            module: "pending",
+            moduleError: "",
+          };
+          if (diag.module === "loaded" && rootLine === "still empty after 5s") {
+            lines.push(
+              "hint: module loaded but root empty → likely app init/auth/router dead-end or silent crash",
+            );
+          }
+
+          ensureBanner().textContent = lines.join("\n");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          render(getRootStatus());
+
+          [1000, 3000, 5000].forEach(function (delay) {
+            setTimeout(function () {
+              var rootStatus = getRootStatus();
+              if (delay === 5000 && rootStatus === "empty") {
+                render("still empty after 5s");
+                return;
+              }
+              render(rootStatus);
+            }, delay);
+          });
+
           setTimeout(function () {
             var rootStatus = getRootStatus();
-            if (delay === 5000 && rootStatus === 'empty') {
-              render('still empty after 5s');
+            if (rootStatus === "empty") {
+              render("still empty after 5s");
               return;
             }
             render(rootStatus);
-          }, delay);
+          }, 6100);
         });
-
-        setTimeout(function () {
-          var rootStatus = getRootStatus();
-          if (rootStatus === 'empty') {
-            render('still empty after 5s');
-            return;
-          }
-          render(rootStatus);
-        }, 6100);
-      });
-    })();
+      })();
     </script>
 
     <title>Kost</title>
   </head>
   <body>
     <div id="root"></div>
-        <script>
-    (function () {
-      if (!window.__KOST_DEBUG_MODE__) {
-        return;
-      }
-
-      var attempts = 0;
-
-      function attachModuleTracking() {
-        var script = document.getElementById('kost-module');
-        if (!script) {
-          attempts += 1;
-          if (attempts < 20) {
-            window.requestAnimationFrame(attachModuleTracking);
-          }
+    <script>
+      (function () {
+        if (!window.__KOST_DEBUG_MODE__) {
           return;
         }
 
-        script.addEventListener('load', function () {
-          window.__KOST_DIAG__.module = 'loaded';
-        });
+        var attempts = 0;
 
-        script.addEventListener('error', function () {
-          window.__KOST_DIAG__.module = 'error';
-          window.__KOST_DIAG__.moduleError = 'module script failed to load';
-        });
-      }
+        function attachModuleTracking() {
+          var script = document.getElementById("kost-module");
+          if (!script) {
+            attempts += 1;
+            if (attempts < 20) {
+              window.requestAnimationFrame(attachModuleTracking);
+            }
+            return;
+          }
 
-      attachModuleTracking();
+          script.addEventListener("load", function () {
+            window.__KOST_DIAG__.module = "loaded";
+          });
 
-      window.setTimeout(function () {
-        if (window.__KOST_DIAG__.module === 'pending') {
-          window.__KOST_DIAG__.moduleError = 'no load/error event after 6s (possible execute/parse issue)';
+          script.addEventListener("error", function () {
+            window.__KOST_DIAG__.module = "error";
+            window.__KOST_DIAG__.moduleError = "module script failed to load";
+          });
         }
-      }, 6000);
-    })();
+
+        attachModuleTracking();
+
+        window.setTimeout(function () {
+          if (window.__KOST_DIAG__.module === "pending") {
+            window.__KOST_DIAG__.moduleError =
+              "no load/error event after 6s (possible execute/parse issue)";
+          }
+        }, 6000);
+      })();
     </script>
-    <script id="kost-module" type="module" crossorigin src="/src/main.tsx"></script>
+    <script
+      id="kost-module"
+      type="module"
+      crossorigin
+      src="/src/main.tsx"
+    ></script>
   </body>
 </html>

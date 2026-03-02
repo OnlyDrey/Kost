@@ -73,7 +73,7 @@ export default function PeriodDetail() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -172,7 +172,7 @@ export default function PeriodDetail() {
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
-      amountClass: "text-indigo-500 dark:text-indigo-400",
+      amountClass: "text-primary dark:text-primary",
     },
     {
       key: "partial",
@@ -270,7 +270,7 @@ export default function PeriodDetail() {
             icon: Receipt,
             label: t("dashboard.totalInvoices"),
             value: stats?.totalInvoices ?? 0,
-            colorClass: "bg-indigo-500",
+            colorClass: "bg-primary",
             onClick: () => setFilter("all"),
           },
           {
@@ -278,7 +278,7 @@ export default function PeriodDetail() {
             icon: Users,
             label: t("period.userShares"),
             value: stats?.userShares?.length ?? 0,
-            colorClass: "bg-sky-500",
+            colorClass: "bg-primary",
             onClick: () => setFilter("share-user", currentUser?.id),
           },
         ]}

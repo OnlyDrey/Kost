@@ -125,7 +125,7 @@ export default function ExpenseItemCard({
             <div className="min-w-0 flex-1">
               {amountLabel && (
                 <p
-                  className={`text-2xl sm:text-3xl leading-none font-bold m-0 ${amountClass}`}
+                  className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
                 >
                   {amountLabel}
                 </p>

@@ -22,6 +22,7 @@ import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { AddPaymentDto } from "./dto/add-payment.dto";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { UserRole } from "@prisma/client";
 
 @ApiTags("invoices")
 @ApiBearerAuth()
@@ -74,8 +75,14 @@ export class InvoicesController {
     @Body() createInvoiceDto: CreateInvoiceDto,
     @CurrentUser("familyId") familyId: string,
     @CurrentUser("sub") currentUserId: string,
+    @CurrentUser("role") currentUserRole: UserRole,
   ) {
-    return this.invoicesService.create(createInvoiceDto, familyId, currentUserId);
+    return this.invoicesService.create(
+      createInvoiceDto,
+      familyId,
+      currentUserId,
+      currentUserRole,
+    );
   }
 
   @Patch(":id")
@@ -90,8 +97,15 @@ export class InvoicesController {
     @Body() updateInvoiceDto: UpdateInvoiceDto,
     @CurrentUser("familyId") familyId: string,
     @CurrentUser("sub") currentUserId: string,
+    @CurrentUser("role") currentUserRole: UserRole,
   ) {
-    return this.invoicesService.update(id, updateInvoiceDto, familyId, currentUserId);
+    return this.invoicesService.update(
+      id,
+      updateInvoiceDto,
+      familyId,
+      currentUserId,
+      currentUserRole,
+    );
   }
 
   @Delete(":id")
@@ -118,6 +132,11 @@ export class InvoicesController {
     @CurrentUser("familyId") familyId: string,
     @CurrentUser("sub") currentUserId: string,
   ) {
-    return this.invoicesService.addPayment(id, addPaymentDto, familyId, currentUserId);
+    return this.invoicesService.addPayment(
+      id,
+      addPaymentDto,
+      familyId,
+      currentUserId,
+    );
   }
 }

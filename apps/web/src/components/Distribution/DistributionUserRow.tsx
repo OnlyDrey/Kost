@@ -1,44 +1,14 @@
-import { Check, ShieldCheck, UsersRound, Baby } from "lucide-react";
+import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import type { User } from "../../services/api";
-
-function RoleIcon({ role }: { role: User["role"] }) {
-  const base = "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0";
-  if (role === "ADMIN") {
-    return (
-      <span
-        className={`${base} bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300`}
-        title="Admin"
-      >
-        <ShieldCheck size={11} />
-      </span>
-    );
-  }
-  if (role === "CHILD") {
-    return (
-      <span
-        className={`${base} bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300`}
-        title="Junior"
-      >
-        <Baby size={11} />
-      </span>
-    );
-  }
-  return (
-    <span
-      className={`${base} bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300`}
-      title="Adult"
-    >
-      <UsersRound size={11} />
-    </span>
-  );
-}
+import RoleBadge from "../Common/RoleBadge";
 
 export default function DistributionUserRow({
   user,
   selected,
   onToggle,
   ariaLabel,
+  roleLabel,
   inlineContent,
   secondaryContent,
 }: {
@@ -57,12 +27,12 @@ export default function DistributionUserRow({
       onClick={() => onToggle(user.id)}
       className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
         selected
-          ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20"
+          ? "border-primary/50 bg-primary/10"
           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
       }`}
     >
       <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-indigo-500 overflow-hidden">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-primary overflow-hidden">
           {user.avatarUrl ? (
             <img
               src={user.avatarUrl}
@@ -81,18 +51,21 @@ export default function DistributionUserRow({
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
             {user.name}
           </p>
-          <RoleIcon role={user.role} />
+          <RoleBadge role={user.role} label={roleLabel} />
         </div>
 
         {inlineContent && (
-          <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex items-center gap-1 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
             {inlineContent}
           </div>
         )}
 
         <span
           className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
-            selected ? "bg-indigo-500 border-indigo-500" : "border-gray-400"
+            selected ? "bg-primary border-primary" : "border-gray-400"
           }`}
         >
           {selected && <Check size={13} className="text-white" />}
@@ -100,7 +73,10 @@ export default function DistributionUserRow({
       </div>
 
       {secondaryContent && (
-        <div className="mt-1.5 flex justify-end" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mt-1.5 flex justify-end"
+          onClick={(e) => e.stopPropagation()}
+        >
           {secondaryContent}
         </div>
       )}

@@ -11,6 +11,10 @@ import {
   Globe,
   Users,
   Palette,
+  Paintbrush,
+  Tags,
+  CreditCard,
+  Store,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -46,11 +50,18 @@ import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
 import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
-import { isValidHexColor, renderIconDataUrl, resolveAppIconBackground } from "../../utils/branding";
-import { getCurrentLogoSource, getDefaultLogoUrl } from "../../branding/brandingAssets";
+import {
+  isValidHexColor,
+  renderIconDataUrl,
+  resolveAppIconBackground,
+} from "../../utils/branding";
+import {
+  getCurrentLogoSource,
+  getDefaultLogoUrl,
+} from "../../branding/brandingAssets";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
@@ -88,7 +99,7 @@ function SettingsSectionCard({
 }
 
 type SettingsPage = "profile" | "password" | "users" | "customization";
-type GlobalSettingsSection = "customization" | FamilySetting;
+type GlobalSettingsSection = "customization" | "branding" | FamilySetting;
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -130,9 +141,14 @@ export default function Profile() {
     (searchParams.get("globalSection") as GlobalSettingsSection | null) ??
     "customization";
   const [globalSection, setGlobalSection] = useState<GlobalSettingsSection>(
-    ["customization", "currency", "categories", "payment-methods", "vendors"].includes(
-      initialGlobalSection,
-    )
+    [
+      "customization",
+      "branding",
+      "currency",
+      "categories",
+      "payment-methods",
+      "vendors",
+    ].includes(initialGlobalSection)
       ? initialGlobalSection
       : "customization",
   );
@@ -155,9 +171,8 @@ export default function Profile() {
   const [brandingAppIconBackground, setBrandingAppIconBackground] = useState(
     settings.branding.appIconBackground,
   );
-  const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] = useState(
-    getDefaultLogoUrl(),
-  );
+  const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] =
+    useState(getDefaultLogoUrl());
   const [brandingError, setBrandingError] = useState("");
   const [brandingSaved, setBrandingSaved] = useState(false);
   const [brandingLogoLoadWarning, setBrandingLogoLoadWarning] = useState("");
@@ -253,13 +268,19 @@ export default function Profile() {
       setActivePage(normalizedTab as SettingsPage);
     }
 
-    const requestedGlobalSection =
-      searchParams.get("globalSection") as GlobalSettingsSection | null;
+    const requestedGlobalSection = searchParams.get(
+      "globalSection",
+    ) as GlobalSettingsSection | null;
     if (
       requestedGlobalSection &&
-      ["customization", "currency", "categories", "payment-methods", "vendors"].includes(
-        requestedGlobalSection,
-      )
+      [
+        "customization",
+        "branding",
+        "currency",
+        "categories",
+        "payment-methods",
+        "vendors",
+      ].includes(requestedGlobalSection)
     ) {
       setGlobalSection(requestedGlobalSection);
     }
@@ -568,7 +589,7 @@ export default function Profile() {
   // ---- Avatar block ----
   const AvatarBlock = () => (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
+      <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
         {user?.avatarUrl ? (
           <img
             src={user.avatarUrl}
@@ -718,6 +739,27 @@ export default function Profile() {
     </>
   );
 
+  const isCustomizationAdmin = activePage === "customization" && isAdmin;
+  const isMasonryPage = activePage === "profile" || activePage === "password";
+  const masonryCardClass = isMasonryPage
+    ? "md:inline-block md:w-full md:break-inside-avoid md:mb-4"
+    : "";
+  const customizationSections: {
+    key: GlobalSettingsSection;
+    label: string;
+    icon: typeof Palette;
+  }[] = [
+    { key: "customization", label: t("settings.customization"), icon: Palette },
+    { key: "branding", label: t("settings.brandingTitle"), icon: Paintbrush },
+    { key: "categories", label: t("familySettings.categories"), icon: Tags },
+    {
+      key: "payment-methods",
+      label: t("familySettings.paymentMethods"),
+      icon: CreditCard,
+    },
+    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
+  ];
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -736,9 +778,9 @@ export default function Profile() {
                   key={item.key}
                   type="button"
                   onClick={() => selectPage(item.key)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     isActive
-                      ? "border-primary bg-primary text-white"
+                      ? "border-primary bg-primary/15 text-primary"
                       : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
                   }`}
                 >
@@ -751,8 +793,8 @@ export default function Profile() {
       </div>
 
       {activePage === "customization" && isAdmin && (
-        <div className="max-w-sm">
-          <label className={labelCls}>{t("settings.section")}</label>
+        <div className="max-w-sm md:hidden">
+          <label className={labelCls}>{t("settings.sectionSettings")}</label>
           <select
             value={globalSection}
             onChange={(e) =>
@@ -761,18 +803,55 @@ export default function Profile() {
             className={inputCls}
           >
             <option value="customization">{t("settings.customization")}</option>
+            <option value="branding">{t("settings.brandingTitle")}</option>
             <option value="categories">{t("familySettings.categories")}</option>
-            <option value="payment-methods">{t("familySettings.paymentMethods")}</option>
+            <option value="payment-methods">
+              {t("familySettings.paymentMethods")}
+            </option>
             <option value="vendors">{t("familySettings.vendors")}</option>
           </select>
         </div>
       )}
 
       <div
-        className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
+        className={`grid grid-cols-1 gap-4 items-start ${activePage === "profile" ? "lg:grid-cols-2" : ""} ${isCustomizationAdmin ? "md:grid-cols-5" : ""}`}
       >
+        {isCustomizationAdmin && (
+          <aside className="hidden md:block md:col-span-1 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              {t("settings.sectionSettings")}
+            </p>
+            <div className="space-y-1">
+              {customizationSections.map((section) => {
+                const selected = globalSection === section.key;
+                const Icon = section.icon;
+                return (
+                  <button
+                    key={section.key}
+                    type="button"
+                    onClick={() => selectGlobalSection(section.key)}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors inline-flex items-center gap-2 ${
+                      selected
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-text-secondary hover:bg-surface-elevated border border-transparent"
+                    }`}
+                  >
+                    <Icon
+                      size={15}
+                      className={
+                        selected ? "text-primary" : "text-text-secondary"
+                      }
+                    />
+                    {section.label}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        )}
+
         <div
-          className={`min-w-0 lg:col-span-2 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:grid-cols-2" : ""}`}
+          className={`min-w-0 grid grid-cols-1 gap-4 ${activePage === "profile" ? "lg:col-span-2 lg:grid-cols-2" : ""} ${isMasonryPage ? "md:columns-3 md:gap-4 md:block" : ""} ${isCustomizationAdmin ? "md:col-span-4 lg:col-span-4 md:grid md:grid-cols-4" : ""}`}
         >
           {/* ---- Profile section: avatar-left + income alongside on desktop ---- */}
           {activePage === "profile" && (
@@ -780,18 +859,16 @@ export default function Profile() {
               {/* Profile card with avatar-left layout */}
               <SettingsSectionCard
                 icon={
-                  <User
-                    size={18}
-                    className="text-indigo-500 dark:text-indigo-400"
-                  />
+                  <User size={18} className="text-primary dark:text-primary" />
                 }
                 title={t("settings.profile")}
+                className={masonryCardClass}
                 action={
                   <button
                     type="submit"
                     form="profile-form"
                     disabled={updateUser.isPending}
-                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
                   >
                     {updateUser.isPending && (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -855,16 +932,17 @@ export default function Profile() {
               icon={
                 <TrendingUp
                   size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
+                  className="text-primary dark:text-primary"
                 />
               }
               title={t("settings.myIncome")}
+              className={masonryCardClass}
               action={
                 <button
                   type="submit"
                   form="income-form"
                   disabled={upsertIncome.isPending || !currentPeriod}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {upsertIncome.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -881,12 +959,10 @@ export default function Profile() {
           {activePage === "profile" && (
             <SettingsSectionCard
               icon={
-                <Globe
-                  size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
-                />
+                <Globe size={18} className="text-primary dark:text-primary" />
               }
               title={t("settings.language")}
+              className={masonryCardClass}
             >
               <div className="space-y-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -897,7 +973,7 @@ export default function Profile() {
                     onClick={() => setLocale("en")}
                     className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
                       settings.locale === "en"
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                        ? "border-primary bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary"
                         : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                   >
@@ -906,7 +982,7 @@ export default function Profile() {
                     {settings.locale === "en" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-500 dark:text-indigo-400"
+                        className="ml-auto text-primary dark:text-primary"
                       />
                     )}
                   </button>
@@ -914,7 +990,7 @@ export default function Profile() {
                     onClick={() => setLocale("nb")}
                     className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
                       settings.locale === "nb"
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                        ? "border-primary bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary"
                         : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                   >
@@ -923,7 +999,7 @@ export default function Profile() {
                     {settings.locale === "nb" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-500 dark:text-indigo-400"
+                        className="ml-auto text-primary dark:text-primary"
                       />
                     )}
                   </button>
@@ -938,16 +1014,17 @@ export default function Profile() {
               icon={
                 <KeyRound
                   size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
+                  className="text-primary dark:text-primary"
                 />
               }
               title={t("settings.changePassword")}
+              className={masonryCardClass}
               action={
                 <button
                   type="submit"
                   form="password-form"
                   disabled={changePassword.isPending}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {changePassword.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1022,10 +1099,11 @@ export default function Profile() {
               icon={
                 <ShieldCheck
                   size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
+                  className="text-primary dark:text-primary"
                 />
               }
               title={t("settings.twoFactorTitle")}
+              className={masonryCardClass}
             >
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 {twoFactorStatus?.enabled
@@ -1044,7 +1122,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={handleSetupTwoFactor}
-                  className="px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
                 >
                   {t("settings.setupTwoFactor")}
                 </button>
@@ -1143,7 +1221,7 @@ export default function Profile() {
                 />
               }
               title={t("settings.deleteAccountTitle")}
-              className="border-red-200 dark:border-red-900"
+              className={`${masonryCardClass} border-red-200 dark:border-red-900`}
             >
               <p className="text-sm text-gray-500 dark:text-gray-300 mb-4">
                 {t("settings.deleteAccountWarning")}
@@ -1200,196 +1278,254 @@ export default function Profile() {
           )}
 
           {/* Family settings sections (admin only) */}
-          {activePage === "customization" && isAdmin && globalSection !== "customization" && (
-            <FamilySettingsContent
-              activeSection={globalSection as FamilySetting}
-              pageSize={familyPageSize}
-              onPageSizeChange={setFamilyPageSize}
-            />
-          )}
-
-          {activePage === "customization" && isAdmin && globalSection === "customization" && (
-            <>
-              <FamilySettingsContent
-                activeSection={"currency" as FamilySetting}
-                pageSize={familyPageSize}
-                onPageSizeChange={setFamilyPageSize}
-              />
-
-            <SettingsSectionCard
-              icon={<Palette size={18} className="text-primary" />}
-              title={t("settings.brandingTitle")}
-            >
-              <form onSubmit={handleSaveBranding} className="space-y-4">
-                <div>
-                  <label className={labelCls}>
-                    {t("settings.brandingAppTitle")}
-                  </label>
-                  <input
-                    type="text"
-                    value={brandingTitle}
-                    onChange={(e) => setBrandingTitle(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
-                    placeholder={t("app.title")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className={labelCls}>
-                    {t("settings.brandingLogo")}
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={
-                        getCurrentLogoSource({
-                        logoDataUrl: brandingLogoDataUrl,
-                        logoUrl: brandingLogoUrl,
-                      }).src
-                      }
-                      alt={t("settings.brandingLogoPreviewAlt")}
-                      className="w-12 h-12 object-contain"
-                      onError={(event) => {
-                        if (brandingLogoUrl) {
-                          setBrandingLogoLoadWarning(
-                            t("settings.brandingLogoLoadFailed"),
-                          );
-                        }
-                        event.currentTarget.src = getDefaultLogoUrl();
-                      }}
-                      onLoad={() => setBrandingLogoLoadWarning("")}
-                    />
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => brandingLogoInputRef.current?.click()}
-                        className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                      >
-                        {brandingLogoDataUrl || brandingLogoUrl
-                          ? t("settings.brandingReplaceLogo")
-                          : t("settings.brandingUploadLogo")}
-                      </button>
-                      {(brandingLogoDataUrl || brandingLogoUrl) && (
-                        <button
-                          type="button"
-                          onClick={handleDeleteBrandingLogo}
-                          className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                        >
-                          {t("settings.brandingDeleteLogo")}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={handleDeleteBrandingLogo}
-                        className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                      >
-                        {t("settings.brandingResetDefault")}
-                      </button>
-                    </div>
-                  </div>
-                  <input
-                    ref={brandingLogoInputRef}
-                    type="file"
-                    accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
-                    onChange={handleBrandingLogoFile}
-                    className="hidden"
-                  />
-                  <div>
-                    <label className={labelCls}>
-                      {t("settings.brandingLogoUrl")}
-                    </label>
-                    <input
-                      type="url"
-                      value={brandingLogoUrl}
-                      onChange={(e) => {
-                        setBrandingLogoUrl(e.target.value);
-                        setBrandingLogoUrlError("");
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent text-sm"
-                      placeholder="https://example.com/logo.svg"
-                    />
-                    {brandingLogoUrlError && (
-                      <p className="text-xs text-danger mt-1">
-                        {brandingLogoUrlError}
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-xs text-text-secondary">
-                    {brandingLogoDataUrl || brandingLogoUrl
-                      ? t("settings.brandingCustomLogoActive")
-                      : t("settings.brandingDefaultLogoActive")}
-                  </p>
-                  {brandingLogoLoadWarning && (
-                    <p className="text-xs text-warning">
-                      {brandingLogoLoadWarning}
-                    </p>
-                  )}
-                </div>
-                <ColorFamilySelect
-                  value={brandingPreset}
-                  onChange={(next) => setBrandingPreset(next as BrandingPreset)}
-                  label={t("settings.brandingPrimaryPreset")}
+          {activePage === "customization" &&
+            isAdmin &&
+            globalSection !== "customization" &&
+            globalSection !== "branding" && (
+              <div className="md:col-span-2 w-full">
+                <FamilySettingsContent
+                  activeSection={globalSection as FamilySetting}
+                  pageSize={familyPageSize}
+                  onPageSizeChange={setFamilyPageSize}
                 />
-                <div>
-                  <label className={labelCls}>
-                    {t("settings.brandingAppIconBackground")}
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={resolveAppIconBackground(
-                        brandingAppIconBackground,
-                      )}
-                      onChange={(e) =>
-                        setBrandingAppIconBackground(
-                          e.target.value.toUpperCase(),
-                        )
-                      }
-                      className="h-10 w-12 rounded border border-border bg-surface p-1 focus:outline-none focus:ring-2 focus:ring-focus"
-                      aria-label={t("settings.brandingAppIconBackground")}
-                    />
-                    <span className="text-sm text-text-secondary">
-                      {resolveAppIconBackground(brandingAppIconBackground)}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-text-secondary">
-                    {t("settings.brandingAppIconPreview")}
-                  </span>
-                  <img
-                    src={brandingIconPreviewUrl}
-                    alt={t("settings.brandingAppIconPreview")}
-                    className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
+              </div>
+            )}
+
+          {activePage === "customization" &&
+            isAdmin &&
+            globalSection === "customization" && (
+              <>
+                <div className="md:col-span-2 w-full">
+                  <FamilySettingsContent
+                    activeSection={"currency" as FamilySetting}
+                    pageSize={familyPageSize}
+                    onPageSizeChange={setFamilyPageSize}
                   />
                 </div>
-                {brandingIconWarning && (
-                  <p className="text-xs text-warning">{brandingIconWarning}</p>
-                )}
-                <p className="text-xs text-text-secondary">
-                  {t("settings.brandingPwaCacheNote")}
-                </p>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs text-text-secondary">
-                    {t("settings.brandingHelp")}
-                  </p>
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+
+                <div className="md:col-span-2 w-full">
+                  <SettingsSectionCard
+                    icon={<Palette size={18} className="text-primary" />}
+                    title={t("settings.themeSection")}
+                    action={
+                      <button
+                        form="theme-form"
+                        type="submit"
+                        className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        {t("common.save")}
+                      </button>
+                    }
                   >
-                    {t("common.save")}
-                  </button>
+                    <form
+                      id="theme-form"
+                      onSubmit={handleSaveBranding}
+                      className="space-y-2"
+                    >
+                      <ColorFamilySelect
+                        value={brandingPreset}
+                        onChange={(next) =>
+                          setBrandingPreset(next as BrandingPreset)
+                        }
+                        label={t("settings.brandingPrimaryPreset")}
+                      />
+                      {brandingError && (
+                        <p className="mt-2 text-xs text-danger">
+                          {brandingError}
+                        </p>
+                      )}
+                      {brandingSaved && (
+                        <p className="mt-2 text-xs text-success">
+                          {t("settings.profileUpdated")}
+                        </p>
+                      )}
+                    </form>
+                  </SettingsSectionCard>
                 </div>
-                {brandingError && (
-                  <p className="text-xs text-danger">{brandingError}</p>
-                )}
-                {brandingSaved && (
-                  <p className="text-xs text-success">
-                    {t("settings.profileUpdated")}
-                  </p>
-                )}
-              </form>
-            </SettingsSectionCard>
-            </>
-          )}
+              </>
+            )}
+
+          {activePage === "customization" &&
+            isAdmin &&
+            globalSection === "branding" && (
+              <>
+                <div className="md:col-span-2 w-full space-y-4">
+                  <SettingsSectionCard
+                    icon={<Palette size={18} className="text-primary" />}
+                    title={t("settings.brandingTitle")}
+                  >
+                    <form onSubmit={handleSaveBranding} className="space-y-4">
+                      <div>
+                        <label className={labelCls}>
+                          {t("settings.brandingAppTitle")}
+                        </label>
+                        <input
+                          type="text"
+                          value={brandingTitle}
+                          onChange={(e) => setBrandingTitle(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                          placeholder={t("app.title")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className={labelCls}>
+                          {t("settings.brandingLogo")}
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={
+                              getCurrentLogoSource({
+                                logoDataUrl: brandingLogoDataUrl,
+                                logoUrl: brandingLogoUrl,
+                              }).src
+                            }
+                            alt={t("settings.brandingLogoPreviewAlt")}
+                            className="w-12 h-12 object-contain"
+                            onError={(event) => {
+                              if (brandingLogoUrl) {
+                                setBrandingLogoLoadWarning(
+                                  t("settings.brandingLogoLoadFailed"),
+                                );
+                              }
+                              event.currentTarget.src = getDefaultLogoUrl();
+                            }}
+                            onLoad={() => setBrandingLogoLoadWarning("")}
+                          />
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                brandingLogoInputRef.current?.click()
+                              }
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              {brandingLogoDataUrl || brandingLogoUrl
+                                ? t("settings.brandingReplaceLogo")
+                                : t("settings.brandingUploadLogo")}
+                            </button>
+                            {(brandingLogoDataUrl || brandingLogoUrl) && (
+                              <button
+                                type="button"
+                                onClick={handleDeleteBrandingLogo}
+                                className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                              >
+                                {t("settings.brandingDeleteLogo")}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={handleDeleteBrandingLogo}
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              {t("settings.brandingResetDefault")}
+                            </button>
+                          </div>
+                        </div>
+                        <input
+                          ref={brandingLogoInputRef}
+                          type="file"
+                          accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
+                          onChange={handleBrandingLogoFile}
+                          className="hidden"
+                        />
+                        <div>
+                          <label className={labelCls}>
+                            {t("settings.brandingLogoUrl")}
+                          </label>
+                          <input
+                            type="url"
+                            value={brandingLogoUrl}
+                            onChange={(e) => {
+                              setBrandingLogoUrl(e.target.value);
+                              setBrandingLogoUrlError("");
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                            placeholder="https://example.com/logo.svg"
+                          />
+                          {brandingLogoUrlError && (
+                            <p className="text-xs text-danger mt-1">
+                              {brandingLogoUrlError}
+                            </p>
+                          )}
+                        </div>
+                        <p className="text-xs text-text-secondary">
+                          {brandingLogoDataUrl || brandingLogoUrl
+                            ? t("settings.brandingCustomLogoActive")
+                            : t("settings.brandingDefaultLogoActive")}
+                        </p>
+                        {brandingLogoLoadWarning && (
+                          <p className="text-xs text-warning">
+                            {brandingLogoLoadWarning}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className={labelCls}>
+                          {t("settings.brandingAppIconBackground")}
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={resolveAppIconBackground(
+                              brandingAppIconBackground,
+                            )}
+                            onChange={(e) =>
+                              setBrandingAppIconBackground(
+                                e.target.value.toUpperCase(),
+                              )
+                            }
+                            className="h-10 w-12 rounded border border-border bg-surface p-1 focus:outline-none focus:ring-2 focus:ring-primary"
+                            aria-label={t("settings.brandingAppIconBackground")}
+                          />
+                          <span className="text-sm text-text-secondary">
+                            {resolveAppIconBackground(
+                              brandingAppIconBackground,
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-text-secondary">
+                          {t("settings.brandingAppIconPreview")}
+                        </span>
+                        <img
+                          src={brandingIconPreviewUrl}
+                          alt={t("settings.brandingAppIconPreview")}
+                          className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
+                        />
+                      </div>
+                      {brandingIconWarning && (
+                        <p className="text-xs text-warning">
+                          {brandingIconWarning}
+                        </p>
+                      )}
+                      <p className="text-xs text-text-secondary">
+                        {t("settings.brandingPwaCacheNote")}
+                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs text-text-secondary">
+                          {t("settings.brandingHelp")}
+                        </p>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                          {t("common.save")}
+                        </button>
+                      </div>
+                      {brandingError && (
+                        <p className="text-xs text-danger">{brandingError}</p>
+                      )}
+                      {brandingSaved && (
+                        <p className="text-xs text-success">
+                          {t("settings.profileUpdated")}
+                        </p>
+                      )}
+                    </form>
+                  </SettingsSectionCard>
+                </div>
+              </>
+            )}
         </div>
       </div>
     </div>

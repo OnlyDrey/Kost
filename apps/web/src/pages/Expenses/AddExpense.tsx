@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,6 +13,7 @@ import {
   useCreateSubscription,
   useUpdateSubscription,
   useCurrentPeriod,
+  usePeriod,
   useUsers,
   useInvoice,
   useSubscription,
@@ -18,11 +24,18 @@ import {
   useCurrency,
   useCurrencySymbolPosition,
 } from "../../hooks/useApi";
-import { amountToCents, centsToAmount, getCurrencySymbol } from "../../utils/currency";
+import {
+  amountToCents,
+  centsToAmount,
+  getCurrencySymbol,
+} from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
+import UserSingleSelect from "../../components/Distribution/UserSingleSelect";
+import { useAuth } from "../../stores/auth.context";
+import { isPeriodClosed } from "../../utils/periodStatus";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
 const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 const labelCls =
@@ -31,8 +44,10 @@ const labelCls =
 export default function AddExpense() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const { id } = useParams<{ id?: string }>();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   // Determine type from URL pathname
   const isSubscription = location.pathname.includes("/subscriptions/");
@@ -44,15 +59,30 @@ export default function AddExpense() {
   const updateSubscription = useUpdateSubscription();
 
   const { data: currentPeriod } = useCurrentPeriod();
+  const selectedPeriodId = searchParams.get("period") ?? "";
+  const { data: selectedPeriod } = usePeriod(selectedPeriodId);
+  const targetPeriodId = selectedPeriodId || currentPeriod?.id || "";
+  const targetPeriodClosed = selectedPeriod
+    ? isPeriodClosed(selectedPeriod)
+    : false;
+
   const { data: users } = useUsers();
-  const { data: existingInvoice } = useInvoice(
-    isEditing && !isSubscription ? id! : "",
-  );
-  const { data: existingSubscription } = useSubscription(
-    isEditing && isSubscription ? id! : "",
-  );
-  const { data: periodIncomes } = useUserIncomes(currentPeriod?.id ?? "");
+  const {
+    data: existingInvoice,
+    isLoading: loadingInvoice,
+    isError: invoiceNotFound,
+  } = useInvoice(isEditing && !isSubscription ? id! : "");
+  const {
+    data: existingSubscription,
+    isLoading: loadingSubscription,
+    isError: subscriptionNotFound,
+  } = useSubscription(isEditing && isSubscription ? id! : "");
+  const { data: periodIncomes } = useUserIncomes(targetPeriodId);
   const { data: categories = [] } = useCategories();
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [categories],
+  );
   const { data: paymentMethods = [] } = usePaymentMethods();
   const { data: vendors = [] } = useVendors();
   const { data: currency = "NOK" } = useCurrency();
@@ -67,7 +97,7 @@ export default function AddExpense() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [amount, setAmount] = useState("");
   const [distributionMethod, setDistributionMethod] = useState<
-    "BY_INCOME" | "BY_PERCENT" | "FIXED"
+    "BY_INCOME" | "BY_PERCENT" | "FIXED" | "PERSONAL"
   >("BY_INCOME");
   const [fixedMode, setFixedMode] = useState<"EQUAL" | "AMOUNT">("EQUAL");
   const [dueDate, setDueDate] = useState("");
@@ -82,7 +112,7 @@ export default function AddExpense() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<
     "ACTIVE" | "PAUSED" | "CANCELED"
   >("ACTIVE");
-  const [isPersonal, setIsPersonal] = useState(false);
+  const [personalUserId, setPersonalUserId] = useState("");
   const [error, setError] = useState("");
   const [userPercents, setUserPercents] = useState<Record<string, string>>({});
   const [userFixedAmounts, setUserFixedAmounts] = useState<
@@ -107,13 +137,15 @@ export default function AddExpense() {
       setPaymentMethod(existingInvoice.paymentMethod ?? "");
       if (existingInvoice.dueDate)
         setDueDate(existingInvoice.dueDate.slice(0, 10));
-      setIsPersonal(!!existingInvoice.isPersonal);
+      setPersonalUserId(existingInvoice.ownerUserId ?? "");
 
       const rules = existingInvoice.distribution as any;
       if (rules?.userIds && Array.isArray(rules.userIds)) {
         setIncomeUserIds(new Set(rules.userIds));
       } else if (existingInvoice.shares && existingInvoice.shares.length > 0) {
-        setIncomeUserIds(new Set(existingInvoice.shares.map((s: any) => s.userId)));
+        setIncomeUserIds(
+          new Set(existingInvoice.shares.map((s: any) => s.userId)),
+        );
       } else {
         setIncomeUserIds(new Set());
       }
@@ -126,7 +158,10 @@ export default function AddExpense() {
           });
         } else if (existingInvoice.shares && existingInvoice.totalCents > 0) {
           existingInvoice.shares.forEach((share: any) => {
-            const percentage = ((share.shareCents / existingInvoice.totalCents) * 100).toFixed(1);
+            const percentage = (
+              (share.shareCents / existingInvoice.totalCents) *
+              100
+            ).toFixed(1);
             percents[share.userId] = percentage;
           });
         }
@@ -184,7 +219,8 @@ export default function AddExpense() {
       setDescription(existingSubscription.description || "");
       setCategory(existingSubscription.category ?? "");
       setAmount(String(centsToAmount(existingSubscription.amountCents)));
-      setDistributionMethod(existingSubscription.distributionMethod);
+      setDistributionMethod(existingSubscription.distributionMethod as any);
+      setPersonalUserId((existingSubscription as any).personalUserId ?? "");
       if (existingSubscription.distributionMethod !== "FIXED") {
         setFixedMode("EQUAL");
       }
@@ -260,11 +296,18 @@ export default function AddExpense() {
         setUserFixedAmounts({});
       }
     }
-  }, [isEditing, isSubscription, existingSubscription?.id, existingSubscription?.updatedAt]);
+  }, [
+    isEditing,
+    isSubscription,
+    existingSubscription?.id,
+    existingSubscription?.updatedAt,
+  ]);
 
   const customAmountTotalCents = Object.entries(userPercents).reduce(
     (sum, [userId, value]) =>
-      incomeUserIds.has(userId) ? sum + amountToCents(parseFloat(value) || 0) : sum,
+      incomeUserIds.has(userId)
+        ? sum + amountToCents(parseFloat(value) || 0)
+        : sum,
     0,
   );
   const fixedTotalCents = Object.values(userFixedAmounts).reduce(
@@ -296,9 +339,13 @@ export default function AddExpense() {
     .map(([userId]) => userId);
 
   const selectedUserIds =
-    distributionMethod === "FIXED" && fixedMode === "AMOUNT"
-      ? fixedAmountUserIds
-      : participantUserIds;
+    distributionMethod === "PERSONAL"
+      ? personalUserId
+        ? [personalUserId]
+        : []
+      : distributionMethod === "FIXED" && fixedMode === "AMOUNT"
+        ? fixedAmountUserIds
+        : participantUserIds;
 
   const equalPercent =
     distributionMethod === "FIXED" && fixedMode === "EQUAL"
@@ -323,10 +370,19 @@ export default function AddExpense() {
     e.preventDefault();
     setError("");
 
-    if (!isEditing && !isSubscription && !currentPeriod) {
+    if (!isEditing && !isSubscription && !targetPeriodId) {
       setError(t("invoice.noPeriodWarning"));
       return;
     }
+    if (!isEditing && !isSubscription && targetPeriodClosed) {
+      setError(t("invoice.closedPeriodAddBlocked"));
+      return;
+    }
+    if (distributionMethod === "PERSONAL" && !personalUserId) {
+      setError(t("invoice.selectPersonalUser"));
+      return;
+    }
+
     if (!vendor.trim()) {
       setError(t("validation.required"));
       return;
@@ -351,16 +407,23 @@ export default function AddExpense() {
       const amountRules = Object.entries(userPercents)
         .filter(
           ([userId, v]) =>
-            selectedUserIds.includes(userId) && amountToCents(parseFloat(v)) > 0,
+            selectedUserIds.includes(userId) &&
+            amountToCents(parseFloat(v)) > 0,
         )
-        .map(([userId, v]) => ({ userId, amountCents: amountToCents(parseFloat(v)) }));
+        .map(([userId, v]) => ({
+          userId,
+          amountCents: amountToCents(parseFloat(v)),
+        }));
 
       if (amountRules.length === 0) {
         setError(t("subscription.fixedAmountPerUser"));
         return;
       }
 
-      const totalCustom = amountRules.reduce((sum, rule) => sum + rule.amountCents, 0);
+      const totalCustom = amountRules.reduce(
+        (sum, rule) => sum + rule.amountCents,
+        0,
+      );
       if (totalCustom <= 0) {
         setError(t("validation.invalidAmount"));
         return;
@@ -368,7 +431,9 @@ export default function AddExpense() {
 
       const percentRules = amountRules.map((rule) => ({
         userId: rule.userId,
-        percentBasisPoints: Math.round((rule.amountCents / totalCustom) * 10000),
+        percentBasisPoints: Math.round(
+          (rule.amountCents / totalCustom) * 10000,
+        ),
       }));
       distributionRules = { percentRules, userIds: selectedUserIds };
     }
@@ -425,6 +490,9 @@ export default function AddExpense() {
           description: description.trim() || undefined,
           amountCents: totalCents,
           distributionMethod,
+          paymentMethod: paymentMethod || undefined,
+          personalUserId:
+            distributionMethod === "PERSONAL" ? personalUserId : undefined,
           frequency: actualFrequency,
           dayOfMonth: parseInt(dayOfMonth) || undefined,
           startDate,
@@ -444,19 +512,22 @@ export default function AddExpense() {
           vendor: vendor.trim(),
           totalCents,
           distributionMethod,
-          isPersonal,
+          paymentMethod: paymentMethod || undefined,
+          personalUserId:
+            distributionMethod === "PERSONAL" ? personalUserId : undefined,
         };
         if (category.trim()) invoiceData.category = category.trim();
         if (description.trim()) invoiceData.description = description.trim();
         if (dueDate) invoiceData.dueDate = dueDate;
         if (paymentMethod) invoiceData.paymentMethod = paymentMethod;
-        if (distributionRules) invoiceData.distributionRules = distributionRules;
+        if (distributionRules)
+          invoiceData.distributionRules = distributionRules;
 
         if (isEditing) {
           await updateInvoice.mutateAsync({ id: id!, data: invoiceData });
         } else {
           await createInvoice.mutateAsync({
-            periodId: currentPeriod!.id,
+            periodId: targetPeriodId,
             ...invoiceData,
           });
         }
@@ -476,7 +547,11 @@ export default function AddExpense() {
     createSubscription.isPending ||
     updateSubscription.isPending;
 
-  const backUrl = isSubscription ? "/subscriptions" : "/invoices";
+  const backUrl = isSubscription
+    ? "/subscriptions"
+    : selectedPeriodId
+      ? `/overview?period=${selectedPeriodId}`
+      : "/invoices";
   const titleKey = isSubscription
     ? isEditing
       ? "subscription.edit"
@@ -485,29 +560,76 @@ export default function AddExpense() {
       ? "invoice.editInvoice"
       : "invoice.addInvoice";
 
+
+  const recordLoading = isEditing &&
+    ((isSubscription && loadingSubscription) ||
+      (!isSubscription && loadingInvoice));
+  const notFound = isEditing &&
+    ((isSubscription && subscriptionNotFound) ||
+      (!isSubscription && invoiceNotFound));
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate(backUrl)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {t(titleKey)}
-        </h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(backUrl)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t(titleKey)}
+          </h1>
+        </div>
+        <div className="inline-flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(backUrl)}
+            className="px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            type="submit"
+            form="expense-form"
+            disabled={
+              isPending ||
+              (!isEditing && !isSubscription && !targetPeriodId) ||
+              (!isEditing && !isSubscription && targetPeriodClosed)
+            }
+            className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
+          >
+            {isPending && (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {t("common.save")}
+          </button>
+        </div>
       </div>
 
-      {!isEditing && !isSubscription && !currentPeriod && (
+      {!isEditing && !isSubscription && !targetPeriodId && (
         <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 rounded-lg px-4 py-3 text-sm">
           <AlertCircle size={16} className="flex-shrink-0" />
           <span>{t("invoice.noPeriodWarning")}</span>
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      {recordLoading && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400">
+          {t("common.loading")}
+        </div>
+      )}
+
+      {notFound && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-red-200 dark:border-red-900/40 p-6 text-sm text-red-600 dark:text-red-400">
+          {isSubscription ? t("subscription.edit") : t("invoice.editInvoice")} - {t("common.noData")}
+        </div>
+      )}
+
+      {!recordLoading && !notFound && (
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm ">
+        <form id="expense-form" onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
               <AlertCircle size={16} className="flex-shrink-0" />
@@ -515,176 +637,172 @@ export default function AddExpense() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h2>
-            <div className="ml-auto inline-flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(backUrl)}
-                className="px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={isPending || (!isEditing && !isSubscription && !currentPeriod)}
-                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
-              >
-                {isPending && (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                {t("common.save")}
-              </button>
-            </div>
-          </div>
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-5">
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-gray-200 dark:bg-gray-800 lg:block" />
+            {isSubscription && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1">
+                <div className="min-w-0">
+                  <label className={labelCls}>{t("subscription.status")}</label>
+                  <select
+                    value={subscriptionStatus}
+                    onChange={(e) =>
+                      setSubscriptionStatus(
+                        e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
+                      )
+                    }
+                    className={inputCls}
+                  >
+                    <option value="ACTIVE">
+                      {t("subscription.statusActive")}
+                    </option>
+                    <option value="PAUSED">
+                      {t("subscription.statusPaused")}
+                    </option>
+                    <option value="CANCELED">
+                      {t("subscription.statusCanceled")}
+                    </option>
+                  </select>
+                </div>
+                <div className="min-w-0">
+                  <label className={labelCls}>
+                    {t("subscription.nextBillingAt")}
+                  </label>
+                  <input
+                    type="date"
+                    value={nextBillingAt}
+                    onChange={(e) => setNextBillingAt(e.target.value)}
+                    className={dateInputCls}
+                  />
+                </div>
+              </div>
+            )}
 
-          {isSubscription && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="min-w-0">
-                <label className={labelCls}>{t("subscription.status")}</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1">
+              <div className="relative">
+                <label className={labelCls}>{t("invoice.vendor")} *</label>
+                <input
+                  type="text"
+                  value={vendor}
+                  onChange={(e) => {
+                    setVendor(e.target.value);
+                    setShowVendorList(true);
+                  }}
+                  onFocus={() => setShowVendorList(true)}
+                  onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
+                  required
+                  className={inputCls}
+                  placeholder={t("invoice.vendorPlaceholder")}
+                />
+                {showVendorList && vendors.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                    {vendors
+                      .filter((v) =>
+                        v.name.toLowerCase().includes(vendor.toLowerCase()),
+                      )
+                      .map((v) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onMouseDown={() => {
+                            setVendor(v.name);
+                            setShowVendorList(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
+                        >
+                          {v.logoUrl && (
+                            <img
+                              src={v.logoUrl}
+                              alt=""
+                              className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          )}
+                          <span>{v.name}</span>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className={labelCls}>{t("invoice.category")}</label>
                 <select
-                  value={subscriptionStatus}
-                  onChange={(e) =>
-                    setSubscriptionStatus(
-                      e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
-                    )
-                  }
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
                   className={inputCls}
                 >
-                  <option value="ACTIVE">
-                    {t("subscription.statusActive")}
-                  </option>
-                  <option value="PAUSED">
-                    {t("subscription.statusPaused")}
-                  </option>
-                  <option value="CANCELED">
-                    {t("subscription.statusCanceled")}
-                  </option>
+                  <option value="">{t("invoice.categoryPlaceholder")}</option>
+                  {sortedCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <div className="min-w-0">
-                <label className={labelCls}>
-                  {t("subscription.nextBillingAt")}
-                </label>
-                <input
-                  type="date"
-                  value={nextBillingAt}
-                  onChange={(e) => setNextBillingAt(e.target.value)}
-                  className={dateInputCls}
-                />
-              </div>
             </div>
-          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="relative">
-              <label className={labelCls}>{t("invoice.vendor")} *</label>
+            <div className="lg:col-start-1 lg:pr-6">
+              <label className={labelCls}>{t("invoice.description")}</label>
               <input
                 type="text"
-                value={vendor}
-                onChange={(e) => {
-                  setVendor(e.target.value);
-                  setShowVendorList(true);
-                }}
-                onFocus={() => setShowVendorList(true)}
-                onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
-                required
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className={inputCls}
-                placeholder={t("invoice.vendorPlaceholder")}
+                placeholder={
+                  isSubscription
+                    ? t("subscription.descriptionPlaceholder")
+                    : t("invoice.descriptionPlaceholder")
+                }
               />
-              {showVendorList && vendors.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-                  {vendors
-                    .filter((v) =>
-                      v.name.toLowerCase().includes(vendor.toLowerCase()),
-                    )
-                    .map((v) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        onMouseDown={() => {
-                          setVendor(v.name);
-                          setShowVendorList(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
-                      >
-                        {v.logoUrl && (
-                          <img
-                            src={v.logoUrl}
-                            alt=""
-                            className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                "none";
-                            }}
-                          />
-                        )}
-                        <span>{v.name}</span>
-                      </button>
-                    ))}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 lg:col-start-1 lg:pr-6">
+              <div className="min-w-0">
+                <label className={labelCls}>{t("invoice.amount")} *</label>
+                <div className="relative flex items-center">
+                  {symbolPosition === "Before" && (
+                    <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
+                      {currencySymbol}
+                    </span>
+                  )}
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    step="0.01"
+                    min="0"
+                    className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
+                    placeholder="0.00"
+                  />
+                  {symbolPosition === "After" && (
+                    <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
+                      {currencySymbol}
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
-            <div>
-              <label className={labelCls}>{t("invoice.category")}</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">{t("invoice.categoryPlaceholder")}</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>{t("invoice.description")}</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={inputCls}
-              placeholder={
-                isSubscription
-                  ? t("subscription.descriptionPlaceholder")
-                  : t("invoice.descriptionPlaceholder")
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="min-w-0">
-              <label className={labelCls}>{t("invoice.amount")} *</label>
-              <div className="relative flex items-center">
-                {symbolPosition === "Before" && (
-                  <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                    {currencySymbol}
-                  </span>
-                )}
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                  step="0.01"
-                  min="0"
-                  className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
-                  placeholder="0.00"
-                />
-                {symbolPosition === "After" && (
-                  <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                    {currencySymbol}
-                  </span>
-                )}
+              </div>
+              <div className="min-w-0">
+                <label className={labelCls}>{t("invoice.paymentMethod")}</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">{t("invoice.paymentMethodPlaceholder")}</option>
+                  {paymentMethods.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+
             {!isSubscription && (
-              <div className="min-w-0">
+              <div className="lg:col-start-1 lg:pr-6">
                 <label className={labelCls}>{t("invoice.dueDate")}</label>
                 <input
                   type="date"
@@ -694,80 +812,11 @@ export default function AddExpense() {
                 />
               </div>
             )}
-          </div>
 
-          {!isSubscription && (
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-              <input
-                type="checkbox"
-                id="isPersonal"
-                checked={isPersonal}
-                onChange={(e) => setIsPersonal(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-              />
-              <label
-                htmlFor="isPersonal"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-              >
-                {t("invoice.personalExpense")}
-              </label>
-            </div>
-          )}
-
-          {isSubscription && (
-            <>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>
-                      {t("subscription.everyLabel")}
-                    </label>
-                    <input
-                      type="number"
-                      value={frequencyQuantity}
-                      onChange={(e) => setFrequencyQuantity(e.target.value)}
-                      className={inputCls}
-                      min="1"
-                      placeholder="1"
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t("subscription.unit")}</label>
-                    <select
-                      value={frequencyUnit}
-                      onChange={(e) => setFrequencyUnit(e.target.value)}
-                      className={inputCls}
-                    >
-                      <option value="DAY">{t("subscription.unitDay")}</option>
-                      <option value="WEEK">{t("subscription.unitWeek")}</option>
-                      <option value="MONTH">
-                        {t("subscription.unitMonth")}
-                      </option>
-                      <option value="YEAR">{t("subscription.unitYear")}</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className={labelCls}>
-                    {t("subscription.dayOfMonth")}
-                  </label>
-                  <input
-                    type="number"
-                    value={dayOfMonth}
-                    onChange={(e) => setDayOfMonth(e.target.value)}
-                    className={inputCls}
-                    min="1"
-                    max="31"
-                    placeholder="1"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="min-w-0">
-                  <label className={labelCls}>
-                    {t("subscription.startDate")}
-                  </label>
+            {isSubscription && (
+              <>
+                <div className="lg:col-start-2 lg:pl-6">
+                  <label className={labelCls}>{t("subscription.startDate")}</label>
                   <input
                     type="date"
                     value={startDate}
@@ -775,31 +824,51 @@ export default function AddExpense() {
                     className={dateInputCls}
                   />
                 </div>
-              </div>
-            </>
-          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {!isSubscription && (
-              <div>
-                <label className={labelCls}>{t("invoice.paymentMethod")}</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">
-                    {t("invoice.paymentMethodPlaceholder")}
-                  </option>
-                  {paymentMethods.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="space-y-4 lg:col-start-2 lg:pl-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                    <div>
+                      <label className={labelCls}>{t("subscription.everyLabel")}</label>
+                      <input
+                        type="number"
+                        value={frequencyQuantity}
+                        onChange={(e) => setFrequencyQuantity(e.target.value)}
+                        className={inputCls}
+                        min="1"
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>{t("subscription.frequencyLabel")}</label>
+                      <select
+                        value={frequencyUnit}
+                        onChange={(e) => setFrequencyUnit(e.target.value)}
+                        className={inputCls}
+                      >
+                        <option value="DAY">{t("subscription.unitDay")}</option>
+                        <option value="WEEK">{t("subscription.unitWeek")}</option>
+                        <option value="MONTH">{t("subscription.unitMonth")}</option>
+                        <option value="YEAR">{t("subscription.unitYear")}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>{t("subscription.dayOfMonth")}</label>
+                    <input
+                      type="number"
+                      value={dayOfMonth}
+                      onChange={(e) => setDayOfMonth(e.target.value)}
+                      className={inputCls}
+                      min="1"
+                      max="31"
+                      placeholder="1"
+                    />
+                  </div>
+                </div>
+              </>
             )}
-            <div className={isSubscription ? "sm:col-span-2" : ""}>
+
+            <div className="lg:col-start-2 lg:pl-6 lg:self-start">
               <label className={labelCls}>
                 {t("invoice.distributionMethod")} *
               </label>
@@ -820,185 +889,299 @@ export default function AddExpense() {
                     setDistributionMethod("FIXED");
                     setFixedMode("AMOUNT");
                   } else {
-                    setDistributionMethod(value as "BY_INCOME" | "BY_PERCENT");
+                    setDistributionMethod(
+                      value as "BY_INCOME" | "BY_PERCENT" | "PERSONAL",
+                    );
                   }
                 }}
                 className={inputCls}
               >
                 <option value="BY_INCOME">{t("invoice.incomeBased")}</option>
-                <option value="BY_PERCENT">{t("subscription.customAmount")}</option>
+                <option value="BY_PERCENT">
+                  {t("subscription.customAmount")}
+                </option>
                 <option value="FIXED_EQUAL">{t("invoice.equal")}</option>
-                <option value="FIXED_AMOUNT">{t("subscription.amountOnly")}</option>
+                <option value="FIXED_AMOUNT">
+                  {t("subscription.amountOnly")}
+                </option>
+                <option value="PERSONAL">
+                  {t("invoice.personalExpenseOption")}
+                </option>
               </select>
             </div>
-          </div>
 
-          {distributionMethod === "BY_INCOME" && users && users.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={labelCls + " mb-0"}>{t("invoice.selectUsers")}</label>
-                {totalIncome === 0 && (
-                  <span className="text-xs text-amber-500 dark:text-amber-400">{t("invoice.noIncome")}</span>
-                )}
+            {distributionMethod === "PERSONAL" && users && users.length > 0 && (
+              <div className="space-y-2 lg:col-start-2 lg:pl-6">
+                <UserSingleSelect
+                  title={t("invoice.appliesTo")}
+                  value={personalUserId}
+                  onChange={setPersonalUserId}
+                  roleLabel={(role) =>
+                    role === "ADMIN"
+                      ? t("users.admin")
+                      : role === "CHILD"
+                        ? t("users.junior")
+                        : t("users.adult")
+                  }
+                  users={users.filter((u) => {
+                    if (!currentUser) return false;
+                    if (currentUser.role === "ADMIN") return true;
+                    if (currentUser.role === "ADULT") {
+                      return u.id === currentUser.id || u.role === "CHILD";
+                    }
+                    return u.id === currentUser.id;
+                  })}
+                />
               </div>
-              <UserSelectionCards
-                users={users}
-                selectedIds={incomeUserIds}
-                onToggle={handleToggleIncomeUser}
-                roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                ariaLabel={(u, selected) => `${t("invoice.selectUsers")}: ${u.name}`}
-                inlineContent={(u, selected) => {
-                  const pct = incomePercent(u.id);
-                  const hasIncome = activeIncomes.some((i) => i.userId === u.id);
-                  if (selected && pct !== null) {
-                    return <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">{pct}%</span>;
-                  }
-                  if (selected && !hasIncome) {
-                    return <span className="text-xs text-amber-500">{t("invoice.noIncomeShort")}</span>;
-                  }
-                  return null;
-                }}
-              />
-              {selectedUserIds.length === 0 && (
-                <p className="text-sm text-amber-500 dark:text-amber-400">{t("invoice.atLeastOneUser")}</p>
-              )}
-            </div>
-          )}
+            )}
 
-          {distributionMethod === "BY_PERCENT" && users && users.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={labelCls + " mb-0"}>{t("subscription.amountPerUser")}</label>
-                <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
-                  {t("invoice.totalLabel")}{" "}
-                  {symbolPosition === "Before" ? `${currencySymbol}\u00A0` : ""}
-                  {centsToAmount(customAmountTotalCents)}
-                  {symbolPosition === "After" ? `\u00A0${currencySymbol}` : ""}
-                </span>
-              </div>
-              <UserSelectionCards
-                users={users}
-                selectedIds={incomeUserIds}
-                onToggle={handleToggleIncomeUser}
-                roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                ariaLabel={(u, selected) => `${t("invoice.selectUsers")}: ${u.name}`}
-                inlineContent={(u, _selected) => (
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <div className="relative flex items-center">
-                      {symbolPosition === "Before" && (
-                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
-                      )}
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        disabled={!_selected}
-                        value={userPercents[u.id] ?? ""}
-                        onChange={(e) =>
-                          setUserPercents((prev) => ({
-                            ...prev,
-                            [u.id]: e.target.value,
-                          }))
-                        }
-                        className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
-                        placeholder="0"
-                      />
-                      {symbolPosition === "After" && (
-                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
-                      )}
-                    </div>
+            {distributionMethod === "BY_INCOME" &&
+              users &&
+              users.length > 0 && (
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("invoice.selectUsers")}
+                    </label>
+                    {totalIncome === 0 && (
+                      <span className="text-xs text-amber-500 dark:text-amber-400">
+                        {t("invoice.noIncome")}
+                      </span>
+                    )}
                   </div>
-                )}
-              />
-              {selectedUserIds.length === 0 && (
-                <p className="text-sm text-amber-500 dark:text-amber-400">{t("invoice.atLeastOneUser")}</p>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u, selected) =>
+                      `${t("invoice.selectUsers")}: ${u.name}`
+                    }
+                    inlineContent={(u, selected) => {
+                      const pct = incomePercent(u.id);
+                      const hasIncome = activeIncomes.some(
+                        (i) => i.userId === u.id,
+                      );
+                      if (selected && pct !== null) {
+                        return (
+                          <span className="text-sm font-semibold text-primary dark:text-primary">
+                            {pct}%
+                          </span>
+                        );
+                      }
+                      if (selected && !hasIncome) {
+                        return (
+                          <span className="text-xs text-amber-500">
+                            {t("invoice.noIncomeShort")}
+                          </span>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  {selectedUserIds.length === 0 && (
+                    <p className="text-sm text-amber-500 dark:text-amber-400">
+                      {t("invoice.atLeastOneUser")}
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {distributionMethod === "FIXED" && users && users.length > 0 &&
-            (fixedMode === "AMOUNT" ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className={labelCls + " mb-0"}>
-                    {t("subscription.fixedAmountPerUser")}
-                  </label>
-                  <span
-                    className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-indigo-500 dark:text-indigo-400" : "text-red-500 dark:text-red-400"}`}
-                  >
-                    {t("subscription.remainingAmount", {
-                      amount: symbolPosition === "Before"
-                        ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
-                        : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
-                    })}
-                  </span>
-                </div>
-                <UserSelectionCards
-                  users={users}
-                  selectedIds={incomeUserIds}
-                  onToggle={handleToggleIncomeUser}
-                  roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                  ariaLabel={(u) => `${t("subscription.fixedAmountPerUser")}: ${u.name}`}
-                  inlineContent={(u, _selected) => (
-                    <div className="relative flex items-center">
-                      {symbolPosition === "Before" && (
-                        <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
-                      )}
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        disabled={!_selected}
-                        value={userFixedAmounts[u.id] ?? ""}
-                        onChange={(e) =>
-                          setUserFixedAmounts((prev) => ({
-                            ...prev,
-                            [u.id]: e.target.value,
-                          }))
-                        }
-                        className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
-                        placeholder="0"
-                      />
-                      {symbolPosition === "After" && (
-                        <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">{currencySymbol}</span>
-                      )}
-                    </div>
-                  )}
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("subscription.remainingAmountHint")}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className={labelCls + " mb-0"}>
-                    {t("invoice.selectUsersEqual")}
-                  </label>
-                  {equalPercent ? (
-                    <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
-                      {equalPercent}
-                      {t("invoice.eachPct")}
+            {distributionMethod === "BY_PERCENT" &&
+              users &&
+              users.length > 0 && (
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("subscription.amountPerUser")}
+                    </label>
+                    <span className="text-sm font-medium text-primary dark:text-primary">
+                      {t("invoice.totalLabel")}{" "}
+                      {symbolPosition === "Before"
+                        ? `${currencySymbol}\u00A0`
+                        : ""}
+                      {centsToAmount(customAmountTotalCents)}
+                      {symbolPosition === "After"
+                        ? `\u00A0${currencySymbol}`
+                        : ""}
                     </span>
-                  ) : (
-                    <span className="text-sm text-amber-500">{t("invoice.atLeastOneUser")}</span>
+                  </div>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u, selected) =>
+                      `${t("invoice.selectUsers")}: ${u.name}`
+                    }
+                    inlineContent={(u, _selected) => (
+                      <div
+                        className="flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="relative flex items-center">
+                          {symbolPosition === "Before" && (
+                            <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                              {currencySymbol}
+                            </span>
+                          )}
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            disabled={!_selected}
+                            value={userPercents[u.id] ?? ""}
+                            onChange={(e) =>
+                              setUserPercents((prev) => ({
+                                ...prev,
+                                [u.id]: e.target.value,
+                              }))
+                            }
+                            className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
+                            placeholder="0"
+                          />
+                          {symbolPosition === "After" && (
+                            <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                              {currencySymbol}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  />
+                  {selectedUserIds.length === 0 && (
+                    <p className="text-sm text-amber-500 dark:text-amber-400">
+                      {t("invoice.atLeastOneUser")}
+                    </p>
                   )}
                 </div>
-                <UserSelectionCards
-                  users={users}
-                  selectedIds={incomeUserIds}
-                  onToggle={handleToggleIncomeUser}
-                  roleLabel={(role) => role === "ADMIN" ? t("users.admin") : role === "CHILD" ? t("users.junior") : t("users.adult")}
-                  ariaLabel={(u) => `${t("invoice.selectUsersEqual")}: ${u.name}`}
-                  inlineContent={(_u, selected) => selected && equalPercent ? (
-                    <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">{equalPercent}%</span>
-                  ) : null}
-                />
-              </div>
-            ))}
+              )}
 
-                  </form>
+            {distributionMethod === "FIXED" &&
+              users &&
+              users.length > 0 &&
+              (fixedMode === "AMOUNT" ? (
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("subscription.fixedAmountPerUser")}
+                    </label>
+                    <span
+                      className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-primary dark:text-primary" : "text-red-500 dark:text-red-400"}`}
+                    >
+                      {t("subscription.remainingAmount", {
+                        amount:
+                          symbolPosition === "Before"
+                            ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
+                            : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
+                      })}
+                    </span>
+                  </div>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u) =>
+                      `${t("subscription.fixedAmountPerUser")}: ${u.name}`
+                    }
+                    inlineContent={(u, _selected) => (
+                      <div className="relative flex items-center">
+                        {symbolPosition === "Before" && (
+                          <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                            {currencySymbol}
+                          </span>
+                        )}
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          disabled={!_selected}
+                          value={userFixedAmounts[u.id] ?? ""}
+                          onChange={(e) =>
+                            setUserFixedAmounts((prev) => ({
+                              ...prev,
+                              [u.id]: e.target.value,
+                            }))
+                          }
+                          className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
+                          placeholder="0"
+                        />
+                        {symbolPosition === "After" && (
+                          <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                            {currencySymbol}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("subscription.remainingAmountHint")}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 lg:col-start-2 lg:pl-6">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls + " mb-0"}>
+                      {t("invoice.selectUsersEqual")}
+                    </label>
+                    {equalPercent ? (
+                      <span className="text-sm font-medium text-primary dark:text-primary">
+                        {equalPercent}
+                        {t("invoice.eachPct")}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-amber-500">
+                        {t("invoice.atLeastOneUser")}
+                      </span>
+                    )}
+                  </div>
+                  <UserSelectionCards
+                    users={users}
+                    selectedIds={incomeUserIds}
+                    onToggle={handleToggleIncomeUser}
+                    roleLabel={(role) =>
+                      role === "ADMIN"
+                        ? t("users.admin")
+                        : role === "CHILD"
+                          ? t("users.junior")
+                          : t("users.adult")
+                    }
+                    ariaLabel={(u) =>
+                      `${t("invoice.selectUsersEqual")}: ${u.name}`
+                    }
+                    inlineContent={(_u, selected) =>
+                      selected && equalPercent ? (
+                        <span className="text-sm font-semibold text-primary dark:text-primary">
+                          {equalPercent}%
+                        </span>
+                      ) : null
+                    }
+                  />
+                </div>
+              ))}
+          </div>
+        </form>
       </div>
+      )}
     </div>
   );
 }

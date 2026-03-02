@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -79,6 +79,11 @@ export default function InvoiceList() {
     ),
   );
 
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [categories],
+  );
+
   const filteredInvoices = invoices?.filter((invoice) => {
     const searchText =
       `${invoice.vendor} ${invoice.description || ""} ${invoice.category}`.toLowerCase();
@@ -121,7 +126,7 @@ export default function InvoiceList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -220,7 +225,7 @@ export default function InvoiceList() {
         rightContent={
           <div className="flex flex-col items-end gap-1">
             {invoice.isPersonal && (
-              <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+              <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground">
                 {t("invoice.personal")}
               </span>
             )}
@@ -252,7 +257,7 @@ export default function InvoiceList() {
                 label: t("common.edit"),
                 onClick: () => navigate(`/invoices/${invoice.id}/edit`),
                 colorClassName:
-                  "bg-primary/20 text-primary hover:bg-primary/30",
+                  "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
               },
               {
                 key: "delete",
@@ -284,7 +289,7 @@ export default function InvoiceList() {
         </h1>
         <button
           onClick={() => navigate("/invoices/add")}
-          className="flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors"
+          className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors"
         >
           <Plus size={16} />
           {t("invoice.addInvoice")}
@@ -292,7 +297,7 @@ export default function InvoiceList() {
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div className="relative">
             <Search
               size={14}
@@ -303,13 +308,13 @@ export default function InvoiceList() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("common.search")}
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
           <select
             value={filterMethod}
             onChange={(e) => setFilterMethod(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             {METHOD_OPTIONS.map((m) => (
               <option key={m} value={m}>
@@ -326,17 +331,17 @@ export default function InvoiceList() {
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="ALL">{t("invoice.categoryFilter")}</option>
-            {categories.map((category) => (
+            {sortedCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
             ))}
           </select>
           <select
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
           >
@@ -367,7 +372,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.overdue, "remaining"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.overdue.map(renderInvoice)}
               </div>
             </div>
@@ -383,7 +388,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.partial, "remaining"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.partial.map(renderInvoice)}
               </div>
             </div>
@@ -395,11 +400,11 @@ export default function InvoiceList() {
                 <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">
                   {t("invoice.statusUnpaid")}
                 </h2>
-                <p className="text-sm font-medium text-indigo-500 dark:text-indigo-400 mt-0.5">
+                <p className="text-sm font-medium text-primary dark:text-primary mt-0.5">
                   {fmt(groupSum(groups.unpaid, "total"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.unpaid.map(renderInvoice)}
               </div>
             </div>
@@ -415,7 +420,7 @@ export default function InvoiceList() {
                   {fmt(groupSum(groups.paid, "total"))}
                 </p>
               </div>
-              <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {groups.paid.map(renderInvoice)}
               </div>
             </div>

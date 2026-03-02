@@ -63,6 +63,7 @@
     "title": "Utgift",
     "invoices": "Utgifter",
     "addInvoice": "Legg til utgift",
+    "closedPeriodAddBlocked": "Kan ikke legge til utgift i en lukket periode.",
     "editInvoice": "Rediger utgift",
     "vendor": "Leverandør",
     "vendorPlaceholder": "f.eks. Sparebank 1",
@@ -131,7 +132,10 @@
     "allocationPercentDescription": "Andeler fordeles etter prosentregler.",
     "allocationFixedDescription": "Faste beløp tildeles per person.",
     "unknownDistributionMethod": "Ukjent fordelingsmetode",
-    "youPayOfTotal": "Du: {{own}} av {{total}}"
+    "youPayOfTotal": "Du: {{own}} av {{total}}",
+    "personalExpenseOption": "Personlig utgift",
+    "appliesTo": "Gjelder for",
+    "selectPersonalUser": "Velg person"
   },
   "period": {
     "title": "Periode",
@@ -227,6 +231,8 @@
     "brandingInvalidLogoUrl": "Bruk en gyldig logo-URL.",
     "brandingLogoLoadFailed": "Kunne ikke laste ekstern logo-URL. Viser standardlogo.",
     "section": "Seksjon",
+    "sectionSettings": "Innstillinger",
+    "themeSection": "Tema",
     "brandingIconGenerationFailed": "Kunne ikke generere forhåndsvisning av app-ikon. Viser reserveikon.",
     "brandingPwaCacheNote": "For oppdatert installert app-ikon kan det være nødvendig å fjerne og installere appen på nytt.",
     "brandingResetDefault": "Tilbakestill til standard"
@@ -301,11 +307,13 @@
     "deleteSelected": "Slett valgte",
     "confirmDeleteItem": "Slette \"{{item}}\"?",
     "confirmDeleteSelected": "Slette {{count}} valgte elementer?",
+    "currencyPosition": "Valutaplassering",
     "currencySymbolPosition": "Valutasymbol plassering",
     "currencySymbolPositionDesc": "Velg om valutasymbolet vises før eller etter beløpet.",
     "symbolBefore": "Før beløpet",
     "symbolAfter": "Etter beløpet",
-    "currencySymbolPositionUpdated": "Valutasymbol plassering oppdatert"
+    "currencySymbolPositionUpdated": "Valutasymbol plassering oppdatert",
+    "itemsPerPage": "Per side"
   },
   "subscription": {
     "title": "Faste utgifter",
@@ -344,6 +352,7 @@
     "statusPaused": "Satt på pause",
     "statusCanceled": "Avsluttet",
     "unit": "Enhet",
+    "frequencyLabel": "Frekvens",
     "unitDay": "Dag",
     "unitWeek": "Uke",
     "unitMonth": "Måned",

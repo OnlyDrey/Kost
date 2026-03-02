@@ -65,7 +65,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -107,7 +107,11 @@ export default function Dashboard() {
             label: t("dashboard.yourShare"),
             value: fmt(userTotalCents),
             colorClass: "bg-amber-500",
-            onClick: () => currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.id ?? ""}`),
+            onClick: () =>
+              currentPeriod &&
+              navigate(
+                `/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.id ?? ""}`,
+              ),
           },
           {
             key: "total",
@@ -115,7 +119,9 @@ export default function Dashboard() {
             label: t("dashboard.totalAmount"),
             value: fmt(stats?.totalAmountCents ?? 0),
             colorClass: "bg-emerald-500",
-            onClick: () => currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=all`),
+            onClick: () =>
+              currentPeriod &&
+              navigate(`/periods/${currentPeriod.id}?filter=all`),
           },
           {
             key: "paid",
@@ -123,7 +129,9 @@ export default function Dashboard() {
             label: t("dashboard.paidLabel"),
             value: fmt(paidUnpaid.paidCents),
             colorClass: "bg-green-500",
-            onClick: () => currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=paid`),
+            onClick: () =>
+              currentPeriod &&
+              navigate(`/periods/${currentPeriod.id}?filter=paid`),
           },
           {
             key: "remaining",
@@ -131,28 +139,37 @@ export default function Dashboard() {
             label: t("dashboard.remainingLabel"),
             value: fmt(paidUnpaid.owedCents),
             colorClass: "bg-red-500",
-            onClick: () => currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=remaining`),
+            onClick: () =>
+              currentPeriod &&
+              navigate(`/periods/${currentPeriod.id}?filter=remaining`),
           },
           {
             key: "total-invoices",
             icon: Receipt,
             label: t("dashboard.totalInvoices"),
             value: stats?.totalInvoices ?? 0,
-            colorClass: "bg-indigo-500",
-            onClick: () => currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=all`),
+            colorClass: "bg-primary",
+            onClick: () =>
+              currentPeriod &&
+              navigate(`/periods/${currentPeriod.id}?filter=all`),
           },
           {
             key: "users",
             icon: Users,
             label: t("period.userShares"),
             value: stats?.userShares?.length ?? 0,
-            colorClass: "bg-sky-500",
-            onClick: () => currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.id ?? ""}`),
+            colorClass: "bg-primary",
+            onClick: () =>
+              currentPeriod &&
+              navigate(
+                `/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.id ?? ""}`,
+              ),
           },
         ]}
       />
 
-      {((invoices && invoices.length > 0) || (stats?.userShares && stats.userShares.length > 0)) && (
+      {((invoices && invoices.length > 0) ||
+        (stats?.userShares && stats.userShares.length > 0)) && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
           <div>
             {invoices && invoices.length > 0 && (
@@ -183,7 +200,10 @@ export default function Dashboard() {
                   emptyLabel={t("common.noData")}
                   unknownLabel={t("invoice.unknown")}
                   onSelectShare={(userId) =>
-                    currentPeriod && navigate(`/periods/${currentPeriod.id}?filter=share-user&shareUser=${userId}`)
+                    currentPeriod &&
+                    navigate(
+                      `/periods/${currentPeriod.id}?filter=share-user&shareUser=${userId}`,
+                    )
                   }
                   selectedUserId={undefined}
                 />

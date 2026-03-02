@@ -23,6 +23,7 @@ import { formatDate } from "../../utils/date";
 import { useSettings } from "../../stores/settings.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
+import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
 
 export default function SubscriptionList() {
@@ -59,7 +60,7 @@ export default function SubscriptionList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -76,10 +77,10 @@ export default function SubscriptionList() {
               <button
                 onClick={handleGenerate}
                 disabled={generateInvoices.isPending}
-                className="hidden sm:flex items-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="hidden sm:flex items-center gap-2 border border-primary/40 dark:border-primary/40 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 {generateInvoices.isPending ? (
-                  <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <RefreshCw size={15} />
                 )}
@@ -88,7 +89,7 @@ export default function SubscriptionList() {
             )}
             <button
               onClick={() => navigate("/subscriptions/add")}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Plus size={16} />
               {t("subscription.addRecurringExpense")}
@@ -99,10 +100,10 @@ export default function SubscriptionList() {
           <button
             onClick={handleGenerate}
             disabled={generateInvoices.isPending}
-            className="sm:hidden w-full flex items-center justify-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="sm:hidden w-full flex items-center justify-center gap-2 border border-primary/40 dark:border-primary/40 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             {generateInvoices.isPending ? (
-              <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : (
               <RefreshCw size={15} />
             )}
@@ -135,7 +136,7 @@ export default function SubscriptionList() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+          <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-5">
             {active.map((sub) => (
               <SubscriptionCard
                 key={sub.id}
@@ -158,7 +159,7 @@ export default function SubscriptionList() {
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             {t("subscription.inactiveSection", { count: inactive.length })}
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+          <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-5">
             {inactive.map((sub) => (
               <SubscriptionCard
                 key={sub.id}
@@ -214,12 +215,6 @@ function SubscriptionCard({
     locale,
     sub.distributionRules as any,
   );
-  const statusClassName =
-    sub.status === "ACTIVE"
-      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-      : sub.status === "PAUSED"
-        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
   const statusLabel =
     sub.status === "ACTIVE"
       ? t("subscription.statusActive")
@@ -266,7 +261,7 @@ function SubscriptionCard({
               icon: Pencil,
               label: t("common.edit"),
               onClick: onEdit,
-              colorClassName: "bg-primary/20 text-primary hover:bg-primary/30",
+              colorClassName: "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
             },
             {
               key: "toggle",
@@ -291,14 +286,17 @@ function SubscriptionCard({
       }
       footerContent={
         <div className="flex items-center flex-wrap gap-1.5">
-          <span
-            className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full ${statusClassName}`}
-          >
-            {statusLabel}
-          </span>
-          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
-            {freqLabel(sub.frequency)}
-          </span>
+          <TagPill
+            label={statusLabel}
+            variant={
+              sub.status === "ACTIVE"
+                ? "success"
+                : sub.status === "PAUSED"
+                  ? "warning"
+                  : "danger"
+            }
+          />
+          <TagPill label={freqLabel(sub.frequency)} variant="frequency" />
         </div>
       }
     />

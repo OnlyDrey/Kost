@@ -11,15 +11,15 @@ import {
   ChevronRight,
   RefreshCw,
   SlidersHorizontal,
-  Shield,
-  Baby,
-  User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
-import TagPill from "../Common/TagPill";
-import { getCurrentLogoSource, getDefaultLogoUrl } from "../../branding/brandingAssets";
+import RoleBadge from "../Common/RoleBadge";
+import {
+  getCurrentLogoSource,
+  getDefaultLogoUrl,
+} from "../../branding/brandingAssets";
 
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
@@ -42,13 +42,13 @@ function NavLink({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
         active
-          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
-          : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          ? "border-primary bg-primary/15 text-primary dark:bg-primary/25"
+          : "border-transparent text-muted-foreground hover:bg-surface-elevated"
       }`}
     >
-      <Icon size={18} />
+      <Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
       <span>{label}</span>
       {active && <ChevronRight size={14} className="ml-auto opacity-60" />}
     </button>
@@ -105,8 +105,6 @@ function Sidebar({
       : user?.role === "CHILD"
         ? t("users.junior")
         : t("users.adult");
-  const RoleIcon =
-    user?.role === "ADMIN" ? Shield : user?.role === "CHILD" ? Baby : User;
 
   const themeOptions = [
     {
@@ -169,10 +167,10 @@ function Sidebar({
                   aria-label={ariaLabel}
                   title={ariaLabel}
                   onClick={() => setTheme(key)}
-                  className={`flex-1 h-8 rounded-full grid place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                  className={`flex-1 h-8 rounded-full grid place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     selected
-                      ? "bg-indigo-200/80 text-indigo-700 dark:bg-indigo-500/25 dark:text-indigo-200"
-                      : "text-slate-500 hover:text-slate-700 dark:text-slate-300/70 dark:hover:text-slate-100"
+                      ? "bg-primary/20 text-primary dark:bg-primary/25 dark:text-primary"
+                      : "text-muted-foreground hover:text-text-primary"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -186,7 +184,7 @@ function Sidebar({
           <button
             type="button"
             onClick={() => onNavigate("/settings?tab=profile")}
-            className="flex-1 flex items-center gap-3 px-2 py-2.5 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            className="flex-1 flex items-center gap-3 px-2 py-2.5 rounded-lg text-left hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <UserAvatar
               name={user?.name ?? ""}
@@ -197,18 +195,17 @@ function Sidebar({
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {user?.name}
               </p>
-              <TagPill
+              <RoleBadge
+                role={user?.role ?? "ADULT"}
                 label={roleLabel}
-                variant="type"
-                size="sm"
-                icon={<RoleIcon size={11} />}
+                className="mt-0.5"
               />
             </div>
           </button>
           <button
             onClick={logout}
             title={t("nav.logout")}
-            className="h-11 w-11 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            className="h-11 w-11 inline-flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <LogOut size={16} />
           </button>
@@ -281,7 +278,7 @@ export default function AppLayout() {
             <span className="text-lg font-bold text-primary">{appTitle}</span>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 md:pl-12 lg:pl-16">
           <Outlet />
         </main>
       </div>

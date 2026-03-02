@@ -69,8 +69,15 @@ export class SubscriptionsController {
   create(
     @Body() createSubscriptionDto: CreateSubscriptionDto,
     @CurrentUser("familyId") familyId: string,
+    @CurrentUser("sub") currentUserId: string,
+    @CurrentUser("role") currentUserRole: UserRole,
   ) {
-    return this.subscriptionsService.create(createSubscriptionDto, familyId);
+    return this.subscriptionsService.create(
+      createSubscriptionDto,
+      familyId,
+      currentUserId,
+      currentUserRole,
+    );
   }
 
   @Post("generate/:periodId")
@@ -106,11 +113,15 @@ export class SubscriptionsController {
     @Param("id") id: string,
     @Body() updateSubscriptionDto: UpdateSubscriptionDto,
     @CurrentUser("familyId") familyId: string,
+    @CurrentUser("sub") currentUserId: string,
+    @CurrentUser("role") currentUserRole: UserRole,
   ) {
     return this.subscriptionsService.update(
       id,
       updateSubscriptionDto,
       familyId,
+      currentUserId,
+      currentUserRole,
     );
   }
 

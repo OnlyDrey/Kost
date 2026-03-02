@@ -26,7 +26,7 @@ import { isPeriodClosed } from "../../utils/periodStatus";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
 
 export default function PeriodList() {
   const { t } = useTranslation();
@@ -205,7 +205,7 @@ export default function PeriodList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -235,7 +235,7 @@ export default function PeriodList() {
               setSelectedYear(e.target.value);
               setSelectedMonth("all");
             }}
-            className="px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+            className="px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary appearance-none"
           >
             <option value="all">{t("overview.allYears")}</option>
             {years.map((year) => (
@@ -253,7 +253,7 @@ export default function PeriodList() {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+            className="px-3 py-2 pr-7 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary appearance-none"
           >
             <option value="all">{t("overview.allMonths")}</option>
             {months.map((month) => (
@@ -276,7 +276,7 @@ export default function PeriodList() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+        <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
           {filteredPeriods.map((period) => (
             <div
               key={period.id}
@@ -567,7 +567,7 @@ export default function PeriodList() {
                   value={deletionPassword}
                   onChange={(e) => setDeletionPassword(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleConfirmDelete()}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
                   placeholder={t("period.passwordPlaceholder")}
                   autoFocus
                 />
