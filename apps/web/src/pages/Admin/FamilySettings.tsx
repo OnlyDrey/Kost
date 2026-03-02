@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AppSelect from "../../components/Common/AppSelect";
 import {
   useCategories,
   useAddCategory,
@@ -258,7 +259,7 @@ function ManagedList({
           <span className="whitespace-nowrap">
             {t("familySettings.itemsPerPage")}:
           </span>
-          <select
+          <AppSelect
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
@@ -268,7 +269,7 @@ function ManagedList({
                 {n}
               </option>
             ))}
-          </select>
+          </AppSelect>
         </label>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
@@ -776,7 +777,7 @@ function VendorManager({
           <span className="whitespace-nowrap">
             {t("familySettings.itemsPerPage")}:
           </span>
-          <select
+          <AppSelect
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
@@ -786,7 +787,7 @@ function VendorManager({
                 {n}
               </option>
             ))}
-          </select>
+          </AppSelect>
         </label>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
@@ -954,7 +955,7 @@ function CurrencySettings() {
         <div className="space-y-4">
           {/* Currency selector */}
           <div className="flex gap-2">
-            <select
+            <AppSelect
               value={value}
               onChange={(e) => {
                 setSelected(e.target.value);
@@ -967,7 +968,7 @@ function CurrencySettings() {
                   {c.label}
                 </option>
               ))}
-            </select>
+            </AppSelect>
             <button
               onClick={handleSaveCurrency}
               disabled={updateCurrency.isPending || value === currentCurrency}
@@ -990,7 +991,7 @@ function CurrencySettings() {
                 {t("familySettings.currencySymbolPositionUpdated")}
               </div>
             )}
-            <select
+            <AppSelect
               value={currentPosition}
               onChange={(e) => handleSavePosition(e.target.value)}
               disabled={updatePosition.isPending}
@@ -998,7 +999,7 @@ function CurrencySettings() {
             >
               <option value="Before">{t("familySettings.symbolBefore")}</option>
               <option value="After">{t("familySettings.symbolAfter")}</option>
-            </select>
+            </AppSelect>
           </div>
         </div>
       )}
@@ -1119,7 +1120,7 @@ export default function FamilySettings() {
 
       {/* Mobile: dropdown selector */}
       <div className="xl:hidden">
-        <select
+        <AppSelect
           value={activeSection}
           onChange={(e) => setActiveSection(e.target.value as FamilySetting)}
           className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
@@ -1129,7 +1130,7 @@ export default function FamilySettings() {
               {item.label}
             </option>
           ))}
-        </select>
+        </AppSelect>
       </div>
 
       <div className="flex gap-6 items-start">

@@ -9,6 +9,7 @@ import { mkdirSync, existsSync } from "fs";
 import * as express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { AppModule } from "./app.module";
+import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -57,7 +58,10 @@ async function bootstrap() {
   );
   app.use((req: Request, res: Response, next: NextFunction): void => {
     const isSecureRequest = req.secure;
-    res.setHeader("Content-Security-Policy", isSecureRequest ? cspHttps : cspHttp);
+    res.setHeader(
+      "Content-Security-Policy",
+      isSecureRequest ? cspHttps : cspHttp,
+    );
     res.setHeader("X-Kost-CSP-Mode", isSecureRequest ? "https" : "http");
     next();
   });
@@ -179,10 +183,7 @@ async function bootstrap() {
         return next();
       }
 
-      res.setHeader(
-        "Cache-Control",
-        "no-store, no-cache, must-revalidate",
-      );
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
       return res.sendFile(join(publicDir, "index.html"));
@@ -200,6 +201,7 @@ async function bootstrap() {
       },
     }),
   );
+  app.useGlobalFilters(new ApiExceptionFilter());
 
   // OpenAPI/Swagger
   const config = new DocumentBuilder()

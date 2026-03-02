@@ -2,6 +2,8 @@ import { CheckCircle2, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
 import { FOCUS_RING_STRONG } from "../Common/focusStyles";
+import InvoiceStatusTag from "../Common/InvoiceStatusTag";
+import type { InvoiceStatus } from "../../utils/invoiceStatus";
 
 import type { ReactNode } from "react";
 
@@ -21,12 +23,14 @@ interface ExpenseItemCardProps {
   rightContent?: ReactNode;
   actionButton?: ReactNode;
   footerContent?: ReactNode;
-  paidLabel?: string;
   overdueLabel?: string;
   showPaidIcon?: boolean;
   selected?: boolean;
   showPaymentStatusPill?: boolean;
   focusRingClassName?: string;
+  amountTone?: "default" | "partial";
+  paymentStatus?: InvoiceStatus;
+  amountDetails?: string[];
 }
 
 export default function ExpenseItemCard({
@@ -45,12 +49,14 @@ export default function ExpenseItemCard({
   rightContent,
   actionButton,
   footerContent,
-  paidLabel,
   overdueLabel,
   showPaidIcon = true,
   selected = false,
   showPaymentStatusPill = true,
   focusRingClassName,
+  amountTone = "default",
+  paymentStatus,
+  amountDetails,
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
   const emphasisClass = paid
@@ -65,7 +71,9 @@ export default function ExpenseItemCard({
     ? "text-success"
     : overdue
       ? "text-danger"
-      : "text-primary";
+      : amountTone === "partial"
+        ? "text-warning"
+        : "text-primary";
 
   const effectiveFocusRing =
     focusRingClassName ??
@@ -113,11 +121,9 @@ export default function ExpenseItemCard({
 
       <div className="w-full flex flex-wrap gap-1">
         {showPaymentStatusPill && (
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${paid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}
-          >
-            {paid ? paidLabel ?? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
-          </span>
+          <InvoiceStatusTag
+            status={paymentStatus ?? (paid ? "PAID" : overdue ? "OVERDUE" : "UNPAID")}
+          />
         )}
         {overdue && (
           <TagPill
@@ -153,6 +159,11 @@ export default function ExpenseItemCard({
                   {shareLabel}
                 </p>
               )}
+              {amountDetails?.map((line) => (
+                <p key={line} className="text-xs text-app-text-secondary mt-0">
+                  {line}
+                </p>
+              ))}
             </div>
 
             {(rightContent || actionButton) && (

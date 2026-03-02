@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AppSelect from "../../components/Common/AppSelect";
 import {
   useInvoices,
   useCurrentPeriod,
@@ -28,6 +29,9 @@ import { useAuth } from "../../stores/auth.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { isPeriodClosed } from "../../utils/periodStatus";
+import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getInvoiceStatus } from "../../utils/invoiceStatus";
 
 const METHOD_OPTIONS = [
   "ALL",
@@ -67,6 +71,7 @@ export default function InvoiceList() {
   const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
+  const periodClosed = currentPeriod ? isPeriodClosed(currentPeriod) : false;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMethod, setFilterMethod] = useState("ALL");
@@ -100,7 +105,7 @@ export default function InvoiceList() {
       (s, p) => s + p.amountCents,
       0,
     );
-    const remaining = invoice.totalCents - totalPaid;
+    const remaining = Math.max(0, invoice.totalCents - totalPaid);
     const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
     const overdue = remaining > 0 && !!dueAt && dueAt < new Date();
 
@@ -181,13 +186,17 @@ export default function InvoiceList() {
     const handleDeleteInvoice = async () => {
       try {
         await deleteInvoice.mutateAsync(invoice.id);
-      } catch {
-        await notify(t("errors.serverError"), t("common.error"));
+      } catch (error: unknown) {
+        await notify(getApiErrorMessage(t, error), t("common.error"));
       }
     };
 
     const handleMarkPaidInFull = async () => {
       if (!user || remaining <= 0) return;
+      if (periodClosed) {
+        await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+        return;
+      }
       try {
         await addPayment.mutateAsync({
           invoiceId: invoice.id,
@@ -197,10 +206,16 @@ export default function InvoiceList() {
             paidAt: new Date().toISOString(),
           },
         });
-      } catch {
-        await notify(t("errors.serverError"), t("common.error"));
+      } catch (error: unknown) {
+        await notify(getApiErrorMessage(t, error), t("common.error"));
       }
     };
+
+    const status = getInvoiceStatus({
+      totalCents: invoice.totalCents,
+      totalPaidCents: totalPaid,
+      dueDate: invoice.dueDate,
+    });
 
     return (
       <ExpenseItemCard
@@ -208,7 +223,19 @@ export default function InvoiceList() {
         vendor={invoice.vendor}
         description={invoice.description}
         logoUrl={logoUrl}
-        amountLabel={fmt(invoice.totalCents)}
+        amountLabel={fmt(isPartiallyPaid ? remaining : invoice.totalCents)}
+        amountDetails={
+          isPartiallyPaid
+            ? [
+                t("invoice.remainingOfTotal", {
+                  remaining: fmt(remaining),
+                  total: fmt(invoice.totalCents),
+                }),
+                t("invoice.paidWithAmount", { amount: fmt(totalPaid) }),
+                t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) }),
+              ]
+            : undefined
+        }
         typeLabel={distributionLabel(
           invoice.distributionMethod,
           settings.locale,
@@ -216,26 +243,21 @@ export default function InvoiceList() {
         )}
         category={invoice.category}
         dateLabel={formatDate(invoice.createdAt)}
-        paid={isPaid}
-        overdue={overdue}
-        paidLabel={t("invoice.statusPaid")}
+        paid={status === "PAID"}
+        overdue={status === "OVERDUE"}
+        paymentStatus={status}
+        amountTone={status === "PARTIALLY_PAID" ? "partial" : "default"}
         showPaidIcon={!isPaid}
         overdueLabel={t("invoice.statusOverdue")}
         onClick={() => navigate(`/invoices/${invoice.id}`)}
         rightContent={
-          <div className="flex flex-col items-end gap-1">
-            {invoice.isPersonal && (
+          invoice.isPersonal ? (
+            <div className="flex flex-col items-end gap-1">
               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground">
                 {t("invoice.personal")}
               </span>
-            )}
-            {isPartiallyPaid && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                <Clock size={10} />{" "}
-                {t("invoice.remaining", { amount: fmt(remaining) })}
-              </span>
-            )}
-          </div>
+            </div>
+          ) : undefined
         }
         actionButton={
           <ActionIconBar
@@ -245,9 +267,10 @@ export default function InvoiceList() {
               {
                 key: "pay",
                 icon: CheckCircle2,
-                label: t("invoice.markPaid"),
+                label: t("invoice.registerPayment"),
                 onClick: handleMarkPaidInFull,
-                disabled: remaining <= 0 || addPayment.isPending,
+                disabled: periodClosed || remaining <= 0 || addPayment.isPending,
+                hidden: periodClosed,
                 colorClassName:
                   "bg-success/20 text-success hover:bg-success/30",
               },
@@ -311,7 +334,7 @@ export default function InvoiceList() {
               className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
-          <select
+          <AppSelect
             value={filterMethod}
             onChange={(e) => setFilterMethod(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -327,8 +350,8 @@ export default function InvoiceList() {
                       : distributionLabel(m, settings.locale)}
               </option>
             ))}
-          </select>
-          <select
+          </AppSelect>
+          <AppSelect
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -339,8 +362,8 @@ export default function InvoiceList() {
                 {category}
               </option>
             ))}
-          </select>
-          <select
+          </AppSelect>
+          <AppSelect
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
@@ -350,7 +373,7 @@ export default function InvoiceList() {
                 {STATUS_LABELS[s]}
               </option>
             ))}
-          </select>
+          </AppSelect>
         </div>
       </div>
 

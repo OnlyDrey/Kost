@@ -8,7 +8,6 @@ import {
   Trash2,
   BarChart3,
   LockOpen,
-  ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,6 +24,9 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
+import AppSelect from "../../components/Common/AppSelect";
+import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
+
 
 const inputCls =
   `w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
@@ -230,7 +232,7 @@ export default function PeriodList() {
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
-          <select
+          <AppSelect
             value={selectedYear}
             onChange={(e) => {
               setSelectedYear(e.target.value);
@@ -244,14 +246,10 @@ export default function PeriodList() {
                 {year}
               </option>
             ))}
-          </select>
-          <ChevronDown
-            size={14}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
-          />
+          </AppSelect>
         </div>
         <div className="relative">
-          <select
+          <AppSelect
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
             className={`px-3 py-2 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
@@ -262,11 +260,7 @@ export default function PeriodList() {
                 {month}
               </option>
             ))}
-          </select>
-          <ChevronDown
-            size={14}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
-          />
+          </AppSelect>
         </div>
       </div>
 
@@ -294,20 +288,9 @@ export default function PeriodList() {
                           <p className="font-semibold text-gray-900 dark:text-gray-100">
                             {period.id}
                           </p>
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                              !closed
-                                ? "bg-success/20 text-success"
-                                : "bg-danger/20 text-danger"
-                            }`}
-                          >
-                            {!closed ? (
-                              <LockOpen size={11} />
-                            ) : (
-                              <Lock size={11} />
-                            )}
-                            {!closed ? t("period.open") : t("period.closed")}
-                          </span>
+                          <PeriodStatusBadge
+                            status={closed ? "CLOSED" : "OPEN"}
+                          />
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 w-full mt-2">
                           {t("period.createdAt", {

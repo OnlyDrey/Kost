@@ -11,6 +11,8 @@ import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { AddPaymentDto } from "./dto/add-payment.dto";
 import { DistributionMethod, PeriodStatus } from "@prisma/client";
 
+const apiError = (code: string, message: string) => ({ code, message });
+
 @Injectable()
 export class InvoicesService {
   constructor(
@@ -361,7 +363,26 @@ export class InvoicesService {
 
     // Check if period is still open
     if (existingInvoice.period.status === PeriodStatus.CLOSED) {
-      throw new BadRequestException("Cannot update invoice in a closed period");
+      throw new BadRequestException(
+        apiError("PERIOD_CLOSED", "Cannot update invoice in a closed period"),
+      );
+    }
+
+    const requestedTotalCents = updateInvoiceDto.totalCents;
+    if (requestedTotalCents !== undefined) {
+      const currentPayments = await this.prisma.payment.aggregate({
+        where: { invoiceId: id },
+        _sum: { amountCents: true },
+      });
+      const paidCents = currentPayments._sum.amountCents ?? 0;
+      if (requestedTotalCents < paidCents) {
+        throw new BadRequestException(
+          apiError(
+            "AMOUNT_LESS_THAN_PAID",
+            "Total amount cannot be lower than already paid amount",
+          ),
+        );
+      }
     }
 
     const {
@@ -622,6 +643,15 @@ export class InvoicesService {
   ) {
     const invoice = await this.findOne(invoiceId, familyId, currentUserId);
 
+    if (invoice.period.status !== PeriodStatus.OPEN) {
+      throw new BadRequestException(
+        apiError(
+          "PERIOD_CLOSED",
+          "Cannot add payment to an invoice in a closed period",
+        ),
+      );
+    }
+
     // Verify payer belongs to family
     const payer = await this.prisma.user.findFirst({
       where: { id: addPaymentDto.paidById, familyId },
@@ -642,7 +672,10 @@ export class InvoicesService {
 
     if (newTotal > invoice.totalCents) {
       throw new BadRequestException(
-        `Payment would exceed invoice total. Invoice: ${invoice.totalCents}, Paid: ${totalPaid}, New: ${addPaymentDto.amountCents}`,
+        apiError(
+          "PAYMENT_EXCEEDS_TOTAL",
+          `Payment would exceed invoice total. Invoice: ${invoice.totalCents}, Paid: ${totalPaid}, New: ${addPaymentDto.amountCents}`,
+        ),
       );
     }
 

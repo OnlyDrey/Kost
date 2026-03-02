@@ -31,6 +31,12 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { FOCUS_RING } from "../../components/Common/focusStyles";
+import AppSelect from "../../components/Common/AppSelect";
+import { isPeriodClosed } from "../../utils/periodStatus";
+import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import InvoiceStatusTag from "../../components/Common/InvoiceStatusTag";
+
 
 const inputCls =
   `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
@@ -66,6 +72,7 @@ export default function InvoiceDetail() {
   const [editPaidById, setEditPaidById] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editError, setEditError] = useState("");
+  const periodClosed = invoice?.period ? isPeriodClosed(invoice.period) : false;
 
   const handleDelete = async () => {
     const accepted = await confirm({
@@ -80,7 +87,7 @@ export default function InvoiceDetail() {
     navigate("/invoices");
   };
 
-  const startEditPayment = (payment: any) => {
+  const startEditPayment = (payment: { id: string; amountCents: number; paidAt: string | Date; paidById: string; note?: string | null }) => {
     setEditingPaymentId(payment.id);
     setEditAmount(String(payment.amountCents / 100));
     setEditPaidAt(
@@ -109,11 +116,8 @@ export default function InvoiceDetail() {
         },
       });
       setEditingPaymentId(null);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setEditError(
-        Array.isArray(msg) ? msg.join(", ") : msg || t("errors.serverError"),
-      );
+    } catch (err: unknown) {
+      setEditError(getApiErrorMessage(t, err));
     }
   };
 
@@ -130,6 +134,11 @@ export default function InvoiceDetail() {
       return;
     }
 
+    if (periodClosed) {
+      setPayError(t("invoice.closedPeriodPaymentBlocked"));
+      return;
+    }
+
     try {
       await addPayment.mutateAsync({
         invoiceId: id!,
@@ -138,16 +147,18 @@ export default function InvoiceDetail() {
       setShowPayForm(false);
       setPayAmount("");
       setPayNote("");
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setPayError(
-        Array.isArray(msg) ? msg.join(", ") : msg || t("errors.serverError"),
-      );
+    } catch (err: unknown) {
+      setPayError(getApiErrorMessage(t, err));
     }
   };
 
   const handleMarkFullyPaid = async () => {
     if (!user || remaining <= 0) return;
+    if (periodClosed) {
+      setPayError(t("invoice.closedPeriodPaymentBlocked"));
+      return;
+    }
+
     try {
       await addPayment.mutateAsync({
         invoiceId: id!,
@@ -157,8 +168,8 @@ export default function InvoiceDetail() {
           note: undefined,
         },
       });
-    } catch {
-      await notify(t("errors.serverError"), t("common.error"));
+    } catch (error: unknown) {
+      await notify(getApiErrorMessage(t, error), t("common.error"));
     }
   };
 
@@ -182,8 +193,14 @@ export default function InvoiceDetail() {
     (sum, p) => sum + p.amountCents,
     0,
   );
-  const remaining = invoice.totalCents - totalPaid;
+  const remaining = Math.max(0, invoice.totalCents - totalPaid);
   const isPaid = remaining <= 0;
+  const isPartial = totalPaid > 0 && remaining > 0;
+  const paymentStatus = getInvoiceStatus({
+    totalCents: invoice.totalCents,
+    totalPaidCents: totalPaid,
+    dueDate: invoice.dueDate,
+  });
   const vendorLogo = vendors.find(
     (v) => v.name.toLowerCase() === invoice.vendor.toLowerCase(),
   )?.logoUrl;
@@ -209,9 +226,7 @@ export default function InvoiceDetail() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${isPaid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}>
-            {isPaid ? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
-          </span>
+          <InvoiceStatusTag status={paymentStatus} />
         <ActionIconBar
           tight
           showLabelFromMd
@@ -219,9 +234,10 @@ export default function InvoiceDetail() {
             {
               key: "mark-complete",
               icon: CheckCircle2,
-              label: t("invoice.markComplete"),
+              label: t("invoice.registerPayment"),
               onClick: handleMarkFullyPaid,
-              disabled: isPaid || addPayment.isPending,
+              disabled: periodClosed || isPaid || addPayment.isPending,
+              hidden: periodClosed,
               colorClassName: "bg-success/20 text-success hover:bg-success/30",
             },
             {
@@ -290,16 +306,34 @@ export default function InvoiceDetail() {
             {invoice.category && (
               <TagPill label={invoice.category} variant="category" />
             )}
-            {isPaid && (
-              <TagPill label={t("invoice.statusPaid")} variant="success" />
-            )}
+            {isPaid && <TagPill label={t("invoice.statusPaid")} variant="success" />}
           </div>
 
           <div className="pt-1">
             <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-              <p className="text-2xl sm:text-[2rem] font-bold text-primary leading-none m-0">
-                {fmt(invoice.totalCents)}
-              </p>
+              <div className="min-w-0">
+                <p className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}>
+                  {fmt(isPartial ? remaining : invoice.totalCents)}
+                </p>
+                {isPartial && (
+                  <p className="text-xs text-app-text-secondary mt-1">
+                    {t("invoice.remainingOfTotal", {
+                      remaining: fmt(remaining),
+                      total: fmt(invoice.totalCents),
+                    })}
+                  </p>
+                )}
+                {isPartial && (
+                  <p className="text-xs text-app-text-secondary mt-1">
+                    {t("invoice.paidWithAmount", { amount: fmt(totalPaid) })}
+                  </p>
+                )}
+                {isPartial && (
+                  <p className="text-xs text-app-text-secondary mt-1">
+                    {t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) })}
+                  </p>
+                )}
+              </div>
               <div className="min-w-0 text-right leading-tight">
                 <p className="text-sm text-app-text-secondary truncate">
                   {formatDate(invoice.createdAt)}
@@ -348,7 +382,7 @@ export default function InvoiceDetail() {
                 }}
                 className={`text-sm font-medium text-primary dark:text-primary hover:underline rounded-md ${FOCUS_RING}`}
               >
-                {t("invoice.markComplete")}
+                {t("invoice.registerPayment")}
               </button>
             )}
           </div>
@@ -388,7 +422,7 @@ export default function InvoiceDetail() {
                               className={dateInputCls}
                             />
                           </div>
-                          <select
+                          <AppSelect
                             value={editPaidById}
                             onChange={(e) => setEditPaidById(e.target.value)}
                             className={inputCls}
@@ -398,7 +432,7 @@ export default function InvoiceDetail() {
                                 {u.name}
                               </option>
                             ))}
-                          </select>
+                          </AppSelect>
                           <input
                             type="text"
                             value={editNote}
@@ -526,13 +560,13 @@ export default function InvoiceDetail() {
                 </button>
                 <button
                   type="submit"
-                  disabled={addPayment.isPending}
+                  disabled={periodClosed || addPayment.isPending}
                   className={`flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors ${FOCUS_RING}`}
                 >
                   {addPayment.isPending && (
                     <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   )}
-                  {t("invoice.markComplete")}
+                  {t("invoice.registerPayment")}
                 </button>
               </div>
             </form>

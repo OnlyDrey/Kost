@@ -7,10 +7,8 @@ import {
   CircleCheckBig,
   CircleAlert,
   Users,
-  Clock,
   Pencil,
   Trash2,
-  ChevronDown,
   Plus,
   RotateCcw,
 } from "lucide-react";
@@ -39,6 +37,11 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import AppSelect from "../../components/Common/AppSelect";
+import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
+import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getInvoiceStatus } from "../../utils/invoiceStatus";
 
 // ------- Period Selector -------
 
@@ -61,23 +64,18 @@ function PeriodSelector({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative">
-        <select
-          value={selectedPeriodId}
-          onChange={(e) => onSelect(e.target.value)}
-          className={`${inputCls} w-28 min-w-[7rem]`}
-        >
-          {sortedPeriods.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.id}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={14}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
-        />
-      </div>
+      <AppSelect
+        value={selectedPeriodId}
+        onChange={(e) => onSelect(e.target.value)}
+        className={`${inputCls} w-28 min-w-[7rem]`}
+        wrapperClassName="w-28 min-w-[7rem]"
+      >
+        {sortedPeriods.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.id}
+          </option>
+        ))}
+      </AppSelect>
     </div>
   );
 }
@@ -125,6 +123,7 @@ export default function Overview() {
   const addPayment = useAddPayment();
   const { data: currency = "NOK" } = useCurrency();
   const fmt = useCurrencyFormatter();
+  const { notify } = useConfirmDialog();
 
   const isLoading =
     periodsLoading || periodLoading || statsLoading || invoicesLoading;
@@ -143,6 +142,9 @@ export default function Overview() {
   const filter = normalizedQuery.filter;
   const shareUserId = normalizedQuery.shareUserId;
   const hasShareSelection = filter === "share-user" && !!shareUserId;
+  const selectedShareUser = hasShareSelection
+    ? stats?.userShares?.find((share) => share.userId === shareUserId)
+    : undefined;
   const statusFilter: OverviewStatus = normalizedQuery.status;
   const categoryFilter = searchParams.get("category") || "";
 
@@ -218,7 +220,7 @@ export default function Overview() {
     if (!(filter === "share-user" && shareUserId))
       return statusFilteredInvoices;
     return statusFilteredInvoices.filter((invoice) =>
-      (invoice.shares ?? []).some((s: any) => s.userId === shareUserId),
+      (invoice.shares ?? []).some((s) => s.userId === shareUserId),
     );
   }, [statusFilteredInvoices, filter, shareUserId]);
 
@@ -384,15 +386,10 @@ export default function Overview() {
             onSelect={handleSelectPeriod}
           />
           {period && (
-            <span
-              className={`inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium ${
-                !closed
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                  : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-              }`}
-            >
-              {!closed ? t("period.open") : t("period.closed")}
-            </span>
+            <PeriodStatusBadge
+              status={closed ? "CLOSED" : "OPEN"}
+              size="md"
+            />
           )}
         </div>
       </div>
@@ -507,6 +504,8 @@ export default function Overview() {
                     <SpendBreakdownCard
                       invoices={breakdownInvoices}
                       currentUserId={currentUser?.id}
+                      selectedShareUserId={hasShareSelection ? shareUserId : undefined}
+                      selectedShareUserName={selectedShareUser?.userName}
                       currency={currency}
                       title={t("period.categoryBreakdown")}
                       selectedCategory={categoryFilter || undefined}
@@ -527,30 +526,18 @@ export default function Overview() {
                   {t("invoice.invoices")}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
-                      className={`h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`}
-                    >
-                      <option value="all">{t("invoice.statusAll")}</option>
-                      <option value="unpaid">{t("invoice.statusUnpaid")}</option>
-                      <option value="remaining">
-                        {t("dashboard.remainingLabel")}
-                      </option>
-                      <option value="partial">
-                        {t("invoice.statusPartiallyPaid")}
-                      </option>
-                      <option value="overdue">
-                        {t("invoice.statusOverdue")}
-                      </option>
-                      <option value="paid">{t("invoice.statusPaid")}</option>
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
-                    />
-                  </div>
+                  <AppSelect
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
+                    className={`h-10 rounded-lg ${SELECT_TRIGGER}`}
+                  >
+                    <option value="all">{t("invoice.statusAll")}</option>
+                    <option value="unpaid">{t("invoice.statusUnpaid")}</option>
+                    <option value="remaining">{t("dashboard.remainingLabel")}</option>
+                    <option value="partial">{t("invoice.statusPartiallyPaid")}</option>
+                    <option value="overdue">{t("invoice.statusOverdue")}</option>
+                    <option value="paid">{t("invoice.statusPaid")}</option>
+                  </AppSelect>
                   <button
                     type="button"
                     disabled={closed}
@@ -597,8 +584,12 @@ export default function Overview() {
                             const dueAt = invoice.dueDate
                               ? new Date(invoice.dueDate)
                               : null;
-                            const overdue =
-                              !isPaid && !!dueAt && dueAt < new Date();
+                            const status = getInvoiceStatus({
+                              totalCents: invoice.totalCents,
+                              totalPaidCents: totalPaid,
+                              dueDate: invoice.dueDate,
+                            });
+                            const overdue = status === "OVERDUE";
                             const userShareEntry =
                               filter === "share-user"
                                 ? (invoice.shares ?? []).find(
@@ -608,9 +599,13 @@ export default function Overview() {
                             const primaryAmount = userShareEntry
                               ? fmt(userShareEntry.shareCents)
                               : fmt(displayCents);
-                            const secondaryLabel = userShareEntry
-                              ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
-                              : undefined;
+                            const secondaryLabel = isPartiallyPaid
+                              ? t("invoice.totalWithAmount", {
+                                  amount: fmt(invoice.totalCents),
+                                })
+                              : userShareEntry
+                                ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
+                                : undefined;
 
                             return (
                               <ExpenseItemCard
@@ -629,7 +624,7 @@ export default function Overview() {
                                 dateLabel={formatDate(invoice.createdAt)}
                                 paid={isPaid}
                                 overdue={overdue}
-                                paidLabel={t("invoice.statusPaid")}
+                                paymentStatus={status}
                                 overdueLabel={t("invoice.statusOverdue")}
                                 showPaymentStatusPill={false}
                                 focusRingClassName={
@@ -644,14 +639,19 @@ export default function Overview() {
                                 onClick={() =>
                                   navigate(`/invoices/${invoice.id}`)
                                 }
-                                rightContent={
-                                  isPartiallyPaid ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                      <Clock size={10} />{" "}
-                                      {t("invoice.amountPaid")}:{" "}
-                                      {fmt(totalPaid)}
-                                    </span>
-                                  ) : undefined
+                                amountTone={isPartiallyPaid ? "partial" : "default"}
+                                amountDetails={
+                                  isPartiallyPaid
+                                    ? [
+                                        t("invoice.remainingOfTotal", {
+                                          remaining: fmt(remaining),
+                                          total: fmt(invoice.totalCents),
+                                        }),
+                                        t("invoice.paidWithAmount", {
+                                          amount: fmt(totalPaid),
+                                        }),
+                                      ]
+                                    : undefined
                                 }
                                 actionButton={
                                   <ActionIconBar
@@ -660,22 +660,34 @@ export default function Overview() {
                                       {
                                         key: "pay",
                                         icon: CircleCheckBig,
-                                        label: t("invoice.markPaid"),
-                                        onClick: () => {
-                                          if (!currentUser || remaining <= 0)
+                                        label: t("invoice.registerPayment"),
+                                        onClick: async () => {
+                                          if (!currentUser || remaining <= 0) return;
+                                          if (closed) {
+                                            await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
                                             return;
-                                          addPayment.mutate({
-                                            invoiceId: invoice.id,
-                                            data: {
-                                              paidById: currentUser.id,
-                                              amountCents: remaining,
-                                              paidAt: new Date().toISOString(),
-                                            },
-                                          });
+                                          }
+                                          try {
+                                            await addPayment.mutateAsync({
+                                              invoiceId: invoice.id,
+                                              data: {
+                                                paidById: currentUser.id,
+                                                amountCents: remaining,
+                                                paidAt: new Date().toISOString(),
+                                              },
+                                            });
+                                          } catch (error: unknown) {
+                                            await notify(
+                                              getApiErrorMessage(t, error),
+                                              t("common.error"),
+                                            );
+                                          }
                                         },
                                         disabled:
+                                          closed ||
                                           remaining <= 0 ||
                                           addPayment.isPending,
+                                        hidden: closed,
                                         colorClassName:
                                           "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
                                       },

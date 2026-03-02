@@ -57,7 +57,8 @@
     "owedLabel": "Skyldig",
     "paidLabel": "Betalt",
     "owedBacklog": "Utestående utgifter",
-    "remainingLabel": "Gjenstår"
+    "remainingLabel": "Gjenstår",
+    "userShare": "{{name}} sin andel"
   },
   "invoice": {
     "title": "Utgift",
@@ -133,9 +134,13 @@
     "allocationFixedDescription": "Faste beløp tildeles per person.",
     "unknownDistributionMethod": "Ukjent fordelingsmetode",
     "youPayOfTotal": "Du: {{own}} av {{total}}",
-    "personalExpenseOption": "Personlig utgift",
+    "personalExpenseOption": "Personlig",
     "appliesTo": "Gjelder for",
-    "selectPersonalUser": "Velg person"
+    "selectPersonalUser": "Velg person",
+    "closedPeriodPaymentBlocked": "Kan ikke markere utgift som betalt i en lukket periode.",
+    "totalWithAmount": "Total: {{amount}}",
+    "paidWithAmount": "Betalt: {{amount}}",
+    "remainingOfTotal": "{{remaining}} av {{total}}"
   },
   "period": {
     "title": "Periode",
@@ -367,7 +372,8 @@
     "amountOnly": "Beløp",
     "customAmount": "Egendefinert",
     "amountPerUser": "Beløp per bruker *",
-    "generateForPeriod": "Generer for periode"
+    "generateForPeriod": "Generer for periode",
+    "closedPeriodError": "Lukkede perioder kan ikke brukes til generering. Velg en åpen periode."
   },
   "common": {
     "loading": "Laster...",
@@ -401,6 +407,11 @@
     "serverError": "Serverfeil. Vennligst prøv igjen senere.",
     "notFound": "Ikke funnet",
     "unauthorized": "Uautorisert. Vennligst logg inn.",
-    "forbidden": "Du har ikke tillatelse til å utføre denne handlingen."
+    "forbidden": "Du har ikke tillatelse til å utføre denne handlingen.",
+    "PERIOD_CLOSED": "Kan ikke oppdatere utgift i en lukket periode",
+    "AMOUNT_LESS_THAN_PAID": "Totalbeløp kan ikke være lavere enn allerede betalt beløp",
+    "PAYMENT_EXCEEDS_TOTAL": "Betaling overstiger totalbeløpet",
+    "INTERNAL_ERROR": "Noe gikk galt. Prøv igjen.",
+    "UNKNOWN": "Noe gikk galt. Prøv igjen."
   }
 }
