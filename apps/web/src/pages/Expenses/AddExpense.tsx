@@ -67,12 +67,16 @@ export default function AddExpense() {
     : false;
 
   const { data: users } = useUsers();
-  const { data: existingInvoice } = useInvoice(
-    isEditing && !isSubscription ? id! : "",
-  );
-  const { data: existingSubscription } = useSubscription(
-    isEditing && isSubscription ? id! : "",
-  );
+  const {
+    data: existingInvoice,
+    isLoading: loadingInvoice,
+    isError: invoiceNotFound,
+  } = useInvoice(isEditing && !isSubscription ? id! : "");
+  const {
+    data: existingSubscription,
+    isLoading: loadingSubscription,
+    isError: subscriptionNotFound,
+  } = useSubscription(isEditing && isSubscription ? id! : "");
   const { data: periodIncomes } = useUserIncomes(targetPeriodId);
   const { data: categories = [] } = useCategories();
   const sortedCategories = useMemo(
@@ -556,6 +560,14 @@ export default function AddExpense() {
       ? "invoice.editInvoice"
       : "invoice.addInvoice";
 
+
+  const recordLoading = isEditing &&
+    ((isSubscription && loadingSubscription) ||
+      (!isSubscription && loadingInvoice));
+  const notFound = isEditing &&
+    ((isSubscription && subscriptionNotFound) ||
+      (!isSubscription && invoiceNotFound));
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -603,6 +615,19 @@ export default function AddExpense() {
         </div>
       )}
 
+      {recordLoading && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400">
+          {t("common.loading")}
+        </div>
+      )}
+
+      {notFound && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-red-200 dark:border-red-900/40 p-6 text-sm text-red-600 dark:text-red-400">
+          {isSubscription ? t("subscription.edit") : t("invoice.editInvoice")} - {t("common.noData")}
+        </div>
+      )}
+
+      {!recordLoading && !notFound && (
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm ">
         <form id="expense-form" onSubmit={handleSubmit} className="space-y-5">
           {error && (
@@ -1156,6 +1181,7 @@ export default function AddExpense() {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 }

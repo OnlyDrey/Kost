@@ -25,6 +25,7 @@ import {
   useDeleteInvoice,
   useAddPayment,
   useCurrencyFormatter,
+  useUsers,
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
@@ -36,6 +37,7 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 
 // ------- Period Selector -------
 
@@ -117,6 +119,7 @@ export default function Overview() {
   const { data: invoices, isLoading: invoicesLoading } =
     useInvoices(resolvedPeriodId);
   const { data: vendors = [] } = useVendors();
+  const { data: users = [], isLoading: usersLoading } = useUsers();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
   const { data: currency = "NOK" } = useCurrency();
@@ -130,62 +133,40 @@ export default function Overview() {
   );
   const closed = period ? isPeriodClosed(period) : false;
 
-  const filter = searchParams.get("filter") || "all";
-  const shareUserId = searchParams.get("shareUser") || "";
+  const validUserIds = useMemo(() => new Set(users.map((u) => u.id)), [users]);
+  const normalizedQuery = useMemo(
+    () => normalizeOverviewQuery(searchParams, usersLoading ? undefined : validUserIds),
+    [searchParams, usersLoading, validUserIds],
+  );
+
+  const filter = normalizedQuery.filter;
+  const shareUserId = normalizedQuery.shareUserId;
   const hasShareSelection = filter === "share-user" && !!shareUserId;
-  const statusParam = searchParams.get("status");
-  const statusFilter =
-    statusParam ||
-    (filter === "paid" ||
-    filter === "remaining" ||
-    filter === "unpaid" ||
-    filter === "partial" ||
-    filter === "overdue"
-      ? filter
-      : "all");
+  const statusFilter: OverviewStatus = normalizedQuery.status;
   const categoryFilter = searchParams.get("category") || "";
 
-
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-    let changed = false;
-    if (
-      !statusParam &&
-      (filter === "paid" ||
-        filter === "remaining" ||
-        filter === "unpaid" ||
-        filter === "partial" ||
-        filter === "overdue")
-    ) {
-      params.set("status", filter);
-      params.delete("filter");
-      changed = true;
+    if (searchParams.toString() !== normalizedQuery.params.toString()) {
+      setSearchParams(normalizedQuery.params, { replace: true });
     }
-    if (statusParam && filter !== "all" && filter !== "share-user") {
-      params.delete("filter");
-      changed = true;
-    }
-    if (changed) {
-      setSearchParams(params, { replace: true });
-    }
-  }, [filter, searchParams, setSearchParams, statusParam]);
+  }, [normalizedQuery.params, searchParams, setSearchParams]);
 
-  const setFilter = (nextFilter: string, su?: string) => {
+  const setFilter = (nextFilter: "all" | "share-user", su?: string) => {
     const params = new URLSearchParams(searchParams);
-    if (nextFilter === "all") params.delete("filter");
-    else params.set("filter", nextFilter);
-    if (su) params.set("shareUser", su);
-    else params.delete("shareUser");
+    if (nextFilter === "share-user" && su && (usersLoading || validUserIds.has(su))) {
+      params.set("filter", "share-user");
+      params.set("shareUser", su);
+    } else {
+      params.delete("filter");
+      params.delete("shareUser");
+    }
     setSearchParams(params, { replace: true });
   };
 
-  const setStatusFilter = (nextStatus: string) => {
+  const setStatusFilter = (nextStatus: OverviewStatus) => {
     const params = new URLSearchParams(searchParams);
     if (nextStatus === "all") params.delete("status");
     else params.set("status", nextStatus);
-    if (params.get("filter") !== "share-user") {
-      params.delete("filter");
-    }
     setSearchParams(params, { replace: true });
   };
 
@@ -547,7 +528,7 @@ export default function Overview() {
                 <div className="flex items-center gap-2">
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
                     className="h-10 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option value="all">{t("invoice.statusAll")}</option>

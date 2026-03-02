@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import {
   Tag,
   CreditCard,
@@ -1019,6 +1019,10 @@ export function FamilySettingsContent({
   const { data: categories = [], isLoading: loadingCats } = useCategories();
   const { data: paymentMethods = [], isLoading: loadingMethods } =
     usePaymentMethods();
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [categories],
+  );
   const addCategory = useAddCategory();
   const removeCategory = useRemoveCategory();
   const removeCategoriesBulk = useRemoveCategoriesBulk();
@@ -1036,7 +1040,7 @@ export function FamilySettingsContent({
         icon={<Tag size={18} />}
         title={t("familySettings.categories")}
         description={t("familySettings.categoriesDesc")}
-        items={categories}
+        items={sortedCategories}
         isLoading={loadingCats}
         onAdd={(name) => addCategory.mutate(name)}
         onRemove={(name) => removeCategory.mutate(name)}
