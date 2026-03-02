@@ -64,7 +64,7 @@ export default function Login() {
             <img
               src={getCurrentLogo(settings.branding)}
               alt={settings.branding.appTitle || "Kost"}
-              className="w-10 h-10 rounded-md object-contain bg-surface-elevated border border-border"
+              className="w-10 h-10 object-contain"
               onError={(event) => {
                 event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
               }}

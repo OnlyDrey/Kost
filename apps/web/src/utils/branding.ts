@@ -50,13 +50,51 @@ function upsertLinkTag(rel: string, href: string, sizes?: string) {
   link.href = href;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+function upsertIconLinks(href: string) {
+  upsertLinkTag("icon", href);
+  upsertLinkTag("shortcut icon", href);
+  upsertLinkTag("apple-touch-icon", href, "180x180");
+
+  const maskIcon = document.head.querySelector<HTMLLinkElement>(
+    'link[rel="mask-icon"]',
+  );
+  if (maskIcon) {
+    maskIcon.href = href;
+  }
+}
+
+function isSvgSource(src: string) {
+  const lowered = src.toLowerCase();
+  return lowered.endsWith(".svg") || lowered.startsWith("data:image/svg");
+}
+
+async function normalizeImageSourceForCanvas(src: string): Promise<string> {
+  if (!isSvgSource(src) || src.startsWith("data:image/svg")) {
+    return src;
+  }
+
+  try {
+    const response = await fetch(src);
+    if (!response.ok) {
+      return src;
+    }
+    const svgText = await response.text();
+    const blob = new Blob([svgText], { type: "image/svg+xml" });
+    return URL.createObjectURL(blob);
+  } catch {
+    return src;
+  }
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  const normalizedSrc = await normalizeImageSourceForCanvas(src);
+
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-    image.src = src;
+    image.src = normalizedSrc;
   });
 }
 
@@ -108,12 +146,11 @@ export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
 
   try {
     const iconDataUrl = await renderIconDataUrl(logoSrc, iconBackground, 180);
-    upsertLinkTag("icon", iconDataUrl);
-    upsertLinkTag("apple-touch-icon", iconDataUrl, "180x180");
-    upsertLinkTag("shortcut icon", iconDataUrl);
+    if (!iconDataUrl.startsWith("data:image/")) {
+      throw new Error("Invalid icon data");
+    }
+    upsertIconLinks(iconDataUrl);
   } catch {
-    upsertLinkTag("icon", getFaviconSource(branding));
-    upsertLinkTag("apple-touch-icon", getAppIconSource(branding), "180x180");
-    upsertLinkTag("shortcut icon", getFaviconSource(branding));
+    upsertIconLinks(getFaviconSource(branding));
   }
 }

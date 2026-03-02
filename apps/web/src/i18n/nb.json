@@ -225,7 +225,9 @@
     "brandingInvalidImage": "Velg en gyldig bildefil.",
     "customization": "Tilpasning",
     "brandingInvalidLogoUrl": "Bruk en gyldig logo-URL.",
-    "brandingLogoLoadFailed": "Kunne ikke laste ekstern logo-URL. Viser standardlogo."
+    "brandingLogoLoadFailed": "Kunne ikke laste ekstern logo-URL. Viser standardlogo.",
+    "section": "Seksjon",
+    "brandingIconGenerationFailed": "Kunne ikke generere forhåndsvisning av app-ikon. Viser reserveikon."
   },
   "users": {
     "title": "Brukere",

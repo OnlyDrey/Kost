@@ -59,7 +59,7 @@ export default function ExpenseItemCard({
       : "text-primary";
 
   const cardBody = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       <div className="flex items-start gap-3">
         {logoUrl ? (
           <img
@@ -85,7 +85,7 @@ export default function ExpenseItemCard({
           </p>
           {description && (
             <p
-              className="text-sm text-app-text-secondary line-clamp-2 mt-0.5"
+              className="text-sm text-app-text-secondary line-clamp-2 mt-0"
               title={description ?? undefined}
             >
               {description}
@@ -120,8 +120,8 @@ export default function ExpenseItemCard({
       </div>
 
       {(amountLabel || rightContent || dateLabel || actionButton) && (
-        <div className="min-w-0 space-y-1">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 min-w-0">
+        <div className="min-w-0 space-y-0.5">
+          <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 min-w-0">
             <div className="min-w-0 flex-1">
               {amountLabel && (
                 <p
@@ -131,7 +131,7 @@ export default function ExpenseItemCard({
                 </p>
               )}
               {shareLabel && (
-                <p className="text-xs text-app-text-secondary mt-0.5">
+                <p className="text-xs text-app-text-secondary mt-0">
                   {shareLabel}
                 </p>
               )}
@@ -152,7 +152,7 @@ export default function ExpenseItemCard({
       )}
 
       {footerContent && (
-        <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+        <div className="pt-1.5 border-t border-gray-100 dark:border-gray-800">
           {footerContent}
         </div>
       )}

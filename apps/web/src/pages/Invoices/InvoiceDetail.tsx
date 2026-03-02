@@ -238,70 +238,68 @@ export default function InvoiceDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main info */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-4">
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
-            <div
-              className="grid gap-3 items-start"
-              style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
-            >
-              {vendorLogo ? (
-                <img
-                  src={vendorLogo}
-                  alt=""
-                  className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              ) : (
-                <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
-              )}
-              <div className="min-w-0">
-                <p
-                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
-                  style={{ overflowWrap: "break-word", wordBreak: "normal" }}
-                >
-                  {invoice.vendor}
-                </p>
-                <p
-                  className="text-sm text-gray-500 dark:text-gray-300 mt-1"
-                  style={{ overflowWrap: "break-word", wordBreak: "normal" }}
-                >
-                  {invoice.description || "—"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              <TagPill
-                label={distributionLabel(
-                  invoice.distributionMethod,
-                  settings.locale,
-                  invoice.distribution as any,
-                )}
-                variant="type"
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
+          <div
+            className="grid gap-3 items-start"
+            style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
+          >
+            {vendorLogo ? (
+              <img
+                src={vendorLogo}
+                alt=""
+                className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
               />
-              {invoice.category && (
-                <TagPill label={invoice.category} variant="category" />
-              )}
-              {isPaid && (
-                <TagPill label={t("invoice.statusPaid")} variant="success" />
-              )}
+            ) : (
+              <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
+            )}
+            <div className="min-w-0">
+              <p
+                className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
+              >
+                {invoice.vendor}
+              </p>
+              <p
+                className="text-sm text-gray-500 dark:text-gray-300 mt-1"
+                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
+              >
+                {invoice.description || "—"}
+              </p>
             </div>
+          </div>
 
-            <div className="pt-1">
-              <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
-                <p className="text-2xl sm:text-[2rem] font-bold text-primary leading-none m-0">
-                  {fmt(invoice.totalCents)}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <TagPill
+              label={distributionLabel(
+                invoice.distributionMethod,
+                settings.locale,
+                invoice.distribution as any,
+              )}
+              variant="type"
+            />
+            {invoice.category && (
+              <TagPill label={invoice.category} variant="category" />
+            )}
+            {isPaid && (
+              <TagPill label={t("invoice.statusPaid")} variant="success" />
+            )}
+          </div>
+
+          <div className="pt-1">
+            <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+              <p className="text-2xl sm:text-[2rem] font-bold text-primary leading-none m-0">
+                {fmt(invoice.totalCents)}
+              </p>
+              <div className="min-w-0 text-right leading-tight">
+                <p className="text-sm text-app-text-secondary truncate">
+                  {formatDate(invoice.createdAt)}
                 </p>
-                <div className="min-w-0 text-right leading-tight">
-                  <p className="text-sm text-app-text-secondary truncate">
-                    {formatDate(invoice.createdAt)}
-                  </p>
-                  <p className="text-sm font-medium text-app-text-primary truncate">
-                    {invoice.paymentMethod || "—"}
-                  </p>
-                </div>
+                <p className="text-sm font-medium text-app-text-primary truncate">
+                  {invoice.paymentMethod || "—"}
+                </p>
               </div>
             </div>
           </div>

@@ -154,6 +154,7 @@ export default function Profile() {
   const [brandingError, setBrandingError] = useState("");
   const [brandingSaved, setBrandingSaved] = useState(false);
   const [brandingLogoLoadWarning, setBrandingLogoLoadWarning] = useState("");
+  const [brandingIconWarning, setBrandingIconWarning] = useState("");
 
   // Profile form
   const [name, setName] = useState(user?.name ?? "");
@@ -214,8 +215,19 @@ export default function Profile() {
       try {
         const iconUrl = await renderIconDataUrl(logoSrc, background, 64);
         setBrandingIconPreviewUrl(iconUrl);
+        setBrandingIconWarning("");
       } catch {
-        setBrandingIconPreviewUrl(logoSrc);
+        try {
+          const fallbackIcon = await renderIconDataUrl(
+            DEFAULT_PROJECT_LOGO_SRC,
+            background,
+            64,
+          );
+          setBrandingIconPreviewUrl(fallbackIcon);
+        } catch {
+          setBrandingIconPreviewUrl(DEFAULT_PROJECT_LOGO_SRC);
+        }
+        setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
       }
     };
 
@@ -684,30 +696,21 @@ export default function Profile() {
         {t("settings.title")}
       </h1>
 
-      <div className="overflow-x-auto pb-1 -mb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-nowrap gap-2 min-w-max pr-1">
+      <div className="max-w-sm">
+        <label className={labelCls}>{t("settings.section")}</label>
+        <select
+          value={activePage}
+          onChange={(e) => selectPage(e.target.value as SettingsPage)}
+          className={inputCls}
+        >
           {pageNavItems
             .filter((item) => !item.hidden)
-            .map((item) => {
-              const Icon = item.icon;
-              const isActive = activePage === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => selectPage(item.key)}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${
-                    isActive
-                      ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                      : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  <Icon size={14} />
-                  {item.label}
-                </button>
-              );
-            })}
-        </div>
+            .map((item) => (
+              <option key={item.key} value={item.key}>
+                {item.label}
+              </option>
+            ))}
+        </select>
       </div>
 
       <div
@@ -1180,7 +1183,7 @@ export default function Profile() {
                         DEFAULT_PROJECT_LOGO_SRC
                       }
                       alt={t("settings.brandingLogoPreviewAlt")}
-                      className="w-12 h-12 rounded-md object-contain bg-surface-elevated border border-border"
+                      className="w-12 h-12 object-contain"
                       onError={(event) => {
                         if (brandingLogoUrl) {
                           setBrandingLogoLoadWarning(
@@ -1288,6 +1291,9 @@ export default function Profile() {
                     className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
                   />
                 </div>
+                {brandingIconWarning && (
+                  <p className="text-xs text-warning">{brandingIconWarning}</p>
+                )}
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-text-secondary">
                     {t("settings.brandingHelp")}

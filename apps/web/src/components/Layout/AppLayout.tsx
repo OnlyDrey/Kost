@@ -133,7 +133,7 @@ function Sidebar({
           <img
             src={appLogoSrc}
             alt={appTitle}
-            className="w-7 h-7 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
+            className="w-7 h-7 object-contain flex-shrink-0"
             onError={(event) => {
               event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
             }}
@@ -273,7 +273,7 @@ export default function AppLayout() {
             <img
               src={appLogoSrc}
               alt={appTitle}
-              className="w-6 h-6 rounded-md object-contain bg-surface-elevated border border-border flex-shrink-0"
+              className="w-6 h-6 object-contain flex-shrink-0"
               onError={(event) => {
                 event.currentTarget.src = DEFAULT_PROJECT_LOGO_SRC;
               }}

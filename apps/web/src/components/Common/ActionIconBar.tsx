@@ -32,7 +32,7 @@ export default function ActionIconBar({
 
   return (
     <div
-      className={`flex items-center ${tight ? "gap-1" : "gap-1.5"} ${className}`.trim()}
+      className={`flex items-center ${tight ? "gap-0.5" : "gap-1"} ${className}`.trim()}
     >
       {visibleItems.map((item) => {
         const Icon = item.icon;
@@ -63,10 +63,10 @@ export default function ActionIconBar({
               }
               await item.onClick();
             }}
-            className={`h-11 w-11 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus focus-visible:ring-offset-surface ${item.disabled ? "cursor-not-allowed" : ""}`}
+            className={`h-10 w-10 inline-flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus focus-visible:ring-offset-surface ${item.disabled ? "cursor-not-allowed" : ""}`}
           >
             <span
-              className={`h-8 w-8 rounded-full inline-flex items-center justify-center transition-colors ${colorClass}`}
+              className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-colors ${colorClass}`}
             >
               <Icon size={16} />
             </span>

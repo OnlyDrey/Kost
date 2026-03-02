@@ -225,7 +225,9 @@
     "brandingInvalidImage": "Please select a valid image file.",
     "customization": "Customization",
     "brandingInvalidLogoUrl": "Use a valid logo URL.",
-    "brandingLogoLoadFailed": "Could not load the external logo URL. Showing default logo."
+    "brandingLogoLoadFailed": "Could not load the external logo URL. Showing default logo.",
+    "section": "Section",
+    "brandingIconGenerationFailed": "Could not generate app icon preview. Using fallback icon."
   },
   "users": {
     "title": "Users",
