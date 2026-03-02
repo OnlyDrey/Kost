@@ -23,6 +23,7 @@ import { formatDate } from "../../utils/date";
 import { useSettings } from "../../stores/settings.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
+import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
 
 export default function SubscriptionList() {
@@ -214,12 +215,6 @@ function SubscriptionCard({
     locale,
     sub.distributionRules as any,
   );
-  const statusClassName =
-    sub.status === "ACTIVE"
-      ? "bg-green-500 text-white"
-      : sub.status === "PAUSED"
-        ? "bg-amber-500 text-white"
-        : "bg-red-500 text-white";
   const statusLabel =
     sub.status === "ACTIVE"
       ? t("subscription.statusActive")
@@ -291,14 +286,17 @@ function SubscriptionCard({
       }
       footerContent={
         <div className="flex items-center flex-wrap gap-1.5">
-          <span
-            className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full ${statusClassName}`}
-          >
-            {statusLabel}
-          </span>
-          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-            {freqLabel(sub.frequency)}
-          </span>
+          <TagPill
+            label={statusLabel}
+            variant={
+              sub.status === "ACTIVE"
+                ? "success"
+                : sub.status === "PAUSED"
+                  ? "warning"
+                  : "danger"
+            }
+          />
+          <TagPill label={freqLabel(sub.frequency)} variant="frequency" />
         </div>
       }
     />

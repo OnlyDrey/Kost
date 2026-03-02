@@ -7,9 +7,6 @@ import {
   X,
   TrendingUp,
   Camera,
-  ShieldCheck,
-  UsersRound,
-  Baby,
   Search,
   Users as UsersIcon,
 } from "lucide-react";
@@ -33,6 +30,7 @@ import { useSettings } from "../../stores/settings.context";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { useAuth } from "../../stores/auth.context";
 import ActionIconBar from "../../components/Common/ActionIconBar";
+import RoleBadge from "../../components/Common/RoleBadge";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -637,37 +635,16 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate min-w-0">
                           {u.name}
                         </p>
-                        <span
-                          title={
+                        <RoleBadge
+                          role={u.role}
+                          label={
                             u.role === "ADMIN"
                               ? t("users.admin")
                               : u.role === "CHILD"
                                 ? t("users.junior")
                                 : t("users.adult")
                           }
-                          aria-label={
-                            u.role === "ADMIN"
-                              ? t("users.admin")
-                              : u.role === "CHILD"
-                                ? t("users.junior")
-                                : t("users.adult")
-                          }
-                          className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
-                            u.role === "ADMIN"
-                              ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
-                              : u.role === "CHILD"
-                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                          }`}
-                        >
-                          {u.role === "ADMIN" ? (
-                            <ShieldCheck size={12} />
-                          ) : u.role === "CHILD" ? (
-                            <Baby size={12} />
-                          ) : (
-                            <UsersRound size={12} />
-                          )}
-                        </span>
+                        />
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         @{u.username}

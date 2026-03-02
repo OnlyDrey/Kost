@@ -23,9 +23,9 @@ const variantClass: Record<NonNullable<TagPillProps["variant"]>, string> = {
   frequency: "bg-violet-500/20 text-violet-200 ring-1 ring-violet-500/30",
   danger: "bg-red-500 text-white",
   success: "bg-green-500 text-white",
-  admin: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30",
-  adult: "bg-sky-500/20 text-sky-200 ring-1 ring-sky-500/30",
-  child: "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-500/30",
+  admin: "bg-sky-600/20 text-sky-300 ring-1 ring-sky-600/30",
+  adult: "bg-slate-500/20 text-slate-200 ring-1 ring-slate-500/30",
+  child: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30",
   warning: "bg-amber-500/70 text-white",
 };
 

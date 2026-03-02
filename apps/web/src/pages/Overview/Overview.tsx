@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Receipt,
@@ -212,6 +212,12 @@ export default function Overview() {
   const breakdownInvoices = filteredInvoices;
   const listInvoices = filteredInvoices;
 
+  useEffect(() => {
+    if (import.meta.env.DEV && listInvoices !== breakdownInvoices) {
+      console.warn("[Overview] list and breakdown datasets diverged");
+    }
+  }, [listInvoices, breakdownInvoices]);
+
   const now = new Date();
   const grouped = useMemo(
     () =>
@@ -270,7 +276,8 @@ export default function Overview() {
       title: t("invoice.statusOverdue"),
       list: grouped.overdue,
       show:
-        filter === "all" || filter === "remaining" || filter === "share-user",
+        (filter === "all" || filter === "remaining" || filter === "share-user") &&
+        (statusFilter === "all" || statusFilter === "overdue"),
       borderClass: "border-red-200 dark:border-red-900/50",
       titleClass: "text-red-700 dark:text-red-400",
       amountClass: "text-red-500 dark:text-red-400/80",
@@ -280,7 +287,8 @@ export default function Overview() {
       title: t("invoice.statusUnpaid"),
       list: grouped.unpaid,
       show:
-        filter === "all" || filter === "remaining" || filter === "share-user",
+        (filter === "all" || filter === "remaining" || filter === "share-user") &&
+        (statusFilter === "all" || statusFilter === "unpaid"),
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
       amountClass: "text-primary",
@@ -290,7 +298,8 @@ export default function Overview() {
       title: t("invoice.statusPartiallyPaid"),
       list: grouped.partial,
       show:
-        filter === "all" || filter === "remaining" || filter === "share-user",
+        (filter === "all" || filter === "remaining" || filter === "share-user") &&
+        (statusFilter === "all" || statusFilter === "partial"),
       borderClass: "border-amber-200 dark:border-amber-900/50",
       titleClass: "text-amber-700 dark:text-amber-400",
       amountClass: "text-amber-500 dark:text-amber-400/80",
@@ -299,7 +308,9 @@ export default function Overview() {
       key: "paid",
       title: t("invoice.statusPaid"),
       list: grouped.paid,
-      show: filter === "all" || filter === "paid" || filter === "share-user",
+      show:
+        (filter === "all" || filter === "paid" || filter === "share-user") &&
+        (statusFilter === "all" || statusFilter === "paid"),
       borderClass: "border-green-200 dark:border-green-900/50",
       titleClass: "text-green-700 dark:text-green-400",
       amountClass: "text-green-500 dark:text-green-400/80",

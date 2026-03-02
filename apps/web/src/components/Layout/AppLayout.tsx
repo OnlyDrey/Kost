@@ -11,14 +11,11 @@ import {
   ChevronRight,
   RefreshCw,
   SlidersHorizontal,
-  Shield,
-  Baby,
-  User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
-import TagPill from "../Common/TagPill";
+import RoleBadge from "../Common/RoleBadge";
 import {
   getCurrentLogoSource,
   getDefaultLogoUrl,
@@ -108,8 +105,6 @@ function Sidebar({
       : user?.role === "CHILD"
         ? t("users.junior")
         : t("users.adult");
-  const RoleIcon =
-    user?.role === "ADMIN" ? Shield : user?.role === "CHILD" ? Baby : User;
 
   const themeOptions = [
     {
@@ -200,17 +195,10 @@ function Sidebar({
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {user?.name}
               </p>
-              <TagPill
+              <RoleBadge
+                role={user?.role ?? "ADULT"}
                 label={roleLabel}
-                variant={
-                  user?.role === "ADMIN"
-                    ? "admin"
-                    : user?.role === "CHILD"
-                      ? "child"
-                      : "adult"
-                }
-                size="sm"
-                icon={<RoleIcon size={11} />}
+                className="mt-0.5"
               />
             </div>
           </button>

@@ -1,45 +1,14 @@
-import { Check, ShieldCheck, UsersRound, Baby } from "lucide-react";
+import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import type { User } from "../../services/api";
-
-function RoleIcon({ role }: { role: User["role"] }) {
-  const base =
-    "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0";
-  if (role === "ADMIN") {
-    return (
-      <span
-        className={`${base} bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30`}
-        title="Admin"
-      >
-        <ShieldCheck size={11} />
-      </span>
-    );
-  }
-  if (role === "CHILD") {
-    return (
-      <span
-        className={`${base} bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-500/30`}
-        title="Junior"
-      >
-        <Baby size={11} />
-      </span>
-    );
-  }
-  return (
-    <span
-      className={`${base} bg-sky-500/20 text-sky-200 ring-1 ring-sky-500/30`}
-      title="Adult"
-    >
-      <UsersRound size={11} />
-    </span>
-  );
-}
+import RoleBadge from "../Common/RoleBadge";
 
 export default function DistributionUserRow({
   user,
   selected,
   onToggle,
   ariaLabel,
+  roleLabel,
   inlineContent,
   secondaryContent,
 }: {
@@ -82,7 +51,7 @@ export default function DistributionUserRow({
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
             {user.name}
           </p>
-          <RoleIcon role={user.role} />
+          <RoleBadge role={user.role} label={roleLabel} />
         </div>
 
         {inlineContent && (
