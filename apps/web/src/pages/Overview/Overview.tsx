@@ -315,7 +315,7 @@ export default function Overview() {
   if (periodsLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -368,7 +368,7 @@ export default function Overview() {
 
       {isLoading && resolvedPeriodId ? (
         <div className="flex items-center justify-center min-h-32">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <>
@@ -412,7 +412,7 @@ export default function Overview() {
                 icon: Receipt,
                 label: t("dashboard.totalInvoices"),
                 value: stats?.totalInvoices ?? 0,
-                colorClass: "bg-indigo-500",
+                colorClass: "bg-primary",
                 onClick: () => setFilter("all"),
               },
               {
@@ -420,7 +420,7 @@ export default function Overview() {
                 icon: Users,
                 label: t("period.userShares"),
                 value: stats?.userShares?.length ?? 0,
-                colorClass: "bg-sky-500",
+                colorClass: "bg-primary",
                 onClick: () => setFilter("share-user", currentUser?.id),
               },
             ]}
@@ -638,7 +638,7 @@ export default function Overview() {
                                             `/invoices/${invoice.id}/edit`,
                                           ),
                                         colorClassName:
-                                          "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-primary",
+                                          "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25 text-primary",
                                       },
                                       {
                                         key: "delete",

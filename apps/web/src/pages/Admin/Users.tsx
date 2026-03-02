@@ -35,7 +35,7 @@ import { useAuth } from "../../stores/auth.context";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm";
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
@@ -58,7 +58,7 @@ function UserAvatar({
   const cls = `w-${size} h-${size}`;
   return (
     <div
-      className={`${cls} rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}
+      className={`${cls} rounded-full bg-primary flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 overflow-hidden`}
     >
       {avatarUrl ? (
         <img
@@ -172,7 +172,7 @@ function UserModal({
             {user && (
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-semibold flex-shrink-0 overflow-hidden">
                     {localAvatarUrl ? (
                       <img
                         src={localAvatarUrl}
@@ -301,7 +301,7 @@ function UserModal({
             <button
               type="submit"
               disabled={isPending}
-              className="flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -429,7 +429,7 @@ function IncomeModal({
             <button
               type="submit"
               disabled={upsertIncome.isPending}
-              className="flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {upsertIncome.isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -546,7 +546,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -556,10 +556,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
       <div className="flex items-center justify-between gap-3">
         {embedded ? (
           <div className="flex items-center gap-2 min-w-0">
-            <UsersIcon
-              size={18}
-              className="text-indigo-500 dark:text-indigo-400"
-            />
+            <UsersIcon size={18} className="text-primary dark:text-primary" />
             <h2 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
               {t("users.title")}
             </h2>
@@ -572,7 +569,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
         {isAdmin && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
           >
             <Plus size={16} />
             {t("users.addUser")}
@@ -591,7 +588,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t("users.searchPlaceholder")}
-              className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
           <select
@@ -601,7 +598,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                 e.target.value as "ALL" | "ADMIN" | "ADULT" | "CHILD",
               )
             }
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="ALL">{t("users.roleAll")}</option>
             <option value="ADMIN">{t("users.admin")}</option>
@@ -657,7 +654,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                           }
                           className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
                             u.role === "ADMIN"
-                              ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                              ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
                               : u.role === "CHILD"
                                 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                                 : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
@@ -676,7 +673,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         @{u.username}
                       </p>
                       {userIncome && (
-                        <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">
+                        <p className="text-xs text-primary dark:text-primary mt-0.5">
                           {userIncome.inputType === "ANNUAL_GROSS"
                             ? t("users.incomeAnnual")
                             : t("users.incomeMonthly")}
@@ -709,7 +706,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                         label: t("common.edit"),
                         onClick: () => openEdit(u),
                         colorClassName:
-                          "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400",
+                          "bg-primary/10 hover:bg-primary/15 dark:bg-primary/20 dark:hover:bg-primary/25 text-primary dark:text-primary",
                         hidden:
                           !isAdmin &&
                           !(

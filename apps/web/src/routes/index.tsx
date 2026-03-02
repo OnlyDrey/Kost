@@ -1,20 +1,20 @@
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { useAuth } from '../stores/auth.context';
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { useAuth } from "../stores/auth.context";
 
-import AppLayout from '../components/Layout/AppLayout';
-import Login from '../pages/Login';
-import Overview from '../pages/Overview/Overview';
-import InvoiceDetail from '../pages/Invoices/InvoiceDetail';
-import AddExpense from '../pages/Expenses/AddExpense';
-import PeriodList from '../pages/Periods/PeriodList';
-import Profile from '../pages/Settings/Profile';
-import AdminUsers from '../pages/Admin/Users';
-import SubscriptionList from '../pages/Subscriptions/SubscriptionList';
+import AppLayout from "../components/Layout/AppLayout";
+import Login from "../pages/Login";
+import Overview from "../pages/Overview/Overview";
+import InvoiceDetail from "../pages/Invoices/InvoiceDetail";
+import AddExpense from "../pages/Expenses/AddExpense";
+import PeriodList from "../pages/Periods/PeriodList";
+import Profile from "../pages/Settings/Profile";
+import AdminUsers from "../pages/Admin/Users";
+import SubscriptionList from "../pages/Subscriptions/SubscriptionList";
 
 function Spinner() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
@@ -56,7 +56,10 @@ export default function AppRoutes() {
         <Route path="/overview" element={<Overview />} />
 
         {/* Legacy routes → redirect to Overview */}
-        <Route path="/dashboard" element={<Navigate to="/overview" replace />} />
+        <Route
+          path="/dashboard"
+          element={<Navigate to="/overview" replace />}
+        />
         <Route path="/invoices" element={<Navigate to="/overview" replace />} />
 
         {/* Expense add / detail / edit routes still work */}
@@ -84,7 +87,10 @@ export default function AppRoutes() {
         }
       >
         <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+        <Route
+          path="/admin/settings"
+          element={<Navigate to="/settings" replace />}
+        />
       </Route>
 
       {/* Authenticated users land on /overview; unauthenticated on /login */}

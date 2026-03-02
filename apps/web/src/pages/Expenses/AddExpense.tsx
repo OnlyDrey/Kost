@@ -957,7 +957,7 @@ export default function AddExpense() {
                       );
                       if (selected && pct !== null) {
                         return (
-                          <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                          <span className="text-sm font-semibold text-primary dark:text-primary">
                             {pct}%
                           </span>
                         );
@@ -988,7 +988,7 @@ export default function AddExpense() {
                     <label className={labelCls + " mb-0"}>
                       {t("subscription.amountPerUser")}
                     </label>
-                    <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
+                    <span className="text-sm font-medium text-primary dark:text-primary">
                       {t("invoice.totalLabel")}{" "}
                       {symbolPosition === "Before"
                         ? `${currencySymbol}\u00A0`
@@ -1066,7 +1066,7 @@ export default function AddExpense() {
                       {t("subscription.fixedAmountPerUser")}
                     </label>
                     <span
-                      className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-indigo-500 dark:text-indigo-400" : "text-red-500 dark:text-red-400"}`}
+                      className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-primary dark:text-primary" : "text-red-500 dark:text-red-400"}`}
                     >
                       {t("subscription.remainingAmount", {
                         amount:
@@ -1131,7 +1131,7 @@ export default function AddExpense() {
                       {t("invoice.selectUsersEqual")}
                     </label>
                     {equalPercent ? (
-                      <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
+                      <span className="text-sm font-medium text-primary dark:text-primary">
                         {equalPercent}
                         {t("invoice.eachPct")}
                       </span>
@@ -1157,7 +1157,7 @@ export default function AddExpense() {
                     }
                     inlineContent={(_u, selected) =>
                       selected && equalPercent ? (
-                        <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                        <span className="text-sm font-semibold text-primary dark:text-primary">
                           {equalPercent}%
                         </span>
                       ) : null

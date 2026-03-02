@@ -36,15 +36,9 @@ export default function ActionIconBar({
     >
       {visibleItems.map((item) => {
         const Icon = item.icon;
-        const enforcedEditColor =
-          item.key === "edit"
-            ? "bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 text-violet-500 dark:text-violet-400"
-            : undefined;
-
         const colorClass = item.disabled
           ? (item.disabledClassName ?? "bg-disabled/20 text-disabled")
-          : (enforcedEditColor ??
-            item.colorClassName ??
+          : (item.colorClassName ??
             "bg-surface-elevated text-text-primary hover:bg-border");
 
         return (

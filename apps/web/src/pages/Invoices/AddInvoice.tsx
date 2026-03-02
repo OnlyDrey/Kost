@@ -21,7 +21,7 @@ import {
 } from "../../utils/currency";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm";
 const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 const labelCls =
@@ -443,12 +443,12 @@ export default function AddInvoice() {
                       onClick={() => handleToggleIncomeUser(u.id)}
                       className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 border transition-colors text-left ${
                         checked
-                          ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20"
+                          ? "border-primary/40 dark:border-primary/40 bg-primary/10 dark:bg-primary/20"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50"
                       }`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? "bg-indigo-500" : "bg-gray-400"}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? "bg-primary" : "bg-gray-400"}`}
                       >
                         {u.name.charAt(0).toUpperCase()}
                       </div>
@@ -461,7 +461,7 @@ export default function AddInvoice() {
                         </span>
                       )}
                       {checked && pct !== null ? (
-                        <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 flex-shrink-0">
+                        <span className="text-sm font-semibold text-primary dark:text-primary flex-shrink-0">
                           {pct}%
                         </span>
                       ) : checked && !hasIncome ? (
@@ -470,7 +470,7 @@ export default function AddInvoice() {
                         </span>
                       ) : null}
                       <span
-                        className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? "bg-indigo-500 border-indigo-500" : "border-gray-400"}`}
+                        className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? "bg-primary border-primary" : "border-gray-400"}`}
                       >
                         {checked && (
                           <svg
@@ -514,7 +514,7 @@ export default function AddInvoice() {
                     key={u.id}
                     className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5"
                   >
-                    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                       {u.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">
@@ -538,7 +538,7 @@ export default function AddInvoice() {
                             [u.id]: e.target.value,
                           }))
                         }
-                        className="w-16 px-2 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-2 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary"
                         placeholder="0"
                       />
                       <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -559,7 +559,7 @@ export default function AddInvoice() {
                   {t("invoice.selectUsersEqual")}
                 </label>
                 {equalPercent && (
-                  <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
+                  <span className="text-sm font-medium text-primary dark:text-primary">
                     {equalPercent}
                     {t("invoice.eachPct")}
                   </span>
@@ -576,12 +576,12 @@ export default function AddInvoice() {
                       onClick={() => handleToggleIncomeUser(u.id)}
                       className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 border transition-colors text-left ${
                         checked
-                          ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20"
+                          ? "border-primary/40 dark:border-primary/40 bg-primary/10 dark:bg-primary/20"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50"
                       }`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? "bg-indigo-500" : "bg-gray-400"}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${checked ? "bg-primary" : "bg-gray-400"}`}
                       >
                         {u.name.charAt(0).toUpperCase()}
                       </div>
@@ -594,12 +594,12 @@ export default function AddInvoice() {
                         </span>
                       )}
                       {checked && equalPercent && (
-                        <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 flex-shrink-0">
+                        <span className="text-sm font-semibold text-primary dark:text-primary flex-shrink-0">
                           {equalPercent}%
                         </span>
                       )}
                       <span
-                        className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? "bg-indigo-500 border-indigo-500" : "border-gray-400"}`}
+                        className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checked ? "bg-primary border-primary" : "border-gray-400"}`}
                       >
                         {checked && (
                           <svg
@@ -635,7 +635,7 @@ export default function AddInvoice() {
             <button
               type="submit"
               disabled={isPending || (!isEditing && !currentPeriod)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
             >
               {isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

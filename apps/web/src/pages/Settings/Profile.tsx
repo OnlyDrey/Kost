@@ -61,7 +61,7 @@ import {
 } from "../../branding/brandingAssets";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm";
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
@@ -589,7 +589,7 @@ export default function Profile() {
   // ---- Avatar block ----
   const AvatarBlock = () => (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
+      <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
         {user?.avatarUrl ? (
           <img
             src={user.avatarUrl}
@@ -859,10 +859,7 @@ export default function Profile() {
               {/* Profile card with avatar-left layout */}
               <SettingsSectionCard
                 icon={
-                  <User
-                    size={18}
-                    className="text-indigo-500 dark:text-indigo-400"
-                  />
+                  <User size={18} className="text-primary dark:text-primary" />
                 }
                 title={t("settings.profile")}
                 className={masonryCardClass}
@@ -871,7 +868,7 @@ export default function Profile() {
                     type="submit"
                     form="profile-form"
                     disabled={updateUser.isPending}
-                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                    className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
                   >
                     {updateUser.isPending && (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -935,7 +932,7 @@ export default function Profile() {
               icon={
                 <TrendingUp
                   size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
+                  className="text-primary dark:text-primary"
                 />
               }
               title={t("settings.myIncome")}
@@ -945,7 +942,7 @@ export default function Profile() {
                   type="submit"
                   form="income-form"
                   disabled={upsertIncome.isPending || !currentPeriod}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {upsertIncome.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -962,10 +959,7 @@ export default function Profile() {
           {activePage === "profile" && (
             <SettingsSectionCard
               icon={
-                <Globe
-                  size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
-                />
+                <Globe size={18} className="text-primary dark:text-primary" />
               }
               title={t("settings.language")}
               className={masonryCardClass}
@@ -979,7 +973,7 @@ export default function Profile() {
                     onClick={() => setLocale("en")}
                     className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
                       settings.locale === "en"
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                        ? "border-primary bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary"
                         : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                   >
@@ -988,7 +982,7 @@ export default function Profile() {
                     {settings.locale === "en" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-500 dark:text-indigo-400"
+                        className="ml-auto text-primary dark:text-primary"
                       />
                     )}
                   </button>
@@ -996,7 +990,7 @@ export default function Profile() {
                     onClick={() => setLocale("nb")}
                     className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
                       settings.locale === "nb"
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                        ? "border-primary bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary"
                         : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                   >
@@ -1005,7 +999,7 @@ export default function Profile() {
                     {settings.locale === "nb" && (
                       <CheckCircle2
                         size={15}
-                        className="ml-auto text-indigo-500 dark:text-indigo-400"
+                        className="ml-auto text-primary dark:text-primary"
                       />
                     )}
                   </button>
@@ -1020,7 +1014,7 @@ export default function Profile() {
               icon={
                 <KeyRound
                   size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
+                  className="text-primary dark:text-primary"
                 />
               }
               title={t("settings.changePassword")}
@@ -1030,7 +1024,7 @@ export default function Profile() {
                   type="submit"
                   form="password-form"
                   disabled={changePassword.isPending}
-                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+                  className="h-11 px-4 inline-flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
                 >
                   {changePassword.isPending && (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1105,7 +1099,7 @@ export default function Profile() {
               icon={
                 <ShieldCheck
                   size={18}
-                  className="text-indigo-500 dark:text-indigo-400"
+                  className="text-primary dark:text-primary"
                 />
               }
               title={t("settings.twoFactorTitle")}
@@ -1128,7 +1122,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={handleSetupTwoFactor}
-                  className="px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
                 >
                   {t("settings.setupTwoFactor")}
                 </button>

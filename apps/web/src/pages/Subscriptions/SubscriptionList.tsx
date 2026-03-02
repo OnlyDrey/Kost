@@ -59,7 +59,7 @@ export default function SubscriptionList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -76,10 +76,10 @@ export default function SubscriptionList() {
               <button
                 onClick={handleGenerate}
                 disabled={generateInvoices.isPending}
-                className="hidden sm:flex items-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="hidden sm:flex items-center gap-2 border border-primary/40 dark:border-primary/40 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 {generateInvoices.isPending ? (
-                  <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <RefreshCw size={15} />
                 )}
@@ -88,7 +88,7 @@ export default function SubscriptionList() {
             )}
             <button
               onClick={() => navigate("/subscriptions/add")}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Plus size={16} />
               {t("subscription.addRecurringExpense")}
@@ -99,10 +99,10 @@ export default function SubscriptionList() {
           <button
             onClick={handleGenerate}
             disabled={generateInvoices.isPending}
-            className="sm:hidden w-full flex items-center justify-center gap-2 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="sm:hidden w-full flex items-center justify-center gap-2 border border-primary/40 dark:border-primary/40 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             {generateInvoices.isPending ? (
-              <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : (
               <RefreshCw size={15} />
             )}
@@ -296,7 +296,7 @@ function SubscriptionCard({
           >
             {statusLabel}
           </span>
-          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-300 text-sky-950">
+          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
             {freqLabel(sub.frequency)}
           </span>
         </div>

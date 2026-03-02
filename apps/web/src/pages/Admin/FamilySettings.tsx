@@ -42,9 +42,9 @@ import {
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 const inputCls =
-  "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm";
 const inputSmCls =
-  "w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm";
+  "w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm";
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
@@ -249,7 +249,7 @@ function ManagedList({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-indigo-500 dark:text-indigo-400">{icon}</span>
+          <span className="text-primary dark:text-primary">{icon}</span>
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {title}
           </h2>
@@ -261,7 +261,7 @@ function ManagedList({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
               <option key={n} value={n}>
@@ -298,7 +298,7 @@ function ManagedList({
         <button
           type="submit"
           disabled={isPendingAdd}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
         >
           {isPendingAdd ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -321,7 +321,7 @@ function ManagedList({
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t("common.search", { defaultValue: "Search…" })}
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
           />
         </div>
       )}
@@ -344,7 +344,7 @@ function ManagedList({
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
@@ -369,7 +369,7 @@ function ManagedList({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleSelected(item)}
-                      className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
                     />
                     {editing ? (
                       <input
@@ -405,7 +405,7 @@ function ManagedList({
                     ) : (
                       <button
                         onClick={() => startEditing(item)}
-                        className="p-1 text-gray-400 hover:text-indigo-500 transition-colors"
+                        className="p-1 text-gray-400 hover:text-primary transition-colors"
                       >
                         <Pencil size={14} />
                       </button>
@@ -475,14 +475,14 @@ function LogoPicker({
         <button
           type="button"
           onClick={() => setMode("url")}
-          className={`flex items-center gap-1 px-2 py-1 rounded ${mode === "url" ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+          className={`flex items-center gap-1 px-2 py-1 rounded ${mode === "url" ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
           <Link size={11} /> {t("familySettings.viaUrl")}
         </button>
         <button
           type="button"
           onClick={() => setMode("upload")}
-          className={`flex items-center gap-1 px-2 py-1 rounded ${mode === "upload" ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+          className={`flex items-center gap-1 px-2 py-1 rounded ${mode === "upload" ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
           <Upload size={11} /> {t("familySettings.uploadOption")}
         </button>
@@ -501,7 +501,7 @@ function LogoPicker({
             type="button"
             onClick={() => onUrlSave(urlValue.trim())}
             disabled={isPending}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-primary hover:bg-primary/90 text-white rounded-md transition-colors disabled:opacity-60"
           >
             <Check size={12} />
           </button>
@@ -601,7 +601,7 @@ function VendorRow({
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-indigo-500 hover:bg-indigo-700 text-white rounded-md transition-colors disabled:opacity-60"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-primary hover:bg-primary/90 text-white rounded-md transition-colors disabled:opacity-60"
             >
               <Check size={13} /> {t("familySettings.saveName")}
             </button>
@@ -614,7 +614,7 @@ function VendorRow({
               type="checkbox"
               checked={checked}
               onChange={onToggle}
-              className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
             {vendor.logoUrl ? (
               <img
@@ -637,7 +637,7 @@ function VendorRow({
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
             <button
               onClick={() => setEditing(true)}
-              className="p-1 text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+              className="p-1 text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
             >
               <Pencil size={14} />
             </button>
@@ -767,7 +767,7 @@ function VendorManager({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
-          <Store size={18} className="text-indigo-500 dark:text-indigo-400" />
+          <Store size={18} className="text-primary dark:text-primary" />
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {t("familySettings.vendors")}
           </h2>
@@ -779,7 +779,7 @@ function VendorManager({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
               <option key={n} value={n}>
@@ -814,7 +814,7 @@ function VendorManager({
         <button
           type="submit"
           disabled={addVendor.isPending}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors whitespace-nowrap"
         >
           {addVendor.isPending ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -840,7 +840,7 @@ function VendorManager({
               setPage(1);
             }}
             placeholder={t("common.search", { defaultValue: "Search…" })}
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
           />
         </div>
       )}
@@ -865,7 +865,7 @@ function VendorManager({
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
@@ -931,7 +931,7 @@ function CurrencySettings() {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
-        <Globe size={18} className="text-indigo-500 dark:text-indigo-400" />
+        <Globe size={18} className="text-primary dark:text-primary" />
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">
           {t("familySettings.currency")}
         </h2>
@@ -948,7 +948,7 @@ function CurrencySettings() {
 
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="space-y-4">
@@ -960,7 +960,7 @@ function CurrencySettings() {
                 setSelected(e.target.value);
                 setSuccessCurrency(false);
               }}
-              className="flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              className="flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
             >
               {SUPPORTED_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -971,7 +971,7 @@ function CurrencySettings() {
             <button
               onClick={handleSaveCurrency}
               disabled={updateCurrency.isPending || value === currentCurrency}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
             >
               {updateCurrency.isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -994,7 +994,7 @@ function CurrencySettings() {
               value={currentPosition}
               onChange={(e) => handleSavePosition(e.target.value)}
               disabled={updatePosition.isPending}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-60"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm disabled:opacity-60"
             >
               <option value="Before">{t("familySettings.symbolBefore")}</option>
               <option value="After">{t("familySettings.symbolAfter")}</option>
@@ -1118,7 +1118,7 @@ export default function FamilySettings() {
         <select
           value={activeSection}
           onChange={(e) => setActiveSection(e.target.value as FamilySetting)}
-          className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+          className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
         >
           {navItems.map((item) => (
             <option key={item.key} value={item.key}>
@@ -1140,7 +1140,7 @@ export default function FamilySettings() {
                 onClick={() => setActiveSection(item.key)}
                 className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors ${
                   isActive
-                    ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                    ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary"
                     : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                 }`}
               >

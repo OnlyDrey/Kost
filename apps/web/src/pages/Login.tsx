@@ -6,7 +6,10 @@ import { LogIn, AlertCircle } from "lucide-react";
 import authService from "../services/auth";
 import { useAuth } from "../stores/auth.context";
 import { useSettings } from "../stores/settings.context";
-import { getCurrentLogoSource, getDefaultLogoUrl } from "../branding/brandingAssets";
+import {
+  getCurrentLogoSource,
+  getDefaultLogoUrl,
+} from "../branding/brandingAssets";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -69,7 +72,7 @@ export default function Login() {
                 event.currentTarget.src = getDefaultLogoUrl();
               }}
             />
-            <h1 className="text-4xl font-bold text-indigo-500 dark:text-indigo-400">
+            <h1 className="text-4xl font-bold text-primary dark:text-primary">
               {settings.branding.appTitle || "Kost"}
             </h1>
           </div>
@@ -98,7 +101,7 @@ export default function Login() {
                 required
                 disabled={loading}
                 autoComplete="username"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 transition-colors text-sm"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-colors text-sm"
               />
             </div>
 
@@ -113,11 +116,11 @@ export default function Login() {
                 required
                 disabled={loading}
                 autoComplete="current-password"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 transition-colors text-sm"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-colors text-sm"
               />
             </div>
             {showSecondFactor && (
-              <div className="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/10 p-3 space-y-3">
+              <div className="rounded-lg border border-primary/40 dark:border-primary/40 bg-primary/10 dark:bg-primary/20 p-3 space-y-3">
                 <p className="text-xs text-gray-500 dark:text-gray-300">
                   {t("auth.secondFactorHint")}
                 </p>
@@ -133,7 +136,7 @@ export default function Login() {
                     disabled={loading}
                     autoComplete="one-time-code"
                     placeholder="123456"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 transition-colors text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-colors text-sm"
                   />
                 </div>
 
@@ -147,7 +150,7 @@ export default function Login() {
                     onChange={(e) => setRecoveryCode(e.target.value)}
                     disabled={loading}
                     placeholder="a1b2c3d4"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 transition-colors text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-colors text-sm"
                   />
                 </div>
               </div>
@@ -156,7 +159,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition-colors mt-2"
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition-colors mt-2"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
