@@ -622,6 +622,12 @@ export class InvoicesService {
   ) {
     const invoice = await this.findOne(invoiceId, familyId, currentUserId);
 
+    if (invoice.period.status !== PeriodStatus.OPEN) {
+      throw new BadRequestException(
+        "Cannot add payment to an invoice in a closed period",
+      );
+    }
+
     // Verify payer belongs to family
     const payer = await this.prisma.user.findFirst({
       where: { id: addPaymentDto.paidById, familyId },

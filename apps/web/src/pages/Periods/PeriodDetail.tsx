@@ -34,6 +34,7 @@ import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 
 export default function PeriodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +53,7 @@ export default function PeriodDetail() {
   const isLoading = periodLoading || statsLoading || invoicesLoading;
   const { data: currency = "NOK" } = useCurrency();
   const fmt = useCurrencyFormatter();
+  const { notify } = useConfirmDialog();
 
   const paidUnpaid = useMemo(() => {
     const list = invoices ?? [];
@@ -421,19 +423,39 @@ export default function PeriodDetail() {
                                   key: "pay",
                                   icon: CircleCheckBig,
                                   label: t("invoice.markPaid"),
-                                  onClick: () => {
+                                  onClick: async () => {
                                     if (!currentUser || remaining <= 0) return;
-                                    addPayment.mutate({
-                                      invoiceId: invoice.id,
-                                      data: {
-                                        paidById: currentUser.id,
-                                        amountCents: remaining,
-                                        paidAt: new Date().toISOString(),
-                                      },
-                                    });
+                                    if (closed) {
+                                      await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+                                      return;
+                                    }
+                                    try {
+                                      await addPayment.mutateAsync({
+                                        invoiceId: invoice.id,
+                                        data: {
+                                          paidById: currentUser.id,
+                                          amountCents: remaining,
+                                          paidAt: new Date().toISOString(),
+                                        },
+                                      });
+                                    } catch (error: unknown) {
+                                      const message =
+                                        typeof error === "object" &&
+                                        error !== null &&
+                                        "response" in error
+                                          ? (error as { response?: { data?: { message?: string | string[] } } }).response?.data?.message
+                                          : undefined;
+                                      await notify(
+                                        Array.isArray(message)
+                                          ? message.join(", ")
+                                          : message || t("errors.serverError"),
+                                        t("common.error"),
+                                      );
+                                    }
                                   },
                                   disabled:
-                                    remaining <= 0 || addPayment.isPending,
+                                    closed || remaining <= 0 || addPayment.isPending,
+                                  hidden: closed,
                                   colorClassName:
                                     "bg-success/20 hover:bg-success/30 text-success",
                                 },

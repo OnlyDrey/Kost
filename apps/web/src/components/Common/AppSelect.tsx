@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import type { SelectHTMLAttributes } from "react";
-import { SELECT_TRIGGER } from "./focusStyles";
+import { CONTROL_HEIGHT, SELECT_TRIGGER } from "./focusStyles";
 
 type AppSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   wrapperClassName?: string;
@@ -16,7 +16,7 @@ export default function AppSelect({
     <div className={`relative ${wrapperClassName}`}>
       <select
         {...props}
-        className={`${SELECT_TRIGGER} h-10 w-full rounded-lg px-3 pr-10 text-sm ${className}`.trim()}
+        className={`${SELECT_TRIGGER} ${CONTROL_HEIGHT} w-full rounded-lg px-3.5 pr-10 text-sm ${className}`.trim()}
       >
         {children}
       </select>

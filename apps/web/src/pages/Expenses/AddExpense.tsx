@@ -34,10 +34,11 @@ import UserSelectionCards from "../../components/Distribution/UserSelectionCards
 import UserSingleSelect from "../../components/Distribution/UserSingleSelect";
 import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
-const dateInputCls = `${inputCls} h-[46px] w-full min-w-0 max-w-full box-border appearance-none`;
+  `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
+const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 const labelCls =
   "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
@@ -589,7 +590,7 @@ export default function AddExpense() {
             <button
               type="button"
               onClick={() => navigate(backUrl)}
-              className="h-10 px-3.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="h-11 px-3.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               {t("common.cancel")}
             </button>
@@ -601,7 +602,7 @@ export default function AddExpense() {
                 (!isEditing && !isSubscription && !targetPeriodId) ||
                 (!isEditing && !isSubscription && targetPeriodClosed)
               }
-              className="flex h-10 items-center gap-2 px-3.5 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
+              className="flex h-11 items-center gap-2 px-3.5 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
             >
               {isPending && (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -666,14 +667,14 @@ export default function AddExpense() {
                     <button
                       type="button"
                       onClick={() => navigate(backUrl)}
-                      className="col-span-3 mt-7 h-10 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="col-span-3 mt-7 h-11 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
                       {t("common.cancel")}
                     </button>
                     <button
                       type="submit"
                       disabled={isPending}
-                      className="col-span-3 mt-7 flex h-10 items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
+                      className="col-span-3 mt-7 flex h-11 items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
                     >
                       {isPending && (
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -29,6 +29,7 @@ import { useAuth } from "../../stores/auth.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { isPeriodClosed } from "../../utils/periodStatus";
 
 const METHOD_OPTIONS = [
   "ALL",
@@ -68,6 +69,7 @@ export default function InvoiceList() {
   const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
+  const periodClosed = currentPeriod ? isPeriodClosed(currentPeriod) : false;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMethod, setFilterMethod] = useState("ALL");
@@ -189,6 +191,10 @@ export default function InvoiceList() {
 
     const handleMarkPaidInFull = async () => {
       if (!user || remaining <= 0) return;
+      if (periodClosed) {
+        await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+        return;
+      }
       try {
         await addPayment.mutateAsync({
           invoiceId: invoice.id,
@@ -248,7 +254,8 @@ export default function InvoiceList() {
                 icon: CheckCircle2,
                 label: t("invoice.markPaid"),
                 onClick: handleMarkPaidInFull,
-                disabled: remaining <= 0 || addPayment.isPending,
+                disabled: periodClosed || remaining <= 0 || addPayment.isPending,
+                hidden: periodClosed,
                 colorClassName:
                   "bg-success/20 text-success hover:bg-success/30",
               },

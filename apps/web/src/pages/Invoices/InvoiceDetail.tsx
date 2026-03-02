@@ -32,6 +32,7 @@ import TagPill from "../../components/Common/TagPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { FOCUS_RING } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
+import { isPeriodClosed } from "../../utils/periodStatus";
 
 
 const inputCls =
@@ -68,6 +69,7 @@ export default function InvoiceDetail() {
   const [editPaidById, setEditPaidById] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editError, setEditError] = useState("");
+  const periodClosed = invoice?.period ? isPeriodClosed(invoice.period) : false;
 
   const handleDelete = async () => {
     const accepted = await confirm({
@@ -132,6 +134,11 @@ export default function InvoiceDetail() {
       return;
     }
 
+    if (periodClosed) {
+      setPayError(t("invoice.closedPeriodPaymentBlocked"));
+      return;
+    }
+
     try {
       await addPayment.mutateAsync({
         invoiceId: id!,
@@ -150,6 +157,11 @@ export default function InvoiceDetail() {
 
   const handleMarkFullyPaid = async () => {
     if (!user || remaining <= 0) return;
+    if (periodClosed) {
+      setPayError(t("invoice.closedPeriodPaymentBlocked"));
+      return;
+    }
+
     try {
       await addPayment.mutateAsync({
         invoiceId: id!,
@@ -223,7 +235,8 @@ export default function InvoiceDetail() {
               icon: CheckCircle2,
               label: t("invoice.markComplete"),
               onClick: handleMarkFullyPaid,
-              disabled: isPaid || addPayment.isPending,
+              disabled: periodClosed || isPaid || addPayment.isPending,
+              hidden: periodClosed,
               colorClassName: "bg-success/20 text-success hover:bg-success/30",
             },
             {
@@ -528,7 +541,7 @@ export default function InvoiceDetail() {
                 </button>
                 <button
                   type="submit"
-                  disabled={addPayment.isPending}
+                  disabled={periodClosed || addPayment.isPending}
                   className={`flex-1 flex items-center justify-center gap-1 py-2 text-sm font-semibold bg-green-500 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg transition-colors ${FOCUS_RING}`}
                 >
                   {addPayment.isPending && (

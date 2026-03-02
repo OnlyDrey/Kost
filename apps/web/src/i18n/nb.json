@@ -136,7 +136,8 @@
     "youPayOfTotal": "Du: {{own}} av {{total}}",
     "personalExpenseOption": "Personlig",
     "appliesTo": "Gjelder for",
-    "selectPersonalUser": "Velg person"
+    "selectPersonalUser": "Velg person",
+    "closedPeriodPaymentBlocked": "Kan ikke markere utgift som betalt i en lukket periode."
   },
   "period": {
     "title": "Periode",

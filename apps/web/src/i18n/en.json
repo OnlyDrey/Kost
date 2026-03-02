@@ -136,7 +136,8 @@
     "youPayOfTotal": "You: {{own}} of {{total}}",
     "personalExpenseOption": "Personal",
     "appliesTo": "Applies to",
-    "selectPersonalUser": "Select person"
+    "selectPersonalUser": "Select person",
+    "closedPeriodPaymentBlocked": "Cannot mark expense as paid in a closed period."
   },
   "period": {
     "title": "Period",

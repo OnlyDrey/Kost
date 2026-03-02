@@ -38,6 +38,7 @@ import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
+import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
 
@@ -121,6 +122,7 @@ export default function Overview() {
   const addPayment = useAddPayment();
   const { data: currency = "NOK" } = useCurrency();
   const fmt = useCurrencyFormatter();
+  const { notify } = useConfirmDialog();
 
   const isLoading =
     periodsLoading || periodLoading || statsLoading || invoicesLoading;
@@ -640,21 +642,41 @@ export default function Overview() {
                                         key: "pay",
                                         icon: CircleCheckBig,
                                         label: t("invoice.markPaid"),
-                                        onClick: () => {
-                                          if (!currentUser || remaining <= 0)
+                                        onClick: async () => {
+                                          if (!currentUser || remaining <= 0) return;
+                                          if (closed) {
+                                            await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
                                             return;
-                                          addPayment.mutate({
-                                            invoiceId: invoice.id,
-                                            data: {
-                                              paidById: currentUser.id,
-                                              amountCents: remaining,
-                                              paidAt: new Date().toISOString(),
-                                            },
-                                          });
+                                          }
+                                          try {
+                                            await addPayment.mutateAsync({
+                                              invoiceId: invoice.id,
+                                              data: {
+                                                paidById: currentUser.id,
+                                                amountCents: remaining,
+                                                paidAt: new Date().toISOString(),
+                                              },
+                                            });
+                                          } catch (error: unknown) {
+                                            const message =
+                                              typeof error === "object" &&
+                                              error !== null &&
+                                              "response" in error
+                                                ? (error as { response?: { data?: { message?: string | string[] } } }).response?.data?.message
+                                                : undefined;
+                                            await notify(
+                                              Array.isArray(message)
+                                                ? message.join(", ")
+                                                : message || t("errors.serverError"),
+                                              t("common.error"),
+                                            );
+                                          }
                                         },
                                         disabled:
+                                          closed ||
                                           remaining <= 0 ||
                                           addPayment.isPending,
+                                        hidden: closed,
                                         colorClassName:
                                           "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-500 dark:text-green-400",
                                       },
