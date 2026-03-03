@@ -8,6 +8,7 @@ import {
 import {
   DEFAULT_PRIMARY_COLOR_FAMILY,
   PRIMARY_COLOR_FAMILIES,
+  PRIMARY_COLOR_OPTIONS,
   type PrimaryColorFamily,
 } from "../theme/primaryColorFamilies";
 import {
@@ -84,16 +85,29 @@ function applyBrandingToDocument(branding: BrandingSettings) {
   if (typeof document === "undefined") return;
 
   const root = document.documentElement;
+  const presetKey: PrimaryColorFamily =
+    branding.primaryPreset in PRIMARY_COLOR_FAMILIES
+      ? branding.primaryPreset
+      : DEFAULT_PRIMARY_COLOR_FAMILY;
   const preset =
-    PRIMARY_COLOR_FAMILIES[branding.primaryPreset] ??
-    PRIMARY_COLOR_FAMILIES[DEFAULT_PRIMARY_COLOR_FAMILY];
+    PRIMARY_COLOR_OPTIONS.find((option) => option.value === presetKey) ??
+    PRIMARY_COLOR_OPTIONS[0];
 
   root.dataset.brandPreset = branding.primaryPreset;
   root.style.setProperty("--color-primary", preset.rgb);
-  root.style.setProperty("--color-primary-hover", preset.rgb);
-  root.style.setProperty("--color-primary-pressed", preset.rgb);
+  root.style.setProperty(
+    "--color-primary-hover",
+    preset.hoverRgb ?? preset.rgb,
+  );
+  root.style.setProperty(
+    "--color-primary-pressed",
+    preset.pressedRgb ?? preset.rgb,
+  );
   root.style.setProperty("--color-secondary", preset.rgb);
-  root.style.setProperty("--color-secondary-hover", preset.rgb);
+  root.style.setProperty(
+    "--color-secondary-hover",
+    preset.hoverRgb ?? preset.rgb,
+  );
   root.style.setProperty("--color-focus", preset.rgb);
   root.style.setProperty("--color-info", preset.rgb);
   root.style.setProperty("--color-info-soft", preset.rgb);

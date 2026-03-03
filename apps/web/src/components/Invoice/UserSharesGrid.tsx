@@ -48,7 +48,7 @@ export default function UserSharesGrid({
             <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
               {share.user?.name || unknownLabel}
             </p>
-            <p className="text-lg sm:text-xl font-bold text-primary dark:text-primary mt-1">
+            <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mt-1">
               {fmt(share.shareCents)}
             </p>
             {totalCents > 0 && (
@@ -62,7 +62,7 @@ export default function UserSharesGrid({
             <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
               {share.user?.name || unknownLabel}
             </p>
-            <p className="text-lg sm:text-xl font-bold text-primary dark:text-primary mt-1">
+            <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mt-1">
               {fmt(share.shareCents)}
             </p>
             {totalCents > 0 && (

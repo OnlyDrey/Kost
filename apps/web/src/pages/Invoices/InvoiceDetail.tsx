@@ -236,8 +236,7 @@ export default function InvoiceDetail() {
           <InvoiceStatusTag status={paymentStatus} />
           <ActionIconBar
             tight
-            showLabelFromMd
-            size="lg"
+            size="md"
             items={[
               {
                 key: "mark-complete",
@@ -272,7 +271,15 @@ export default function InvoiceDetail() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-1">
           {/* Main info */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
+          <div
+            className={`rounded-xl border p-5 shadow-sm space-y-3 ${
+              paymentStatus === "OVERDUE"
+                ? "bg-red-50 border-red-500/30 dark:bg-red-950/20 dark:border-red-500/30"
+                : paymentStatus === "PAID"
+                  ? "bg-green-50 border-green-500/30 dark:bg-green-950/20 dark:border-green-500/30"
+                  : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"
+            }`}
+          >
             <div
               className="grid gap-3 items-start"
               style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
