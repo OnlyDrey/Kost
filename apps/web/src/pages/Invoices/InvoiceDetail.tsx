@@ -268,7 +268,7 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:[grid-template-columns:2fr_1fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         {/* Main info */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
           <div
@@ -350,7 +350,7 @@ export default function InvoiceDetail() {
         </div>
 
         {/* Allocation explanation */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-1">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
             {t("invoice.allocationExplanation")}
           </h3>
@@ -372,7 +372,7 @@ export default function InvoiceDetail() {
         </div>
 
         {/* Payments */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-3 lg:row-span-2">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-2 lg:row-span-3 lg:row-start-1 self-start">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
               {t("invoice.payments")}

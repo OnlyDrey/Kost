@@ -779,7 +779,7 @@ export default function Profile() {
                   key={item.key}
                   type="button"
                   onClick={() => selectPage(item.key)}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
+                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
                     isActive
                       ? "border-primary bg-primary/15 text-primary"
                       : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
@@ -1312,7 +1312,7 @@ export default function Profile() {
                       <button
                         form="theme-form"
                         type="submit"
-                        className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                        className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                       >
                         {t("common.save")}
                       </button>
@@ -1398,7 +1398,7 @@ export default function Profile() {
                               onClick={() =>
                                 brandingLogoInputRef.current?.click()
                               }
-                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                             >
                               {brandingLogoDataUrl || brandingLogoUrl
                                 ? t("settings.brandingReplaceLogo")
@@ -1408,7 +1408,7 @@ export default function Profile() {
                               <button
                                 type="button"
                                 onClick={handleDeleteBrandingLogo}
-                                className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                                className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                               >
                                 {t("settings.brandingDeleteLogo")}
                               </button>
@@ -1416,7 +1416,7 @@ export default function Profile() {
                             <button
                               type="button"
                               onClick={handleDeleteBrandingLogo}
-                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                             >
                               {t("settings.brandingResetDefault")}
                             </button>
@@ -1509,7 +1509,7 @@ export default function Profile() {
                         </p>
                         <button
                           type="submit"
-                          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                         >
                           {t("common.save")}
                         </button>

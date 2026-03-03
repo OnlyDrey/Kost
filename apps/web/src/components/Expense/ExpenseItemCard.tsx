@@ -119,10 +119,32 @@ export default function ExpenseItemCard({
         </div>
       </div>
 
+      {(amountLabel || rightContent || actionButton) && (
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1">
+            {amountLabel && (
+              <p
+                className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
+              >
+                {amountLabel}
+              </p>
+            )}
+          </div>
+          {(rightContent || actionButton) && (
+            <div className="ml-auto flex items-center gap-2">
+              {rightContent && <div className="shrink-0">{rightContent}</div>}
+              {actionButton && <div className="shrink-0">{actionButton}</div>}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="w-full flex flex-wrap gap-1">
         {showPaymentStatusPill && (
           <InvoiceStatusTag
-            status={paymentStatus ?? (paid ? "PAID" : overdue ? "OVERDUE" : "UNPAID")}
+            status={
+              paymentStatus ?? (paid ? "PAID" : overdue ? "OVERDUE" : "UNPAID")
+            }
           />
         )}
         {overdue && (
@@ -143,37 +165,16 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel || actionButton) && (
-        <div className="min-w-0 space-y-0.5">
-          <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 min-w-0">
-            <div className="min-w-0 flex-1">
-              {amountLabel && (
-                <p
-                  className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
-                >
-                  {amountLabel}
-                </p>
-              )}
-              {shareLabel && (
-                <p className="text-xs text-app-text-secondary mt-0">
-                  {shareLabel}
-                </p>
-              )}
-              {amountDetails?.map((line) => (
-                <p key={line} className="text-xs text-app-text-secondary mt-0">
-                  {line}
-                </p>
-              ))}
-            </div>
-
-            {(rightContent || actionButton) && (
-              <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
-                {rightContent && <div className="shrink-0">{rightContent}</div>}
-                {actionButton && <div className="shrink-0">{actionButton}</div>}
-              </div>
-            )}
-          </div>
-
+      {(shareLabel || amountDetails?.length || dateLabel) && (
+        <div className="space-y-0.5">
+          {shareLabel && (
+            <p className="text-xs text-app-text-secondary mt-0">{shareLabel}</p>
+          )}
+          {amountDetails?.map((line) => (
+            <p key={line} className="text-xs text-app-text-secondary mt-0">
+              {line}
+            </p>
+          ))}
           {dateLabel && (
             <p className="text-xs text-app-text-secondary">{dateLabel}</p>
           )}
@@ -190,7 +191,7 @@ export default function ExpenseItemCard({
 
   return (
     <div
-      className={`relative bg-app-surface rounded-xl border ${emphasisClass} shadow-sm hover:shadow-md transition-all`}
+      className={`relative bg-app-surface rounded-xl border ${emphasisClass} shadow-sm transition-all hover:shadow-md`}
     >
       {onClick ? (
         <button

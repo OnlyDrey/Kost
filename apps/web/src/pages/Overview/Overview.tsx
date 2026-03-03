@@ -10,7 +10,7 @@ import {
   Pencil,
   Trash2,
   Plus,
-  RotateCcw,
+  Eraser,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -44,6 +44,8 @@ import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import { Button } from "../../components/ui/button";
+import { IconButton } from "../../components/ui/icon-button";
 import {
   calcPaidSum,
   calcRemaining,
@@ -327,7 +329,8 @@ export default function Overview() {
         statusFilter === "all" ||
         statusFilter === "remaining" ||
         statusFilter === "overdue",
-      borderClass: "border-red-200 dark:border-red-900/50",
+      borderClass:
+        "border-red-300 dark:border-red-800/70 bg-red-50/30 dark:bg-red-950/20",
       titleClass: "text-red-700 dark:text-red-400",
       amountClass: "text-red-500 dark:text-red-400/80",
     },
@@ -351,7 +354,8 @@ export default function Overview() {
         statusFilter === "all" ||
         statusFilter === "remaining" ||
         statusFilter === "partial",
-      borderClass: "border-amber-200 dark:border-amber-900/50",
+      borderClass:
+        "border-amber-300 dark:border-amber-800/70 bg-amber-50/30 dark:bg-amber-950/20",
       titleClass: "text-amber-700 dark:text-amber-400",
       amountClass: "text-amber-500 dark:text-amber-400/80",
     },
@@ -360,7 +364,8 @@ export default function Overview() {
       title: t("invoice.statusPaid"),
       list: grouped.paid,
       show: statusFilter === "all" || statusFilter === "paid",
-      borderClass: "border-green-200 dark:border-green-900/50",
+      borderClass:
+        "border-green-300 dark:border-green-800/70 bg-green-50/30 dark:bg-green-950/20",
       titleClass: "text-green-700 dark:text-green-400",
       amountClass: "text-green-500 dark:text-green-400/80",
     },
@@ -491,18 +496,18 @@ export default function Overview() {
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                           {t("period.userShares")}
                         </h2>
-                        <button
+                        <IconButton
                           type="button"
                           onClick={() => setFilter("all")}
                           aria-label={t("common.reset")}
-                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${FOCUS_RING} ${
+                          className={
                             hasShareSelection
-                              ? "border-primary/40 text-primary hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
-                              : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                          }`}
+                              ? "border-primary/40 text-primary"
+                              : ""
+                          }
                         >
-                          <RotateCcw size={16} />
-                        </button>
+                          <Eraser size={16} />
+                        </IconButton>
                       </div>
                       <UserSharesGrid
                         shares={stats.userShares.map((share) => ({
@@ -573,18 +578,22 @@ export default function Overview() {
                     </option>
                     <option value="paid">{t("invoice.statusPaid")}</option>
                   </AppSelect>
-                  <button
+                  <Button
                     type="button"
                     disabled={closed}
                     onClick={() => {
                       if (closed) return;
                       navigate(`/invoices/add?period=${resolvedPeriodId}`);
                     }}
-                    className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3.5 text-sm font-semibold leading-none transition-colors ${closed ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90 text-white"}`}
+                    icon={<Plus size={15} />}
+                    className={
+                      closed
+                        ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                        : ""
+                    }
                   >
-                    <Plus size={15} />
                     {t("invoice.addInvoice")}
-                  </button>
+                  </Button>
                 </div>
               </div>
               {!listInvoices || listInvoices.length === 0 ? (

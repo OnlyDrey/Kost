@@ -30,6 +30,8 @@ import { useSettings } from "../../stores/settings.context";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { useAuth } from "../../stores/auth.context";
 import AppSelect from "../../components/Common/AppSelect";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { sortRoles } from "../../utils/roles";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import RoleBadge from "../../components/Common/RoleBadge";
@@ -226,7 +228,6 @@ function UserModal({
                     </p>
                   )}
                 </div>
-
               </div>
             )}
 
@@ -568,30 +569,24 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
           </h1>
         )}
         {isAdmin && (
-          <button
+          <Button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0"
+            icon={<Plus size={16} />}
+            className="shrink-0"
           >
-            <Plus size={16} />
             {t("users.addUser")}
-          </button>
+          </Button>
         )}
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-2">
-          <div className="relative">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t("users.searchPlaceholder")}
-              className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-            />
-          </div>
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={t("users.searchPlaceholder")}
+            leadingIcon={<Search size={14} />}
+          />
           <AppSelect
             value={roleFilter}
             onChange={(e) =>
@@ -599,7 +594,7 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
                 e.target.value as "ALL" | "ADMIN" | "ADULT" | "CHILD",
               )
             }
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full"
           >
             <option value="ALL">{t("users.roleAll")}</option>
             <option value="ADMIN">{t("users.admin")}</option>
@@ -727,15 +722,13 @@ export default function Users({ embedded = false }: { embedded?: boolean }) {
               currentUser?.role === "ADULT" &&
               editingUser.role === "CHILD")
           }
-          roleOptions={
-            sortRoles(
-              isAdmin
-                ? ["ADMIN", "ADULT", "CHILD"]
-                : editingUser?.role === "CHILD"
-                  ? ["ADULT", "CHILD"]
-                  : [editingUser?.role === "ADMIN" ? "ADMIN" : "ADULT"],
-            )
-          }
+          roleOptions={sortRoles(
+            isAdmin
+              ? ["ADMIN", "ADULT", "CHILD"]
+              : editingUser?.role === "CHILD"
+                ? ["ADULT", "CHILD"]
+                : [editingUser?.role === "ADMIN" ? "ADMIN" : "ADULT"],
+          )}
         />
       )}
 
