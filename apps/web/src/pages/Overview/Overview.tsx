@@ -34,7 +34,6 @@ import UserSharesGrid from "../../components/Invoice/UserSharesGrid";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
-import { isPeriodClosed } from "../../utils/periodStatus";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
@@ -131,7 +130,23 @@ export default function Overview() {
   const userShare = stats?.userShares?.find(
     (s) => s.userId === currentUser?.id,
   );
-  const closed = period ? isPeriodClosed(period) : false;
+  const periodFromList = periods.find((p) => p.id === resolvedPeriodId);
+  const effectivePeriodStatus =
+    period?.status ?? periodFromList?.status ?? "OPEN";
+  const closed = effectivePeriodStatus === "CLOSED";
+
+  useEffect(() => {
+    if (
+      import.meta.env.DEV &&
+      period?.status &&
+      periodFromList?.status &&
+      period.status !== periodFromList.status
+    ) {
+      console.warn(
+        `[Overview] status mismatch for ${resolvedPeriodId}: detail=${period.status}, list=${periodFromList.status}`,
+      );
+    }
+  }, [period?.status, periodFromList?.status, resolvedPeriodId]);
 
   const validUserIds = useMemo(() => new Set(users.map((u) => u.id)), [users]);
   const normalizedQuery = useMemo(
@@ -388,7 +403,7 @@ export default function Overview() {
           {period && (
             <PeriodStatusBadge
               status={closed ? "CLOSED" : "OPEN"}
-              size="md"
+              variant="field"
             />
           )}
         </div>
@@ -565,6 +580,13 @@ export default function Overview() {
                     (sum, item) => sum + item.displayCents,
                     0,
                   );
+                  const groupTotal =
+                    group.key === "partial"
+                      ? group.list.reduce(
+                          (sum, item) => sum + item.invoice.totalCents,
+                          0,
+                        )
+                      : undefined;
                   return (
                     <div
                       key={group.key}
@@ -572,8 +594,19 @@ export default function Overview() {
                     >
                       <div className="mb-3">
                         <p className={`text-base ${group.amountClass} mt-0.5`}>
-                          <span className="font-semibold">{group.title}</span> -{" "}
-                          {fmt(groupSum)}
+                          <span className="font-semibold">
+                            {group.key === "partial" && groupTotal !== undefined
+                              ? t("invoice.partialHeader", {
+                                  remaining: fmt(groupSum),
+                                  total: fmt(groupTotal),
+                                })
+                              : group.title}
+                          </span>
+                          {group.key !== "partial" && (
+                            <>
+                              {" "}- {fmt(groupSum)}
+                            </>
+                          )}
                         </p>
                       </div>
                       <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-5">
@@ -581,9 +614,6 @@ export default function Overview() {
                           ({ invoice, totalPaid, remaining, displayCents }) => {
                             const isPaid = remaining <= 0;
                             const isPartiallyPaid = totalPaid > 0 && !isPaid;
-                            const dueAt = invoice.dueDate
-                              ? new Date(invoice.dueDate)
-                              : null;
                             const status = getInvoiceStatus({
                               totalCents: invoice.totalCents,
                               totalPaidCents: totalPaid,
@@ -596,12 +626,41 @@ export default function Overview() {
                                     (sh: any) => sh.userId === shareUserId,
                                   )
                                 : undefined;
-                            const primaryAmount = userShareEntry
-                              ? fmt(userShareEntry.shareCents)
-                              : fmt(displayCents);
+                            const shareRatio = userShareEntry
+                              ? userShareEntry.shareCents / invoice.totalCents
+                              : null;
+                            const shareRemaining =
+                              shareRatio !== null
+                                ? Math.max(
+                                    0,
+                                    Math.round(
+                                      invoice.totalCents * shareRatio -
+                                        totalPaid * shareRatio,
+                                    ),
+                                  )
+                                : null;
+                            const shareTotalPaid =
+                              shareRatio !== null
+                                ? Math.max(
+                                    0,
+                                    Math.round(totalPaid * shareRatio),
+                                  )
+                                : null;
+                            const primaryAmount =
+                              shareRatio !== null
+                                ? fmt(
+                                    isPartiallyPaid && shareRemaining !== null
+                                      ? shareRemaining
+                                      : userShareEntry.shareCents,
+                                  )
+                                : fmt(displayCents);
                             const secondaryLabel = isPartiallyPaid
                               ? t("invoice.totalWithAmount", {
-                                  amount: fmt(invoice.totalCents),
+                                  amount: fmt(
+                                    shareRatio !== null
+                                      ? userShareEntry.shareCents
+                                      : invoice.totalCents,
+                                  ),
                                 })
                               : userShareEntry
                                 ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
@@ -644,11 +703,25 @@ export default function Overview() {
                                   isPartiallyPaid
                                     ? [
                                         t("invoice.remainingOfTotal", {
-                                          remaining: fmt(remaining),
-                                          total: fmt(invoice.totalCents),
+                                          remaining: fmt(
+                                            shareRatio !== null &&
+                                              shareRemaining !== null
+                                              ? shareRemaining
+                                              : remaining,
+                                          ),
+                                          total: fmt(
+                                            shareRatio !== null
+                                              ? userShareEntry.shareCents
+                                              : invoice.totalCents,
+                                          ),
                                         }),
                                         t("invoice.paidWithAmount", {
-                                          amount: fmt(totalPaid),
+                                          amount: fmt(
+                                            shareRatio !== null &&
+                                              shareTotalPaid !== null
+                                              ? shareTotalPaid
+                                              : totalPaid,
+                                          ),
                                         }),
                                       ]
                                     : undefined

@@ -87,6 +87,7 @@ export default function Dashboard() {
           {currentPeriod && (
             <PeriodStatusBadge
               status={currentPeriod.status === "OPEN" ? "OPEN" : "CLOSED"}
+              variant="field"
               className="ml-2"
             />
           )}

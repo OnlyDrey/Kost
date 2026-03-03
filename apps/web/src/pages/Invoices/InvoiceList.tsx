@@ -5,7 +5,6 @@ import {
   Search,
   Pencil,
   CheckCircle2,
-  Clock,
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +12,6 @@ import AppSelect from "../../components/Common/AppSelect";
 import {
   useInvoices,
   useCurrentPeriod,
-  useCurrency,
   useVendors,
   useDeleteInvoice,
   useAddPayment,
@@ -66,7 +64,6 @@ export default function InvoiceList() {
 
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: invoices, isLoading } = useInvoices(currentPeriod?.id);
-  const { data: currency = "NOK" } = useCurrency();
   const fmt = useCurrencyFormatter();
   const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
@@ -171,6 +168,12 @@ export default function InvoiceList() {
       return sum + Math.max(0, inv.totalCents - totalPaid);
     }, 0);
 
+  const partialSummary = (() => {
+    const total = groupSum(groups.partial, "total");
+    const remaining = groupSum(groups.partial, "remaining");
+    return { total, remaining };
+  })();
+
   const renderInvoice = (invoice: any) => {
     const totalPaid = (invoice.payments ?? []).reduce(
       (sum: number, p: any) => sum + p.amountCents,
@@ -179,8 +182,6 @@ export default function InvoiceList() {
     const remaining = invoice.totalCents - totalPaid;
     const isPaid = remaining <= 0;
     const isPartiallyPaid = totalPaid > 0 && !isPaid;
-    const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
-    const overdue = !isPaid && !!dueAt && dueAt < new Date();
     const logoUrl = getVendorLogo(invoice.vendor);
 
     const handleDeleteInvoice = async () => {
@@ -405,10 +406,13 @@ export default function InvoiceList() {
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-amber-200 dark:border-amber-900/50 p-4 sm:p-5 shadow-sm">
               <div className="mb-3">
                 <h2 className="text-base font-semibold text-amber-700 dark:text-amber-400">
-                  {t("invoice.statusPartiallyPaid")}
+                  {t("invoice.partialHeader", {
+                    remaining: fmt(partialSummary.remaining),
+                    total: fmt(partialSummary.total),
+                  })}
                 </h2>
                 <p className="text-sm font-medium text-amber-500 dark:text-amber-400/80 mt-0.5">
-                  {fmt(groupSum(groups.partial, "remaining"))}
+                  {fmt(partialSummary.remaining)}
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

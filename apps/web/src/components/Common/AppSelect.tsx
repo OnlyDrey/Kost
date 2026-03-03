@@ -16,13 +16,13 @@ export default function AppSelect({
     <div className={`relative ${wrapperClassName}`}>
       <select
         {...props}
-        className={`${SELECT_TRIGGER} ${CONTROL_HEIGHT} w-full rounded-lg px-3.5 pr-10 text-sm ${className}`.trim()}
+        className={`${SELECT_TRIGGER} ${CONTROL_HEIGHT} w-full rounded-lg px-3 pr-9 text-sm ${className}`.trim()}
       >
         {children}
       </select>
       <ChevronDown
         size={14}
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-current opacity-70"
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-current opacity-70"
       />
     </div>
   );

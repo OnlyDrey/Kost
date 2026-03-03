@@ -349,6 +349,13 @@ export default function PeriodDetail() {
               (sum, item) => sum + item.displayCents,
               0,
             );
+            const groupTotal =
+              group.key === "partial"
+                ? group.list.reduce(
+                    (sum, item) => sum + item.invoice.totalCents,
+                    0,
+                  )
+                : undefined;
             return (
               <div
                 key={group.key}
@@ -356,13 +363,20 @@ export default function PeriodDetail() {
               >
                 <div className="mb-3">
                   <h3 className={`text-base font-semibold ${group.titleClass}`}>
-                    {group.title}
+                    {group.key === "partial" && groupTotal !== undefined
+                      ? t("invoice.partialHeader", {
+                          remaining: fmt(groupSum),
+                          total: fmt(groupTotal),
+                        })
+                      : group.title}
                   </h3>
-                  <p
-                    className={`text-sm font-medium ${group.amountClass} mt-0.5`}
-                  >
-                    {fmt(groupSum)}
-                  </p>
+                  {group.key !== "partial" && (
+                    <p
+                      className={`text-sm font-medium ${group.amountClass} mt-0.5`}
+                    >
+                      {fmt(groupSum)}
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-2.5">
                   {group.list.map(
@@ -382,12 +396,38 @@ export default function PeriodDetail() {
                             )
                           : undefined;
                       // When "Your Share" mode is active: primary = share, secondary = total
-                      const primaryAmount = userShareEntry
-                        ? fmt(userShareEntry.shareCents)
-                        : fmt(displayCents);
+                      const shareRatio = userShareEntry
+                        ? userShareEntry.shareCents / invoice.totalCents
+                        : null;
+                      const shareRemaining =
+                        shareRatio !== null
+                          ? Math.max(
+                              0,
+                              Math.round(
+                                invoice.totalCents * shareRatio -
+                                  totalPaid * shareRatio,
+                              ),
+                            )
+                          : null;
+                      const shareTotalPaid =
+                        shareRatio !== null
+                          ? Math.max(0, Math.round(totalPaid * shareRatio))
+                          : null;
+                      const primaryAmount =
+                        shareRatio !== null
+                          ? fmt(
+                              isPartiallyPaid && shareRemaining !== null
+                                ? shareRemaining
+                                : userShareEntry.shareCents,
+                            )
+                          : fmt(displayCents);
                       const secondaryLabel = isPartiallyPaid
                         ? t("invoice.totalWithAmount", {
-                            amount: fmt(invoice.totalCents),
+                            amount: fmt(
+                              shareRatio !== null
+                                ? userShareEntry.shareCents
+                                : invoice.totalCents,
+                            ),
                           })
                         : userShareEntry
                           ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
@@ -417,11 +457,25 @@ export default function PeriodDetail() {
                             isPartiallyPaid
                               ? [
                                   t("invoice.remainingOfTotal", {
-                                    remaining: fmt(remaining),
-                                    total: fmt(invoice.totalCents),
+                                    remaining: fmt(
+                                      shareRatio !== null &&
+                                        shareRemaining !== null
+                                        ? shareRemaining
+                                        : remaining,
+                                    ),
+                                    total: fmt(
+                                      shareRatio !== null
+                                        ? userShareEntry.shareCents
+                                        : invoice.totalCents,
+                                    ),
                                   }),
                                   t("invoice.paidWithAmount", {
-                                    amount: fmt(totalPaid),
+                                    amount: fmt(
+                                      shareRatio !== null &&
+                                        shareTotalPaid !== null
+                                        ? shareTotalPaid
+                                        : totalPaid,
+                                    ),
                                   }),
                                 ]
                               : undefined
