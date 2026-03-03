@@ -32,9 +32,10 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
-import PeriodStatusPill from "../../components/Common/PeriodStatusPill";
+import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getInvoiceStatus } from "../../utils/invoiceStatus";
 
 export default function PeriodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -220,9 +221,8 @@ export default function PeriodDetail() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {period.id}
             </h1>
-            <PeriodStatusPill
-              isClosed={closed}
-              className="rounded-full px-2 py-0.5 text-xs"
+            <PeriodStatusBadge
+              status={closed ? "CLOSED" : "OPEN"}
             />
           </div>
           {period.closedAt && (
@@ -349,6 +349,13 @@ export default function PeriodDetail() {
               (sum, item) => sum + item.displayCents,
               0,
             );
+            const groupTotal =
+              group.key === "partial"
+                ? group.list.reduce(
+                    (sum, item) => sum + item.invoice.totalCents,
+                    0,
+                  )
+                : undefined;
             return (
               <div
                 key={group.key}
@@ -356,23 +363,32 @@ export default function PeriodDetail() {
               >
                 <div className="mb-3">
                   <h3 className={`text-base font-semibold ${group.titleClass}`}>
-                    {group.title}
+                    {group.key === "partial" && groupTotal !== undefined
+                      ? t("invoice.partialHeader", {
+                          remaining: fmt(groupSum),
+                          total: fmt(groupTotal),
+                        })
+                      : group.title}
                   </h3>
-                  <p
-                    className={`text-sm font-medium ${group.amountClass} mt-0.5`}
-                  >
-                    {fmt(groupSum)}
-                  </p>
+                  {group.key !== "partial" && (
+                    <p
+                      className={`text-sm font-medium ${group.amountClass} mt-0.5`}
+                    >
+                      {fmt(groupSum)}
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-4 2xl:grid-cols-6 gap-2.5">
                   {group.list.map(
                     ({ invoice, totalPaid, remaining, displayCents }) => {
                       const isPaid = remaining <= 0;
                       const isPartiallyPaid = totalPaid > 0 && !isPaid;
-                      const dueAt = invoice.dueDate
-                        ? new Date(invoice.dueDate)
-                        : null;
-                      const overdue = !isPaid && !!dueAt && dueAt < new Date();
+                      const status = getInvoiceStatus({
+                        totalCents: invoice.totalCents,
+                        totalPaidCents: totalPaid,
+                        dueDate: invoice.dueDate,
+                      });
+                      const overdue = status === "OVERDUE";
                       const userShareEntry =
                         filter === "share-user"
                           ? (invoice.shares ?? []).find(
@@ -380,12 +396,38 @@ export default function PeriodDetail() {
                             )
                           : undefined;
                       // When "Your Share" mode is active: primary = share, secondary = total
-                      const primaryAmount = userShareEntry
-                        ? fmt(userShareEntry.shareCents)
-                        : fmt(displayCents);
+                      const shareRatio = userShareEntry
+                        ? userShareEntry.shareCents / invoice.totalCents
+                        : null;
+                      const shareRemaining =
+                        shareRatio !== null
+                          ? Math.max(
+                              0,
+                              Math.round(
+                                invoice.totalCents * shareRatio -
+                                  totalPaid * shareRatio,
+                              ),
+                            )
+                          : null;
+                      const shareTotalPaid =
+                        shareRatio !== null
+                          ? Math.max(0, Math.round(totalPaid * shareRatio))
+                          : null;
+                      const primaryAmount =
+                        shareRatio !== null
+                          ? fmt(
+                              isPartiallyPaid && shareRemaining !== null
+                                ? shareRemaining
+                                : userShareEntry.shareCents,
+                            )
+                          : fmt(displayCents);
                       const secondaryLabel = isPartiallyPaid
                         ? t("invoice.totalWithAmount", {
-                            amount: fmt(invoice.totalCents),
+                            amount: fmt(
+                              shareRatio !== null
+                                ? userShareEntry.shareCents
+                                : invoice.totalCents,
+                            ),
                           })
                         : userShareEntry
                           ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
@@ -405,12 +447,39 @@ export default function PeriodDetail() {
                           )}
                           category={invoice.category}
                           dateLabel={formatDate(invoice.createdAt)}
-                          paid={isPaid}
+                          paid={status === "PAID"}
                           overdue={overdue}
-                          paidLabel={t("invoice.statusPaid")}
+                          paymentStatus={status}
                           overdueLabel={t("invoice.statusOverdue")}
                           onClick={() => navigate(`/invoices/${invoice.id}`)}
                           amountTone={isPartiallyPaid ? "partial" : "default"}
+                          amountDetails={
+                            isPartiallyPaid
+                              ? [
+                                  t("invoice.remainingOfTotal", {
+                                    remaining: fmt(
+                                      shareRatio !== null &&
+                                        shareRemaining !== null
+                                        ? shareRemaining
+                                        : remaining,
+                                    ),
+                                    total: fmt(
+                                      shareRatio !== null
+                                        ? userShareEntry.shareCents
+                                        : invoice.totalCents,
+                                    ),
+                                  }),
+                                  t("invoice.paidWithAmount", {
+                                    amount: fmt(
+                                      shareRatio !== null &&
+                                        shareTotalPaid !== null
+                                        ? shareTotalPaid
+                                        : totalPaid,
+                                    ),
+                                  }),
+                                ]
+                              : undefined
+                          }
                           actionButton={
                             <ActionIconBar
                               tight

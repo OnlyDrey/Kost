@@ -25,6 +25,7 @@ import { isPeriodClosed } from "../../utils/periodStatus";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
+import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 
 
 const inputCls =
@@ -287,20 +288,9 @@ export default function PeriodList() {
                           <p className="font-semibold text-gray-900 dark:text-gray-100">
                             {period.id}
                           </p>
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                              !closed
-                                ? "bg-success/20 text-success"
-                                : "bg-danger/20 text-danger"
-                            }`}
-                          >
-                            {!closed ? (
-                              <LockOpen size={11} />
-                            ) : (
-                              <Lock size={11} />
-                            )}
-                            {!closed ? t("period.open") : t("period.closed")}
-                          </span>
+                          <PeriodStatusBadge
+                            status={closed ? "CLOSED" : "OPEN"}
+                          />
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 w-full mt-2">
                           {t("period.createdAt", {

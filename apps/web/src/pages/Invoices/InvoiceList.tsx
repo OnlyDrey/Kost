@@ -5,7 +5,6 @@ import {
   Search,
   Pencil,
   CheckCircle2,
-  Clock,
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +12,6 @@ import AppSelect from "../../components/Common/AppSelect";
 import {
   useInvoices,
   useCurrentPeriod,
-  useCurrency,
   useVendors,
   useDeleteInvoice,
   useAddPayment,
@@ -30,6 +28,8 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { isPeriodClosed } from "../../utils/periodStatus";
+import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getInvoiceStatus } from "../../utils/invoiceStatus";
 
 const METHOD_OPTIONS = [
   "ALL",
@@ -64,7 +64,6 @@ export default function InvoiceList() {
 
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: invoices, isLoading } = useInvoices(currentPeriod?.id);
-  const { data: currency = "NOK" } = useCurrency();
   const fmt = useCurrencyFormatter();
   const { data: vendors = [] } = useVendors();
   const deleteInvoice = useDeleteInvoice();
@@ -103,7 +102,7 @@ export default function InvoiceList() {
       (s, p) => s + p.amountCents,
       0,
     );
-    const remaining = invoice.totalCents - totalPaid;
+    const remaining = Math.max(0, invoice.totalCents - totalPaid);
     const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
     const overdue = remaining > 0 && !!dueAt && dueAt < new Date();
 
@@ -169,6 +168,12 @@ export default function InvoiceList() {
       return sum + Math.max(0, inv.totalCents - totalPaid);
     }, 0);
 
+  const partialSummary = (() => {
+    const total = groupSum(groups.partial, "total");
+    const remaining = groupSum(groups.partial, "remaining");
+    return { total, remaining };
+  })();
+
   const renderInvoice = (invoice: any) => {
     const totalPaid = (invoice.payments ?? []).reduce(
       (sum: number, p: any) => sum + p.amountCents,
@@ -177,15 +182,13 @@ export default function InvoiceList() {
     const remaining = invoice.totalCents - totalPaid;
     const isPaid = remaining <= 0;
     const isPartiallyPaid = totalPaid > 0 && !isPaid;
-    const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
-    const overdue = !isPaid && !!dueAt && dueAt < new Date();
     const logoUrl = getVendorLogo(invoice.vendor);
 
     const handleDeleteInvoice = async () => {
       try {
         await deleteInvoice.mutateAsync(invoice.id);
-      } catch {
-        await notify(t("errors.serverError"), t("common.error"));
+      } catch (error: unknown) {
+        await notify(getApiErrorMessage(t, error), t("common.error"));
       }
     };
 
@@ -204,10 +207,16 @@ export default function InvoiceList() {
             paidAt: new Date().toISOString(),
           },
         });
-      } catch {
-        await notify(t("errors.serverError"), t("common.error"));
+      } catch (error: unknown) {
+        await notify(getApiErrorMessage(t, error), t("common.error"));
       }
     };
+
+    const status = getInvoiceStatus({
+      totalCents: invoice.totalCents,
+      totalPaidCents: totalPaid,
+      dueDate: invoice.dueDate,
+    });
 
     return (
       <ExpenseItemCard
@@ -215,7 +224,19 @@ export default function InvoiceList() {
         vendor={invoice.vendor}
         description={invoice.description}
         logoUrl={logoUrl}
-        amountLabel={fmt(invoice.totalCents)}
+        amountLabel={fmt(isPartiallyPaid ? remaining : invoice.totalCents)}
+        amountDetails={
+          isPartiallyPaid
+            ? [
+                t("invoice.remainingOfTotal", {
+                  remaining: fmt(remaining),
+                  total: fmt(invoice.totalCents),
+                }),
+                t("invoice.paidWithAmount", { amount: fmt(totalPaid) }),
+                t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) }),
+              ]
+            : undefined
+        }
         typeLabel={distributionLabel(
           invoice.distributionMethod,
           settings.locale,
@@ -223,26 +244,21 @@ export default function InvoiceList() {
         )}
         category={invoice.category}
         dateLabel={formatDate(invoice.createdAt)}
-        paid={isPaid}
-        overdue={overdue}
-        paidLabel={t("invoice.statusPaid")}
+        paid={status === "PAID"}
+        overdue={status === "OVERDUE"}
+        paymentStatus={status}
+        amountTone={status === "PARTIALLY_PAID" ? "partial" : "default"}
         showPaidIcon={!isPaid}
         overdueLabel={t("invoice.statusOverdue")}
         onClick={() => navigate(`/invoices/${invoice.id}`)}
         rightContent={
-          <div className="flex flex-col items-end gap-1">
-            {invoice.isPersonal && (
+          invoice.isPersonal ? (
+            <div className="flex flex-col items-end gap-1">
               <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground">
                 {t("invoice.personal")}
               </span>
-            )}
-            {isPartiallyPaid && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                <Clock size={10} />{" "}
-                {t("invoice.remaining", { amount: fmt(remaining) })}
-              </span>
-            )}
-          </div>
+            </div>
+          ) : undefined
         }
         actionButton={
           <ActionIconBar
@@ -252,7 +268,7 @@ export default function InvoiceList() {
               {
                 key: "pay",
                 icon: CheckCircle2,
-                label: t("invoice.markPaid"),
+                label: t("invoice.registerPayment"),
                 onClick: handleMarkPaidInFull,
                 disabled: periodClosed || remaining <= 0 || addPayment.isPending,
                 hidden: periodClosed,
@@ -390,10 +406,13 @@ export default function InvoiceList() {
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-amber-200 dark:border-amber-900/50 p-4 sm:p-5 shadow-sm">
               <div className="mb-3">
                 <h2 className="text-base font-semibold text-amber-700 dark:text-amber-400">
-                  {t("invoice.statusPartiallyPaid")}
+                  {t("invoice.partialHeader", {
+                    remaining: fmt(partialSummary.remaining),
+                    total: fmt(partialSummary.total),
+                  })}
                 </h2>
                 <p className="text-sm font-medium text-amber-500 dark:text-amber-400/80 mt-0.5">
-                  {fmt(groupSum(groups.partial, "remaining"))}
+                  {fmt(partialSummary.remaining)}
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

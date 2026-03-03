@@ -83,7 +83,7 @@
     "status": "Status",
     "statusAll": "Status",
     "statusPaid": "Betalt",
-    "statusPartiallyPaid": "Delvis betalt",
+    "statusPartiallyPaid": "Delbetalt",
     "statusUnpaid": "Ubetalt",
     "distributionMethod": "Fordelingsmetode",
     "equal": "Lik fordeling",
@@ -138,7 +138,10 @@
     "appliesTo": "Gjelder for",
     "selectPersonalUser": "Velg person",
     "closedPeriodPaymentBlocked": "Kan ikke markere utgift som betalt i en lukket periode.",
-    "totalWithAmount": "Total: {{amount}}"
+    "totalWithAmount": "Total: {{amount}}",
+    "paidWithAmount": "Betalt: {{amount}}",
+    "remainingOfTotal": "{{remaining}} av {{total}}",
+    "partialHeader": "Delbetalt - {{remaining}} igjen av {{total}}"
   },
   "period": {
     "title": "Periode",

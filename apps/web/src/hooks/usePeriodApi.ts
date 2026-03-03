@@ -32,6 +32,7 @@ export function useCreatePeriod() {
       periodApi.create(data).then(res => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
     },
   });
 }
@@ -41,9 +42,11 @@ export function useClosePeriod() {
 
   return useMutation({
     mutationFn: (id: string) => periodApi.close(id).then(res => res.data),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.period(id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.periodStats(id) });
     },
   });
 }
@@ -61,8 +64,10 @@ export function useDeletePeriod() {
 
   return useMutation({
     mutationFn: (id: string) => periodApi.delete(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+      queryClient.removeQueries({ queryKey: queryKeys.period(id) });
+      queryClient.removeQueries({ queryKey: queryKeys.periodStats(id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
     },
   });
@@ -74,9 +79,11 @@ export function useReopenPeriod() {
 
   return useMutation({
     mutationFn: (id: string) => periodApi.reopen(id).then(res => res.data),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.periods() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.period(id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.periodStats(id) });
     },
   });
 }

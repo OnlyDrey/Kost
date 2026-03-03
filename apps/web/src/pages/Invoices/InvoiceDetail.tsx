@@ -34,6 +34,8 @@ import { FOCUS_RING } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import InvoiceStatusTag from "../../components/Common/InvoiceStatusTag";
 
 
 const inputCls =
@@ -194,6 +196,11 @@ export default function InvoiceDetail() {
   const remaining = Math.max(0, invoice.totalCents - totalPaid);
   const isPaid = remaining <= 0;
   const isPartial = totalPaid > 0 && remaining > 0;
+  const paymentStatus = getInvoiceStatus({
+    totalCents: invoice.totalCents,
+    totalPaidCents: totalPaid,
+    dueDate: invoice.dueDate,
+  });
   const vendorLogo = vendors.find(
     (v) => v.name.toLowerCase() === invoice.vendor.toLowerCase(),
   )?.logoUrl;
@@ -219,9 +226,7 @@ export default function InvoiceDetail() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${isPaid ? "bg-success/20 text-success" : "bg-surface-elevated text-text-secondary"}`}>
-            {isPaid ? t("invoice.statusPaid") : t("invoice.statusUnpaid")}
-          </span>
+          <InvoiceStatusTag status={paymentStatus} />
         <ActionIconBar
           tight
           showLabelFromMd
@@ -310,6 +315,19 @@ export default function InvoiceDetail() {
                 <p className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}>
                   {fmt(isPartial ? remaining : invoice.totalCents)}
                 </p>
+                {isPartial && (
+                  <p className="text-xs text-app-text-secondary mt-1">
+                    {t("invoice.remainingOfTotal", {
+                      remaining: fmt(remaining),
+                      total: fmt(invoice.totalCents),
+                    })}
+                  </p>
+                )}
+                {isPartial && (
+                  <p className="text-xs text-app-text-secondary mt-1">
+                    {t("invoice.paidWithAmount", { amount: fmt(totalPaid) })}
+                  </p>
+                )}
                 {isPartial && (
                   <p className="text-xs text-app-text-secondary mt-1">
                     {t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) })}
