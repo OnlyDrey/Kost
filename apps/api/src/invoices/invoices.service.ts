@@ -492,7 +492,10 @@ export class InvoicesService {
         participants = allParticipants.filter((p) => p.role !== "CHILD");
       }
 
-      const personalTargetUserId = updateInvoiceDto.personalUserId;
+      const personalTargetUserId =
+        updateInvoiceDto.personalUserId ??
+        existingInvoice.ownerUserId ??
+        undefined;
       if (method === DistributionMethod.PERSONAL) {
         if (!personalTargetUserId) {
           throw new BadRequestException(

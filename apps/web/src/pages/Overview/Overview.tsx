@@ -332,7 +332,7 @@ export default function Overview() {
       borderClass:
         "border-red-300 dark:border-red-800/70 bg-red-50/30 dark:bg-red-950/20",
       titleClass: "text-red-700 dark:text-red-400",
-      amountClass: "text-red-500 dark:text-red-400/80",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
     {
       key: "unpaid",
@@ -344,7 +344,7 @@ export default function Overview() {
         statusFilter === "unpaid",
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
-      amountClass: "text-primary",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
     {
       key: "partial",
@@ -357,7 +357,7 @@ export default function Overview() {
       borderClass:
         "border-amber-300 dark:border-amber-800/70 bg-amber-50/30 dark:bg-amber-950/20",
       titleClass: "text-amber-700 dark:text-amber-400",
-      amountClass: "text-amber-500 dark:text-amber-400/80",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
     {
       key: "paid",
@@ -367,7 +367,7 @@ export default function Overview() {
       borderClass:
         "border-green-300 dark:border-green-800/70 bg-green-50/30 dark:bg-green-950/20",
       titleClass: "text-green-700 dark:text-green-400",
-      amountClass: "text-green-500 dark:text-green-400/80",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
   ].filter((g) => g.show);
 
@@ -557,13 +557,13 @@ export default function Overview() {
                 <h2 className="text-[clamp(1.5rem,2.2vw,1.9rem)] font-bold text-gray-900 dark:text-gray-100">
                   {t("invoice.invoices")}
                 </h2>
-                <div className="flex items-center gap-2">
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
                   <AppSelect
                     value={statusFilter}
                     onChange={(e) =>
                       setStatusFilter(e.target.value as OverviewStatus)
                     }
-                    className={`h-10 rounded-lg px-3.5 text-sm ${SELECT_TRIGGER}`}
+                    className={`h-10 w-full rounded-lg px-3.5 text-sm ${SELECT_TRIGGER}`}
                   >
                     <option value="all">{t("invoice.statusAll")}</option>
                     <option value="unpaid">{t("invoice.statusUnpaid")}</option>
@@ -586,11 +586,7 @@ export default function Overview() {
                       navigate(`/invoices/add?period=${resolvedPeriodId}`);
                     }}
                     icon={<Plus size={15} />}
-                    className={
-                      closed
-                        ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                        : ""
-                    }
+                    className="w-full sm:w-auto"
                   >
                     {t("invoice.addInvoice")}
                   </Button>

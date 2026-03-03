@@ -237,6 +237,7 @@ export default function InvoiceDetail() {
           <ActionIconBar
             tight
             showLabelFromMd
+            size="lg"
             items={[
               {
                 key: "mark-complete",
@@ -321,9 +322,7 @@ export default function InvoiceDetail() {
             <div className="pt-1">
               <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
                 <div className="min-w-0">
-                  <p
-                    className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}
-                  >
+                  <p className="text-2xl sm:text-[2rem] font-bold leading-none m-0 text-gray-900 dark:text-gray-100">
                     {fmt(isPartial ? remaining : invoice.totalCents)}
                   </p>
                   {isPartial && (

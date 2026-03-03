@@ -67,13 +67,7 @@ export default function ExpenseItemCard({
         ? "border-primary/60 bg-primary/5"
         : "border-app-border";
 
-  const amountClass = paid
-    ? "text-success"
-    : overdue
-      ? "text-danger"
-      : amountTone === "partial"
-        ? "text-warning"
-        : "text-primary";
+  const amountClass = "text-gray-900 dark:text-gray-100";
 
   const effectiveFocusRing =
     focusRingClassName ??

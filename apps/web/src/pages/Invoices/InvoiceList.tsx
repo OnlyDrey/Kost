@@ -387,7 +387,7 @@ export default function InvoiceList() {
                 <h2 className="text-base font-semibold text-red-700 dark:text-red-400">
                   {t("invoice.statusOverdue")}
                 </h2>
-                <p className="text-sm font-medium text-red-500 dark:text-red-400/80 mt-0.5">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
                   {fmt(groupSum(groups.overdue, "remaining"))}
                 </p>
               </div>
@@ -406,7 +406,7 @@ export default function InvoiceList() {
                     total: fmt(partialSummary.total),
                   })}
                 </h2>
-                <p className="text-sm font-medium text-amber-500 dark:text-amber-400/80 mt-0.5">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
                   {fmt(partialSummary.remaining)}
                 </p>
               </div>
@@ -422,7 +422,7 @@ export default function InvoiceList() {
                 <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">
                   {t("invoice.statusUnpaid")}
                 </h2>
-                <p className="text-sm font-medium text-primary dark:text-primary mt-0.5">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
                   {fmt(groupSum(groups.unpaid, "total"))}
                 </p>
               </div>
@@ -438,7 +438,7 @@ export default function InvoiceList() {
                 <h2 className="text-base font-semibold text-green-700 dark:text-green-400">
                   {t("invoice.statusPaid")}
                 </h2>
-                <p className="text-sm font-medium text-green-500 dark:text-green-400/80 mt-0.5">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
                   {fmt(groupSum(groups.paid, "total"))}
                 </p>
               </div>
