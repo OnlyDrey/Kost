@@ -241,10 +241,10 @@ export default function InvoiceDetail() {
               {
                 key: "mark-complete",
                 icon: CheckCircle2,
-                label: t("invoice.registerPayment"),
+                label: t("invoice.markAsPaid"),
                 onClick: handleMarkFullyPaid,
                 disabled: periodClosed || isPaid || addPayment.isPending,
-                hidden: periodClosed,
+                hidden: periodClosed || isPaid,
                 colorClassName:
                   "bg-success/20 text-success hover:bg-success/30",
               },
@@ -268,111 +268,110 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        {/* Main info */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
-          <div
-            className="grid gap-3 items-start"
-            style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
-          >
-            {vendorLogo ? (
-              <img
-                src={vendorLogo}
-                alt=""
-                className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
-            )}
-            <div className="min-w-0">
-              <p
-                className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
-                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
-              >
-                {invoice.vendor}
-              </p>
-              <p
-                className="text-sm text-gray-500 dark:text-gray-300 mt-1"
-                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
-              >
-                {invoice.description || "—"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            <TagPill
-              label={distributionLabel(
-                invoice.distributionMethod,
-                settings.locale,
-                invoice.distribution as any,
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-1">
+          {/* Main info */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
+            <div
+              className="grid gap-3 items-start"
+              style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
+            >
+              {vendorLogo ? (
+                <img
+                  src={vendorLogo}
+                  alt=""
+                  className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
               )}
-              variant="type"
-            />
-            {invoice.category && (
-              <TagPill label={invoice.category} variant="category" />
-            )}
-            {isPaid && (
-              <TagPill label={t("invoice.statusPaid")} variant="success" />
-            )}
-          </div>
-
-          <div className="pt-1">
-            <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
               <div className="min-w-0">
                 <p
-                  className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}
+                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                  style={{ overflowWrap: "break-word", wordBreak: "normal" }}
                 >
-                  {fmt(isPartial ? remaining : invoice.totalCents)}
+                  {invoice.vendor}
                 </p>
-                {isPartial && (
-                  <p className="text-xs text-app-text-secondary mt-1">
-                    {t("invoice.paidOfTotal", {
-                      paid: fmt(totalPaid),
-                      total: fmt(invoice.totalCents),
-                    })}
-                  </p>
-                )}
-              </div>
-              <div className="min-w-0 text-right leading-tight">
-                <p className="text-sm text-app-text-secondary truncate">
-                  {formatDate(invoice.createdAt)}
-                </p>
-                <p className="text-sm font-medium text-app-text-primary truncate">
-                  {invoice.paymentMethod || "—"}
+                <p
+                  className="text-sm text-gray-500 dark:text-gray-300 mt-1"
+                  style={{ overflowWrap: "break-word", wordBreak: "normal" }}
+                >
+                  {invoice.description || "—"}
                 </p>
               </div>
             </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <TagPill
+                label={distributionLabel(
+                  invoice.distributionMethod,
+                  settings.locale,
+                  invoice.distribution as any,
+                )}
+                variant="type"
+              />
+              {invoice.category && (
+                <TagPill label={invoice.category} variant="category" />
+              )}
+            </div>
+
+            <div className="pt-1">
+              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                <div className="min-w-0">
+                  <p
+                    className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}
+                  >
+                    {fmt(isPartial ? remaining : invoice.totalCents)}
+                  </p>
+                  {isPartial && (
+                    <p className="text-xs text-app-text-secondary mt-1">
+                      {t("invoice.paidOfTotal", {
+                        paid: fmt(totalPaid),
+                        total: fmt(invoice.totalCents),
+                      })}
+                    </p>
+                  )}
+                </div>
+                <div className="min-w-0 text-right leading-tight">
+                  <p className="text-sm text-app-text-secondary truncate">
+                    {formatDate(invoice.createdAt)}
+                  </p>
+                  <p className="text-sm font-medium text-app-text-primary truncate">
+                    {invoice.paymentMethod || "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shares */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {t("invoice.shares")}
+            </h3>
+            <UserSharesGrid
+              shares={invoice.shares ?? []}
+              totalCents={invoice.totalCents}
+              currency={currency}
+              emptyLabel={t("common.noData")}
+              unknownLabel={t("invoice.unknown")}
+            />
           </div>
         </div>
 
         {/* Allocation explanation */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-1">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-span-1">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
             {t("invoice.allocationExplanation")}
           </h3>
           <AllocationExplanation invoice={invoice} />
         </div>
 
-        {/* Shares */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-1">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {t("invoice.shares")}
-          </h3>
-          <UserSharesGrid
-            shares={invoice.shares ?? []}
-            totalCents={invoice.totalCents}
-            currency={currency}
-            emptyLabel={t("common.noData")}
-            unknownLabel={t("invoice.unknown")}
-          />
-        </div>
-
         {/* Payments */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-2 lg:row-span-3 lg:row-start-1 self-start">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-span-1 self-start">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
               {t("invoice.payments")}
@@ -389,7 +388,6 @@ export default function InvoiceDetail() {
               </button>
             )}
           </div>
-
           {/* Existing payments */}
           {invoice.payments && invoice.payments.length > 0 ? (
             <div className="space-y-2 mb-4">

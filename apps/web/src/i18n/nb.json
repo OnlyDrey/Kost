@@ -118,6 +118,7 @@
     "noteOptional": "Notat (valgfritt)",
     "notePlaceholder": "f.eks. bankoverføring",
     "registerPayment": "Registrer betaling",
+    "markAsPaid": "Marker som betalt",
     "noPeriodWarning": "Ingen aktiv periode. Vennligst opprett en periode først.",
     "atLeastOneUser": "Velg minst én bruker",
     "percentsMustSum": "Prosentene må summere til 100%",

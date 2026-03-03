@@ -14,7 +14,7 @@ export function IconButton({
   return (
     <button
       type="button"
-      className={`inline-flex ${sizeClass} items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:bg-surface-elevated ${FOCUS_RING} ${className}`.trim()}
+      className={`inline-flex ${sizeClass} items-center justify-center rounded-full border border-border bg-surface text-text-secondary transition-colors hover:bg-surface-elevated ${FOCUS_RING} ${className}`.trim()}
       {...props}
     >
       {children}

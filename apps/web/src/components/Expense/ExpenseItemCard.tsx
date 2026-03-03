@@ -119,26 +119,6 @@ export default function ExpenseItemCard({
         </div>
       </div>
 
-      {(amountLabel || rightContent || actionButton) && (
-        <div className="flex items-center justify-between gap-2 min-w-0">
-          <div className="min-w-0 flex-1">
-            {amountLabel && (
-              <p
-                className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
-              >
-                {amountLabel}
-              </p>
-            )}
-          </div>
-          {(rightContent || actionButton) && (
-            <div className="ml-auto flex items-center gap-2">
-              {rightContent && <div className="shrink-0">{rightContent}</div>}
-              {actionButton && <div className="shrink-0">{actionButton}</div>}
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="w-full flex flex-wrap gap-1">
         {showPaymentStatusPill && (
           <InvoiceStatusTag
@@ -164,6 +144,26 @@ export default function ExpenseItemCard({
           <TagPill label={frequencyLabel} variant="frequency" />
         )}
       </div>
+
+      {(amountLabel || rightContent || actionButton) && (
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1">
+            {amountLabel && (
+              <p
+                className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
+              >
+                {amountLabel}
+              </p>
+            )}
+          </div>
+          {(rightContent || actionButton) && (
+            <div className="ml-auto flex items-center gap-2">
+              {rightContent && <div className="shrink-0">{rightContent}</div>}
+              {actionButton && <div className="shrink-0">{actionButton}</div>}
+            </div>
+          )}
+        </div>
+      )}
 
       {(shareLabel || amountDetails?.length || dateLabel) && (
         <div className="space-y-0.5">

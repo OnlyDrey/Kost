@@ -118,6 +118,7 @@
     "noteOptional": "Note (optional)",
     "notePlaceholder": "e.g. bank transfer",
     "registerPayment": "Register payment",
+    "markAsPaid": "Mark as paid",
     "noPeriodWarning": "No active period. Please create a period first.",
     "atLeastOneUser": "Select at least one user",
     "percentsMustSum": "Percentages must sum to 100%",

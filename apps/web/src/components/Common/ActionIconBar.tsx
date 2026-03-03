@@ -67,7 +67,7 @@ export default function ActionIconBar({
               }
               await item.onClick();
             }}
-            className={`inline-flex h-10 ${showLabelFromMd ? "md:w-auto md:px-3" : "w-10"} items-center justify-center rounded-lg text-sm transition-colors ${FOCUS_RING} ${colorClass} ${item.disabled ? "cursor-not-allowed" : ""}`}
+            className={`inline-flex h-10 ${showLabelFromMd ? "md:w-auto md:px-3" : "w-10"} items-center justify-center rounded-full text-sm transition-colors ${FOCUS_RING} ${colorClass} ${item.disabled ? "cursor-not-allowed" : ""}`}
           >
             <Icon size={16} />
             {showLabelFromMd && (
