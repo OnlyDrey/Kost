@@ -140,6 +140,7 @@
     "closedPeriodPaymentBlocked": "Kan ikke markere utgift som betalt i en lukket periode.",
     "totalWithAmount": "Total: {{amount}}",
     "paidWithAmount": "Betalt: {{amount}}",
+    "paidOfTotal": "Betalt: {{paid}} av {{total}}",
     "remainingOfTotal": "{{remaining}} av {{total}}",
     "partialHeader": "Delbetalt - {{remaining}} igjen av {{total}}"
   },
@@ -160,7 +161,7 @@
     "userShares": "Andeler",
     "createdAt": "Opprettet: {{date}}",
     "closedAt": "Lukket: {{date}}",
-    "categoryBreakdown": "Utgifter per kategori",
+    "categoryBreakdown": "Kategori",
     "autoImportSubscriptions": "Importer aktive abonnementer automatisk etter opprettelse av periode",
     "invalidIdFormat": "Periode-ID må være på formatet ÅÅÅÅ-MM (f.eks. 2025-03)",
     "periodIdLabel": "Periode-ID (ÅÅÅÅ-MM) *",

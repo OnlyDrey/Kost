@@ -1,12 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Pencil,
-  CheckCircle2,
-  Trash2,
-} from "lucide-react";
+import { Plus, Search, Pencil, CheckCircle2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppSelect from "../../components/Common/AppSelect";
 import {
@@ -30,6 +24,11 @@ import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider"
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import {
+  calcPaidSum,
+  calcRemaining,
+  calcPaymentStatus,
+} from "../../utils/paymentMath";
 
 const METHOD_OPTIONS = [
   "ALL",
@@ -82,7 +81,10 @@ export default function InvoiceList() {
   );
 
   const sortedCategories = useMemo(
-    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    () =>
+      [...categories].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" }),
+      ),
     [categories],
   );
 
@@ -98,21 +100,19 @@ export default function InvoiceList() {
     const matchesCategory =
       filterCategory === "ALL" || invoice.category === filterCategory;
 
-    const totalPaid = (invoice.payments ?? []).reduce(
-      (s, p) => s + p.amountCents,
-      0,
-    );
-    const remaining = Math.max(0, invoice.totalCents - totalPaid);
+    const totalPaid = calcPaidSum(invoice.payments);
+    const remaining = calcRemaining(invoice.totalCents, totalPaid);
     const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
     const overdue = remaining > 0 && !!dueAt && dueAt < new Date();
 
+    const paymentStatus = calcPaymentStatus(invoice.totalCents, totalPaid);
     let matchesStatus = true;
     if (filterStatus !== "ALL") {
-      if (filterStatus === "PAID") matchesStatus = remaining <= 0;
+      if (filterStatus === "PAID") matchesStatus = paymentStatus === "PAID";
       else if (filterStatus === "PARTIALLY_PAID")
-        matchesStatus = totalPaid > 0 && remaining > 0;
+        matchesStatus = paymentStatus === "PARTIALLY_PAID";
       else if (filterStatus === "UNPAID")
-        matchesStatus = totalPaid === 0 && !overdue;
+        matchesStatus = paymentStatus === "UNPAID" && !overdue;
       else if (filterStatus === "OVERDUE") matchesStatus = overdue;
     }
 
@@ -137,16 +137,14 @@ export default function InvoiceList() {
   const now = new Date();
   const groups = (filteredInvoices ?? []).reduce(
     (acc, invoice) => {
-      const totalPaid = (invoice.payments ?? []).reduce(
-        (sum, p) => sum + p.amountCents,
-        0,
-      );
-      const remaining = invoice.totalCents - totalPaid;
+      const totalPaid = calcPaidSum(invoice.payments);
+      const remaining = calcRemaining(invoice.totalCents, totalPaid);
       const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
       const isOverdue = remaining > 0 && !!dueAt && dueAt < now;
-      if (remaining <= 0) acc.paid.push(invoice);
+      const paymentStatus = calcPaymentStatus(invoice.totalCents, totalPaid);
+      if (paymentStatus === "PAID") acc.paid.push(invoice);
       else if (isOverdue) acc.overdue.push(invoice);
-      else if (totalPaid > 0) acc.partial.push(invoice);
+      else if (paymentStatus === "PARTIALLY_PAID") acc.partial.push(invoice);
       else acc.unpaid.push(invoice);
       return acc;
     },
@@ -161,11 +159,8 @@ export default function InvoiceList() {
   const groupSum = (list: any[], type: "remaining" | "total") =>
     list.reduce((sum, inv) => {
       if (type === "total") return sum + inv.totalCents;
-      const totalPaid = (inv.payments ?? []).reduce(
-        (s: number, p: any) => s + p.amountCents,
-        0,
-      );
-      return sum + Math.max(0, inv.totalCents - totalPaid);
+      const totalPaid = calcPaidSum(inv.payments);
+      return sum + calcRemaining(inv.totalCents, totalPaid);
     }, 0);
 
   const partialSummary = (() => {
@@ -175,13 +170,11 @@ export default function InvoiceList() {
   })();
 
   const renderInvoice = (invoice: any) => {
-    const totalPaid = (invoice.payments ?? []).reduce(
-      (sum: number, p: any) => sum + p.amountCents,
-      0,
-    );
-    const remaining = invoice.totalCents - totalPaid;
-    const isPaid = remaining <= 0;
-    const isPartiallyPaid = totalPaid > 0 && !isPaid;
+    const totalPaid = calcPaidSum(invoice.payments);
+    const remaining = calcRemaining(invoice.totalCents, totalPaid);
+    const paymentProgress = calcPaymentStatus(invoice.totalCents, totalPaid);
+    const isPaid = paymentProgress === "PAID";
+    const isPartiallyPaid = paymentProgress === "PARTIALLY_PAID";
     const logoUrl = getVendorLogo(invoice.vendor);
 
     const handleDeleteInvoice = async () => {
@@ -195,7 +188,10 @@ export default function InvoiceList() {
     const handleMarkPaidInFull = async () => {
       if (!user || remaining <= 0) return;
       if (periodClosed) {
-        await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+        await notify(
+          t("invoice.closedPeriodPaymentBlocked"),
+          t("common.error"),
+        );
         return;
       }
       try {
@@ -228,12 +224,10 @@ export default function InvoiceList() {
         amountDetails={
           isPartiallyPaid
             ? [
-                t("invoice.remainingOfTotal", {
-                  remaining: fmt(remaining),
+                t("invoice.paidOfTotal", {
+                  paid: fmt(totalPaid),
                   total: fmt(invoice.totalCents),
                 }),
-                t("invoice.paidWithAmount", { amount: fmt(totalPaid) }),
-                t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) }),
               ]
             : undefined
         }
@@ -270,7 +264,8 @@ export default function InvoiceList() {
                 icon: CheckCircle2,
                 label: t("invoice.registerPayment"),
                 onClick: handleMarkPaidInFull,
-                disabled: periodClosed || remaining <= 0 || addPayment.isPending,
+                disabled:
+                  periodClosed || remaining <= 0 || addPayment.isPending,
                 hidden: periodClosed,
                 colorClassName:
                   "bg-success/20 text-success hover:bg-success/30",

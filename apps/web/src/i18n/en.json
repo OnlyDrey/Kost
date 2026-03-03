@@ -140,6 +140,7 @@
     "closedPeriodPaymentBlocked": "Cannot mark expense as paid in a closed period.",
     "totalWithAmount": "Total: {{amount}}",
     "paidWithAmount": "Paid: {{amount}}",
+    "paidOfTotal": "Paid: {{paid}} of {{total}}",
     "remainingOfTotal": "{{remaining}} of {{total}}",
     "partialHeader": "Partially paid - {{remaining}} remaining of {{total}}"
   },
@@ -160,7 +161,7 @@
     "userShares": "Shares",
     "createdAt": "Created: {{date}}",
     "closedAt": "Closed: {{date}}",
-    "categoryBreakdown": "Expenses by Category",
+    "categoryBreakdown": "Category",
     "autoImportSubscriptions": "Auto-import active subscriptions after period creation",
     "invalidIdFormat": "Period ID must be in YYYY-MM format (e.g. 2025-03)",
     "periodIdLabel": "Period ID (YYYY-MM) *",

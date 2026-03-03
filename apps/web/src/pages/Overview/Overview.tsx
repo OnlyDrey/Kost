@@ -35,12 +35,20 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import { distributionLabel } from "../../utils/distribution";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
-import { SELECT_TRIGGER, FOCUS_RING } from "../../components/Common/focusStyles";
+import {
+  SELECT_TRIGGER,
+  FOCUS_RING,
+} from "../../components/Common/focusStyles";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import {
+  calcPaidSum,
+  calcRemaining,
+  calcPaymentStatus,
+} from "../../utils/paymentMath";
 
 // ------- Period Selector -------
 
@@ -58,8 +66,7 @@ function PeriodSelector({
     [periods],
   );
 
-  const inputCls =
-    `h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`;
+  const inputCls = `h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -150,7 +157,11 @@ export default function Overview() {
 
   const validUserIds = useMemo(() => new Set(users.map((u) => u.id)), [users]);
   const normalizedQuery = useMemo(
-    () => normalizeOverviewQuery(searchParams, usersLoading ? undefined : validUserIds),
+    () =>
+      normalizeOverviewQuery(
+        searchParams,
+        usersLoading ? undefined : validUserIds,
+      ),
     [searchParams, usersLoading, validUserIds],
   );
 
@@ -171,7 +182,11 @@ export default function Overview() {
 
   const setFilter = (nextFilter: "all" | "share-user", su?: string) => {
     const params = new URLSearchParams(searchParams);
-    if (nextFilter === "share-user" && su && (usersLoading || validUserIds.has(su))) {
+    if (
+      nextFilter === "share-user" &&
+      su &&
+      (usersLoading || validUserIds.has(su))
+    ) {
       params.set("filter", "share-user");
       params.set("shareUser", su);
     } else {
@@ -200,11 +215,8 @@ export default function Overview() {
     let paidCents = 0;
     let owedCents = 0;
     for (const invoice of list) {
-      const totalPaid = (invoice.payments ?? []).reduce(
-        (sum, p) => sum + p.amountCents,
-        0,
-      );
-      const remaining = Math.max(0, invoice.totalCents - totalPaid);
+      const totalPaid = calcPaidSum(invoice.payments);
+      const remaining = calcRemaining(invoice.totalCents, totalPaid);
       if (remaining === 0) paidCents += invoice.totalCents;
       else owedCents += remaining;
     }
@@ -214,18 +226,16 @@ export default function Overview() {
   const statusFilteredInvoices = useMemo(() => {
     const base = invoices ?? [];
     return base.filter((invoice) => {
-      const totalPaid = (invoice.payments ?? []).reduce(
-        (sum, p) => sum + p.amountCents,
-        0,
-      );
-      const remaining = Math.max(0, invoice.totalCents - totalPaid);
+      const totalPaid = calcPaidSum(invoice.payments);
+      const remaining = calcRemaining(invoice.totalCents, totalPaid);
       const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
       const isOverdue = remaining > 0 && !!dueAt && dueAt < new Date();
-      if (statusFilter === "paid") return remaining <= 0;
-      if (statusFilter === "remaining") return remaining > 0;
+      const paymentStatus = calcPaymentStatus(invoice.totalCents, totalPaid);
+      if (statusFilter === "paid") return paymentStatus === "PAID";
+      if (statusFilter === "remaining") return paymentStatus !== "PAID";
       if (statusFilter === "unpaid")
-        return remaining > 0 && totalPaid === 0 && !isOverdue;
-      if (statusFilter === "partial") return remaining > 0 && totalPaid > 0;
+        return paymentStatus === "UNPAID" && !isOverdue;
+      if (statusFilter === "partial") return paymentStatus === "PARTIALLY_PAID";
       if (statusFilter === "overdue") return isOverdue;
       return true;
     });
@@ -260,14 +270,15 @@ export default function Overview() {
     () =>
       listInvoices.reduce(
         (acc, invoice) => {
-          const totalPaid = (invoice.payments ?? []).reduce(
-            (sum, p) => sum + p.amountCents,
-            0,
-          );
-          const remaining = Math.max(0, invoice.totalCents - totalPaid);
+          const totalPaid = calcPaidSum(invoice.payments);
+          const remaining = calcRemaining(invoice.totalCents, totalPaid);
           const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
           const isOverdue = remaining > 0 && !!dueAt && dueAt < now;
-          if (remaining <= 0)
+          const paymentStatus = calcPaymentStatus(
+            invoice.totalCents,
+            totalPaid,
+          );
+          if (paymentStatus === "PAID")
             acc.paid.push({
               invoice,
               totalPaid,
@@ -281,7 +292,7 @@ export default function Overview() {
               remaining,
               displayCents: remaining,
             });
-          else if (totalPaid > 0)
+          else if (paymentStatus === "PARTIALLY_PAID")
             acc.partial.push({
               invoice,
               totalPaid,
@@ -348,8 +359,7 @@ export default function Overview() {
       key: "paid",
       title: t("invoice.statusPaid"),
       list: grouped.paid,
-      show:
-        statusFilter === "all" || statusFilter === "paid",
+      show: statusFilter === "all" || statusFilter === "paid",
       borderClass: "border-green-200 dark:border-green-900/50",
       titleClass: "text-green-700 dark:text-green-400",
       amountClass: "text-green-500 dark:text-green-400/80",
@@ -519,7 +529,9 @@ export default function Overview() {
                     <SpendBreakdownCard
                       invoices={breakdownInvoices}
                       currentUserId={currentUser?.id}
-                      selectedShareUserId={hasShareSelection ? shareUserId : undefined}
+                      selectedShareUserId={
+                        hasShareSelection ? shareUserId : undefined
+                      }
                       selectedShareUserName={selectedShareUser?.userName}
                       currency={currency}
                       title={t("period.categoryBreakdown")}
@@ -543,14 +555,22 @@ export default function Overview() {
                 <div className="flex items-center gap-2">
                   <AppSelect
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as OverviewStatus)}
-                    className={`h-10 rounded-lg ${SELECT_TRIGGER}`}
+                    onChange={(e) =>
+                      setStatusFilter(e.target.value as OverviewStatus)
+                    }
+                    className={`h-10 rounded-lg px-3.5 text-sm ${SELECT_TRIGGER}`}
                   >
                     <option value="all">{t("invoice.statusAll")}</option>
                     <option value="unpaid">{t("invoice.statusUnpaid")}</option>
-                    <option value="remaining">{t("dashboard.remainingLabel")}</option>
-                    <option value="partial">{t("invoice.statusPartiallyPaid")}</option>
-                    <option value="overdue">{t("invoice.statusOverdue")}</option>
+                    <option value="remaining">
+                      {t("dashboard.remainingLabel")}
+                    </option>
+                    <option value="partial">
+                      {t("invoice.statusPartiallyPaid")}
+                    </option>
+                    <option value="overdue">
+                      {t("invoice.statusOverdue")}
+                    </option>
                     <option value="paid">{t("invoice.statusPaid")}</option>
                   </AppSelect>
                   <button
@@ -560,7 +580,7 @@ export default function Overview() {
                       if (closed) return;
                       navigate(`/invoices/add?period=${resolvedPeriodId}`);
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${closed ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90 text-white"}`}
+                    className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3.5 text-sm font-semibold leading-none transition-colors ${closed ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90 text-white"}`}
                   >
                     <Plus size={15} />
                     {t("invoice.addInvoice")}
@@ -602,18 +622,19 @@ export default function Overview() {
                                 })
                               : group.title}
                           </span>
-                          {group.key !== "partial" && (
-                            <>
-                              {" "}- {fmt(groupSum)}
-                            </>
-                          )}
+                          {group.key !== "partial" && <> - {fmt(groupSum)}</>}
                         </p>
                       </div>
                       <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-5">
                         {group.list.map(
                           ({ invoice, totalPaid, remaining, displayCents }) => {
-                            const isPaid = remaining <= 0;
-                            const isPartiallyPaid = totalPaid > 0 && !isPaid;
+                            const paymentStatus = calcPaymentStatus(
+                              invoice.totalCents,
+                              totalPaid,
+                            );
+                            const isPaid = paymentStatus === "PAID";
+                            const isPartiallyPaid =
+                              paymentStatus === "PARTIALLY_PAID";
                             const status = getInvoiceStatus({
                               totalCents: invoice.totalCents,
                               totalPaidCents: totalPaid,
@@ -654,15 +675,8 @@ export default function Overview() {
                                       : userShareEntry.shareCents,
                                   )
                                 : fmt(displayCents);
-                            const secondaryLabel = isPartiallyPaid
-                              ? t("invoice.totalWithAmount", {
-                                  amount: fmt(
-                                    shareRatio !== null
-                                      ? userShareEntry.shareCents
-                                      : invoice.totalCents,
-                                  ),
-                                })
-                              : userShareEntry
+                            const secondaryLabel =
+                              !isPartiallyPaid && userShareEntry
                                 ? `${t("dashboard.totalAmount")}: ${fmt(invoice.totalCents)}`
                                 : undefined;
 
@@ -698,29 +712,23 @@ export default function Overview() {
                                 onClick={() =>
                                   navigate(`/invoices/${invoice.id}`)
                                 }
-                                amountTone={isPartiallyPaid ? "partial" : "default"}
+                                amountTone={
+                                  isPartiallyPaid ? "partial" : "default"
+                                }
                                 amountDetails={
                                   isPartiallyPaid
                                     ? [
-                                        t("invoice.remainingOfTotal", {
-                                          remaining: fmt(
+                                        t("invoice.paidOfTotal", {
+                                          paid: fmt(
                                             shareRatio !== null &&
-                                              shareRemaining !== null
-                                              ? shareRemaining
-                                              : remaining,
+                                              shareTotalPaid !== null
+                                              ? shareTotalPaid
+                                              : totalPaid,
                                           ),
                                           total: fmt(
                                             shareRatio !== null
                                               ? userShareEntry.shareCents
                                               : invoice.totalCents,
-                                          ),
-                                        }),
-                                        t("invoice.paidWithAmount", {
-                                          amount: fmt(
-                                            shareRatio !== null &&
-                                              shareTotalPaid !== null
-                                              ? shareTotalPaid
-                                              : totalPaid,
                                           ),
                                         }),
                                       ]
@@ -735,9 +743,15 @@ export default function Overview() {
                                         icon: CircleCheckBig,
                                         label: t("invoice.registerPayment"),
                                         onClick: async () => {
-                                          if (!currentUser || remaining <= 0) return;
+                                          if (!currentUser || remaining <= 0)
+                                            return;
                                           if (closed) {
-                                            await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+                                            await notify(
+                                              t(
+                                                "invoice.closedPeriodPaymentBlocked",
+                                              ),
+                                              t("common.error"),
+                                            );
                                             return;
                                           }
                                           try {
@@ -746,7 +760,8 @@ export default function Overview() {
                                               data: {
                                                 paidById: currentUser.id,
                                                 amountCents: remaining,
-                                                paidAt: new Date().toISOString(),
+                                                paidAt:
+                                                  new Date().toISOString(),
                                               },
                                             });
                                           } catch (error: unknown) {

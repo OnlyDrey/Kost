@@ -1,14 +1,24 @@
-export type InvoiceLike = { totalCents: number; payments?: Array<{ amountCents: number }> };
+import {
+  calcPaidSum,
+  calcPaymentStatus,
+  calcRemaining,
+} from "../invoices/payment-status.util";
+
+export type InvoiceLike = {
+  totalCents: number;
+  payments?: Array<{ amountCents: number }>;
+};
 
 export function groupInvoiceSums(invoices: InvoiceLike[]) {
   return invoices.reduce(
     (acc, invoice) => {
-      const paid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amountCents, 0);
-      const remaining = Math.max(0, invoice.totalCents - paid);
+      const paid = calcPaidSum(invoice.payments);
+      const remaining = calcRemaining(invoice.totalCents, paid);
+      const paymentStatus = calcPaymentStatus(invoice.totalCents, paid);
 
-      if (remaining === invoice.totalCents) {
+      if (paymentStatus === "UNPAID") {
         acc.unpaid += invoice.totalCents;
-      } else if (remaining > 0) {
+      } else if (paymentStatus === "PARTIALLY_PAID") {
         acc.partial += remaining;
       } else {
         acc.paid += paid;
@@ -21,7 +31,8 @@ export function groupInvoiceSums(invoices: InvoiceLike[]) {
 }
 
 export function normalizeDashboardFilter(filter: string | null | undefined) {
-  if (filter === "paid" || filter === "remaining" || filter === "all") return filter;
+  if (filter === "paid" || filter === "remaining" || filter === "all")
+    return filter;
   return "all";
 }
 

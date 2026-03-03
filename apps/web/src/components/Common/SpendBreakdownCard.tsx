@@ -76,7 +76,7 @@ export default function SpendBreakdownCard({
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
       <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
             {title}
           </h2>
           {onResetCategory && (
@@ -131,9 +131,7 @@ export default function SpendBreakdownCard({
                     {fmt(primaryCents)}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                    {mode === "TOTAL"
-                      ? shareLabel
-                      : t("dashboard.totalAmount")}
+                    {mode === "TOTAL" ? shareLabel : t("dashboard.totalAmount")}
                     : {fmt(secondaryCents)}
                   </p>
                 </div>
