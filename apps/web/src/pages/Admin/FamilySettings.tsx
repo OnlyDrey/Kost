@@ -41,6 +41,7 @@ import {
   useRemoveVendorsBulk,
 } from "../../hooks/useApi";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
+import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
 
 const inputCls =
   "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -49,15 +50,6 @@ const inputSmCls =
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
-
-const SUPPORTED_CURRENCIES = [
-  { code: "NOK", label: "Norwegian Krone (NOK)" },
-  { code: "SEK", label: "Swedish Krona (SEK)" },
-  { code: "DKK", label: "Danish Krone (DKK)" },
-  { code: "EUR", label: "Euro (EUR)" },
-  { code: "USD", label: "US Dollar (USD)" },
-  { code: "GBP", label: "British Pound (GBP)" },
-];
 
 export type FamilySetting =
   | "currency"
@@ -1021,7 +1013,10 @@ export function FamilySettingsContent({
   const { data: paymentMethods = [], isLoading: loadingMethods } =
     usePaymentMethods();
   const sortedCategories = useMemo(
-    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    () =>
+      [...categories].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" }),
+      ),
     [categories],
   );
   const addCategory = useAddCategory();

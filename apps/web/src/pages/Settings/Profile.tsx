@@ -32,7 +32,9 @@ import {
   useUserIncomes,
   useUpsertUserIncome,
   useCurrency,
+  useUpdateCurrency,
   useCurrencySymbolPosition,
+  useUpdateCurrencySymbolPosition,
   useUploadAvatar,
   useRemoveAvatar,
   useDeleteMyAccount,
@@ -45,6 +47,7 @@ import {
 import {
   amountToCents,
   centsToAmount,
+  formatCurrency,
   getCurrencySymbol,
 } from "../../utils/currency";
 import { FamilySettingsContent } from "../Admin/FamilySettings";
@@ -61,6 +64,7 @@ import {
   getCurrentLogoSource,
   getDefaultLogoUrl,
 } from "../../branding/brandingAssets";
+import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -122,7 +126,9 @@ export default function Profile() {
   const regenerateRecoveryCodes = useRegenerateRecoveryCodes();
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: currency = "NOK" } = useCurrency();
+  const updateCurrency = useUpdateCurrency();
   const { data: symbolPosition = "Before" } = useCurrencySymbolPosition();
+  const updateCurrencySymbolPosition = useUpdateCurrencySymbolPosition();
   const { data: incomes } = useUserIncomes(currentPeriod?.id ?? "");
   const upsertIncome = useUpsertUserIncome();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -176,6 +182,10 @@ export default function Profile() {
   const [brandingShowVendorImages, setBrandingShowVendorImages] = useState(
     settings.branding.showVendorImages,
   );
+  const [draftCurrency, setDraftCurrency] = useState(currency);
+  const [draftCurrencyPosition, setDraftCurrencyPosition] = useState<
+    "Before" | "After"
+  >(symbolPosition as "Before" | "After");
   const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] =
     useState(getDefaultLogoUrl());
   const [brandingError, setBrandingError] = useState("");
@@ -234,6 +244,14 @@ export default function Profile() {
     setBrandingAppIconBackground(settings.branding.appIconBackground);
     setBrandingShowVendorImages(settings.branding.showVendorImages);
   }, [settings.branding]);
+
+  useEffect(() => {
+    setDraftCurrency(currency);
+  }, [currency]);
+
+  useEffect(() => {
+    setDraftCurrencyPosition(symbolPosition as "Before" | "After");
+  }, [symbolPosition]);
 
   useEffect(() => {
     const renderPreview = async () => {
@@ -307,7 +325,7 @@ export default function Profile() {
     setSearchParams(params, { replace: true });
   };
 
-  const handleSaveBranding = (e: React.FormEvent) => {
+  const handleSaveCustomization = async (e: React.FormEvent) => {
     e.preventDefault();
     setBrandingError("");
 
@@ -328,16 +346,31 @@ export default function Profile() {
       }
     }
 
-    setBranding({
-      appTitle: brandingTitle.trim() || settings.branding.appTitle,
-      logoDataUrl: brandingLogoDataUrl.trim(),
-      logoUrl: brandingLogoUrl.trim(),
-      primaryPreset: brandingPreset,
-      appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
-      showVendorImages: brandingShowVendorImages,
-    });
-    setBrandingSaved(true);
-    window.setTimeout(() => setBrandingSaved(false), 2000);
+    try {
+      setBranding({
+        appTitle: brandingTitle.trim() || settings.branding.appTitle,
+        logoDataUrl: brandingLogoDataUrl.trim(),
+        logoUrl: brandingLogoUrl.trim(),
+        primaryPreset: brandingPreset,
+        appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
+        showVendorImages: brandingShowVendorImages,
+      });
+
+      if (draftCurrency !== currency) {
+        await updateCurrency.mutateAsync(draftCurrency);
+      }
+
+      if (draftCurrencyPosition !== (symbolPosition as "Before" | "After")) {
+        await updateCurrencySymbolPosition.mutateAsync(draftCurrencyPosition);
+      }
+
+      setBrandingSaved(true);
+      window.setTimeout(() => setBrandingSaved(false), 2000);
+    } catch (err) {
+      setBrandingError(
+        err instanceof Error ? err.message : t("errors.generic"),
+      );
+    }
   };
 
   const handleBrandingLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1303,17 +1336,9 @@ export default function Profile() {
             globalSection === "customization" && (
               <>
                 <div className="md:col-span-2 w-full">
-                  <FamilySettingsContent
-                    activeSection={"currency" as FamilySetting}
-                    pageSize={familyPageSize}
-                    onPageSizeChange={setFamilyPageSize}
-                  />
-                </div>
-
-                <div className="md:col-span-2 w-full">
                   <SettingsSectionCard
                     icon={<Palette size={18} className="text-primary" />}
-                    title={t("settings.themeSection")}
+                    title={t("settings.customization")}
                     action={
                       <button
                         form="theme-form"
@@ -1326,7 +1351,7 @@ export default function Profile() {
                   >
                     <form
                       id="theme-form"
-                      onSubmit={handleSaveBranding}
+                      onSubmit={handleSaveCustomization}
                       className="space-y-2"
                     >
                       <ColorFamilySelect
@@ -1350,6 +1375,58 @@ export default function Profile() {
                           onCheckedChange={setBrandingShowVendorImages}
                           aria-label={t("settings.showVendorImages")}
                         />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-text-secondary">
+                          {t("familySettings.currency")}
+                        </label>
+                        <AppSelect
+                          value={draftCurrency}
+                          onChange={(e) => setDraftCurrency(e.target.value)}
+                          className="px-3.5"
+                        >
+                          {SUPPORTED_CURRENCIES.map((currencyOption) => (
+                            <option
+                              key={currencyOption.code}
+                              value={currencyOption.code}
+                            >
+                              {currencyOption.label}
+                            </option>
+                          ))}
+                        </AppSelect>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-text-secondary">
+                          {t("familySettings.currencyPosition")}
+                        </label>
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+                          <AppSelect
+                            value={draftCurrencyPosition}
+                            onChange={(e) =>
+                              setDraftCurrencyPosition(
+                                e.target.value as "Before" | "After",
+                              )
+                            }
+                            className="px-3.5"
+                          >
+                            <option value="Before">
+                              {t("familySettings.symbolBefore")}
+                            </option>
+                            <option value="After">
+                              {t("familySettings.symbolAfter")}
+                            </option>
+                          </AppSelect>
+                          <span className="inline-flex h-10 items-center rounded-lg border border-border bg-surface px-3 text-sm text-text-primary whitespace-nowrap">
+                            {formatCurrency(
+                              10000,
+                              draftCurrency,
+                              true,
+                              settings.locale,
+                              draftCurrencyPosition,
+                            )}
+                          </span>
+                        </div>
                       </div>
                       {brandingError && (
                         <p className="mt-2 text-xs text-danger">
@@ -1376,7 +1453,10 @@ export default function Profile() {
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.brandingTitle")}
                   >
-                    <form onSubmit={handleSaveBranding} className="space-y-4">
+                    <form
+                      onSubmit={handleSaveCustomization}
+                      className="space-y-4"
+                    >
                       <ColorFamilySelect
                         value={brandingPreset}
                         onChange={(next) =>
