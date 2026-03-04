@@ -21,11 +21,11 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       onClick={() => onCheckedChange(!checked)}
-      className={`relative inline-flex h-10 w-[3.25rem] items-center rounded-full border transition-colors ${FOCUS_RING} ${checked ? "border-primary/60 bg-primary/20" : "border-border bg-surface-elevated"} ${className}`.trim()}
+      className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors ${FOCUS_RING} ${checked ? "border-primary/60 bg-primary/25" : "border-border bg-surface-elevated"} ${className}`.trim()}
       {...props}
     >
       <span
-        className={`inline-block h-6 w-6 transform rounded-full bg-white dark:bg-gray-100 shadow transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}
+        className={`inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-100 shadow transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}
       />
     </button>
   );

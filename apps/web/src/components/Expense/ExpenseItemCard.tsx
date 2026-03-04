@@ -1,7 +1,8 @@
-import { CheckCircle2, Store } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
 import { useSettings } from "../../stores/settings.context";
+import VendorAvatar from "../Common/VendorAvatar";
 import { FOCUS_RING_STRONG } from "../Common/focusStyles";
 import InvoiceStatusTag from "../Common/InvoiceStatusTag";
 import type { InvoiceStatus } from "../../utils/invoiceStatus";
@@ -82,27 +83,11 @@ export default function ExpenseItemCard({
   const cardBody = (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-start gap-3">
-        {settings.branding.showVendorImages && logoUrl ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="w-12 h-12 rounded-md object-contain object-center bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0">
-            <Store
-              size={18}
-              className={
-                settings.branding.showVendorImages
-                  ? "text-gray-400"
-                  : "text-gray-300 dark:text-gray-600"
-              }
-            />
-          </div>
-        )}
+        <VendorAvatar
+          vendorName={vendor}
+          logoUrl={logoUrl}
+          show={settings.branding.showVendorImages}
+        />
 
         <div className="min-w-0 flex-1">
           <p

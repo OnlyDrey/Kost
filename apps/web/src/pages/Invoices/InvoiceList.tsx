@@ -19,6 +19,7 @@ import {
 import { useSettings } from "../../stores/settings.context";
 import { useAuth } from "../../stores/auth.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { isPeriodClosed } from "../../utils/periodStatus";
@@ -120,9 +121,7 @@ export default function InvoiceList() {
   });
 
   function getVendorLogo(vendorName: string) {
-    return vendors.find(
-      (v) => v.name.toLowerCase() === vendorName.toLowerCase(),
-    )?.logoUrl;
+    return getVendorLogoUrl(vendors, vendorName);
   }
 
   if (isLoading) {

@@ -27,6 +27,7 @@ import AllocationExplanation from "../../components/Invoice/AllocationExplanatio
 import { distributionLabel } from "../../utils/distribution";
 import { useSettings } from "../../stores/settings.context";
 import UserSharesGrid from "../../components/Invoice/UserSharesGrid";
+import VendorAvatar from "../../components/Common/VendorAvatar";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
@@ -35,6 +36,7 @@ import AppSelect from "../../components/Common/AppSelect";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
 import {
   calcPaidSum,
   calcRemaining,
@@ -208,9 +210,7 @@ export default function InvoiceDetail() {
     totalPaidCents: totalPaid,
     dueDate: invoice.dueDate,
   });
-  const vendorLogo = vendors.find(
-    (v) => v.name.toLowerCase() === invoice.vendor.toLowerCase(),
-  )?.logoUrl;
+  const vendorLogo = getVendorLogoUrl(vendors, invoice.vendor);
 
   return (
     <div className="space-y-5">
@@ -284,18 +284,12 @@ export default function InvoiceDetail() {
               className="grid gap-3 items-start"
               style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
             >
-              {vendorLogo ? (
-                <img
-                  src={vendorLogo}
-                  alt=""
-                  className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              ) : (
-                <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
-              )}
+              <VendorAvatar
+                vendorName={invoice.vendor}
+                logoUrl={vendorLogo}
+                show={settings.branding.showVendorImages}
+                size="sm"
+              />
               <div className="min-w-0">
                 <p
                   className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
