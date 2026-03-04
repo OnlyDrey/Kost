@@ -42,6 +42,10 @@ import {
 } from "../../hooks/useApi";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
+import VendorAvatar from "../../components/Common/VendorAvatar";
+import { ListRow } from "../../components/ui/list-row";
+import { Button } from "../../components/ui/button";
+import { IconButton } from "../../components/ui/icon-button";
 
 const inputCls =
   "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -157,11 +161,11 @@ function ManagedList({
     e.preventDefault();
     const trimmed = newItem.trim();
     if (!trimmed) {
-      setError(t("familySettings.fieldRequired"));
+      setError(t("globalSettings.fieldRequired"));
       return;
     }
     if (items.includes(trimmed)) {
-      setError(t("familySettings.alreadyExists"));
+      setError(t("globalSettings.alreadyExists"));
       return;
     }
     setError("");
@@ -182,7 +186,7 @@ function ManagedList({
   const handleRemoveOne = async (item: string) => {
     const accepted = await confirm({
       title: t("common.delete"),
-      message: t("familySettings.confirmDeleteItem", { item }),
+      message: t("globalSettings.confirmDeleteItem", { item }),
       confirmLabel: t("common.delete"),
       tone: "danger",
     });
@@ -196,7 +200,7 @@ function ManagedList({
     if (!selectedItems.length) return;
     const accepted = await confirm({
       title: t("common.delete"),
-      message: t("familySettings.confirmDeleteSelected", {
+      message: t("globalSettings.confirmDeleteSelected", {
         count: selectedItems.length,
       }),
       confirmLabel: t("common.delete"),
@@ -222,7 +226,7 @@ function ManagedList({
     if (!editingItem) return;
     const trimmed = editingValue.trim();
     if (!trimmed) {
-      setError(t("familySettings.fieldRequired"));
+      setError(t("globalSettings.fieldRequired"));
       return;
     }
     if (trimmed === editingItem) {
@@ -230,7 +234,7 @@ function ManagedList({
       return;
     }
     if (items.includes(trimmed)) {
-      setError(t("familySettings.alreadyExists"));
+      setError(t("globalSettings.alreadyExists"));
       return;
     }
     onRename(editingItem, trimmed);
@@ -249,7 +253,7 @@ function ManagedList({
         </div>
         <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
           <span className="whitespace-nowrap">
-            {t("familySettings.itemsPerPage")}:
+            {t("globalSettings.itemsPerPage")}:
           </span>
           <AppSelect
             value={pageSize}
@@ -284,7 +288,7 @@ function ManagedList({
             setError("");
           }}
           className={inputCls}
-          placeholder={t("familySettings.addPlaceholder", {
+          placeholder={t("globalSettings.addPlaceholder", {
             item: title.toLowerCase(),
           })}
         />
@@ -298,7 +302,7 @@ function ManagedList({
           ) : (
             <Plus size={15} />
           )}
-          {t("familySettings.addItem")}
+          {t("globalSettings.addItem")}
         </button>
       </form>
 
@@ -322,7 +326,7 @@ function ManagedList({
       {selectedItems.length > 0 && (
         <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-xs mb-3">
           <span className="text-amber-700 dark:text-amber-300">
-            {t("familySettings.selectedCount", { count: selectedItems.length })}
+            {t("globalSettings.selectedCount", { count: selectedItems.length })}
           </span>
           <button
             onClick={handleRemoveSelected}
@@ -330,7 +334,7 @@ function ManagedList({
             className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
           >
             <Trash2 size={13} />
-            {t("familySettings.deleteSelected")}
+            {t("globalSettings.deleteSelected")}
           </button>
         </div>
       )}
@@ -343,7 +347,7 @@ function ManagedList({
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
           {search
             ? t("common.noResults", { defaultValue: "No results found." })
-            : t("familySettings.noneAdded")}
+            : t("globalSettings.noneAdded")}
         </p>
       ) : (
         <>
@@ -456,7 +460,7 @@ function LogoPicker({
       setUploadErr(
         Array.isArray(msg)
           ? msg.join(", ")
-          : msg || t("familySettings.uploadFailed"),
+          : msg || t("globalSettings.uploadFailed"),
       );
     }
     e.target.value = "";
@@ -470,14 +474,14 @@ function LogoPicker({
           onClick={() => setMode("url")}
           className={`flex items-center gap-1 px-2 py-1 rounded ${mode === "url" ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
-          <Link size={11} /> {t("familySettings.viaUrl")}
+          <Link size={11} /> {t("globalSettings.viaUrl")}
         </button>
         <button
           type="button"
           onClick={() => setMode("upload")}
           className={`flex items-center gap-1 px-2 py-1 rounded ${mode === "upload" ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
-          <Upload size={11} /> {t("familySettings.uploadOption")}
+          <Upload size={11} /> {t("globalSettings.uploadOption")}
         </button>
       </div>
 
@@ -519,7 +523,7 @@ function LogoPicker({
             ) : (
               <Upload size={12} />
             )}
-            {t("familySettings.chooseFile")}
+            {t("globalSettings.chooseFile")}
           </button>
           {uploadErr && (
             <p className="text-xs text-red-500 dark:text-red-400 mt-1">
@@ -566,7 +570,7 @@ function VendorRow({
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
+    <ListRow>
       {editing ? (
         <div className="space-y-2">
           <input
@@ -596,7 +600,7 @@ function VendorRow({
               disabled={isPending}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-primary hover:bg-primary/90 text-white rounded-md transition-colors disabled:opacity-60"
             >
-              <Check size={13} /> {t("familySettings.saveName")}
+              <Check size={13} /> {t("globalSettings.saveName")}
             </button>
           </div>
         </div>
@@ -609,36 +613,29 @@ function VendorRow({
               onChange={onToggle}
               className="rounded border-gray-300 text-primary focus:ring-primary"
             />
-            {vendor.logoUrl ? (
-              <img
-                src={vendor.logoUrl}
-                alt={vendor.name}
-                className="w-6 h-6 rounded object-contain bg-white border border-gray-200 dark:border-gray-500 flex-shrink-0"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-500 flex items-center justify-center flex-shrink-0">
-                <Store size={12} className="text-gray-500" />
-              </div>
-            )}
+            <VendorAvatar
+              vendorName={vendor.name}
+              logoUrl={vendor.logoUrl}
+              show={true}
+              size="sm"
+            />
             <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
               {vendor.name}
             </span>
           </label>
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            <button
+            <IconButton
               onClick={() => setEditing(true)}
-              className="p-1 text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+              size="sm"
+              aria-label={t("common.edit")}
             >
               <Pencil size={14} />
-            </button>
-            <button
+            </IconButton>
+            <IconButton
               onClick={async () => {
                 const accepted = await confirm({
                   title: t("common.delete"),
-                  message: t("familySettings.confirmDeleteItem", {
+                  message: t("globalSettings.confirmDeleteItem", {
                     item: vendor.name,
                   }),
                   confirmLabel: t("common.delete"),
@@ -647,14 +644,16 @@ function VendorRow({
                 if (accepted) onRemove(vendor.id);
               }}
               disabled={isPending}
-              className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+              size="sm"
+              className="text-danger hover:bg-danger/10"
+              aria-label={t("common.delete")}
             >
               <Trash2 size={14} />
-            </button>
+            </IconButton>
           </div>
         </div>
       )}
-    </div>
+    </ListRow>
   );
 }
 
@@ -696,11 +695,11 @@ function VendorManager({
     e.preventDefault();
     const trimmed = newName.trim();
     if (!trimmed) {
-      setError(t("familySettings.fieldRequired"));
+      setError(t("globalSettings.fieldRequired"));
       return;
     }
     if (vendors.some((v) => v.name.toLowerCase() === trimmed.toLowerCase())) {
-      setError(t("familySettings.vendorExists"));
+      setError(t("globalSettings.vendorExists"));
       return;
     }
     setError("");
@@ -717,7 +716,7 @@ function VendorManager({
           setError(
             Array.isArray(msg)
               ? msg.join(", ")
-              : msg || t("familySettings.somethingWentWrong"),
+              : msg || t("globalSettings.somethingWentWrong"),
           );
         },
       },
@@ -736,7 +735,7 @@ function VendorManager({
     if (!selectedVendorIds.length) return;
     const accepted = await confirm({
       title: t("common.delete"),
-      message: t("familySettings.confirmDeleteSelected", {
+      message: t("globalSettings.confirmDeleteSelected", {
         count: selectedVendorIds.length,
       }),
       confirmLabel: t("common.delete"),
@@ -762,12 +761,12 @@ function VendorManager({
         <div className="flex items-center gap-2">
           <Store size={18} className="text-primary dark:text-primary" />
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-            {t("familySettings.vendors")}
+            {t("globalSettings.vendors")}
           </h2>
         </div>
         <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
           <span className="whitespace-nowrap">
-            {t("familySettings.itemsPerPage")}:
+            {t("globalSettings.itemsPerPage")}:
           </span>
           <AppSelect
             value={pageSize}
@@ -783,7 +782,7 @@ function VendorManager({
         </label>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-        {t("familySettings.vendorsDesc")}
+        {t("globalSettings.vendorsDesc")}
       </p>
 
       {error && (
@@ -802,7 +801,7 @@ function VendorManager({
             setError("");
           }}
           className={inputCls}
-          placeholder={t("familySettings.vendorNamePlaceholder")}
+          placeholder={t("globalSettings.vendorNamePlaceholder")}
         />
         <button
           type="submit"
@@ -814,7 +813,7 @@ function VendorManager({
           ) : (
             <Plus size={15} />
           )}
-          {t("familySettings.addItem")}
+          {t("globalSettings.addItem")}
         </button>
       </form>
 
@@ -841,7 +840,7 @@ function VendorManager({
       {selectedVendorIds.length > 0 && (
         <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-xs mb-3">
           <span className="text-amber-700 dark:text-amber-300">
-            {t("familySettings.selectedCount", {
+            {t("globalSettings.selectedCount", {
               count: selectedVendorIds.length,
             })}
           </span>
@@ -851,7 +850,7 @@ function VendorManager({
             className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50"
           >
             <Trash2 size={13} />
-            {t("familySettings.deleteSelected")}
+            {t("globalSettings.deleteSelected")}
           </button>
         </div>
       )}
@@ -864,7 +863,7 @@ function VendorManager({
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">
           {search
             ? t("common.noResults", { defaultValue: "No results found." })
-            : t("familySettings.noVendors")}
+            : t("globalSettings.noVendors")}
         </p>
       ) : (
         <>
@@ -926,16 +925,16 @@ function CurrencySettings() {
       <div className="flex items-center gap-2 mb-2">
         <Globe size={18} className="text-primary dark:text-primary" />
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-          {t("familySettings.currency")}
+          {t("globalSettings.currency")}
         </h2>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-        {t("familySettings.currencyDesc")}
+        {t("globalSettings.currencyDesc")}
       </p>
 
       {successCurrency && (
         <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-3 py-2 text-sm mb-4">
-          {t("familySettings.currencyUpdated", { value })}
+          {t("globalSettings.currencyUpdated", { value })}
         </div>
       )}
 
@@ -976,11 +975,11 @@ function CurrencySettings() {
           {/* Currency position */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t("familySettings.currencyPosition")}
+              {t("globalSettings.currencyPosition")}
             </label>
             {successPosition && (
               <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg px-3 py-2 text-sm mb-2">
-                {t("familySettings.currencySymbolPositionUpdated")}
+                {t("globalSettings.currencySymbolPositionUpdated")}
               </div>
             )}
             <AppSelect
@@ -989,8 +988,8 @@ function CurrencySettings() {
               disabled={updatePosition.isPending}
               className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm disabled:opacity-60"
             >
-              <option value="Before">{t("familySettings.symbolBefore")}</option>
-              <option value="After">{t("familySettings.symbolAfter")}</option>
+              <option value="Before">{t("globalSettings.symbolBefore")}</option>
+              <option value="After">{t("globalSettings.symbolAfter")}</option>
             </AppSelect>
           </div>
         </div>
@@ -1034,8 +1033,8 @@ export function FamilySettingsContent({
     return (
       <ManagedList
         icon={<Tag size={18} />}
-        title={t("familySettings.categories")}
-        description={t("familySettings.categoriesDesc")}
+        title={t("globalSettings.categories")}
+        description={t("globalSettings.categoriesDesc")}
         items={sortedCategories}
         isLoading={loadingCats}
         onAdd={(name) => addCategory.mutate(name)}
@@ -1058,8 +1057,8 @@ export function FamilySettingsContent({
     return (
       <ManagedList
         icon={<CreditCard size={18} />}
-        title={t("familySettings.paymentMethods")}
-        description={t("familySettings.paymentMethodsDesc")}
+        title={t("globalSettings.paymentMethods")}
+        description={t("globalSettings.paymentMethodsDesc")}
         items={paymentMethods}
         isLoading={loadingMethods}
         onAdd={(name) => addPaymentMethod.mutate(name)}
@@ -1097,20 +1096,20 @@ export default function FamilySettings() {
     label: string;
     icon: React.ElementType;
   }[] = [
-    { key: "currency", label: t("familySettings.currency"), icon: Globe },
-    { key: "categories", label: t("familySettings.categories"), icon: Tag },
+    { key: "currency", label: t("globalSettings.currency"), icon: Globe },
+    { key: "categories", label: t("globalSettings.categories"), icon: Tag },
     {
       key: "payment-methods",
-      label: t("familySettings.paymentMethods"),
+      label: t("globalSettings.paymentMethods"),
       icon: CreditCard,
     },
-    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
+    { key: "vendors", label: t("globalSettings.vendors"), icon: Store },
   ];
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {t("familySettings.title")}
+        {t("globalSettings.title")}
       </h1>
 
       {/* Mobile: dropdown selector */}

@@ -45,6 +45,7 @@ import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
 import { Button } from "../../components/ui/button";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
 import { IconButton } from "../../components/ui/icon-button";
 import {
   calcPaidSum,
@@ -157,14 +158,30 @@ export default function Overview() {
     }
   }, [period?.status, periodFromList?.status, resolvedPeriodId]);
 
-  const validUserIds = useMemo(() => new Set(users.map((u) => u.id)), [users]);
+  const userIdSet = useMemo(() => new Set(users.map((u) => u.id)), [users]);
+  const usernameMap = useMemo(
+    () => new Map(users.map((u) => [u.username.toLowerCase(), u.id])),
+    [users],
+  );
+  const idToUsernameMap = useMemo(
+    () => new Map(users.map((u) => [u.id, u.username])),
+    [users],
+  );
+
   const normalizedQuery = useMemo(
     () =>
       normalizeOverviewQuery(
         searchParams,
-        usersLoading ? undefined : validUserIds,
+        usersLoading
+          ? undefined
+          : {
+              isValidUserId: (value) => userIdSet.has(value),
+              usernameToId: (username) =>
+                usernameMap.get(username.toLowerCase()),
+              idToUsername: (id) => idToUsernameMap.get(id),
+            },
       ),
-    [searchParams, usersLoading, validUserIds],
+    [searchParams, usersLoading, userIdSet, usernameMap, idToUsernameMap],
   );
 
   const filter = normalizedQuery.filter;
@@ -182,15 +199,14 @@ export default function Overview() {
     }
   }, [normalizedQuery.params, searchParams, setSearchParams]);
 
-  const setFilter = (nextFilter: "all" | "share-user", su?: string) => {
+  const setFilter = (nextFilter: "all" | "share-user", userId?: string) => {
     const params = new URLSearchParams(searchParams);
-    if (
-      nextFilter === "share-user" &&
-      su &&
-      (usersLoading || validUserIds.has(su))
-    ) {
-      params.set("filter", "share-user");
-      params.set("shareUser", su);
+    if (nextFilter === "share-user" && userId) {
+      const username = idToUsernameMap.get(userId);
+      if (usersLoading || username) {
+        params.set("filter", "share-user");
+        params.set("shareUser", username ?? userId);
+      }
     } else {
       params.delete("filter");
       params.delete("shareUser");
@@ -372,8 +388,7 @@ export default function Overview() {
   ].filter((g) => g.show);
 
   const getVendorLogo = (vendorName: string) =>
-    vendors.find((v) => v.name.toLowerCase() === vendorName.toLowerCase())
-      ?.logoUrl;
+    getVendorLogoUrl(vendors, vendorName);
 
   if (periodsLoading) {
     return (

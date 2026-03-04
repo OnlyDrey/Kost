@@ -55,6 +55,8 @@ import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
 import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
 import { Switch } from "../../components/ui/switch";
+import { TabButton, TabsRow } from "../../components/ui/tabs";
+import { SidebarItem } from "../../components/ui/sidebar-item";
 import {
   isValidHexColor,
   renderIconDataUrl,
@@ -791,13 +793,13 @@ export default function Profile() {
   }[] = [
     { key: "customization", label: t("settings.customization"), icon: Palette },
     { key: "branding", label: t("settings.brandingTitle"), icon: Paintbrush },
-    { key: "categories", label: t("familySettings.categories"), icon: Tags },
+    { key: "categories", label: t("globalSettings.categories"), icon: Tags },
     {
       key: "payment-methods",
-      label: t("familySettings.paymentMethods"),
+      label: t("globalSettings.paymentMethods"),
       icon: CreditCard,
     },
-    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
+    { key: "vendors", label: t("globalSettings.vendors"), icon: Store },
   ];
 
   return (
@@ -807,29 +809,24 @@ export default function Profile() {
       </h1>
 
       <div className="overflow-x-auto pb-1">
-        <div className="inline-flex min-w-full gap-2">
+        <TabsRow>
           {pageNavItems
             .filter((item) => !item.hidden)
             .map((item) => {
               const Icon = item.icon;
               const isActive = activePage === item.key;
               return (
-                <button
+                <TabButton
                   key={item.key}
-                  type="button"
+                  active={isActive}
                   onClick={() => selectPage(item.key)}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
-                    isActive
-                      ? "border-primary bg-primary/15 text-primary"
-                      : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
-                  }`}
+                  icon={<Icon size={16} />}
                 >
-                  <Icon size={16} />
                   {item.label}
-                </button>
+                </TabButton>
               );
             })}
-        </div>
+        </TabsRow>
       </div>
 
       {activePage === "customization" && isAdmin && (
@@ -844,11 +841,11 @@ export default function Profile() {
           >
             <option value="customization">{t("settings.customization")}</option>
             <option value="branding">{t("settings.brandingTitle")}</option>
-            <option value="categories">{t("familySettings.categories")}</option>
+            <option value="categories">{t("globalSettings.categories")}</option>
             <option value="payment-methods">
-              {t("familySettings.paymentMethods")}
+              {t("globalSettings.paymentMethods")}
             </option>
-            <option value="vendors">{t("familySettings.vendors")}</option>
+            <option value="vendors">{t("globalSettings.vendors")}</option>
           </AppSelect>
         </div>
       )}
@@ -866,24 +863,21 @@ export default function Profile() {
                 const selected = globalSection === section.key;
                 const Icon = section.icon;
                 return (
-                  <button
+                  <SidebarItem
                     key={section.key}
-                    type="button"
+                    active={selected}
                     onClick={() => selectGlobalSection(section.key)}
-                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors inline-flex items-center gap-2 ${
-                      selected
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "text-text-secondary hover:bg-surface-elevated border border-transparent"
-                    }`}
+                    icon={
+                      <Icon
+                        size={15}
+                        className={
+                          selected ? "text-primary" : "text-text-secondary"
+                        }
+                      />
+                    }
                   >
-                    <Icon
-                      size={15}
-                      className={
-                        selected ? "text-primary" : "text-text-secondary"
-                      }
-                    />
                     {section.label}
-                  </button>
+                  </SidebarItem>
                 );
               })}
             </div>
@@ -1378,7 +1372,7 @@ export default function Profile() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="block text-sm font-medium text-text-secondary">
-                          {t("familySettings.currency")}
+                          {t("globalSettings.currency")}
                         </label>
                         <AppSelect
                           value={draftCurrency}
@@ -1398,7 +1392,7 @@ export default function Profile() {
 
                       <div className="space-y-1.5">
                         <label className="block text-sm font-medium text-text-secondary">
-                          {t("familySettings.currencyPosition")}
+                          {t("globalSettings.currencyPosition")}
                         </label>
                         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
                           <AppSelect
@@ -1411,10 +1405,10 @@ export default function Profile() {
                             className="px-3.5"
                           >
                             <option value="Before">
-                              {t("familySettings.symbolBefore")}
+                              {t("globalSettings.symbolBefore")}
                             </option>
                             <option value="After">
-                              {t("familySettings.symbolAfter")}
+                              {t("globalSettings.symbolAfter")}
                             </option>
                           </AppSelect>
                           <span className="inline-flex h-10 items-center rounded-lg border border-border bg-surface px-3 text-sm text-text-primary whitespace-nowrap">
@@ -1457,28 +1451,6 @@ export default function Profile() {
                       onSubmit={handleSaveCustomization}
                       className="space-y-4"
                     >
-                      <ColorFamilySelect
-                        value={brandingPreset}
-                        onChange={(next) =>
-                          setBrandingPreset(next as BrandingPreset)
-                        }
-                        label={t("settings.brandingPrimaryPreset")}
-                      />
-                      <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-surface px-3.5 py-2.5">
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-text-primary">
-                            {t("settings.showVendorImages")}
-                          </p>
-                          <p className="text-xs text-text-secondary">
-                            {t("settings.showVendorImagesHelp")}
-                          </p>
-                        </div>
-                        <Switch
-                          checked={brandingShowVendorImages}
-                          onCheckedChange={setBrandingShowVendorImages}
-                          aria-label={t("settings.showVendorImages")}
-                        />
-                      </div>
                       <div>
                         <label className={labelCls}>
                           {t("settings.brandingAppTitle")}

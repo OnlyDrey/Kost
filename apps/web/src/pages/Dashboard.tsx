@@ -105,7 +105,7 @@ export default function Dashboard() {
             onClick: () =>
               currentPeriod &&
               navigate(
-                `/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.id ?? ""}`,
+                `/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.username ?? user?.id ?? ""}`,
               ),
           },
           {
@@ -157,7 +157,7 @@ export default function Dashboard() {
             onClick: () =>
               currentPeriod &&
               navigate(
-                `/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.id ?? ""}`,
+                `/periods/${currentPeriod.id}?filter=share-user&shareUser=${user?.username ?? user?.id ?? ""}`,
               ),
           },
         ]}

@@ -268,7 +268,7 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-1">
           {/* Main info */}
           <div
@@ -363,7 +363,7 @@ export default function InvoiceDetail() {
         </div>
 
         {/* Allocation explanation */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-span-1">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-span-1 self-start">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
             {t("invoice.allocationExplanation")}
           </h3>

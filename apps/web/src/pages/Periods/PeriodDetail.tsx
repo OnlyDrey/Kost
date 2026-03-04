@@ -35,6 +35,7 @@ import { isPeriodClosed } from "../../utils/periodStatus";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
 
 export default function PeriodDetail() {
@@ -206,8 +207,7 @@ export default function PeriodDetail() {
   ].filter((group) => group.show);
 
   const getVendorLogo = (vendorName: string) =>
-    vendors.find((v) => v.name.toLowerCase() === vendorName.toLowerCase())
-      ?.logoUrl;
+    getVendorLogoUrl(vendors, vendorName);
 
   return (
     <div className="space-y-6">
