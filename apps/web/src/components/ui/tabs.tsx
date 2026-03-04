@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { FOCUS_RING } from "../Common/focusStyles";
 
 interface TabButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean;
@@ -15,7 +16,7 @@ export function TabButton({
   return (
     <button
       type="button"
-      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
+      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium whitespace-nowrap transition-colors ${FOCUS_RING} ${
         active
           ? "border-primary/60 bg-primary/15 text-primary"
           : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
