@@ -11,7 +11,8 @@ interface TagPillProps {
     | "admin"
     | "adult"
     | "child"
-    | "warning";
+    | "warning"
+    | "neutral";
   shape?: "pill" | "rounded";
   size?: "sm" | "md";
   icon?: ReactNode;
@@ -35,6 +36,8 @@ const variantClass: Record<NonNullable<TagPillProps["variant"]>, string> = {
     "bg-amber-100 text-amber-800 ring-1 ring-amber-300 dark:bg-amber-500/20 dark:text-amber-200 dark:ring-amber-500/30",
   warning:
     "bg-amber-100 text-amber-700 ring-1 ring-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:ring-amber-500/30",
+  neutral:
+    "bg-gray-100 text-gray-700 ring-1 ring-gray-300 dark:bg-gray-500/20 dark:text-gray-200 dark:ring-gray-500/30",
 };
 
 export default function TagPill({

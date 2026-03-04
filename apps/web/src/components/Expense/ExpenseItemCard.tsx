@@ -1,6 +1,7 @@
 import { CheckCircle2, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
+import { useSettings } from "../../stores/settings.context";
 import { FOCUS_RING_STRONG } from "../Common/focusStyles";
 import InvoiceStatusTag from "../Common/InvoiceStatusTag";
 import type { InvoiceStatus } from "../../utils/invoiceStatus";
@@ -59,6 +60,7 @@ export default function ExpenseItemCard({
   amountDetails,
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
+  const { settings } = useSettings();
   const emphasisClass = paid
     ? "border-success/60 bg-success/5"
     : overdue
@@ -80,7 +82,7 @@ export default function ExpenseItemCard({
   const cardBody = (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-start gap-3">
-        {logoUrl ? (
+        {settings.branding.showVendorImages && logoUrl ? (
           <img
             src={logoUrl}
             alt=""
@@ -91,7 +93,14 @@ export default function ExpenseItemCard({
           />
         ) : (
           <div className="w-12 h-12 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0">
-            <Store size={18} className="text-gray-400" />
+            <Store
+              size={18}
+              className={
+                settings.branding.showVendorImages
+                  ? "text-gray-400"
+                  : "text-gray-300 dark:text-gray-600"
+              }
+            />
           </div>
         )}
 

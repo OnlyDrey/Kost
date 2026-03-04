@@ -220,6 +220,8 @@
     "brandingAppTitle": "App-tittel",
     "brandingLogoUrl": "Logo-URL",
     "brandingPrimaryPreset": "Primærfarge",
+    "showVendorImages": "Leverandørbilder",
+    "showVendorImagesHelp": "Vis leverandørlogoer på utgifter og faste utgifter.",
     "brandingPresetIndigo": "Indigo",
     "brandingPresetEmerald": "Smaragd",
     "brandingPresetViolet": "Fiolett",

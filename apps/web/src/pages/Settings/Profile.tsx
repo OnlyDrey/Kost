@@ -51,6 +51,7 @@ import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
 import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
+import { Switch } from "../../components/ui/switch";
 import {
   isValidHexColor,
   renderIconDataUrl,
@@ -172,6 +173,9 @@ export default function Profile() {
   const [brandingAppIconBackground, setBrandingAppIconBackground] = useState(
     settings.branding.appIconBackground,
   );
+  const [brandingShowVendorImages, setBrandingShowVendorImages] = useState(
+    settings.branding.showVendorImages,
+  );
   const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] =
     useState(getDefaultLogoUrl());
   const [brandingError, setBrandingError] = useState("");
@@ -228,6 +232,7 @@ export default function Profile() {
     setBrandingLogoUrl(settings.branding.logoUrl);
     setBrandingPreset(settings.branding.primaryPreset);
     setBrandingAppIconBackground(settings.branding.appIconBackground);
+    setBrandingShowVendorImages(settings.branding.showVendorImages);
   }, [settings.branding]);
 
   useEffect(() => {
@@ -329,6 +334,7 @@ export default function Profile() {
       logoUrl: brandingLogoUrl.trim(),
       primaryPreset: brandingPreset,
       appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
+      showVendorImages: brandingShowVendorImages,
     });
     setBrandingSaved(true);
     window.setTimeout(() => setBrandingSaved(false), 2000);
@@ -1330,6 +1336,21 @@ export default function Profile() {
                         }
                         label={t("settings.brandingPrimaryPreset")}
                       />
+                      <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-surface px-3.5 py-2.5">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-text-primary">
+                            {t("settings.showVendorImages")}
+                          </p>
+                          <p className="text-xs text-text-secondary">
+                            {t("settings.showVendorImagesHelp")}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={brandingShowVendorImages}
+                          onCheckedChange={setBrandingShowVendorImages}
+                          aria-label={t("settings.showVendorImages")}
+                        />
+                      </div>
                       {brandingError && (
                         <p className="mt-2 text-xs text-danger">
                           {brandingError}
@@ -1356,6 +1377,28 @@ export default function Profile() {
                     title={t("settings.brandingTitle")}
                   >
                     <form onSubmit={handleSaveBranding} className="space-y-4">
+                      <ColorFamilySelect
+                        value={brandingPreset}
+                        onChange={(next) =>
+                          setBrandingPreset(next as BrandingPreset)
+                        }
+                        label={t("settings.brandingPrimaryPreset")}
+                      />
+                      <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-surface px-3.5 py-2.5">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-text-primary">
+                            {t("settings.showVendorImages")}
+                          </p>
+                          <p className="text-xs text-text-secondary">
+                            {t("settings.showVendorImagesHelp")}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={brandingShowVendorImages}
+                          onCheckedChange={setBrandingShowVendorImages}
+                          aria-label={t("settings.showVendorImages")}
+                        />
+                      </div>
                       <div>
                         <label className={labelCls}>
                           {t("settings.brandingAppTitle")}

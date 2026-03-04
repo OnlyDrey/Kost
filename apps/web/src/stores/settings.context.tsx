@@ -28,6 +28,7 @@ export interface BrandingSettings {
   logoUrl: string;
   primaryPreset: BrandingPreset;
   appIconBackground: string;
+  showVendorImages: boolean;
 }
 
 interface Settings {
@@ -50,6 +51,7 @@ const defaultBranding: BrandingSettings = {
   logoUrl: "",
   primaryPreset: DEFAULT_PRIMARY_COLOR_FAMILY,
   appIconBackground: DEFAULT_APP_ICON_BACKGROUND,
+  showVendorImages: true,
 };
 
 const defaultSettings: Settings = {
@@ -78,6 +80,10 @@ function normalizeBrandingSettings(
       branding?.appIconBackground && isValidHexColor(branding.appIconBackground)
         ? branding.appIconBackground
         : defaultBranding.appIconBackground,
+    showVendorImages:
+      branding?.showVendorImages === undefined
+        ? defaultBranding.showVendorImages
+        : Boolean(branding.showVendorImages),
   };
 }
 

@@ -7,7 +7,9 @@ import {
   Power,
   RefreshCw,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  Circle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -26,7 +28,10 @@ import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
-import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
+import {
+  FOCUS_RING,
+  SELECT_TRIGGER,
+} from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 
 export default function SubscriptionList() {
@@ -313,7 +318,8 @@ function SubscriptionCard({
               icon: Pencil,
               label: t("common.edit"),
               onClick: onEdit,
-              colorClassName: "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
+              colorClassName:
+                "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
             },
             {
               key: "toggle",
@@ -344,11 +350,22 @@ function SubscriptionCard({
               sub.status === "ACTIVE"
                 ? "success"
                 : sub.status === "PAUSED"
-                  ? "warning"
+                  ? "neutral"
                   : "danger"
             }
+            icon={
+              <Circle
+                size={12}
+                className="fill-current stroke-current"
+                aria-hidden
+              />
+            }
           />
-          <TagPill label={freqLabel(sub.frequency)} variant="frequency" />
+          <TagPill
+            label={freqLabel(sub.frequency)}
+            variant="frequency"
+            icon={<Calendar size={12} aria-hidden />}
+          />
         </div>
       }
     />

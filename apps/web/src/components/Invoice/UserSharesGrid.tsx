@@ -45,7 +45,7 @@ export default function UserSharesGrid({
             onClick={() => onSelectShare(share.userId)}
             className={`${cls} ${FOCUS_RING}`}
           >
-            <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+            <p className="font-medium text-primary text-sm">
               {share.user?.name || unknownLabel}
             </p>
             <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mt-1">
@@ -59,7 +59,7 @@ export default function UserSharesGrid({
           </button>
         ) : (
           <div key={share.id} className={`${cls} ${FOCUS_RING}`}>
-            <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+            <p className="font-medium text-primary text-sm">
               {share.user?.name || unknownLabel}
             </p>
             <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mt-1">

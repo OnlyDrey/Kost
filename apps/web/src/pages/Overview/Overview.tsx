@@ -470,7 +470,7 @@ export default function Overview() {
                 icon: Receipt,
                 label: t("dashboard.totalInvoices"),
                 value: stats?.totalInvoices ?? 0,
-                colorClass: "bg-primary",
+                colorClass: "bg-slate-500",
                 onClick: () => setFilter("all"),
               },
               {
@@ -478,7 +478,7 @@ export default function Overview() {
                 icon: Users,
                 label: t("period.userShares"),
                 value: stats?.userShares?.length ?? 0,
-                colorClass: "bg-primary",
+                colorClass: "bg-violet-500",
                 onClick: () => setFilter("share-user", currentUser?.id),
               },
             ]}

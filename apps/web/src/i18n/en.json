@@ -220,6 +220,8 @@
     "brandingAppTitle": "App title",
     "brandingLogoUrl": "Logo URL",
     "brandingPrimaryPreset": "Primary color",
+    "showVendorImages": "Vendor images",
+    "showVendorImagesHelp": "Show vendor logos on expenses and recurring expenses.",
     "brandingPresetIndigo": "Indigo",
     "brandingPresetEmerald": "Emerald",
     "brandingPresetViolet": "Violet",

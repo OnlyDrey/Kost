@@ -125,7 +125,7 @@ export default function ColorFamilySelect({
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={onTriggerKeyDown}
       >
-        <span className="inline-flex items-center gap-2">
+        <span className="inline-flex min-w-0 flex-1 items-center gap-2">
           <span
             className="h-4 w-4 rounded-full border border-border"
             style={{ backgroundColor: `rgb(${selected.rgb})` }}
@@ -133,7 +133,9 @@ export default function ColorFamilySelect({
           />
           <span>{selected.label}</span>
         </span>
-        <ChevronDown size={16} className="text-text-secondary" />
+        <span className="ml-auto inline-flex shrink-0 items-center justify-center text-text-secondary">
+          <ChevronDown size={16} />
+        </span>
       </button>
 
       {open && (
@@ -166,7 +168,7 @@ export default function ColorFamilySelect({
                   setOpen(false);
                 }}
               >
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex min-w-0 flex-1 items-center gap-2">
                   <span
                     className="h-4 w-4 rounded-full border border-border"
                     style={{ backgroundColor: `rgb(${option.rgb})` }}
