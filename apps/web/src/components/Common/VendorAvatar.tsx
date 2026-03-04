@@ -16,10 +16,12 @@ export default function VendorAvatar({
   const containerSize = size === "sm" ? "h-10 w-10" : "h-12 w-12";
   const iconSize = size === "sm" ? 16 : 18;
 
-  if (show && logoUrl) {
+  if (show !== true) return null;
+
+  if (logoUrl?.trim()) {
     return (
       <img
-        src={logoUrl}
+        src={logoUrl.trim()}
         alt={vendorName}
         className={`${containerSize} rounded-md object-contain object-center bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0`}
         onError={(e) => {

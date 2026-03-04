@@ -152,16 +152,18 @@ export default function ColorFamilySelect({
       </label>
       <button
         type="button"
-        className={`${SELECT_TRIGGER} h-10 w-full px-3.5 pr-10 text-sm inline-flex items-center gap-2`}
+        className={`${SELECT_TRIGGER} relative h-10 w-full px-3 pr-9 text-sm inline-flex items-center`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={onTriggerKeyDown}
       >
-        <ColorDot color={selected.value} />
-        <span className="truncate">{selected.label}</span>
-        <span className="ml-auto inline-flex shrink-0 items-center justify-center text-current opacity-70">
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <ColorDot color={selected.value} />
+          <span className="truncate">{selected.label}</span>
+        </span>
+        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-current opacity-70">
           <ChevronDown size={16} />
         </span>
       </button>
