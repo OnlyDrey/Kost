@@ -6,7 +6,70 @@ on:
   pull_request:
     branches: [main, develop]
 
+env:
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_AUDIT: "false"
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: "Guard: no Prisma migrations committed"
+        run: |
+          migrations_count=$(git ls-files -- ':(glob)**/prisma/migrations/**' | wc -l)
+          lock_count=$(git ls-files -- ':(glob)**/prisma/migration_lock.toml' | wc -l)
+          if [ "$migrations_count" -gt 0 ] || [ "$lock_count" -gt 0 ]; then
+            echo "Prisma migration artifacts must not be committed"
+            git ls-files -- ':(glob)**/prisma/migrations/**' ':(glob)**/prisma/migration_lock.toml'
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Pin npm version
+        run: npm i -g npm@10
+
+      - name: Install dependencies
+        run: npm ci --workspaces --include-workspace-root --foreground-scripts
+
+      - name: Cache TS incremental artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.cache/tsbuildinfo
+            packages/shared/.cache/tsbuildinfo
+            apps/api/.cache/tsbuildinfo
+          key: ts-${{ runner.os }}-${{ hashFiles('package-lock.json', 'apps/web/tsconfig.json', 'apps/web/tsconfig.node.json', 'packages/shared/tsconfig.json', 'apps/api/tsconfig.json', 'apps/api/tsconfig.seed.json', 'apps/web/vite.config.ts') }}
+          restore-keys: |
+            ts-${{ runner.os }}-
+
+      - name: Lint
+        run: npm run lint --workspaces --if-present
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build Web
+        run: npm run build --workspace=@kost/web
+        env:
+          VITE_API_URL: http://localhost:3000/api
+
+      - name: Upload npm logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-logs-build
+          path: ~/.npm/_logs/*.log
+          if-no-files-found: ignore
+
   test:
     runs-on: ubuntu-latest
 
@@ -52,11 +115,16 @@ jobs:
           restore-keys: |
             prisma-${{ runner.os }}-
 
-      - name: Lint
-        run: npm run lint --workspaces --if-present
-
-      - name: Build shared package
-        run: npm run build --workspace=@kost/shared
+      - name: Cache TS incremental artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.cache/tsbuildinfo
+            packages/shared/.cache/tsbuildinfo
+            apps/api/.cache/tsbuildinfo
+          key: ts-${{ runner.os }}-${{ hashFiles('package-lock.json', 'apps/web/tsconfig.json', 'apps/web/tsconfig.node.json', 'packages/shared/tsconfig.json', 'apps/api/tsconfig.json', 'apps/api/tsconfig.seed.json', 'apps/web/vite.config.ts') }}
+          restore-keys: |
+            ts-${{ runner.os }}-
 
       - name: Generate Prisma client
         run: npm run generate --workspace=@kost/api
@@ -83,25 +151,17 @@ jobs:
       - name: Build API
         run: npm run build --workspace=@kost/api
 
-      - name: Typecheck Web
-        run: npm run typecheck --workspace=@kost/web
-
-      - name: Build Web
-        run: npm run build --workspace=@kost/web
-        env:
-          VITE_API_URL: http://localhost:3000/api
-
       - name: Upload npm logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: npm-logs
+          name: npm-logs-test
           path: ~/.npm/_logs/*.log
           if-no-files-found: ignore
 
   docker:
     runs-on: ubuntu-latest
-    needs: test
+    needs: [build, test]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     steps:
@@ -111,15 +171,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Docker tool versions
+        run: |
+          docker version --format '{{.Server.Version}}'
+          docker buildx version
+
+      - name: Record docker build start
+        run: echo "DOCKER_BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
+
       - name: Build single-container app image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: false
-          tags: kost-app:latest
+          load: true
+          tags: kost-app:ci
           build-args: |
             VITE_API_URL=/api
             NODE_IMAGE=${{ vars.NODE_IMAGE || 'node:22-alpine' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Docker build metrics
+        run: |
+          end=$(date +%s)
+          elapsed=$((end - DOCKER_BUILD_START))
+          echo "Docker build duration (s): $elapsed"
+          size_bytes=$(docker image inspect kost-app:ci --format '{{.Size}}')
+          echo "Docker image size (bytes): $size_bytes"
+          echo "Top image layers:"
+          docker history kost-app:ci --no-trunc | head -n 20

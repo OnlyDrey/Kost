@@ -100,9 +100,11 @@ RUN_SYSTEM_CHECKS=1 npm install --workspaces --include-workspace-root
 3. Prepare API database:
 
 ```bash
-npm run migrate:deploy --workspace=apps/api
+npm run db:push --workspace=apps/api
 npm run seed --workspace=apps/api
 ```
+
+Development policy: Prisma migration files are not committed in this repo at the current product stage. Use `db push` + `generate` instead of tracked migrations.
 
 4. Run API and web in separate terminals:
 
@@ -189,3 +191,41 @@ Update the digest intentionally (for example when adopting Node security updates
 ### CI suggestion
 
 For self-hosted or restricted CI runners, configure a registry mirror or pre-pull `node:22-alpine` (or your mirrored equivalent). The CI workflow also supports overriding `NODE_IMAGE` through repository variable `NODE_IMAGE`.
+
+## CI performance and caching playbook
+
+Current CI caches and where they apply:
+
+- **npm cache** via `actions/setup-node` (`cache: npm`) in `build` and `test` jobs.
+- **TypeScript incremental cache** (`apps/*/.cache/tsbuildinfo`, `packages/*/.cache/tsbuildinfo`) restored before typecheck/build steps.
+- **Prisma engine cache** (`~/.cache/prisma`, `.prisma` directories) restored before Prisma generate/push in the `test` job.
+- **Docker Buildx cache** (`cache-from/cache-to: type=gha`) in the `docker` job.
+
+Cache invalidation triggers:
+
+- npm cache: lockfile changes (`package-lock.json`) and dependency graph changes.
+- TS incremental cache: `tsconfig` changes, lockfile changes, and web Vite config changes.
+- Prisma cache: Prisma schema/package/lockfile changes.
+- Docker cache: Dockerfile/context layer changes.
+
+How to diagnose slow CI runs:
+
+1. Check cache hit/miss lines for npm, TS cache, and Prisma cache.
+2. Compare `docker` job metrics output:
+   - `Docker build duration (s)`
+   - `Docker image size (bytes)`
+   - top layers from `docker history`
+3. If web build remains heavy, compare chunk warnings and bundle outputs over time.
+
+Local profiling quick checks:
+
+```bash
+npm run build:analyze --workspace=apps/web
+npm run typecheck --workspace=apps/web && npm run typecheck --workspace=apps/web
+npm run build --workspace=packages/shared && npm run build --workspace=packages/shared
+```
+
+Restricted network notes:
+
+- Docker Hub pull TLS/timeouts are usually host/network related; prefer registry mirrors.
+- Prisma engine checksum/download failures (for example `403`) are environment/network issues; keep Prisma checks enabled and use CI caches/mirrors where possible.

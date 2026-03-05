@@ -17,9 +17,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:push": "prisma db push",
-    "migrate": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
-    "migrate:reset": "prisma migrate reset",
+    "migrate": "echo \"Prisma migrations are disabled in this repo. Use npm run db:push for schema sync.\" && exit 1",
+    "migrate:deploy": "echo \"Prisma migrations are disabled in this repo. Use npm run db:push for schema sync.\" && exit 1",
+    "migrate:reset": "echo \"Prisma migrations are disabled in this repo. Use npm run db:push for schema sync.\" && exit 1",
     "seed": "ts-node prisma/seed.ts",
     "studio": "prisma studio",
     "generate": "prisma generate"

@@ -57,6 +57,7 @@ Recommended checks:
 ```bash
 npm run lint --workspaces --if-present
 npm run test --workspaces --if-present
+npm run typecheck
 npm run build
 ```
 
@@ -74,3 +75,14 @@ npm run build
 - Run `npm run doctor` when you explicitly want host dependency checks (Docker/Compose, Node, npm).
 - To enforce checks during install, opt in with `RUN_SYSTEM_CHECKS=1 npm install --workspaces --include-workspace-root`.
 - CI keeps Docker checks isolated to the dedicated Docker image build job.
+
+
+## CI performance checklist (optional)
+
+When a PR can affect performance/build behavior, consider adding these notes in the PR description:
+
+- [ ] npm cache hit/miss looked healthy in CI logs
+- [ ] TS incremental cache hit/miss looked healthy in CI logs
+- [ ] Prisma cache hit/miss looked healthy (API path)
+- [ ] Docker metrics reviewed (`duration`, `image size`, top layers)
+- [ ] Web bundle warning/chunk size trend checked (if web assets changed)

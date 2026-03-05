@@ -13,9 +13,10 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "db:migrate": "docker compose exec app /app/node_modules/.bin/prisma migrate deploy",
-    "db:reset": "docker compose exec app /app/node_modules/.bin/prisma migrate reset --force",
+    "db:migrate": "echo \"Prisma migrations are not tracked in this repo. Use npm run db:push --workspace=apps/api instead.\" && exit 1",
+    "db:reset": "echo \"Prisma migrations are not tracked in this repo. Use npm run db:push --workspace=apps/api for schema sync.\" && exit 1",
     "db:seed": "docker compose exec app node dist/prisma/seed.js",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
@@ -36,7 +37,6 @@
   "devDependencies": {
     "@types/node": "^20.11.5",
     "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3"
   },

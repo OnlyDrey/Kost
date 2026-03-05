@@ -46,7 +46,7 @@ COPY apps/api/package.json ./apps/api/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-  npm ci --workspaces --include-workspace-root --omit=dev
+  npm ci --omit=dev --workspace=@kost/api --workspace=@kost/shared
 
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 RUN npm run generate --workspace=@kost/api

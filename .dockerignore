@@ -48,6 +48,7 @@ docs
 # --- Misc ---
 *.pem
 .cache
+**/.cache
 .temp
 backup.sql
 check-system.sh
@@ -56,3 +57,5 @@ Makefile
 # Docker buildx local cache
 .buildx-cache
 .buildx-cache-new
+**/.cache/**
+**/.cache/jest
