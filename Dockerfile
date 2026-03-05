@@ -27,9 +27,10 @@ COPY apps/web ./apps/web
 
 RUN npm run build --workspace=@kost/shared
 RUN npm run generate --workspace=@kost/api
+RUN test -d node_modules/.prisma/client && test -d node_modules/@prisma/client
 RUN npm run typecheck --workspace=@kost/web
 RUN npm run build --workspace=@kost/web
-RUN npm run build --workspace=@kost/api
+RUN npm exec --workspace=@kost/api -- nest build
 RUN npx tsc -p apps/api/tsconfig.seed.json
 
 ARG NODE_IMAGE
@@ -49,7 +50,8 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
   npm ci --omit=dev --workspace=@kost/api --workspace=@kost/shared
 
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-RUN npm run generate --workspace=@kost/api
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/web/dist ./apps/api/public
