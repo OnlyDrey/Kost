@@ -52,3 +52,7 @@ docs
 backup.sql
 check-system.sh
 Makefile
+
+# Docker buildx local cache
+.buildx-cache
+.buildx-cache-new
