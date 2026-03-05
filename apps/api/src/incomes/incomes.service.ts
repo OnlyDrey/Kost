@@ -7,6 +7,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateIncomeDto } from "./dto/create-income.dto";
 import { UpdateIncomeDto } from "./dto/update-income.dto";
 import { IncomeType, PeriodStatus } from "@kost/shared";
+import { toIncomeType } from "../common/enum-mappers";
 
 @Injectable()
 export class IncomesService {
@@ -193,7 +194,7 @@ export class IncomesService {
     }
 
     // Determine new values
-    const inputType = updateIncomeDto.inputType ?? income.inputType;
+    const inputType = toIncomeType(updateIncomeDto.inputType ?? income.inputType);
     const inputCents = updateIncomeDto.inputCents ?? income.inputCents;
 
     // Recalculate normalized value if needed

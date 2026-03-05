@@ -6,12 +6,10 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AllocationService } from "../invoices/allocation.service";
-import {
-  CreateSubscriptionDto,
-  DistributionMethod,
-  SubscriptionStatus,
-} from "./dto/create-subscription.dto";
+import { CreateSubscriptionDto } from "./dto/create-subscription.dto";
 import { UpdateSubscriptionDto } from "./dto/update-subscription.dto";
+import { DistributionMethod, SubscriptionStatus } from "@kost/shared";
+import { toDistributionMethod, toSubscriptionStatus } from "../common/enum-mappers";
 
 @Injectable()
 export class SubscriptionsService {
@@ -60,7 +58,7 @@ export class SubscriptionsService {
       ...subscriptionData
     } = createSubscriptionDto;
 
-    const normalizedStatus = status ?? SubscriptionStatus.ACTIVE;
+    const normalizedStatus = toSubscriptionStatus(status ?? SubscriptionStatus.ACTIVE);
 
     const isPersonalDistribution =
       createSubscriptionDto.distributionMethod === DistributionMethod.PERSONAL;
@@ -123,11 +121,12 @@ export class SubscriptionsService {
       ...updateData
     } = updateSubscriptionDto;
 
-    const normalizedStatus = status;
+    const normalizedStatus = status ? toSubscriptionStatus(status) : undefined;
 
     const existing = await this.findOne(id, familyId);
-    const effectiveMethod =
-      updateSubscriptionDto.distributionMethod ?? existing.distributionMethod;
+    const effectiveMethod = toDistributionMethod(
+      updateSubscriptionDto.distributionMethod ?? existing.distributionMethod,
+    );
     const isPersonalDistribution =
       effectiveMethod === DistributionMethod.PERSONAL;
     const effectivePersonalUserId = personalUserId ?? undefined;
@@ -269,10 +268,13 @@ export class SubscriptionsService {
               selectedUserIds.includes(p.userId),
             )
           : allParticipants.filter((p: Participant) => p.role !== "CHILD");
+      const distributionMethod = toDistributionMethod(
+        subscription.distributionMethod,
+      );
 
       const shares = await this.calculateShares(
         subscription.amountCents,
-        subscription.distributionMethod,
+        distributionMethod,
         distributionRules,
         participants,
         subscription.ownerUserId || undefined,
@@ -286,12 +288,11 @@ export class SubscriptionsService {
           vendor: subscription.vendor,
           description: `${subscription.name} - ${subscription.frequency}`,
           totalCents: subscription.amountCents,
-          distributionMethod: subscription.distributionMethod,
+          distributionMethod,
           paymentMethod: subscription.paymentMethod ?? null,
-          isPersonal:
-            subscription.distributionMethod === DistributionMethod.PERSONAL,
+          isPersonal: distributionMethod === DistributionMethod.PERSONAL,
           ownerUserId:
-            subscription.distributionMethod === DistributionMethod.PERSONAL
+            distributionMethod === DistributionMethod.PERSONAL
               ? subscription.ownerUserId
               : null,
           shares: {

@@ -6,10 +6,11 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AllocationService } from "./allocation.service";
-import { CreateInvoiceDto, DistributionMethod } from "./dto/create-invoice.dto";
+import { CreateInvoiceDto } from "./dto/create-invoice.dto";
 import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { AddPaymentDto } from "./dto/add-payment.dto";
-import { PeriodStatus } from "@kost/shared";
+import { DistributionMethod, PeriodStatus } from "@kost/shared";
+import { toDistributionMethod } from "../common/enum-mappers";
 import type { Prisma } from "@prisma/client";
 
 const apiError = (code: string, message: string) => ({ code, message });
@@ -428,9 +429,9 @@ export class InvoicesService {
     if (shouldRecalculateShares) {
       const totalCents =
         updateInvoiceDto.totalCents ?? existingInvoice.totalCents;
-      const method =
-        updateInvoiceDto.distributionMethod ??
-        existingInvoice.distributionMethod;
+      const method = toDistributionMethod(
+        updateInvoiceDto.distributionMethod ?? existingInvoice.distributionMethod,
+      );
 
       // Get incomes for period
       const incomes = await this.prisma.income.findMany({
