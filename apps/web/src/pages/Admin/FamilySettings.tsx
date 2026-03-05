@@ -13,8 +13,6 @@ import {
   Upload,
   Link,
   Search,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppSelect from "../../components/Common/AppSelect";
@@ -46,6 +44,8 @@ import VendorAvatar from "../../components/Common/VendorAvatar";
 import { ListRow } from "../../components/ui/list-row";
 import { Button } from "../../components/ui/button";
 import { IconButton } from "../../components/ui/icon-button";
+import { Checkbox } from "../../components/ui/checkbox";
+import { SettingsDataTable } from "../../components/settings/settings-data-table";
 
 const inputCls =
   "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -60,45 +60,6 @@ export type FamilySetting =
   | "categories"
   | "payment-methods"
   | "vendors";
-
-function Pagination({
-  page,
-  totalPages,
-  onPrev,
-  onNext,
-}: {
-  page: number;
-  totalPages: number;
-  onPrev: () => void;
-  onNext: () => void;
-}) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-      <span className="text-xs text-gray-500 dark:text-gray-400">
-        {page} / {totalPages}
-      </span>
-      <div className="flex items-center gap-1">
-        <button
-          onClick={onPrev}
-          disabled={page <= 1}
-          className="p-1 rounded text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30"
-          aria-label="Previous page"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <button
-          onClick={onNext}
-          disabled={page >= totalPages}
-          className="p-1 rounded text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30"
-          aria-label="Next page"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function ManagedList({
   icon,
@@ -350,24 +311,21 @@ function ManagedList({
             : t("globalSettings.noneAdded")}
         </p>
       ) : (
-        <>
-          <div className="space-y-1.5">
-            {pageItems.map((item) => {
-              const checked = selectedItems.includes(item);
-              const editing = editingItem === item;
+        <SettingsDataTable
+          rows={pageItems}
+          page={currentPage}
+          pageCount={totalPages}
+          onPageChange={setPage}
+          emptyState={null}
+          renderRow={(item) => {
+            const checked = selectedItems.includes(item);
+            const editing = editingItem === item;
 
-              return (
-                <div
-                  key={item}
-                  className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2"
-                >
+            return (
+              <ListRow key={item}>
+                <div className="flex items-center justify-between gap-2">
                   <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleSelected(item)}
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                    />
+                    <Checkbox checked={checked} onChange={() => toggleSelected(item)} />
                     {editing ? (
                       <input
                         autoFocus
@@ -385,47 +343,48 @@ function ManagedList({
                   <div className="flex items-center gap-1">
                     {editing ? (
                       <>
-                        <button
+                        <IconButton
                           onClick={submitEdit}
                           disabled={isPendingEdit}
-                          className="p-1 text-gray-500 hover:text-emerald-500 disabled:opacity-50"
+                          size="sm"
+                          variant="success"
+                          aria-label={t("common.save")}
                         >
                           <Check size={14} />
-                        </button>
-                        <button
+                        </IconButton>
+                        <IconButton
                           onClick={() => setEditingItem(null)}
-                          className="p-1 text-gray-500 hover:text-gray-700"
+                          size="sm"
+                          aria-label={t("common.cancel")}
                         >
                           <X size={14} />
-                        </button>
+                        </IconButton>
                       </>
                     ) : (
-                      <button
+                      <IconButton
                         onClick={() => startEditing(item)}
-                        className="p-1 text-gray-400 hover:text-primary transition-colors"
+                        size="sm"
+                        variant="violet"
+                        aria-label={t("common.edit")}
                       >
                         <Pencil size={14} />
-                      </button>
+                      </IconButton>
                     )}
-                    <button
+                    <IconButton
                       onClick={() => handleRemoveOne(item)}
                       disabled={isPendingRemove}
-                      className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+                      size="sm"
+                      variant="danger"
+                      aria-label={t("common.delete")}
                     >
                       <Trash2 size={15} />
-                    </button>
+                    </IconButton>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <Pagination
-            page={currentPage}
-            totalPages={totalPages}
-            onPrev={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-          />
-        </>
+              </ListRow>
+            );
+          }}
+        />
       )}
     </div>
   );
@@ -607,11 +566,9 @@ function VendorRow({
       ) : (
         <div className="flex items-center justify-between gap-2">
           <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={checked}
               onChange={onToggle}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
             <VendorAvatar
               vendorName={vendor.name}
@@ -627,6 +584,7 @@ function VendorRow({
             <IconButton
               onClick={() => setEditing(true)}
               size="sm"
+              variant="violet"
               aria-label={t("common.edit")}
             >
               <Pencil size={14} />
@@ -645,7 +603,7 @@ function VendorRow({
               }}
               disabled={isPending}
               size="sm"
-              className="text-danger hover:bg-danger/10"
+              variant="danger"
               aria-label={t("common.delete")}
             >
               <Trash2 size={14} />
@@ -866,27 +824,24 @@ function VendorManager({
             : t("globalSettings.noVendors")}
         </p>
       ) : (
-        <>
-          <div className="space-y-1.5">
-            {pageVendors.map((vendor) => (
-              <VendorRow
-                key={vendor.id}
-                vendor={vendor}
-                checked={selectedVendorIds.includes(vendor.id)}
-                onToggle={() => toggleSelectedVendor(vendor.id)}
-                onUpdate={(id, data) => updateVendor.mutate({ id, data })}
-                onRemove={(id) => removeVendor.mutate(id)}
-                isPending={pending}
-              />
-            ))}
-          </div>
-          <Pagination
-            page={currentPage}
-            totalPages={totalPages}
-            onPrev={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-          />
-        </>
+        <SettingsDataTable
+          rows={pageVendors}
+          page={currentPage}
+          pageCount={totalPages}
+          onPageChange={setPage}
+          emptyState={null}
+          renderRow={(vendor) => (
+            <VendorRow
+              key={vendor.id}
+              vendor={vendor}
+              checked={selectedVendorIds.includes(vendor.id)}
+              onToggle={() => toggleSelectedVendor(vendor.id)}
+              onUpdate={(id, data) => updateVendor.mutate({ id, data })}
+              onRemove={(id) => removeVendor.mutate(id)}
+              isPending={pending}
+            />
+          )}
+        />
       )}
     </div>
   );

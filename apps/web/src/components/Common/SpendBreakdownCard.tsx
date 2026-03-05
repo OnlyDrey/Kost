@@ -115,14 +115,14 @@ export default function SpendBreakdownCard({
               key={`${mode}-${category}`}
               type="button"
               onClick={() => onSelectCategory?.(category)}
-              className={`w-full px-5 py-3.5 text-left rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${selected ? "border-primary/60 bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
+              className={`w-full px-5 py-3.5 text-left rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 ${selected ? "border-primary/60 bg-primary/10" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800/70"}`}
             >
               <div className="flex items-start justify-between mb-1.5 gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">
                   {category}
                 </span>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-base font-bold text-primary leading-tight">
+                  <p className="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">
                     {fmt(primaryCents)}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
