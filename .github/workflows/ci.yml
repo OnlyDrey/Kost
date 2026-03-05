@@ -126,10 +126,24 @@ jobs:
           restore-keys: |
             ts-${{ runner.os }}-
 
+      - name: Wait for Postgres readiness
+        run: |
+          for i in {1..60}; do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && exit 0
+            echo "Waiting for Postgres (attempt $i/60)..."
+            sleep 1
+          done
+          echo "Postgres did not become ready in time" >&2
+          exit 1
+
       - name: Generate Prisma client
         run: npm run generate --workspace=@kost/api
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
+
+      - name: Verify Prisma client artifacts
+        run: |
+          test -f node_modules/.prisma/client/index.js || test -f apps/api/node_modules/.prisma/client/index.js
 
       - name: Push schema to test DB
         run: npm run db:push --workspace=@kost/api
