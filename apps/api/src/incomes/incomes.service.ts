@@ -6,7 +6,7 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateIncomeDto } from "./dto/create-income.dto";
 import { UpdateIncomeDto } from "./dto/update-income.dto";
-import { IncomeType, PeriodStatus } from "@prisma/client";
+import { IncomeType, PeriodStatus } from "@kost/shared";
 
 @Injectable()
 export class IncomesService {

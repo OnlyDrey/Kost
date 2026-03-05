@@ -19,7 +19,8 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { UserRole, AuditAction } from "@prisma/client";
+import { AuditAction } from "@kost/shared";
+import { USER_ROLES } from "../common/user-roles";
 
 @ApiTags("audit")
 @ApiBearerAuth()
@@ -29,7 +30,7 @@ export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
   @Get()
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Get all audit logs for the family (Admin only)" })
   @ApiQuery({ name: "limit", required: false, type: Number, example: 100 })
   @ApiQuery({ name: "offset", required: false, type: Number, example: 0 })
@@ -44,7 +45,7 @@ export class AuditController {
   }
 
   @Get("entity/:entityType/:entityId")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({
     summary: "Get audit logs for a specific entity (Admin only)",
   })
@@ -74,7 +75,7 @@ export class AuditController {
   }
 
   @Get("action/:action")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Get audit logs by action type (Admin only)" })
   @ApiQuery({ name: "limit", required: false, type: Number, example: 50 })
   @ApiQuery({ name: "offset", required: false, type: Number, example: 0 })
@@ -90,7 +91,7 @@ export class AuditController {
   }
 
   @Get(":id")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Get a specific audit log by ID (Admin only)" })
   @ApiResponse({ status: 200, description: "Audit log details" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })

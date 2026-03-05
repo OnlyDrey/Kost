@@ -9,7 +9,7 @@ import { AllocationService } from "./allocation.service";
 import { CreateInvoiceDto } from "./dto/create-invoice.dto";
 import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { AddPaymentDto } from "./dto/add-payment.dto";
-import { DistributionMethod, PeriodStatus } from "@prisma/client";
+import { DistributionMethod, PeriodStatus } from "@kost/shared";
 
 const apiError = (code: string, message: string) => ({ code, message });
 

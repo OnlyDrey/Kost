@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreatePeriodDto } from "./dto/create-period.dto";
-import { PeriodStatus } from "@prisma/client";
+import { PeriodStatus } from "@kost/shared";
 import { SubscriptionsService } from "../subscriptions/subscriptions.service";
 
 @Injectable()

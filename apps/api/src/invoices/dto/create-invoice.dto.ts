@@ -11,7 +11,7 @@ import {
   IsBoolean,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { DistributionMethod, RemainderMethod } from "@prisma/client";
+import { DistributionMethod, RemainderMethod } from "@kost/shared";
 import { Type } from "class-transformer";
 
 export class InvoiceLineDto {

@@ -1,4 +1,5 @@
 import { readFileSync } from "fs";
+import { USER_ROLES } from "../common/user-roles";
 import { resolve } from "path";
 
 function enumValues(schema: string, enumName: string): string[] {
@@ -19,6 +20,6 @@ describe("users role constants stay aligned with Prisma schema", () => {
     const schema = readFileSync(resolve(__dirname, "../../prisma/schema.prisma"), "utf8");
     const schemaValues = enumValues(schema, "UserRole");
 
-    expect(schemaValues).toEqual(["ADMIN", "ADULT", "CHILD"]);
+    expect(schemaValues).toEqual(Object.values(USER_ROLES));
   });
 });

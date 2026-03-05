@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { PeriodStatus } from "@prisma/client";
+import { PeriodStatus } from "@kost/shared";
 
 interface SettlementData {
   totalInvoicesCents: number;

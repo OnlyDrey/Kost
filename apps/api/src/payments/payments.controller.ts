@@ -20,7 +20,7 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { UserRole } from "@prisma/client";
+import { USER_ROLES } from "../common/user-roles";
 import { UpdatePaymentDto } from "./dto/update-payment.dto";
 
 @ApiTags("payments")
@@ -93,7 +93,7 @@ export class PaymentsController {
 
 
   @Patch(":id")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Update a payment (Admin only)" })
   @ApiResponse({ status: 200, description: "Payment updated successfully" })
   update(
@@ -105,7 +105,7 @@ export class PaymentsController {
   }
 
   @Delete(":id")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Delete a payment (Admin only)" })
   @ApiResponse({ status: 200, description: "Payment deleted successfully" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })

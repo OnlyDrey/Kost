@@ -23,7 +23,7 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { UserRole } from "@prisma/client";
+import { USER_ROLES, UserRole } from "../common/user-roles";
 
 @ApiTags("subscriptions")
 @ApiBearerAuth()
@@ -60,7 +60,7 @@ export class SubscriptionsController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.ADULT)
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.ADULT)
   @ApiOperation({ summary: "Create a new subscription" })
   @ApiResponse({
     status: 201,
@@ -81,7 +81,7 @@ export class SubscriptionsController {
   }
 
   @Post("generate/:periodId")
-  @Roles(UserRole.ADMIN, UserRole.ADULT)
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.ADULT)
   @ApiOperation({
     summary: "Generate invoices from subscriptions for a period",
   })
@@ -102,7 +102,7 @@ export class SubscriptionsController {
   }
 
   @Patch(":id")
-  @Roles(UserRole.ADMIN, UserRole.ADULT)
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.ADULT)
   @ApiOperation({ summary: "Update a subscription" })
   @ApiResponse({
     status: 200,
@@ -126,7 +126,7 @@ export class SubscriptionsController {
   }
 
   @Patch(":id/toggle")
-  @Roles(UserRole.ADMIN, UserRole.ADULT)
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.ADULT)
   @ApiOperation({ summary: "Toggle subscription active status" })
   @ApiResponse({ status: 200, description: "Subscription status toggled" })
   @ApiResponse({ status: 404, description: "Subscription not found" })
@@ -138,7 +138,7 @@ export class SubscriptionsController {
   }
 
   @Delete(":id")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Delete a subscription (Admin only)" })
   @ApiResponse({
     status: 200,

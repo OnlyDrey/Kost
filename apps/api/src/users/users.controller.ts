@@ -34,7 +34,7 @@ import {
   CurrentUser,
   JwtPayload,
 } from "../common/decorators/current-user.decorator";
-import { UserRole } from "@prisma/client";
+import { USER_ROLES, UserRole } from "../common/user-roles";
 
 @ApiTags("users")
 @ApiBearerAuth()
@@ -59,7 +59,7 @@ export class UsersController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Create a new user (Admin only)" })
   @ApiResponse({ status: 201, description: "User created successfully" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
@@ -156,7 +156,7 @@ export class UsersController {
   }
 
   @Delete(":id")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Delete a user (Admin only)" })
   @ApiResponse({ status: 200, description: "User deleted successfully" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })

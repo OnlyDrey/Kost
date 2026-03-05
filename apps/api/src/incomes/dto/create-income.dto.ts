@@ -1,6 +1,6 @@
 import { IsEnum, IsInt, Min, IsNotEmpty, IsString } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
-import { IncomeType } from "@prisma/client";
+import { IncomeType } from "@kost/shared";
 
 export class CreateIncomeDto {
   @ApiProperty({ example: "user123" })

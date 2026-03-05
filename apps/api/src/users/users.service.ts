@@ -11,12 +11,7 @@ import * as bcrypt from "bcryptjs";
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
-const UserRole = {
-  ADMIN: "ADMIN",
-  ADULT: "ADULT",
-  CHILD: "CHILD",
-} as const;
-type UserRole = (typeof UserRole)[keyof typeof UserRole];
+import { USER_ROLES, UserRole } from "../common/user-roles";
 
 const userSelect = {
   id: true,
@@ -136,11 +131,11 @@ export class UsersService {
     }
 
     // Only admins can change roles or update other users
-    if (id !== currentUserId && currentUserRole !== UserRole.ADMIN) {
+    if (id !== currentUserId && currentUserRole !== USER_ROLES.ADMIN) {
       throw new ForbiddenException("Only admins can update other users");
     }
 
-    if (updateUserDto.role && currentUserRole !== UserRole.ADMIN) {
+    if (updateUserDto.role && currentUserRole !== USER_ROLES.ADMIN) {
       throw new ForbiddenException("Only admins can change user roles");
     }
 
@@ -202,9 +197,9 @@ export class UsersService {
     }
 
     // Prevent deleting the last admin
-    if (user.role === UserRole.ADMIN) {
+    if (user.role === USER_ROLES.ADMIN) {
       const adminCount = await this.prisma.user.count({
-        where: { familyId, role: UserRole.ADMIN },
+        where: { familyId, role: USER_ROLES.ADMIN },
       });
 
       if (adminCount <= 1) {
@@ -239,7 +234,7 @@ export class UsersService {
   ) {
     const user = await this.prisma.user.findFirst({ where: { id, familyId } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
-    if (id !== currentUserId && currentUserRole !== UserRole.ADMIN) {
+    if (id !== currentUserId && currentUserRole !== USER_ROLES.ADMIN) {
       throw new ForbiddenException("Only admins can update other users");
     }
 
@@ -263,7 +258,7 @@ export class UsersService {
   ) {
     const user = await this.prisma.user.findFirst({ where: { id, familyId } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
-    if (id !== currentUserId && currentUserRole !== UserRole.ADMIN) {
+    if (id !== currentUserId && currentUserRole !== USER_ROLES.ADMIN) {
       throw new ForbiddenException("Only admins can update other users");
     }
 

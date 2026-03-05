@@ -8,7 +8,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AllocationService } from "../invoices/allocation.service";
 import { CreateSubscriptionDto } from "./dto/create-subscription.dto";
 import { UpdateSubscriptionDto } from "./dto/update-subscription.dto";
-import { DistributionMethod, SubscriptionStatus } from "@prisma/client";
+import { DistributionMethod, SubscriptionStatus } from "@kost/shared";
 
 @Injectable()
 export class SubscriptionsService {
