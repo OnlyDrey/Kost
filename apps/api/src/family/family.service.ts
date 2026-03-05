@@ -37,7 +37,7 @@ export class FamilyService {
     const removeSet = new Set(names);
     const updated = await this.prisma.family.update({
       where: { id: familyId },
-      data: { categories: family.categories.filter((c) => !removeSet.has(c)) },
+      data: { categories: family.categories.filter((c: string) => !removeSet.has(c)) },
     });
     return updated.categories;
   }
@@ -53,7 +53,7 @@ export class FamilyService {
     const updated = await this.prisma.family.update({
       where: { id: familyId },
       data: {
-        categories: family.categories.map((category) => (category === oldName ? newName : category)),
+        categories: family.categories.map((category: string) => (category === oldName ? newName : category)),
       },
     });
 
@@ -84,7 +84,7 @@ export class FamilyService {
     const removeSet = new Set(names);
     const updated = await this.prisma.family.update({
       where: { id: familyId },
-      data: { paymentMethods: family.paymentMethods.filter((m) => !removeSet.has(m)) },
+      data: { paymentMethods: family.paymentMethods.filter((m: string) => !removeSet.has(m)) },
     });
     return updated.paymentMethods;
   }
@@ -100,7 +100,7 @@ export class FamilyService {
     const updated = await this.prisma.family.update({
       where: { id: familyId },
       data: {
-        paymentMethods: family.paymentMethods.map((method) => (method === oldName ? newName : method)),
+        paymentMethods: family.paymentMethods.map((method: string) => (method === oldName ? newName : method)),
       },
     });
 

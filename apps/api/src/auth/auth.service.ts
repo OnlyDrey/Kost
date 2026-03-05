@@ -244,7 +244,7 @@ export class AuthService {
       }
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: any) => {
       await tx.invoice.updateMany({
         where: { ownerUserId: userId, isPersonal: true },
         data: { isPersonal: false, ownerUserId: null },
