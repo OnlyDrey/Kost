@@ -59,3 +59,10 @@ npm run lint --workspaces --if-present
 npm run test --workspaces --if-present
 npm run build
 ```
+
+
+## Documentation placement
+
+- Keep repository-level documentation in `docs/`.
+- Keep `README.md` at repository root as the primary entry point.
+- When adding a new guide, link it from `docs/index.md`.
