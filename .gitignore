@@ -41,8 +41,11 @@ coverage/
 # Misc
 *.pem
 .cache/
+**/.cache/
 .temp/
 
 # Docker buildx local cache
 .buildx-cache
 .buildx-cache-new
+**/prisma/migrations/**
+**/prisma/migration_lock.toml

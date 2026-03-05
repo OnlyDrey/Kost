@@ -23,11 +23,13 @@ npm run build --workspace=apps/api
 
 ```bash
 npm run generate --workspace=apps/api
-npm run migrate:deploy --workspace=apps/api
+npm run db:push --workspace=apps/api
 npm run seed --workspace=apps/api
 ```
 
 Prisma is an active runtime dependency across the API modules and is required for application startup.
+
+Migration files are intentionally **not tracked** in this development-stage repository. Use `prisma db push` for schema sync during development and CI.
 
 ## Prisma engine reliability notes
 

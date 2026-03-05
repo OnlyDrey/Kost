@@ -224,7 +224,7 @@ export class PaymentsService {
     });
 
     const summaries = await Promise.all(
-      incomes.map((income) =>
+      incomes.map((income: (typeof incomes)[number]) =>
         this.getUserPaymentSummary(income.userId, periodId, familyId),
       ),
     );
@@ -232,7 +232,7 @@ export class PaymentsService {
     return {
       periodId,
       users: summaries,
-      totalInvoicesCents: summaries.reduce((sum) => {
+      totalInvoicesCents: summaries.reduce((sum: number) => {
         // Only count each user's owed amount once
         return sum;
       }, 0),

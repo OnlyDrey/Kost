@@ -10,19 +10,8 @@ import {
   IsObject,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-
-export enum DistributionMethod {
-  BY_PERCENT = "BY_PERCENT",
-  BY_INCOME = "BY_INCOME",
-  FIXED = "FIXED",
-  PERSONAL = "PERSONAL",
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = "ACTIVE",
-  PAUSED = "PAUSED",
-  CANCELED = "CANCELED",
-}
+import { DistributionMethod, SubscriptionStatus } from "@kost/shared";
+export { DistributionMethod, SubscriptionStatus } from "@kost/shared";
 
 
 export class CreateSubscriptionDto {

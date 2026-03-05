@@ -1,6 +1,6 @@
 import { IsEnum, IsInt, Min, IsOptional } from "class-validator";
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IncomeType } from "@prisma/client";
+import { IncomeType } from "@kost/shared";
 
 export class UpdateIncomeDto {
   @ApiPropertyOptional({ enum: IncomeType, example: IncomeType.MONTHLY_GROSS })

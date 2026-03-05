@@ -22,7 +22,7 @@ import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { AddPaymentDto } from "./dto/add-payment.dto";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "../common/user-roles";
 
 @ApiTags("invoices")
 @ApiBearerAuth()

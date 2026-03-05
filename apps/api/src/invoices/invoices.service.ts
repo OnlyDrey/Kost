@@ -9,7 +9,9 @@ import { AllocationService } from "./allocation.service";
 import { CreateInvoiceDto } from "./dto/create-invoice.dto";
 import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
 import { AddPaymentDto } from "./dto/add-payment.dto";
-import { DistributionMethod, PeriodStatus } from "@prisma/client";
+import { DistributionMethod, PeriodStatus } from "@kost/shared";
+import { toDistributionMethod } from "../common/enum-mappers";
+import type { Prisma } from "@prisma/client";
 
 const apiError = (code: string, message: string) => ({ code, message });
 
@@ -19,6 +21,19 @@ export class InvoicesService {
     private prisma: PrismaService,
     private allocationService: AllocationService,
   ) {}
+
+  private toParticipant(income: {
+    userId: string;
+    user: { name: string; role: string };
+    normalizedMonthlyGrossCents: number;
+  }) {
+    return {
+      userId: income.userId,
+      userName: income.user.name,
+      role: income.user.role,
+      normalizedMonthlyGrossCents: income.normalizedMonthlyGrossCents,
+    };
+  }
 
   /**
    * Get all invoices for a period
@@ -204,14 +219,14 @@ export class InvoicesService {
     else if (selectedUserIds && selectedUserIds.length > 0) {
       // When users are explicitly selected, we need to include them even if they don't have incomes
       // This allows manually selecting children (CHILD users) for expense distribution
-      const incomesMap = new Map(incomes.map((inc) => [inc.userId, inc]));
+      const incomesMap = new Map(incomes.map((inc: (typeof incomes)[number]) => [inc.userId, inc]));
       const allFamily = await this.prisma.user.findMany({
         where: { familyId },
       });
 
       allParticipants = selectedUserIds.map((userId) => {
         const income = incomesMap.get(userId);
-        const user = allFamily.find((u) => u.id === userId);
+        const user = allFamily.find((u: (typeof allFamily)[number]) => u.id === userId);
 
         if (!user) {
           throw new BadRequestException(`User ${userId} not found in family`);
@@ -221,7 +236,8 @@ export class InvoicesService {
           userId: user.id,
           userName: user.name,
           role: user.role,
-          normalizedMonthlyGrossCents: income?.normalizedMonthlyGrossCents ?? 0,
+          normalizedMonthlyGrossCents:
+            (income as (typeof incomes)[number] | undefined)?.normalizedMonthlyGrossCents ?? 0,
         };
       });
 
@@ -257,12 +273,7 @@ export class InvoicesService {
       }
 
       if (incomes.length > 0) {
-        allParticipants = incomes.map((inc) => ({
-          userId: inc.userId,
-          userName: inc.user.name,
-          role: inc.user.role,
-          normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-        }));
+        allParticipants = incomes.map((inc: (typeof incomes)[number]) => this.toParticipant(inc));
         participants = allParticipants.filter((p) => p.role !== "CHILD");
       } else {
         // No incomes found, but explicit rules provided - use an empty participants list
@@ -282,7 +293,7 @@ export class InvoicesService {
     );
 
     // Create invoice with lines, distribution rules, and shares in a transaction
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const invoice = await tx.invoice.create({
         data: {
           familyId,
@@ -418,9 +429,9 @@ export class InvoicesService {
     if (shouldRecalculateShares) {
       const totalCents =
         updateInvoiceDto.totalCents ?? existingInvoice.totalCents;
-      const method =
-        updateInvoiceDto.distributionMethod ??
-        existingInvoice.distributionMethod;
+      const method = toDistributionMethod(
+        updateInvoiceDto.distributionMethod ?? existingInvoice.distributionMethod,
+      );
 
       // Get incomes for period
       const incomes = await this.prisma.income.findMany({
@@ -445,14 +456,14 @@ export class InvoicesService {
 
       if (selectedUserIds && selectedUserIds.length > 0) {
         // When users are explicitly selected, include them even if they don't have incomes
-        const incomesMap = new Map(incomes.map((inc) => [inc.userId, inc]));
+        const incomesMap = new Map(incomes.map((inc: (typeof incomes)[number]) => [inc.userId, inc]));
         const allFamily = await this.prisma.user.findMany({
           where: { familyId },
         });
 
         allParticipants = selectedUserIds.map((userId) => {
           const income = incomesMap.get(userId);
-          const user = allFamily.find((u) => u.id === userId);
+          const user = allFamily.find((u: (typeof allFamily)[number]) => u.id === userId);
 
           if (!user) {
             throw new BadRequestException(`User ${userId} not found in family`);
@@ -463,7 +474,8 @@ export class InvoicesService {
             userName: user.name,
             role: user.role,
             normalizedMonthlyGrossCents:
-              income?.normalizedMonthlyGrossCents ?? 0,
+              (income as (typeof incomes)[number] | undefined)
+                ?.normalizedMonthlyGrossCents ?? 0,
           };
         });
 
@@ -483,12 +495,7 @@ export class InvoicesService {
         participants = allParticipants;
       } else {
         // Default behavior: use users with incomes, excluding CHILD users
-        allParticipants = incomes.map((inc) => ({
-          userId: inc.userId,
-          userName: inc.user.name,
-          role: inc.user.role,
-          normalizedMonthlyGrossCents: inc.normalizedMonthlyGrossCents,
-        }));
+        allParticipants = incomes.map((inc: (typeof incomes)[number]) => this.toParticipant(inc));
         participants = allParticipants.filter((p) => p.role !== "CHILD");
       }
 
@@ -519,7 +526,7 @@ export class InvoicesService {
       );
 
       // Update in transaction
-      return this.prisma.$transaction(async (tx) => {
+      return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Delete existing shares
         await tx.invoiceShare.deleteMany({
           where: { invoiceId: id },

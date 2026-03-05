@@ -18,7 +18,7 @@ The default deployment is Docker-first, running PostgreSQL and a single app cont
 
 ```text
 apps/
-  api/        NestJS backend, Prisma schema/migrations, tests
+  api/        NestJS backend, Prisma schema, tests
   web/        React frontend (PWA)
 packages/
   shared/     Shared TypeScript types/schemas
@@ -72,13 +72,14 @@ npm run dev:web
 - `npm run dev:web` – run Vite dev server
 - `npm run lint` – lint all workspaces
 - `npm run test` – run workspace tests
+- `npm run typecheck` – typecheck workspaces that expose a `typecheck` script
 - `npm run build` – build all workspaces
 - `npm run docker:up` / `npm run docker:down` – compose lifecycle
 - `npm run doctor` – optional local environment/system check
 
 ### Workspace highlights
 
-- `apps/api`: `dev`, `build`, `test`, `test:e2e`, `generate`, `migrate:deploy`, `seed`
+- `apps/api`: `dev`, `build`, `test`, `test:e2e`, `generate`, `db:push`, `seed`
 - `apps/web`: `dev`, `build`, `lint`, `typecheck`
 - `packages/shared`: `build`
 

@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreatePeriodDto } from "./dto/create-period.dto";
-import { PeriodStatus } from "@prisma/client";
+import { PeriodStatus } from "@kost/shared";
 import { SubscriptionsService } from "../subscriptions/subscriptions.service";
 
 @Injectable()
@@ -240,15 +240,20 @@ export class PeriodsService {
   async getPeriodStatus(id: string, familyId: string, currentUserId?: string) {
     const period = await this.findOne(id, familyId, currentUserId);
 
+    type PeriodInvoice = (typeof period.invoices)[number];
+    type PeriodPayment = PeriodInvoice["payments"][number];
+    type PeriodShare = PeriodInvoice["shares"][number];
+    type PeriodIncome = (typeof period.incomes)[number];
+
     // Calculate totals
     const totalInvoicesCents = period.invoices.reduce(
-      (sum, inv) => sum + inv.totalCents,
+      (sum: number, inv: PeriodInvoice) => sum + inv.totalCents,
       0,
     );
 
-    const totalPaidCents = period.invoices.reduce((sum, inv) => {
+    const totalPaidCents = period.invoices.reduce((sum: number, inv: PeriodInvoice) => {
       const invoicePayments = inv.payments.reduce(
-        (pSum, p) => pSum + p.amountCents,
+        (pSum: number, p: PeriodPayment) => pSum + p.amountCents,
         0,
       );
       return sum + invoicePayments;
@@ -269,7 +274,7 @@ export class PeriodsService {
     >();
 
     // Initialize with users who have incomes
-    period.incomes.forEach((income) => {
+    period.incomes.forEach((income: PeriodIncome) => {
       userSummaries.set(income.userId, {
         userId: income.userId,
         userName: income.user.name,
@@ -280,8 +285,8 @@ export class PeriodsService {
     });
 
     // Calculate owed amounts
-    period.invoices.forEach((invoice) => {
-      invoice.shares.forEach((share) => {
+    period.invoices.forEach((invoice: PeriodInvoice) => {
+      invoice.shares.forEach((share: PeriodShare) => {
         const summary = userSummaries.get(share.userId);
         if (summary) {
           summary.totalOwedCents += share.shareCents;
@@ -290,8 +295,8 @@ export class PeriodsService {
     });
 
     // Calculate paid amounts
-    period.invoices.forEach((invoice) => {
-      invoice.payments.forEach((payment) => {
+    period.invoices.forEach((invoice: PeriodInvoice) => {
+      invoice.payments.forEach((payment: PeriodPayment) => {
         const summary = userSummaries.get(payment.paidById);
         if (summary) {
           summary.totalPaidCents += payment.amountCents;
@@ -327,8 +332,11 @@ export class PeriodsService {
   async getPeriodStats(id: string, familyId: string, currentUserId?: string) {
     const period = await this.findOne(id, familyId, currentUserId);
 
+    type PeriodInvoice = (typeof period.invoices)[number];
+    type PeriodShare = PeriodInvoice["shares"][number];
+
     const totalAmountCents = period.invoices.reduce(
-      (sum, inv) => sum + inv.totalCents,
+      (sum: number, inv: PeriodInvoice) => sum + inv.totalCents,
       0,
     );
 
@@ -337,8 +345,8 @@ export class PeriodsService {
       { userId: string; userName: string; totalShareCents: number }
     >();
 
-    period.invoices.forEach((invoice) => {
-      invoice.shares.forEach((share) => {
+    period.invoices.forEach((invoice: PeriodInvoice) => {
+      invoice.shares.forEach((share: PeriodShare) => {
         const existing = userShareMap.get(share.userId);
         if (existing) {
           existing.totalShareCents += share.shareCents;

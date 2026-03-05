@@ -21,6 +21,7 @@ export enum DistributionMethod {
   BY_PERCENT = 'BY_PERCENT',
   BY_INCOME = 'BY_INCOME',
   FIXED = 'FIXED',
+  PERSONAL = 'PERSONAL',
 }
 
 export enum RemainderMethod {
@@ -33,6 +34,12 @@ export enum IncomeType {
   MONTHLY_NET = 'MONTHLY_NET',
   ANNUAL_GROSS = 'ANNUAL_GROSS',
   ANNUAL_NET = 'ANNUAL_NET',
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  CANCELED = 'CANCELED',
 }
 
 export enum AuditAction {

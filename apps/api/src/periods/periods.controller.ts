@@ -24,7 +24,7 @@ import {
   CurrentUser,
   JwtPayload,
 } from "../common/decorators/current-user.decorator";
-import { UserRole } from "@prisma/client";
+import { USER_ROLES } from "../common/user-roles";
 
 @ApiTags("periods")
 @ApiBearerAuth()
@@ -94,7 +94,7 @@ export class PeriodsController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.ADULT)
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.ADULT)
   @ApiOperation({ summary: "Create a new period" })
   @ApiResponse({ status: 201, description: "Period created successfully" })
   @ApiResponse({ status: 409, description: "Period already exists" })
@@ -107,7 +107,7 @@ export class PeriodsController {
 
   @Post(":id/close")
   @HttpCode(200)
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({
     summary: "Close a period and calculate settlements (Admin only)",
   })
@@ -123,7 +123,7 @@ export class PeriodsController {
 
   @Post(":id/reopen")
   @HttpCode(200)
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Reopen a closed period (Admin only)" })
   @ApiResponse({ status: 200, description: "Period reopened successfully" })
   @ApiResponse({ status: 400, description: "Period is already open" })
@@ -136,7 +136,7 @@ export class PeriodsController {
   }
 
   @Get(":id/deletion-info")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Get deletion info for a period (what will be deleted)" })
   @ApiResponse({ status: 200, description: "Deletion info retrieved" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
@@ -148,7 +148,7 @@ export class PeriodsController {
   }
 
   @Delete(":id")
-  @Roles(UserRole.ADMIN)
+  @Roles(USER_ROLES.ADMIN)
   @ApiOperation({ summary: "Delete a period and cascade delete all related data (Admin only)" })
   @ApiResponse({ status: 200, description: "Period deleted successfully" })
   @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
