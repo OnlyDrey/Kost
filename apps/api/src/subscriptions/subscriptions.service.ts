@@ -6,9 +6,12 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AllocationService } from "../invoices/allocation.service";
-import { CreateSubscriptionDto } from "./dto/create-subscription.dto";
+import {
+  CreateSubscriptionDto,
+  DistributionMethod,
+  SubscriptionStatus,
+} from "./dto/create-subscription.dto";
 import { UpdateSubscriptionDto } from "./dto/update-subscription.dto";
-import { DistributionMethod, SubscriptionStatus } from "@kost/shared";
 
 @Injectable()
 export class SubscriptionsService {
@@ -222,7 +225,15 @@ export class SubscriptionsService {
       );
     }
 
-    const allParticipants = incomes.map((inc) => ({
+    type IncomeWithUser = (typeof incomes)[number];
+    type Participant = {
+      userId: string;
+      userName: string;
+      role: string;
+      normalizedMonthlyGrossCents: number;
+    };
+
+    const allParticipants: Participant[] = incomes.map((inc: IncomeWithUser) => ({
       userId: inc.userId,
       userName: inc.user.name,
       role: inc.user.role,
@@ -254,8 +265,10 @@ export class SubscriptionsService {
       const selectedUserIds = distributionRules?.userIds;
       const participants =
         selectedUserIds && selectedUserIds.length > 0
-          ? allParticipants.filter((p) => selectedUserIds.includes(p.userId))
-          : allParticipants.filter((p) => p.role !== "CHILD");
+          ? allParticipants.filter((p: Participant) =>
+              selectedUserIds.includes(p.userId),
+            )
+          : allParticipants.filter((p: Participant) => p.role !== "CHILD");
 
       const shares = await this.calculateShares(
         subscription.amountCents,

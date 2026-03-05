@@ -11,8 +11,15 @@ import {
   IsBoolean,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { DistributionMethod, RemainderMethod } from "@kost/shared";
+import { RemainderMethod } from "@kost/shared";
 import { Type } from "class-transformer";
+
+export enum DistributionMethod {
+  BY_PERCENT = "BY_PERCENT",
+  BY_INCOME = "BY_INCOME",
+  FIXED = "FIXED",
+  PERSONAL = "PERSONAL",
+}
 
 export class InvoiceLineDto {
   @ApiProperty({ example: "Line item description" })

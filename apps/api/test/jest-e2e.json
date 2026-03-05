@@ -13,7 +13,7 @@
   },
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../src/$1",
-    "^@kost/shared$": "<rootDir>/../../packages/shared/src/index.ts",
-    "^@kost/shared/(.*)$": "<rootDir>/../../packages/shared/src/$1"
+    "^@kost/shared$": "<rootDir>/../../../packages/shared/src/index.ts",
+    "^@kost/shared/(.*)$": "<rootDir>/../../../packages/shared/src/$1"
   }
 }
