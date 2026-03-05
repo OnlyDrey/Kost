@@ -143,25 +143,37 @@ If you see `TLS handshake timeout` when pulling `node:22-alpine` from Docker Hub
 2. **Use an internal registry** that mirrors Node base images.
 3. **Pre-pull base images** on runners/build hosts before the build step.
 
-### Custom base image source (optional)
+### Standard build commands
 
-The Dockerfile supports overriding the base image source while keeping the default unchanged.
-
-Default build (unchanged behavior):
+Run from repository root:
 
 ```bash
-docker build -t kost-app:latest .
+npm run docker:image:build
+npm run docker:image:help
 ```
 
-Build with a mirrored/internal Node image:
+Mirror/internal registry build:
 
 ```bash
-docker build \
-  --build-arg NODE_IMAGE=<your-registry>/library/node:22-alpine \
-  -t kost-app:latest \
-  .
+NODE_IMAGE=<your-registry>/library/node:22-alpine npm run docker:image:build:mirror
 ```
+
+BuildKit local cache build (CI-like local run):
+
+```bash
+NODE_IMAGE=node:22-alpine IMAGE_TAG=kost-app:ci npm run docker:image:build:ci
+```
+
+### Optional reproducibility pinning
+
+You can pin the base image by digest for deterministic rebuilds:
+
+```bash
+NODE_IMAGE=node@sha256:<digest> npm run docker:image:build:mirror
+```
+
+Update the digest intentionally (for example when adopting Node security updates), then rebuild and validate.
 
 ### CI suggestion
 
-For self-hosted or restricted CI runners, configure a registry mirror or pre-pull `node:22-alpine` (or your mirrored equivalent) to reduce hard dependency on Docker Hub availability.
+For self-hosted or restricted CI runners, configure a registry mirror or pre-pull `node:22-alpine` (or your mirrored equivalent). The CI workflow also supports overriding `NODE_IMAGE` through repository variable `NODE_IMAGE`.

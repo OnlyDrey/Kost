@@ -120,5 +120,6 @@ jobs:
           tags: kost-app:latest
           build-args: |
             VITE_API_URL=/api
+            NODE_IMAGE=${{ vars.NODE_IMAGE || 'node:22-alpine' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

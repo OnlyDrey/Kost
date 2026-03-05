@@ -32,6 +32,7 @@ RUN npm run build --workspace=@kost/web
 RUN npm run build --workspace=@kost/api
 RUN npx tsc -p apps/api/tsconfig.seed.json
 
+ARG NODE_IMAGE
 FROM ${NODE_IMAGE} AS runtime
 WORKDIR /app
 

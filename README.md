@@ -86,7 +86,7 @@ npm run dev:web
 
 - [Documentation index](docs/index.md)
 - [System overview](docs/overview.md)
-- [Setup and deployment](docs/setup-and-deployment.md)
+- [Setup and deployment](docs/setup-and-deployment.md) (includes Docker mirror/build-cache guidance)
 - [Operations runbook](docs/operations.md)
 - [Web app guide](docs/web-app.md)
 - [API guide](docs/api.md)
