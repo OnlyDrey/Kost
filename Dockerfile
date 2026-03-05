@@ -27,7 +27,7 @@ COPY apps/web ./apps/web
 
 RUN npm run build --workspace=@kost/shared
 RUN npm run generate --workspace=@kost/api
-RUN test -d node_modules/.prisma/client && test -d node_modules/@prisma/client
+RUN set -eux;   mkdir -p /tmp/prisma-artifacts/.prisma /tmp/prisma-artifacts/@prisma;   if [ -d node_modules/.prisma ]; then cp -R node_modules/.prisma/. /tmp/prisma-artifacts/.prisma/; fi;   if [ -d apps/api/node_modules/.prisma ]; then cp -R apps/api/node_modules/.prisma/. /tmp/prisma-artifacts/.prisma/; fi;   if [ -d node_modules/@prisma ]; then cp -R node_modules/@prisma/. /tmp/prisma-artifacts/@prisma/; fi;   if [ -d apps/api/node_modules/@prisma ]; then cp -R apps/api/node_modules/@prisma/. /tmp/prisma-artifacts/@prisma/; fi;   test -d /tmp/prisma-artifacts/.prisma/client;   test -d /tmp/prisma-artifacts/@prisma/client
 RUN npm run typecheck --workspace=@kost/web
 RUN npm run build --workspace=@kost/web
 RUN npm exec --workspace=@kost/api -- nest build
@@ -50,8 +50,8 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
   npm ci --omit=dev --workspace=@kost/api --workspace=@kost/shared
 
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /tmp/prisma-artifacts/.prisma ./node_modules/.prisma
+COPY --from=builder /tmp/prisma-artifacts/@prisma ./node_modules/@prisma
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/web/dist ./apps/api/public
