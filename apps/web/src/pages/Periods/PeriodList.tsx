@@ -23,13 +23,14 @@ import { formatDate } from "../../utils/date";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
-import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
+import {
+  FOCUS_RING,
+  SELECT_TRIGGER,
+} from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 
-
-const inputCls =
-  `w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
+const inputCls = `w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
 
 export default function PeriodList() {
   const { t } = useTranslation();
@@ -273,9 +274,11 @@ export default function PeriodList() {
       ) : (
         <div className="grid grid-cols-1 gap-3 items-stretch md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
           {filteredPeriods.map((period) => (
-            <div
+            <button
               key={period.id}
-              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm"
+              type="button"
+              onClick={() => navigate(`/overview?period=${period.id}`)}
+              className={`w-full text-left bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60 ${FOCUS_RING}`}
             >
               {(() => {
                 const closed = isPeriodClosed(period);
@@ -308,6 +311,7 @@ export default function PeriodList() {
 
                       <ActionIconBar
                         tight
+                        stopPropagation
                         items={[
                           {
                             key: "stats",
@@ -364,7 +368,7 @@ export default function PeriodList() {
                   </div>
                 );
               })()}
-            </div>
+            </button>
           ))}
         </div>
       )}

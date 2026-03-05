@@ -1,6 +1,8 @@
-import { CheckCircle2, Store } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
+import { useSettings } from "../../stores/settings.context";
+import VendorAvatar from "../Common/VendorAvatar";
 import { FOCUS_RING_STRONG } from "../Common/focusStyles";
 import InvoiceStatusTag from "../Common/InvoiceStatusTag";
 import type { InvoiceStatus } from "../../utils/invoiceStatus";
@@ -59,6 +61,7 @@ export default function ExpenseItemCard({
   amountDetails,
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
+  const { settings } = useSettings();
   const emphasisClass = paid
     ? "border-success/60 bg-success/5"
     : overdue
@@ -67,13 +70,7 @@ export default function ExpenseItemCard({
         ? "border-primary/60 bg-primary/5"
         : "border-app-border";
 
-  const amountClass = paid
-    ? "text-success"
-    : overdue
-      ? "text-danger"
-      : amountTone === "partial"
-        ? "text-warning"
-        : "text-primary";
+  const amountClass = "text-gray-900 dark:text-gray-100";
 
   const effectiveFocusRing =
     focusRingClassName ??
@@ -86,20 +83,11 @@ export default function ExpenseItemCard({
   const cardBody = (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-start gap-3">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="w-12 h-12 rounded-md object-contain object-center bg-white border border-gray-200 dark:border-gray-700 flex-shrink-0"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0">
-            <Store size={18} className="text-gray-400" />
-          </div>
-        )}
+        <VendorAvatar
+          vendorName={vendor}
+          logoUrl={logoUrl}
+          show={settings.branding.showVendorImages}
+        />
 
         <div className="min-w-0 flex-1">
           <p
@@ -122,7 +110,9 @@ export default function ExpenseItemCard({
       <div className="w-full flex flex-wrap gap-1">
         {showPaymentStatusPill && (
           <InvoiceStatusTag
-            status={paymentStatus ?? (paid ? "PAID" : overdue ? "OVERDUE" : "UNPAID")}
+            status={
+              paymentStatus ?? (paid ? "PAID" : overdue ? "OVERDUE" : "UNPAID")
+            }
           />
         )}
         {overdue && (
@@ -143,37 +133,36 @@ export default function ExpenseItemCard({
         )}
       </div>
 
-      {(amountLabel || rightContent || dateLabel || actionButton) && (
-        <div className="min-w-0 space-y-0.5">
-          <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 min-w-0">
-            <div className="min-w-0 flex-1">
-              {amountLabel && (
-                <p
-                  className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
-                >
-                  {amountLabel}
-                </p>
-              )}
-              {shareLabel && (
-                <p className="text-xs text-app-text-secondary mt-0">
-                  {shareLabel}
-                </p>
-              )}
-              {amountDetails?.map((line) => (
-                <p key={line} className="text-xs text-app-text-secondary mt-0">
-                  {line}
-                </p>
-              ))}
-            </div>
-
-            {(rightContent || actionButton) && (
-              <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
-                {rightContent && <div className="shrink-0">{rightContent}</div>}
-                {actionButton && <div className="shrink-0">{actionButton}</div>}
-              </div>
+      {(amountLabel || rightContent || actionButton) && (
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1">
+            {amountLabel && (
+              <p
+                className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
+              >
+                {amountLabel}
+              </p>
             )}
           </div>
+          {(rightContent || actionButton) && (
+            <div className="ml-auto flex items-center gap-2">
+              {rightContent && <div className="shrink-0">{rightContent}</div>}
+              {actionButton && <div className="shrink-0">{actionButton}</div>}
+            </div>
+          )}
+        </div>
+      )}
 
+      {(shareLabel || amountDetails?.length || dateLabel) && (
+        <div className="space-y-0.5">
+          {shareLabel && (
+            <p className="text-xs text-app-text-secondary mt-0">{shareLabel}</p>
+          )}
+          {amountDetails?.map((line) => (
+            <p key={line} className="text-xs text-app-text-secondary mt-0">
+              {line}
+            </p>
+          ))}
           {dateLabel && (
             <p className="text-xs text-app-text-secondary">{dateLabel}</p>
           )}
@@ -190,7 +179,7 @@ export default function ExpenseItemCard({
 
   return (
     <div
-      className={`relative bg-app-surface rounded-xl border ${emphasisClass} shadow-sm hover:shadow-md transition-all`}
+      className={`relative bg-app-surface rounded-xl border ${emphasisClass} shadow-sm transition-all hover:shadow-md`}
     >
       {onClick ? (
         <button

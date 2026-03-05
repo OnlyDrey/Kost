@@ -35,6 +35,7 @@ import { isPeriodClosed } from "../../utils/periodStatus";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
 
 export default function PeriodDetail() {
@@ -157,7 +158,9 @@ export default function PeriodDetail() {
   const filterByShare = (list: any[]) =>
     filter === "share-user"
       ? list.filter(({ invoice }) =>
-          (invoice.shares ?? []).some((s: { userId: string }) => s.userId === shareUserId),
+          (invoice.shares ?? []).some(
+            (s: { userId: string }) => s.userId === shareUserId,
+          ),
         )
       : list;
 
@@ -170,7 +173,7 @@ export default function PeriodDetail() {
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-red-200 dark:border-red-900/50",
       titleClass: "text-red-700 dark:text-red-400",
-      amountClass: "text-red-500 dark:text-red-400/80",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
     {
       key: "unpaid",
@@ -180,7 +183,7 @@ export default function PeriodDetail() {
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-gray-200 dark:border-gray-800",
       titleClass: "text-gray-800 dark:text-gray-200",
-      amountClass: "text-primary dark:text-primary",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
     {
       key: "partial",
@@ -190,7 +193,7 @@ export default function PeriodDetail() {
         filter === "all" || filter === "remaining" || filter === "share-user",
       borderClass: "border-amber-200 dark:border-amber-900/50",
       titleClass: "text-amber-700 dark:text-amber-400",
-      amountClass: "text-amber-500 dark:text-amber-400/80",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
     {
       key: "paid",
@@ -199,13 +202,12 @@ export default function PeriodDetail() {
       show: filter === "all" || filter === "paid" || filter === "share-user",
       borderClass: "border-green-200 dark:border-green-900/50",
       titleClass: "text-green-700 dark:text-green-400",
-      amountClass: "text-green-500 dark:text-green-400/80",
+      amountClass: "text-gray-900 dark:text-gray-100",
     },
   ].filter((group) => group.show);
 
   const getVendorLogo = (vendorName: string) =>
-    vendors.find((v) => v.name.toLowerCase() === vendorName.toLowerCase())
-      ?.logoUrl;
+    getVendorLogoUrl(vendors, vendorName);
 
   return (
     <div className="space-y-6">
@@ -221,9 +223,7 @@ export default function PeriodDetail() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {period.id}
             </h1>
-            <PeriodStatusBadge
-              status={closed ? "CLOSED" : "OPEN"}
-            />
+            <PeriodStatusBadge status={closed ? "CLOSED" : "OPEN"} />
           </div>
           {period.closedAt && (
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -294,7 +294,9 @@ export default function PeriodDetail() {
               <SpendBreakdownCard
                 invoices={invoices}
                 currentUserId={currentUser?.id}
-                selectedShareUserId={hasShareSelection ? shareUserId : undefined}
+                selectedShareUserId={
+                  hasShareSelection ? shareUserId : undefined
+                }
                 selectedShareUserName={selectedShareUser?.userName}
                 currency={currency}
                 title={t("period.categoryBreakdown")}
@@ -492,7 +494,10 @@ export default function PeriodDetail() {
                                   onClick: async () => {
                                     if (!currentUser || remaining <= 0) return;
                                     if (closed) {
-                                      await notify(t("invoice.closedPeriodPaymentBlocked"), t("common.error"));
+                                      await notify(
+                                        t("invoice.closedPeriodPaymentBlocked"),
+                                        t("common.error"),
+                                      );
                                       return;
                                     }
                                     try {
@@ -512,7 +517,9 @@ export default function PeriodDetail() {
                                     }
                                   },
                                   disabled:
-                                    closed || remaining <= 0 || addPayment.isPending,
+                                    closed ||
+                                    remaining <= 0 ||
+                                    addPayment.isPending,
                                   hidden: closed,
                                   colorClassName:
                                     "bg-success/20 hover:bg-success/30 text-success",

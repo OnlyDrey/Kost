@@ -21,28 +21,34 @@ export default function ActionIconBar({
   className = "",
   stopPropagation = false,
   showLabelFromMd = false,
+  size = "md",
 }: {
   items: ActionIconItem[];
   tight?: boolean;
   className?: string;
   stopPropagation?: boolean;
   showLabelFromMd?: boolean;
+  size?: "md" | "lg";
 }) {
   const { confirm } = useConfirmDialog();
   const visibleItems = items.filter((item) => !item.hidden);
+  const sizeClass = size === "lg" ? "h-11" : "h-10";
+  const widthClass = size === "lg" ? "w-11" : "w-10";
+  const iconSize = size === "lg" ? 18 : 16;
 
   if (!visibleItems.length) return null;
 
   return (
     <div
-      className={`flex items-center ${tight ? "gap-0.5" : "gap-1"} ${className}`.trim()}
+      className={`flex items-center ${tight ? "gap-1" : "gap-2"} ${className}`.trim()}
     >
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const colorClass = item.disabled
-          ? (item.disabledClassName ?? "bg-disabled/20 text-disabled")
+          ? (item.disabledClassName ??
+            "border border-border bg-disabled/20 text-disabled")
           : (item.colorClassName ??
-            "bg-surface-elevated text-text-primary hover:bg-border");
+            "border border-border bg-surface text-text-primary hover:bg-surface-elevated");
 
         return (
           <button
@@ -66,14 +72,14 @@ export default function ActionIconBar({
               }
               await item.onClick();
             }}
-            className={`inline-flex h-10 ${showLabelFromMd ? "md:w-auto md:px-3" : "w-10"} items-center justify-center rounded-full transition-colors ${FOCUS_RING} ${item.disabled ? "cursor-not-allowed" : ""}`}
+            className={`inline-flex ${sizeClass} ${showLabelFromMd ? "md:w-auto md:px-3" : widthClass} items-center justify-center rounded-full text-sm transition-colors ${FOCUS_RING} ${colorClass} ${item.disabled ? "cursor-not-allowed" : ""}`}
           >
-            <span
-              className={`h-7 ${showLabelFromMd ? "w-7 md:w-auto md:px-2" : "w-7"} rounded-full inline-flex items-center justify-center transition-colors gap-1.5 ${colorClass}`}
-            >
-              <Icon size={16} />
-              {showLabelFromMd && <span className="hidden md:inline text-xs font-medium">{item.label}</span>}
-            </span>
+            <Icon size={iconSize} />
+            {showLabelFromMd && (
+              <span className="ml-1.5 hidden md:inline font-medium">
+                {item.label}
+              </span>
+            )}
           </button>
         );
       })}

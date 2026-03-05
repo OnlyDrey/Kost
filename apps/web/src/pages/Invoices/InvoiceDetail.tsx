@@ -27,6 +27,7 @@ import AllocationExplanation from "../../components/Invoice/AllocationExplanatio
 import { distributionLabel } from "../../utils/distribution";
 import { useSettings } from "../../stores/settings.context";
 import UserSharesGrid from "../../components/Invoice/UserSharesGrid";
+import VendorAvatar from "../../components/Common/VendorAvatar";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
@@ -35,11 +36,15 @@ import AppSelect from "../../components/Common/AppSelect";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getInvoiceStatus } from "../../utils/invoiceStatus";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
+import {
+  calcPaidSum,
+  calcRemaining,
+  calcPaymentStatus,
+} from "../../utils/paymentMath";
 import InvoiceStatusTag from "../../components/Common/InvoiceStatusTag";
 
-
-const inputCls =
-  `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
+const inputCls = `w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
 const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 export default function InvoiceDetail() {
@@ -87,7 +92,13 @@ export default function InvoiceDetail() {
     navigate("/invoices");
   };
 
-  const startEditPayment = (payment: { id: string; amountCents: number; paidAt: string | Date; paidById: string; note?: string | null }) => {
+  const startEditPayment = (payment: {
+    id: string;
+    amountCents: number;
+    paidAt: string | Date;
+    paidById: string;
+    note?: string | null;
+  }) => {
     setEditingPaymentId(payment.id);
     setEditAmount(String(payment.amountCents / 100));
     setEditPaidAt(
@@ -189,21 +200,17 @@ export default function InvoiceDetail() {
     );
   }
 
-  const totalPaid = (invoice.payments ?? []).reduce(
-    (sum, p) => sum + p.amountCents,
-    0,
-  );
-  const remaining = Math.max(0, invoice.totalCents - totalPaid);
-  const isPaid = remaining <= 0;
-  const isPartial = totalPaid > 0 && remaining > 0;
+  const totalPaid = calcPaidSum(invoice.payments);
+  const remaining = calcRemaining(invoice.totalCents, totalPaid);
+  const paymentProgress = calcPaymentStatus(invoice.totalCents, totalPaid);
+  const isPaid = paymentProgress === "PAID";
+  const isPartial = paymentProgress === "PARTIALLY_PAID";
   const paymentStatus = getInvoiceStatus({
     totalCents: invoice.totalCents,
     totalPaidCents: totalPaid,
     dueDate: invoice.dueDate,
   });
-  const vendorLogo = vendors.find(
-    (v) => v.name.toLowerCase() === invoice.vendor.toLowerCase(),
-  )?.logoUrl;
+  const vendorLogo = getVendorLogoUrl(vendors, invoice.vendor);
 
   return (
     <div className="space-y-5">
@@ -227,149 +234,144 @@ export default function InvoiceDetail() {
         </div>
         <div className="flex items-center gap-2">
           <InvoiceStatusTag status={paymentStatus} />
-        <ActionIconBar
-          tight
-          showLabelFromMd
-          items={[
-            {
-              key: "mark-complete",
-              icon: CheckCircle2,
-              label: t("invoice.registerPayment"),
-              onClick: handleMarkFullyPaid,
-              disabled: periodClosed || isPaid || addPayment.isPending,
-              hidden: periodClosed,
-              colorClassName: "bg-success/20 text-success hover:bg-success/30",
-            },
-            {
-              key: "edit",
-              icon: Pencil,
-              label: t("common.edit"),
-              onClick: () => navigate(`/invoices/${id}/edit`),
-              colorClassName: "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
-            },
-            {
-              key: "delete",
-              icon: Trash2,
-              label: t("common.delete"),
-              onClick: handleDelete,
-              colorClassName: "bg-danger/20 text-danger hover:bg-danger/30",
-            },
-          ]}
-        />
+          <ActionIconBar
+            tight
+            size="md"
+            items={[
+              {
+                key: "mark-complete",
+                icon: CheckCircle2,
+                label: t("invoice.markAsPaid"),
+                onClick: handleMarkFullyPaid,
+                disabled: periodClosed || isPaid || addPayment.isPending,
+                hidden: periodClosed || isPaid,
+                colorClassName:
+                  "bg-success/20 text-success hover:bg-success/30",
+              },
+              {
+                key: "edit",
+                icon: Pencil,
+                label: t("common.edit"),
+                onClick: () => navigate(`/invoices/${id}/edit`),
+                colorClassName:
+                  "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
+              },
+              {
+                key: "delete",
+                icon: Trash2,
+                label: t("common.delete"),
+                onClick: handleDelete,
+                colorClassName: "bg-danger/20 text-danger hover:bg-danger/30",
+              },
+            ]}
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:[grid-template-columns:2fr_1fr_1fr]">
-        {/* Main info */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-3">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-1">
+          {/* Main info */}
           <div
-            className="grid gap-3 items-start"
-            style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
+            className={`rounded-xl border p-5 shadow-sm space-y-3 ${
+              paymentStatus === "OVERDUE"
+                ? "bg-red-50 border-red-500/30 dark:bg-red-950/20 dark:border-red-500/30"
+                : paymentStatus === "PAID"
+                  ? "bg-green-50 border-green-500/30 dark:bg-green-950/20 dark:border-green-500/30"
+                  : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"
+            }`}
           >
-            {vendorLogo ? (
-              <img
-                src={vendorLogo}
-                alt=""
-                className="w-11 h-11 rounded-lg object-contain object-center bg-white border border-gray-200 dark:border-gray-700"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
+            <div
+              className="grid gap-3 items-start"
+              style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }}
+            >
+              <VendorAvatar
+                vendorName={invoice.vendor}
+                logoUrl={vendorLogo}
+                show={settings.branding.showVendorImages}
+                size="sm"
               />
-            ) : (
-              <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
-            )}
-            <div className="min-w-0">
-              <p
-                className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
-                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
-              >
-                {invoice.vendor}
-              </p>
-              <p
-                className="text-sm text-gray-500 dark:text-gray-300 mt-1"
-                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
-              >
-                {invoice.description || "—"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            <TagPill
-              label={distributionLabel(
-                invoice.distributionMethod,
-                settings.locale,
-                invoice.distribution as any,
-              )}
-              variant="type"
-            />
-            {invoice.category && (
-              <TagPill label={invoice.category} variant="category" />
-            )}
-            {isPaid && <TagPill label={t("invoice.statusPaid")} variant="success" />}
-          </div>
-
-          <div className="pt-1">
-            <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
               <div className="min-w-0">
-                <p className={`text-2xl sm:text-[2rem] font-bold leading-none m-0 ${isPaid ? "text-success" : isPartial ? "text-warning" : "text-primary"}`}>
-                  {fmt(isPartial ? remaining : invoice.totalCents)}
+                <p
+                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                  style={{ overflowWrap: "break-word", wordBreak: "normal" }}
+                >
+                  {invoice.vendor}
                 </p>
-                {isPartial && (
-                  <p className="text-xs text-app-text-secondary mt-1">
-                    {t("invoice.remainingOfTotal", {
-                      remaining: fmt(remaining),
-                      total: fmt(invoice.totalCents),
-                    })}
-                  </p>
-                )}
-                {isPartial && (
-                  <p className="text-xs text-app-text-secondary mt-1">
-                    {t("invoice.paidWithAmount", { amount: fmt(totalPaid) })}
-                  </p>
-                )}
-                {isPartial && (
-                  <p className="text-xs text-app-text-secondary mt-1">
-                    {t("invoice.totalWithAmount", { amount: fmt(invoice.totalCents) })}
-                  </p>
-                )}
-              </div>
-              <div className="min-w-0 text-right leading-tight">
-                <p className="text-sm text-app-text-secondary truncate">
-                  {formatDate(invoice.createdAt)}
-                </p>
-                <p className="text-sm font-medium text-app-text-primary truncate">
-                  {invoice.paymentMethod || "—"}
+                <p
+                  className="text-sm text-gray-500 dark:text-gray-300 mt-1"
+                  style={{ overflowWrap: "break-word", wordBreak: "normal" }}
+                >
+                  {invoice.description || "—"}
                 </p>
               </div>
             </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <TagPill
+                label={distributionLabel(
+                  invoice.distributionMethod,
+                  settings.locale,
+                  invoice.distribution as any,
+                )}
+                variant="type"
+              />
+              {invoice.category && (
+                <TagPill label={invoice.category} variant="category" />
+              )}
+            </div>
+
+            <div className="pt-1">
+              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                <div className="min-w-0">
+                  <p className="text-2xl sm:text-[2rem] font-bold leading-none m-0 text-gray-900 dark:text-gray-100">
+                    {fmt(isPartial ? remaining : invoice.totalCents)}
+                  </p>
+                  {isPartial && (
+                    <p className="text-xs text-app-text-secondary mt-1">
+                      {t("invoice.paidOfTotal", {
+                        paid: fmt(totalPaid),
+                        total: fmt(invoice.totalCents),
+                      })}
+                    </p>
+                  )}
+                </div>
+                <div className="min-w-0 text-right leading-tight">
+                  <p className="text-sm text-app-text-secondary truncate">
+                    {formatDate(invoice.createdAt)}
+                  </p>
+                  <p className="text-sm font-medium text-app-text-primary truncate">
+                    {invoice.paymentMethod || "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shares */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {t("invoice.shares")}
+            </h3>
+            <UserSharesGrid
+              shares={invoice.shares ?? []}
+              totalCents={invoice.totalCents}
+              currency={currency}
+              emptyLabel={t("common.noData")}
+              unknownLabel={t("invoice.unknown")}
+            />
           </div>
         </div>
 
         {/* Allocation explanation */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-span-1 self-start">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
             {t("invoice.allocationExplanation")}
           </h3>
           <AllocationExplanation invoice={invoice} />
         </div>
 
-        {/* Shares */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-1">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {t("invoice.shares")}
-          </h3>
-          <UserSharesGrid
-            shares={invoice.shares ?? []}
-            totalCents={invoice.totalCents}
-            currency={currency}
-            emptyLabel={t("common.noData")}
-            unknownLabel={t("invoice.unknown")}
-          />
-        </div>
-
         {/* Payments */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-start-3 lg:row-span-2">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm lg:col-span-1 self-start">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
               {t("invoice.payments")}
@@ -386,7 +388,6 @@ export default function InvoiceDetail() {
               </button>
             )}
           </div>
-
           {/* Existing payments */}
           {invoice.payments && invoice.payments.length > 0 ? (
             <div className="space-y-2 mb-4">

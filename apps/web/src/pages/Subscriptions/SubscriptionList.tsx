@@ -7,7 +7,10 @@ import {
   Power,
   RefreshCw,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  Circle,
+  CircleX,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,15 +21,20 @@ import {
   useCurrentPeriod,
   useCurrencyFormatter,
   usePeriods,
+  useVendors,
 } from "../../hooks/useApi";
 import { Subscription } from "../../services/api";
 import { formatDate } from "../../utils/date";
+import { getVendorLogoUrl } from "../../utils/vendorLogo";
 import { useSettings } from "../../stores/settings.context";
 import ExpenseItemCard from "../../components/Expense/ExpenseItemCard";
 import ActionIconBar from "../../components/Common/ActionIconBar";
 import TagPill from "../../components/Common/TagPill";
 import { distributionLabel } from "../../utils/distribution";
-import { FOCUS_RING, SELECT_TRIGGER } from "../../components/Common/focusStyles";
+import {
+  FOCUS_RING,
+  SELECT_TRIGGER,
+} from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 
 export default function SubscriptionList() {
@@ -36,6 +44,7 @@ export default function SubscriptionList() {
   const { settings } = useSettings();
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: periods = [] } = usePeriods();
+  const { data: vendors = [] } = useVendors();
 
   const toggleSub = useToggleSubscription();
   const deleteSub = useDeleteSubscription();
@@ -199,6 +208,7 @@ export default function SubscriptionList() {
                 deleteConfirmMessage={t("subscription.confirmDelete", {
                   name: sub.name,
                 })}
+                logoUrl={getVendorLogoUrl(vendors, sub.vendor)}
               />
             ))}
           </div>
@@ -222,6 +232,7 @@ export default function SubscriptionList() {
                 deleteConfirmMessage={t("subscription.confirmDelete", {
                   name: sub.name,
                 })}
+                logoUrl={getVendorLogoUrl(vendors, sub.vendor)}
               />
             ))}
           </div>
@@ -238,6 +249,7 @@ function SubscriptionCard({
   onToggle,
   onDelete,
   deleteConfirmMessage,
+  logoUrl,
 }: {
   sub: Subscription;
   locale: string;
@@ -245,6 +257,7 @@ function SubscriptionCard({
   onToggle: () => void;
   onDelete: () => void;
   deleteConfirmMessage: string;
+  logoUrl?: string;
 }) {
   const { t } = useTranslation();
   const fmt = useCurrencyFormatter();
@@ -284,6 +297,7 @@ function SubscriptionCard({
       category={sub.category}
       amountLabel={fmt(sub.amountCents)}
       showPaymentStatusPill={false}
+      logoUrl={logoUrl}
       rightContent={
         sub.nextBillingAt || sub.lastGenerated ? (
           <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
@@ -313,7 +327,8 @@ function SubscriptionCard({
               icon: Pencil,
               label: t("common.edit"),
               onClick: onEdit,
-              colorClassName: "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
+              colorClassName:
+                "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
             },
             {
               key: "toggle",
@@ -344,11 +359,28 @@ function SubscriptionCard({
               sub.status === "ACTIVE"
                 ? "success"
                 : sub.status === "PAUSED"
-                  ? "warning"
+                  ? "neutral"
                   : "danger"
             }
+            icon={
+              sub.status === "ACTIVE" ? (
+                <Circle
+                  size={12}
+                  className="fill-current stroke-current"
+                  aria-hidden
+                />
+              ) : sub.status === "PAUSED" ? (
+                <Circle size={12} aria-hidden />
+              ) : (
+                <CircleX size={12} aria-hidden />
+              )
+            }
           />
-          <TagPill label={freqLabel(sub.frequency)} variant="frequency" />
+          <TagPill
+            label={freqLabel(sub.frequency)}
+            variant="frequency"
+            icon={<Calendar size={12} aria-hidden />}
+          />
         </div>
       }
     />

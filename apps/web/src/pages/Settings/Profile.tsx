@@ -32,7 +32,9 @@ import {
   useUserIncomes,
   useUpsertUserIncome,
   useCurrency,
+  useUpdateCurrency,
   useCurrencySymbolPosition,
+  useUpdateCurrencySymbolPosition,
   useUploadAvatar,
   useRemoveAvatar,
   useDeleteMyAccount,
@@ -45,12 +47,16 @@ import {
 import {
   amountToCents,
   centsToAmount,
+  formatCurrency,
   getCurrencySymbol,
 } from "../../utils/currency";
 import { FamilySettingsContent } from "../Admin/FamilySettings";
 import type { FamilySetting } from "../Admin/FamilySettings";
 import AdminUsers from "../Admin/Users";
 import ColorFamilySelect from "../../components/Common/ColorFamilySelect";
+import { Switch } from "../../components/ui/switch";
+import { TabButton, TabsRow } from "../../components/ui/tabs";
+import { SidebarItem } from "../../components/ui/sidebar-item";
 import {
   isValidHexColor,
   renderIconDataUrl,
@@ -60,6 +66,7 @@ import {
   getCurrentLogoSource,
   getDefaultLogoUrl,
 } from "../../branding/brandingAssets";
+import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -121,7 +128,9 @@ export default function Profile() {
   const regenerateRecoveryCodes = useRegenerateRecoveryCodes();
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: currency = "NOK" } = useCurrency();
+  const updateCurrency = useUpdateCurrency();
   const { data: symbolPosition = "Before" } = useCurrencySymbolPosition();
+  const updateCurrencySymbolPosition = useUpdateCurrencySymbolPosition();
   const { data: incomes } = useUserIncomes(currentPeriod?.id ?? "");
   const upsertIncome = useUpsertUserIncome();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -172,6 +181,13 @@ export default function Profile() {
   const [brandingAppIconBackground, setBrandingAppIconBackground] = useState(
     settings.branding.appIconBackground,
   );
+  const [brandingShowVendorImages, setBrandingShowVendorImages] = useState(
+    settings.branding.showVendorImages,
+  );
+  const [draftCurrency, setDraftCurrency] = useState(currency);
+  const [draftCurrencyPosition, setDraftCurrencyPosition] = useState<
+    "Before" | "After"
+  >(symbolPosition as "Before" | "After");
   const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] =
     useState(getDefaultLogoUrl());
   const [brandingError, setBrandingError] = useState("");
@@ -228,7 +244,16 @@ export default function Profile() {
     setBrandingLogoUrl(settings.branding.logoUrl);
     setBrandingPreset(settings.branding.primaryPreset);
     setBrandingAppIconBackground(settings.branding.appIconBackground);
+    setBrandingShowVendorImages(settings.branding.showVendorImages);
   }, [settings.branding]);
+
+  useEffect(() => {
+    setDraftCurrency(currency);
+  }, [currency]);
+
+  useEffect(() => {
+    setDraftCurrencyPosition(symbolPosition as "Before" | "After");
+  }, [symbolPosition]);
 
   useEffect(() => {
     const renderPreview = async () => {
@@ -302,7 +327,7 @@ export default function Profile() {
     setSearchParams(params, { replace: true });
   };
 
-  const handleSaveBranding = (e: React.FormEvent) => {
+  const handleSaveCustomization = async (e: React.FormEvent) => {
     e.preventDefault();
     setBrandingError("");
 
@@ -323,15 +348,31 @@ export default function Profile() {
       }
     }
 
-    setBranding({
-      appTitle: brandingTitle.trim() || settings.branding.appTitle,
-      logoDataUrl: brandingLogoDataUrl.trim(),
-      logoUrl: brandingLogoUrl.trim(),
-      primaryPreset: brandingPreset,
-      appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
-    });
-    setBrandingSaved(true);
-    window.setTimeout(() => setBrandingSaved(false), 2000);
+    try {
+      setBranding({
+        appTitle: brandingTitle.trim() || settings.branding.appTitle,
+        logoDataUrl: brandingLogoDataUrl.trim(),
+        logoUrl: brandingLogoUrl.trim(),
+        primaryPreset: brandingPreset,
+        appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
+        showVendorImages: brandingShowVendorImages,
+      });
+
+      if (draftCurrency !== currency) {
+        await updateCurrency.mutateAsync(draftCurrency);
+      }
+
+      if (draftCurrencyPosition !== (symbolPosition as "Before" | "After")) {
+        await updateCurrencySymbolPosition.mutateAsync(draftCurrencyPosition);
+      }
+
+      setBrandingSaved(true);
+      window.setTimeout(() => setBrandingSaved(false), 2000);
+    } catch (err) {
+      setBrandingError(
+        err instanceof Error ? err.message : t("errors.generic"),
+      );
+    }
   };
 
   const handleBrandingLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -752,13 +793,13 @@ export default function Profile() {
   }[] = [
     { key: "customization", label: t("settings.customization"), icon: Palette },
     { key: "branding", label: t("settings.brandingTitle"), icon: Paintbrush },
-    { key: "categories", label: t("familySettings.categories"), icon: Tags },
+    { key: "categories", label: t("globalSettings.categories"), icon: Tags },
     {
       key: "payment-methods",
-      label: t("familySettings.paymentMethods"),
+      label: t("globalSettings.paymentMethods"),
       icon: CreditCard,
     },
-    { key: "vendors", label: t("familySettings.vendors"), icon: Store },
+    { key: "vendors", label: t("globalSettings.vendors"), icon: Store },
   ];
 
   return (
@@ -768,29 +809,24 @@ export default function Profile() {
       </h1>
 
       <div className="overflow-x-auto pb-1">
-        <div className="inline-flex min-w-full gap-2">
+        <TabsRow>
           {pageNavItems
             .filter((item) => !item.hidden)
             .map((item) => {
               const Icon = item.icon;
               const isActive = activePage === item.key;
               return (
-                <button
+                <TabButton
                   key={item.key}
-                  type="button"
+                  active={isActive}
                   onClick={() => selectPage(item.key)}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
-                    isActive
-                      ? "border-primary bg-primary/15 text-primary"
-                      : "border-border bg-surface text-text-secondary hover:bg-surface-elevated"
-                  }`}
+                  icon={<Icon size={16} />}
                 >
-                  <Icon size={16} />
                   {item.label}
-                </button>
+                </TabButton>
               );
             })}
-        </div>
+        </TabsRow>
       </div>
 
       {activePage === "customization" && isAdmin && (
@@ -805,11 +841,11 @@ export default function Profile() {
           >
             <option value="customization">{t("settings.customization")}</option>
             <option value="branding">{t("settings.brandingTitle")}</option>
-            <option value="categories">{t("familySettings.categories")}</option>
+            <option value="categories">{t("globalSettings.categories")}</option>
             <option value="payment-methods">
-              {t("familySettings.paymentMethods")}
+              {t("globalSettings.paymentMethods")}
             </option>
-            <option value="vendors">{t("familySettings.vendors")}</option>
+            <option value="vendors">{t("globalSettings.vendors")}</option>
           </AppSelect>
         </div>
       )}
@@ -827,24 +863,21 @@ export default function Profile() {
                 const selected = globalSection === section.key;
                 const Icon = section.icon;
                 return (
-                  <button
+                  <SidebarItem
                     key={section.key}
-                    type="button"
+                    active={selected}
                     onClick={() => selectGlobalSection(section.key)}
-                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors inline-flex items-center gap-2 ${
-                      selected
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "text-text-secondary hover:bg-surface-elevated border border-transparent"
-                    }`}
+                    icon={
+                      <Icon
+                        size={15}
+                        className={
+                          selected ? "text-primary" : "text-text-secondary"
+                        }
+                      />
+                    }
                   >
-                    <Icon
-                      size={15}
-                      className={
-                        selected ? "text-primary" : "text-text-secondary"
-                      }
-                    />
                     {section.label}
-                  </button>
+                  </SidebarItem>
                 );
               })}
             </div>
@@ -1297,22 +1330,14 @@ export default function Profile() {
             globalSection === "customization" && (
               <>
                 <div className="md:col-span-2 w-full">
-                  <FamilySettingsContent
-                    activeSection={"currency" as FamilySetting}
-                    pageSize={familyPageSize}
-                    onPageSizeChange={setFamilyPageSize}
-                  />
-                </div>
-
-                <div className="md:col-span-2 w-full">
                   <SettingsSectionCard
                     icon={<Palette size={18} className="text-primary" />}
-                    title={t("settings.themeSection")}
+                    title={t("settings.customization")}
                     action={
                       <button
                         form="theme-form"
                         type="submit"
-                        className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                        className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                       >
                         {t("common.save")}
                       </button>
@@ -1320,7 +1345,7 @@ export default function Profile() {
                   >
                     <form
                       id="theme-form"
-                      onSubmit={handleSaveBranding}
+                      onSubmit={handleSaveCustomization}
                       className="space-y-2"
                     >
                       <ColorFamilySelect
@@ -1330,6 +1355,73 @@ export default function Profile() {
                         }
                         label={t("settings.brandingPrimaryPreset")}
                       />
+                      <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-surface px-3.5 py-2.5">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-text-primary">
+                            {t("settings.showVendorImages")}
+                          </p>
+                          <p className="text-xs text-text-secondary">
+                            {t("settings.showVendorImagesHelp")}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={brandingShowVendorImages}
+                          onCheckedChange={setBrandingShowVendorImages}
+                          aria-label={t("settings.showVendorImages")}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-text-secondary">
+                          {t("globalSettings.currency")}
+                        </label>
+                        <AppSelect
+                          value={draftCurrency}
+                          onChange={(e) => setDraftCurrency(e.target.value)}
+                          className="px-3.5"
+                        >
+                          {SUPPORTED_CURRENCIES.map((currencyOption) => (
+                            <option
+                              key={currencyOption.code}
+                              value={currencyOption.code}
+                            >
+                              {currencyOption.label}
+                            </option>
+                          ))}
+                        </AppSelect>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-text-secondary">
+                          {t("globalSettings.currencyPosition")}
+                        </label>
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+                          <AppSelect
+                            value={draftCurrencyPosition}
+                            onChange={(e) =>
+                              setDraftCurrencyPosition(
+                                e.target.value as "Before" | "After",
+                              )
+                            }
+                            className="px-3.5"
+                          >
+                            <option value="Before">
+                              {t("globalSettings.symbolBefore")}
+                            </option>
+                            <option value="After">
+                              {t("globalSettings.symbolAfter")}
+                            </option>
+                          </AppSelect>
+                          <span className="inline-flex h-10 items-center rounded-lg border border-border bg-surface px-3 text-sm text-text-primary whitespace-nowrap">
+                            {formatCurrency(
+                              10000,
+                              draftCurrency,
+                              true,
+                              settings.locale,
+                              draftCurrencyPosition,
+                            )}
+                          </span>
+                        </div>
+                      </div>
                       {brandingError && (
                         <p className="mt-2 text-xs text-danger">
                           {brandingError}
@@ -1355,7 +1447,10 @@ export default function Profile() {
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.brandingTitle")}
                   >
-                    <form onSubmit={handleSaveBranding} className="space-y-4">
+                    <form
+                      onSubmit={handleSaveCustomization}
+                      className="space-y-4"
+                    >
                       <div>
                         <label className={labelCls}>
                           {t("settings.brandingAppTitle")}
@@ -1398,7 +1493,7 @@ export default function Profile() {
                               onClick={() =>
                                 brandingLogoInputRef.current?.click()
                               }
-                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                             >
                               {brandingLogoDataUrl || brandingLogoUrl
                                 ? t("settings.brandingReplaceLogo")
@@ -1408,7 +1503,7 @@ export default function Profile() {
                               <button
                                 type="button"
                                 onClick={handleDeleteBrandingLogo}
-                                className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                                className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                               >
                                 {t("settings.brandingDeleteLogo")}
                               </button>
@@ -1416,7 +1511,7 @@ export default function Profile() {
                             <button
                               type="button"
                               onClick={handleDeleteBrandingLogo}
-                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium border border-border text-text-secondary hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                             >
                               {t("settings.brandingResetDefault")}
                             </button>
@@ -1509,7 +1604,7 @@ export default function Profile() {
                         </p>
                         <button
                           type="submit"
-                          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                         >
                           {t("common.save")}
                         </button>

@@ -1,3 +1,5 @@
+import { calcPaymentStatus, calcRemaining } from "./paymentMath";
+
 export type InvoiceStatus = "PAID" | "PARTIALLY_PAID" | "OVERDUE" | "UNPAID";
 
 export function getInvoiceStatus(params: {
@@ -5,13 +7,17 @@ export function getInvoiceStatus(params: {
   totalPaidCents: number;
   dueDate?: string | Date | null;
 }): InvoiceStatus {
-  const remaining = Math.max(0, params.totalCents - params.totalPaidCents);
+  const remaining = calcRemaining(params.totalCents, params.totalPaidCents);
+  const paymentStatus = calcPaymentStatus(
+    params.totalCents,
+    params.totalPaidCents,
+  );
 
-  if (remaining === 0 && params.totalPaidCents > 0) {
+  if (paymentStatus === "PAID") {
     return "PAID";
   }
 
-  if (params.totalPaidCents > 0 && remaining > 0) {
+  if (paymentStatus === "PARTIALLY_PAID") {
     return "PARTIALLY_PAID";
   }
 

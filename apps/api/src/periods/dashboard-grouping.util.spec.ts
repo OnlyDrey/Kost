@@ -1,4 +1,8 @@
-import { defaultSelectedUserIdsForNewExpense, groupInvoiceSums, normalizeDashboardFilter } from "./dashboard-grouping.util";
+import {
+  defaultSelectedUserIdsForNewExpense,
+  groupInvoiceSums,
+  normalizeDashboardFilter,
+} from "./dashboard-grouping.util";
 
 describe("dashboard grouping logic", () => {
   it("uses original / remaining / paid sums per group", () => {
@@ -6,11 +10,12 @@ describe("dashboard grouping logic", () => {
       { totalCents: 10000, payments: [] },
       { totalCents: 10000, payments: [{ amountCents: 2500 }] },
       { totalCents: 10000, payments: [{ amountCents: 10000 }] },
+      { totalCents: 10000, payments: [{ amountCents: 12000 }] },
     ]);
 
     expect(sums.unpaid).toBe(10000);
     expect(sums.partial).toBe(7500);
-    expect(sums.paid).toBe(10000);
+    expect(sums.paid).toBe(22000);
   });
 
   it("normalizes filter route params", () => {

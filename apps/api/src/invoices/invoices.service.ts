@@ -368,23 +368,6 @@ export class InvoicesService {
       );
     }
 
-    const requestedTotalCents = updateInvoiceDto.totalCents;
-    if (requestedTotalCents !== undefined) {
-      const currentPayments = await this.prisma.payment.aggregate({
-        where: { invoiceId: id },
-        _sum: { amountCents: true },
-      });
-      const paidCents = currentPayments._sum.amountCents ?? 0;
-      if (requestedTotalCents < paidCents) {
-        throw new BadRequestException(
-          apiError(
-            "AMOUNT_LESS_THAN_PAID",
-            "Total amount cannot be lower than already paid amount",
-          ),
-        );
-      }
-    }
-
     const {
       periodId,
       lines,
@@ -509,7 +492,10 @@ export class InvoicesService {
         participants = allParticipants.filter((p) => p.role !== "CHILD");
       }
 
-      const personalTargetUserId = updateInvoiceDto.personalUserId;
+      const personalTargetUserId =
+        updateInvoiceDto.personalUserId ??
+        existingInvoice.ownerUserId ??
+        undefined;
       if (method === DistributionMethod.PERSONAL) {
         if (!personalTargetUserId) {
           throw new BadRequestException(
