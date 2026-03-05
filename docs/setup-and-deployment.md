@@ -84,6 +84,18 @@ Open:
 npm install
 ```
 
+Optional system check (does not run automatically unless opted in):
+
+```bash
+npm run doctor
+```
+
+To run the same check automatically during install, opt in explicitly:
+
+```bash
+RUN_SYSTEM_CHECKS=1 npm install --workspaces --include-workspace-root
+```
+
 2. Ensure PostgreSQL is running and `.env` points to it.
 3. Prepare API database:
 
@@ -132,3 +144,48 @@ Forward at least:
 curl -sI http://localhost:3000/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
 curl -sI https://your-domain/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
 ```
+
+## Docker build reliability in restricted networks
+
+If you see `TLS handshake timeout` when pulling `node:22-alpine` from Docker Hub, it is usually a network or registry-access issue on the build host (not an application code issue).
+
+### Recommended options
+
+1. **Use a Docker registry mirror (preferred)** on the Docker daemon.
+2. **Use an internal registry** that mirrors Node base images.
+3. **Pre-pull base images** on runners/build hosts before the build step.
+
+### Standard build commands
+
+Run from repository root:
+
+```bash
+npm run docker:image:build
+npm run docker:image:help
+```
+
+Mirror/internal registry build:
+
+```bash
+NODE_IMAGE=<your-registry>/library/node:22-alpine npm run docker:image:build:mirror
+```
+
+BuildKit local cache build (CI-like local run):
+
+```bash
+NODE_IMAGE=node:22-alpine IMAGE_TAG=kost-app:ci npm run docker:image:build:ci
+```
+
+### Optional reproducibility pinning
+
+You can pin the base image by digest for deterministic rebuilds:
+
+```bash
+NODE_IMAGE=node@sha256:<digest> npm run docker:image:build:mirror
+```
+
+Update the digest intentionally (for example when adopting Node security updates), then rebuild and validate.
+
+### CI suggestion
+
+For self-hosted or restricted CI runners, configure a registry mirror or pre-pull `node:22-alpine` (or your mirrored equivalent). The CI workflow also supports overriding `NODE_IMAGE` through repository variable `NODE_IMAGE`.

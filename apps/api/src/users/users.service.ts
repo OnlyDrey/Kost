@@ -7,10 +7,16 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
+
+const UserRole = {
+  ADMIN: "ADMIN",
+  ADULT: "ADULT",
+  CHILD: "CHILD",
+} as const;
+type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 const userSelect = {
   id: true,
@@ -206,7 +212,7 @@ export class UsersService {
       }
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: any) => {
       await tx.invoice.updateMany({
         where: { ownerUserId: id, isPersonal: true },
         data: { isPersonal: false, ownerUserId: null },

@@ -59,3 +59,18 @@ npm run lint --workspaces --if-present
 npm run test --workspaces --if-present
 npm run build
 ```
+
+
+## Documentation placement
+
+- Keep repository-level documentation in `docs/`.
+- Keep `README.md` at repository root as the primary entry point.
+- When adding a new guide, link it from `docs/index.md`.
+
+
+## System check policy
+
+- `npm install` does not run Docker/system checks by default.
+- Run `npm run doctor` when you explicitly want host dependency checks (Docker/Compose, Node, npm).
+- To enforce checks during install, opt in with `RUN_SYSTEM_CHECKS=1 npm install --workspaces --include-workspace-root`.
+- CI keeps Docker checks isolated to the dedicated Docker image build job.

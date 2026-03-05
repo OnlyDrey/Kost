@@ -22,10 +22,16 @@
     "docker:build": "docker compose build --no-cache",
     "docker:logs": "docker compose logs -f",
     "prepare": "[ -d .git ] && husky install || true",
-    "postinstall": "[ -z \"${CI}\" ] && bash check-system.sh || true",
+    "postinstall": "[ \"${RUN_SYSTEM_CHECKS:-0}\" = \"1\" ] && bash check-system.sh || true",
     "audit": "npm audit --omit=dev",
-    "check": "bash check-system.sh",
-    "check:color-guard": "bash scripts/check-color-guard.sh"
+    "check": "npm run check:system",
+    "check:color-guard": "bash scripts/check-color-guard.sh",
+    "docker:image:build": "bash scripts/docker-build.sh default",
+    "docker:image:build:mirror": "bash scripts/docker-build.sh mirror",
+    "docker:image:build:ci": "bash scripts/docker-build.sh ci",
+    "docker:image:help": "bash scripts/docker-build.sh --help",
+    "check:system": "bash check-system.sh",
+    "doctor": "npm run check:system"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

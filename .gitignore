@@ -42,3 +42,7 @@ coverage/
 *.pem
 .cache/
 .temp/
+
+# Docker buildx local cache
+.buildx-cache
+.buildx-cache-new

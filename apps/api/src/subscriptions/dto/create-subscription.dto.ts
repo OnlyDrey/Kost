@@ -10,7 +10,20 @@ import {
   IsObject,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { DistributionMethod, SubscriptionStatus } from "@prisma/client";
+
+export enum DistributionMethod {
+  BY_PERCENT = "BY_PERCENT",
+  BY_INCOME = "BY_INCOME",
+  FIXED = "FIXED",
+  PERSONAL = "PERSONAL",
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = "ACTIVE",
+  PAUSED = "PAUSED",
+  CANCELED = "CANCELED",
+}
+
 
 export class CreateSubscriptionDto {
   @ApiProperty({ example: "Netflix Subscription" })
