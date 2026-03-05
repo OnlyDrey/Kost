@@ -26,20 +26,37 @@ Examples:
 USAGE
 }
 
+require_cmd() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Error: required command '$cmd' not found in PATH." >&2
+    echo "Install Docker and try again, or run: npm run docker:image:help" >&2
+    exit 127
+  fi
+}
+
 case "$MODE" in
   default)
+    require_cmd docker
     docker build \
       --build-arg NODE_IMAGE=node:22-alpine \
       -t "$IMAGE_TAG" \
       .
     ;;
   mirror)
+    require_cmd docker
     docker build \
       --build-arg NODE_IMAGE="$NODE_IMAGE" \
       -t "$IMAGE_TAG" \
       .
     ;;
   ci)
+    require_cmd docker
+    if ! docker buildx version >/dev/null 2>&1; then
+      echo "Error: 'docker buildx' is not available. Install Docker Buildx or use default/mirror mode." >&2
+      exit 127
+    fi
+
     docker buildx build \
       --build-arg NODE_IMAGE="$NODE_IMAGE" \
       --cache-from=type=local,src=.buildx-cache \

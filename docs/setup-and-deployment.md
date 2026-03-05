@@ -84,6 +84,18 @@ Open:
 npm install
 ```
 
+Optional system check (does not run automatically unless opted in):
+
+```bash
+npm run doctor
+```
+
+To run the same check automatically during install, opt in explicitly:
+
+```bash
+RUN_SYSTEM_CHECKS=1 npm install --workspaces --include-workspace-root
+```
+
 2. Ensure PostgreSQL is running and `.env` points to it.
 3. Prepare API database:
 

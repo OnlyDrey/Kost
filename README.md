@@ -74,7 +74,7 @@ npm run dev:web
 - `npm run test` – run workspace tests
 - `npm run build` – build all workspaces
 - `npm run docker:up` / `npm run docker:down` – compose lifecycle
-- `npm run check` – local environment check script
+- `npm run doctor` – optional local environment/system check
 
 ### Workspace highlights
 
