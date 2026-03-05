@@ -132,3 +132,36 @@ Forward at least:
 curl -sI http://localhost:3000/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
 curl -sI https://your-domain/ | egrep -i "strict-transport-security|content-security-policy|x-kost-csp-mode"
 ```
+
+## Docker build reliability in restricted networks
+
+If you see `TLS handshake timeout` when pulling `node:22-alpine` from Docker Hub, it is usually a network or registry-access issue on the build host (not an application code issue).
+
+### Recommended options
+
+1. **Use a Docker registry mirror (preferred)** on the Docker daemon.
+2. **Use an internal registry** that mirrors Node base images.
+3. **Pre-pull base images** on runners/build hosts before the build step.
+
+### Custom base image source (optional)
+
+The Dockerfile supports overriding the base image source while keeping the default unchanged.
+
+Default build (unchanged behavior):
+
+```bash
+docker build -t kost-app:latest .
+```
+
+Build with a mirrored/internal Node image:
+
+```bash
+docker build \
+  --build-arg NODE_IMAGE=<your-registry>/library/node:22-alpine \
+  -t kost-app:latest \
+  .
+```
+
+### CI suggestion
+
+For self-hosted or restricted CI runners, configure a registry mirror or pre-pull `node:22-alpine` (or your mirrored equivalent) to reduce hard dependency on Docker Hub availability.

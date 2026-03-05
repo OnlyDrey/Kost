@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:22-alpine AS builder
+ARG NODE_IMAGE=node:22-alpine
+
+FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 
 RUN apk add --no-cache openssl
@@ -16,7 +18,7 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY tsconfig.base.json ./
 
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
   npm ci --workspaces --include-workspace-root
 
 COPY packages ./packages
@@ -30,7 +32,7 @@ RUN npm run build --workspace=@kost/web
 RUN npm run build --workspace=@kost/api
 RUN npx tsc -p apps/api/tsconfig.seed.json
 
-FROM node:22-alpine AS runtime
+FROM ${NODE_IMAGE} AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -42,7 +44,7 @@ COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
   npm ci --workspaces --include-workspace-root --omit=dev
 
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
