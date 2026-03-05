@@ -105,6 +105,7 @@ jobs:
         run: npm ci --workspaces --include-workspace-root --foreground-scripts
 
       - name: Cache Prisma engines
+        id: cache-prisma
         uses: actions/cache@v4
         with:
           path: |
@@ -143,7 +144,29 @@ jobs:
 
       - name: Verify Prisma client artifacts
         run: |
-          test -f node_modules/.prisma/client/index.js || test -f apps/api/node_modules/.prisma/client/index.js
+          PRISMA_CLIENT_DIR=""
+          if [ -d apps/api/node_modules/.prisma/client ]; then
+            PRISMA_CLIENT_DIR="apps/api/node_modules/.prisma/client"
+          elif [ -d node_modules/.prisma/client ]; then
+            PRISMA_CLIENT_DIR="node_modules/.prisma/client"
+          fi
+
+          PRISMA_PACKAGE_DIR=""
+          if [ -d apps/api/node_modules/@prisma/client ]; then
+            PRISMA_PACKAGE_DIR="apps/api/node_modules/@prisma/client"
+          elif [ -d node_modules/@prisma/client ]; then
+            PRISMA_PACKAGE_DIR="node_modules/@prisma/client"
+          fi
+
+          if [ -z "$PRISMA_CLIENT_DIR" ] || [ -z "$PRISMA_PACKAGE_DIR" ]; then
+            echo "Prisma client verification failed."
+            echo "  .prisma/client dir: ${PRISMA_CLIENT_DIR:-missing}"
+            echo "  @prisma/client dir: ${PRISMA_PACKAGE_DIR:-missing}"
+            exit 1
+          fi
+
+          echo "Found generated Prisma client at: $PRISMA_CLIENT_DIR"
+          echo "Found @prisma/client package at: $PRISMA_PACKAGE_DIR"
 
       - name: Push schema to test DB
         run: npm run db:push --workspace=@kost/api
@@ -161,6 +184,20 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
           JWT_SECRET: test-secret
+
+      - name: Prisma failure diagnostics
+        if: failure()
+        run: |
+          echo "Node: $(node -v)"
+          echo "npm: $(npm -v)"
+          echo "Prisma cache restored: ${{ steps.cache-prisma.outputs.cache-hit || 'n/a' }}"
+
+          [ -d apps/api/node_modules/.prisma ] && ls -la apps/api/node_modules/.prisma || echo "apps/api/node_modules/.prisma: missing"
+          [ -d node_modules/.prisma ] && ls -la node_modules/.prisma || echo "node_modules/.prisma: missing"
+          [ -d apps/api/node_modules/@prisma ] && ls -la apps/api/node_modules/@prisma || echo "apps/api/node_modules/@prisma: missing"
+          [ -d node_modules/@prisma ] && ls -la node_modules/@prisma || echo "node_modules/@prisma: missing"
+
+          npm exec --workspace=@kost/api -- prisma -v || true
 
       - name: Build API
         run: npm run build --workspace=@kost/api
