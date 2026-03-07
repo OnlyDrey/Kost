@@ -134,7 +134,7 @@ export default function ExpenseItemCard({
       </div>
 
       {(amountLabel || rightContent || actionButton) && (
-        <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">
             {amountLabel && (
               <p
@@ -145,7 +145,7 @@ export default function ExpenseItemCard({
             )}
           </div>
           {(rightContent || actionButton) && (
-            <div className="w-full sm:w-auto sm:ml-auto flex items-center justify-end gap-2">
+            <div className="ml-auto flex items-center gap-2">
               {rightContent && <div className="shrink-0">{rightContent}</div>}
               {actionButton && <div className="shrink-0">{actionButton}</div>}
             </div>
@@ -154,7 +154,7 @@ export default function ExpenseItemCard({
       )}
 
       {(shareLabel || amountDetails?.length || dateLabel) && (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {shareLabel && (
             <p className="text-xs text-app-text-secondary mt-0">{shareLabel}</p>
           )}
