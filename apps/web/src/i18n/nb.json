@@ -515,7 +515,11 @@
       "paymentMethods": "Betalingsmåter i backup",
       "vendors": "Leverandører i backup"
     },
-    "noOpenPeriod": "Ingen åpen periode tilgjengelig. Opprett/åpne en periode før import av utgifter."
+    "noOpenPeriod": "Ingen åpen periode tilgjengelig. Opprett/åpne en periode før import av utgifter.",
+    "chooseFile": "Velg fil",
+    "selectedFile": "Valgt fil",
+    "noFileSelected": "Ingen fil valgt",
+    "uploadFile": "Last opp fil"
   },
   "settlement": {
     "title": "Oppgjør",

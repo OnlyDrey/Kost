@@ -515,7 +515,11 @@
       "paymentMethods": "Payment methods in backup",
       "vendors": "Vendors in backup"
     },
-    "noOpenPeriod": "No open period available. Create/open a period before importing expenses."
+    "noOpenPeriod": "No open period available. Create/open a period before importing expenses.",
+    "chooseFile": "Choose file",
+    "selectedFile": "Selected file",
+    "noFileSelected": "No file selected",
+    "uploadFile": "Upload file"
   },
   "settlement": {
     "title": "Oppgjør",

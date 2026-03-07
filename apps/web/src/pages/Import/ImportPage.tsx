@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AppSelect from "../../components/Common/AppSelect";
 import { Button } from "../../components/ui/button";
@@ -51,9 +51,15 @@ export default function ImportPage() {
   const [importSummary, setImportSummary] = useState<ImportExecutionSummary | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+
   const [backupInfo, setBackupInfo] = useState("");
   const [backupError, setBackupError] = useState("");
   const [backupBundle, setBackupBundle] = useState<BackupBundle | null>(null);
+  const [selectedBackupFile, setSelectedBackupFile] = useState<File | null>(null);
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
+
   const [restoreSummary, setRestoreSummary] = useState<RestoreSummary | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -85,9 +91,9 @@ export default function ImportPage() {
     });
   }, [categories, importType, paymentMethods, targetOpenPeriodId, vendors]);
 
-  const onSpreadsheetUpload = async (file?: File) => {
-    if (!file) return;
-    const parsed = await parseSpreadsheet(file);
+  const uploadSpreadsheet = async () => {
+    if (!selectedImportFile) return;
+    const parsed = await parseSpreadsheet(selectedImportFile);
     setParsedHeaders(parsed.headers);
     setRows(parsed.rows);
     setPreview(null);
@@ -115,16 +121,15 @@ export default function ImportPage() {
     setBackupError("");
     try {
       const bundle = await downloadFullBackup(settings);
-      setBackupInfo(
-        `${t("importExport.backupExportedAt")}: ${bundle.metadata.exportedAt}`,
-      );
+      setBackupInfo(`${t("importExport.backupExportedAt")}: ${bundle.metadata.exportedAt}`);
     } catch {
       setBackupError(t("importExport.backupExportFailed"));
     }
   };
 
-  const onBackupUpload = async (file?: File) => {
+  const onBackupFileSelected = async (file?: File) => {
     if (!file) return;
+    setSelectedBackupFile(file);
     setBackupError("");
     setRestoreSummary(null);
     try {
@@ -159,7 +164,15 @@ export default function ImportPage() {
       <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
         <h2 className="text-lg font-semibold">{t("importExport.importData")}</h2>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <input
+          ref={importFileInputRef}
+          type="file"
+          accept=".csv,.xlsx,.ods"
+          className="hidden"
+          onChange={(e) => setSelectedImportFile(e.target.files?.[0] ?? null)}
+        />
+
+        <div className="grid grid-cols-2 gap-2">
           <AppSelect
             value={importType}
             onChange={(e) => setImportType(e.target.value as ImportEntityType)}
@@ -168,15 +181,26 @@ export default function ImportPage() {
             <option value="expense">{t("import.type.expense")}</option>
             <option value="recurring">{t("import.type.recurring")}</option>
           </AppSelect>
-          <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 h-10 flex items-center">
-            <input
-              type="file"
-              accept=".csv,.xlsx,.ods"
-              className="w-full text-sm file:mr-3 file:px-2 file:py-1 file:rounded file:border-0 file:bg-gray-100 dark:file:bg-gray-700 file:text-sm"
-              onChange={(e) => void onSpreadsheetUpload(e.target.files?.[0])}
-            />
-          </div>
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={() => importFileInputRef.current?.click()}
+          >
+            {t("importExport.chooseFile")}
+          </Button>
         </div>
+
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {selectedImportFile
+            ? `${t("importExport.selectedFile")}: ${selectedImportFile.name}`
+            : t("importExport.noFileSelected")}
+        </p>
+
+        {selectedImportFile && (
+          <Button className="w-full sm:w-auto" onClick={() => void uploadSpreadsheet()}>
+            {t("importExport.uploadFile")}
+          </Button>
+        )}
 
         {parsedHeaders.length > 0 && (
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3 space-y-3">
@@ -274,7 +298,7 @@ export default function ImportPage() {
       <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
         <h2 className="text-lg font-semibold">{t("importExport.exportTemplates")}</h2>
         <p className="text-sm text-gray-500">{t("importExport.templateHelp")}</p>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2">
           <AppSelect
             value={templateType}
             onChange={(e) => setTemplateType(e.target.value as ImportEntityType)}
@@ -292,12 +316,14 @@ export default function ImportPage() {
             <option value="xlsx">XLSX</option>
             <option value="ods">ODS</option>
           </AppSelect>
-          <Button
-            className="w-full sm:w-auto"
-            onClick={() => downloadImportTemplate(templateType, templateFormat)}
-          >
-            {t("import.downloadTemplate")}
-          </Button>
+          <div className="col-span-2">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => downloadImportTemplate(templateType, templateFormat)}
+            >
+              {t("import.downloadTemplate")}
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -326,14 +352,29 @@ export default function ImportPage() {
         <p className="text-sm text-red-700 dark:text-red-300">
           {t("importExport.restoreWarning")}
         </p>
-        <div className="rounded-lg border border-red-300 dark:border-red-700 bg-white/80 dark:bg-gray-900/60 px-3 h-10 flex items-center">
-          <input
-            type="file"
-            accept="application/json,.json"
-            className="w-full text-sm file:mr-3 file:px-2 file:py-1 file:rounded file:border-0 file:bg-red-100 dark:file:bg-red-900/40"
-            onChange={(e) => void onBackupUpload(e.target.files?.[0])}
-          />
-        </div>
+
+        <input
+          ref={backupFileInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => void onBackupFileSelected(e.target.files?.[0])}
+        />
+
+        <Button
+          variant="secondary"
+          className="w-full sm:w-auto"
+          onClick={() => backupFileInputRef.current?.click()}
+        >
+          {t("importExport.chooseFile")}
+        </Button>
+
+        <p className="text-xs text-red-700 dark:text-red-300">
+          {selectedBackupFile
+            ? `${t("importExport.selectedFile")}: ${selectedBackupFile.name}`
+            : t("importExport.noFileSelected")}
+        </p>
+
         {restorePreview && (
           <div className="rounded-lg border border-red-300 dark:border-red-700 p-3 text-sm space-y-1">
             <div>
@@ -361,14 +402,20 @@ export default function ImportPage() {
             </ul>
           </div>
         )}
-        <Button
-          className="w-full sm:w-auto"
-          variant="danger"
-          disabled={!backupBundle || isRestoring}
-          onClick={() => void confirmRestore()}
-        >
-          {isRestoring ? t("importExport.restoring") : t("importExport.confirmRestore")}
-        </Button>
+
+        {selectedBackupFile && (
+          <Button
+            className="w-full sm:w-auto"
+            variant="danger"
+            disabled={!backupBundle || isRestoring}
+            onClick={() => void confirmRestore()}
+          >
+            {isRestoring
+              ? t("importExport.restoring")
+              : t("importExport.confirmRestore")}
+          </Button>
+        )}
+
         {restoreSummary && (
           <div className="text-sm text-red-800 dark:text-red-300">
             {t("import.summary.imported")}: {restoreSummary.imported} · {t("import.summary.skipped")}: {restoreSummary.skipped} · {t("import.summary.failed")}: {restoreSummary.failed}

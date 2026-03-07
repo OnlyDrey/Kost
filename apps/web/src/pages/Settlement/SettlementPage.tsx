@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { type ComponentType, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AlertTriangle, ArrowRightLeft, Coins, CreditCard, Wallet } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
 import { Button } from "../../components/ui/button";
 import {
@@ -17,6 +18,10 @@ import { amountToCents } from "../../utils/currency";
 function safeCents(value: number): number {
   return Math.abs(value) < 1 ? 0 : value;
 }
+
+const inputCls =
+  "h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm text-gray-900 dark:text-gray-100";
+const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
 
 export default function SettlementPage() {
   const { t } = useTranslation();
@@ -129,22 +134,32 @@ export default function SettlementPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <Metric
+          icon={Wallet}
+          colorClass="bg-amber-500"
           label={t("settlement.totalOwed")}
           value={fmt(safeCents(summary?.totals.totalOwedCents ?? 0))}
         />
         <Metric
+          icon={CreditCard}
+          colorClass="bg-green-500"
           label={t("settlement.totalPaid")}
           value={fmt(safeCents(summary?.totals.totalPaidCents ?? 0))}
         />
         <Metric
+          icon={Coins}
+          colorClass="bg-blue-500"
           label={t("settlement.totalCredit")}
           value={fmt(safeCents(summary?.totals.totalCreditCents ?? 0))}
         />
         <Metric
+          icon={ArrowRightLeft}
+          colorClass="bg-red-500"
           label={t("settlement.totalUnpaid")}
           value={fmt(safeCents(summary?.totals.totalUnpaidCents ?? 0))}
         />
         <Metric
+          icon={AlertTriangle}
+          colorClass="bg-orange-500"
           label={t("settlement.unresolvedWarnings")}
           value={String(summary?.totals.unresolvedWarningCount ?? 0)}
         />
@@ -231,40 +246,42 @@ export default function SettlementPage() {
           )}
 
           <div className="space-y-2">
-            <AppSelect
-              value={entryForm.fromUserId}
-              onChange={(e) =>
-                setEntryForm((prev) => ({ ...prev, fromUserId: e.target.value }))
-              }
-              className="h-10"
-            >
-              <option value="">{t("settlement.fromUser")}</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </AppSelect>
-            <AppSelect
-              value={entryForm.toUserId}
-              onChange={(e) =>
-                setEntryForm((prev) => ({ ...prev, toUserId: e.target.value }))
-              }
-              className="h-10"
-            >
-              <option value="">{t("settlement.toUser")}</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </AppSelect>
+            <div className="grid grid-cols-2 gap-2">
+              <AppSelect
+                value={entryForm.fromUserId}
+                onChange={(e) =>
+                  setEntryForm((prev) => ({ ...prev, fromUserId: e.target.value }))
+                }
+                className="h-10"
+              >
+                <option value="">{t("settlement.fromUser")}</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </AppSelect>
+              <AppSelect
+                value={entryForm.toUserId}
+                onChange={(e) =>
+                  setEntryForm((prev) => ({ ...prev, toUserId: e.target.value }))
+                }
+                className="h-10"
+              >
+                <option value="">{t("settlement.toUser")}</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </AppSelect>
+            </div>
             <input
               value={entryForm.amount}
               onChange={(e) =>
                 setEntryForm((prev) => ({ ...prev, amount: e.target.value }))
               }
-              className="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+              className={inputCls}
               placeholder={t("settlement.amount")}
             />
             <input
@@ -273,14 +290,14 @@ export default function SettlementPage() {
               onChange={(e) =>
                 setEntryForm((prev) => ({ ...prev, date: e.target.value }))
               }
-              className="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+              className={dateInputCls}
             />
             <input
               value={entryForm.comment}
               onChange={(e) =>
                 setEntryForm((prev) => ({ ...prev, comment: e.target.value }))
               }
-              className="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+              className={inputCls}
               placeholder={t("settlement.comment")}
             />
           </div>
@@ -305,35 +322,37 @@ export default function SettlementPage() {
           <h3 className="font-semibold">{t("settlement.planTitle")}</h3>
 
           <div className="space-y-2">
-            <AppSelect
-              value={planForm.fromUserId}
-              onChange={(e) =>
-                setPlanForm((prev) => ({ ...prev, fromUserId: e.target.value }))
-              }
-              className="h-10"
-            >
-              <option value="">{t("settlement.fromUser")}</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </AppSelect>
+            <div className="grid grid-cols-2 gap-2">
+              <AppSelect
+                value={planForm.fromUserId}
+                onChange={(e) =>
+                  setPlanForm((prev) => ({ ...prev, fromUserId: e.target.value }))
+                }
+                className="h-10"
+              >
+                <option value="">{t("settlement.fromUser")}</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </AppSelect>
 
-            <AppSelect
-              value={planForm.toUserId}
-              onChange={(e) =>
-                setPlanForm((prev) => ({ ...prev, toUserId: e.target.value }))
-              }
-              className="h-10"
-            >
-              <option value="">{t("settlement.toUser")}</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </AppSelect>
+              <AppSelect
+                value={planForm.toUserId}
+                onChange={(e) =>
+                  setPlanForm((prev) => ({ ...prev, toUserId: e.target.value }))
+                }
+                className="h-10"
+              >
+                <option value="">{t("settlement.toUser")}</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </AppSelect>
+            </div>
 
             <AppSelect
               value={planForm.planType}
@@ -356,7 +375,7 @@ export default function SettlementPage() {
                     configuredAmount: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+                className={inputCls}
                 placeholder={t("settlement.fixedAmountPerPeriod")}
               />
             )}
@@ -370,7 +389,7 @@ export default function SettlementPage() {
                     configuredPeriods: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+                className={inputCls}
                 placeholder={t("settlement.numberOfPeriods")}
               />
             )}
@@ -380,7 +399,7 @@ export default function SettlementPage() {
               onChange={(e) =>
                 setPlanForm((prev) => ({ ...prev, comment: e.target.value }))
               }
-              className="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+              className={inputCls}
               placeholder={t("settlement.comment")}
             />
           </div>
@@ -503,10 +522,25 @@ export default function SettlementPage() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({
+  label,
+  value,
+  icon: Icon,
+  colorClass,
+}: {
+  label: string;
+  value: string;
+  icon: ComponentType<{ className?: string }>;
+  colorClass: string;
+}) {
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-      <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
+        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-white ${colorClass}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
       <div className="text-base font-semibold mt-1 text-gray-900 dark:text-gray-100">
         {value}
       </div>
