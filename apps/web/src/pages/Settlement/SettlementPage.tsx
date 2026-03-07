@@ -1,7 +1,8 @@
-import { type ComponentType, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ArrowRightLeft, Coins, CreditCard, Wallet } from "lucide-react";
+import { AlertTriangle, CircleCheckBig, Scale, Wallet } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
+import TileGrid from "../../components/Common/TileGrid";
 import { Button } from "../../components/ui/button";
 import {
   useCreateSettlementEntry,
@@ -14,14 +15,15 @@ import {
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
 import { amountToCents } from "../../utils/currency";
+import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
 
 function safeCents(value: number): number {
   return Math.abs(value) < 1 ? 0 : value;
 }
 
 const inputCls =
-  "h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm text-gray-900 dark:text-gray-100";
-const dateInputCls = `${inputCls} min-w-0 max-w-full box-border`;
+  `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
+const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 export default function SettlementPage() {
   const { t } = useTranslation();
@@ -69,6 +71,17 @@ export default function SettlementPage() {
 
   const userName = (id: string) =>
     users.find((user) => user.id === id)?.name ?? id;
+
+  const netBalanceCents = safeCents(
+    (summary?.totals.totalUnpaidCents ?? 0) -
+      (summary?.totals.totalCreditCents ?? 0),
+  );
+  const netBalanceText =
+    netBalanceCents === 0
+      ? t("settlement.balanceSettled")
+      : netBalanceCents > 0
+        ? t("settlement.balanceDebt")
+        : t("settlement.balanceCredit");
 
   const submitEntry = async () => {
     await createEntry.mutateAsync({
@@ -132,38 +145,38 @@ export default function SettlementPage() {
         </AppSelect>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <Metric
-          icon={Wallet}
-          colorClass="bg-amber-500"
-          label={t("settlement.totalOwed")}
-          value={fmt(safeCents(summary?.totals.totalOwedCents ?? 0))}
-        />
-        <Metric
-          icon={CreditCard}
-          colorClass="bg-green-500"
-          label={t("settlement.totalPaid")}
-          value={fmt(safeCents(summary?.totals.totalPaidCents ?? 0))}
-        />
-        <Metric
-          icon={Coins}
-          colorClass="bg-blue-500"
-          label={t("settlement.totalCredit")}
-          value={fmt(safeCents(summary?.totals.totalCreditCents ?? 0))}
-        />
-        <Metric
-          icon={ArrowRightLeft}
-          colorClass="bg-red-500"
-          label={t("settlement.totalUnpaid")}
-          value={fmt(safeCents(summary?.totals.totalUnpaidCents ?? 0))}
-        />
-        <Metric
-          icon={AlertTriangle}
-          colorClass="bg-orange-500"
-          label={t("settlement.unresolvedWarnings")}
-          value={String(summary?.totals.unresolvedWarningCount ?? 0)}
-        />
-      </div>
+      <TileGrid
+        items={[
+          {
+            key: "total-owed",
+            icon: Wallet,
+            label: t("settlement.totalOwed"),
+            value: fmt(safeCents(summary?.totals.totalOwedCents ?? 0)),
+            colorClass: "bg-amber-500",
+          },
+          {
+            key: "total-paid",
+            icon: CircleCheckBig,
+            label: t("settlement.totalPaid"),
+            value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
+            colorClass: "bg-green-500",
+          },
+          {
+            key: "net-balance",
+            icon: Scale,
+            label: t("settlement.netBalance"),
+            value: `${netBalanceText}: ${fmt(Math.abs(netBalanceCents))}`,
+            colorClass: netBalanceCents > 0 ? "bg-red-500" : netBalanceCents < 0 ? "bg-blue-500" : "bg-slate-500",
+          },
+          {
+            key: "warnings",
+            icon: AlertTriangle,
+            label: t("settlement.unresolvedWarnings"),
+            value: String(summary?.totals.unresolvedWarningCount ?? 0),
+            colorClass: "bg-orange-500",
+          },
+        ]}
+      />
 
       <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
         <h2 className="text-lg font-semibold">{t("settlement.overview")}</h2>
@@ -186,6 +199,9 @@ export default function SettlementPage() {
               </div>
               <div>
                 {t("settlement.planAddition")}: {fmt(safeCents(row.plannedAdditionCents))}
+              </div>
+              <div>
+                {t("settlement.payments")}: {fmt(safeCents(row.paymentsCents))}
               </div>
               <div className="font-semibold text-gray-900 dark:text-gray-100 pt-1">
                 {t("settlement.remaining")}: {fmt(safeCents(row.remainingCents))}
@@ -518,32 +534,6 @@ export default function SettlementPage() {
           </div>
         </section>
       )}
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  icon: Icon,
-  colorClass,
-}: {
-  label: string;
-  value: string;
-  icon: ComponentType<{ className?: string }>;
-  colorClass: string;
-}) {
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
-        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-white ${colorClass}`}>
-          <Icon className="h-4 w-4" />
-        </span>
-      </div>
-      <div className="text-base font-semibold mt-1 text-gray-900 dark:text-gray-100">
-        {value}
-      </div>
     </div>
   );
 }

@@ -531,8 +531,8 @@
     "overview": "Settlement overview",
     "fromUser": "From user",
     "toUser": "To user",
-    "baseObligation": "Base obligation",
-    "carriedCredit": "Credit from previous",
+    "baseObligation": "Share this month",
+    "carriedCredit": "Credit from previous period",
     "planAddition": "Plan addition",
     "payments": "Payments",
     "remaining": "Remaining settlement",
@@ -557,9 +557,13 @@
     "reversalCommentPrompt": "Enter reversal comment",
     "unresolvedUnpaid": "Uavklart restgjeld",
     "shareAdjustmentTitle": "Share adjustments",
-    "shareAdjustmentDesc": "Base share is shown separately from settlement adjustments.",
-    "baseShare": "Grunnandel",
+    "shareAdjustmentDesc": "This month's share is shown separately from credit and plan additions.",
+    "baseShare": "Share this month",
     "creditPrevious": "Tilgode fra forrige periode",
-    "historyEmpty": "No settlement entries for this period yet."
+    "historyEmpty": "No settlement entries for this period yet.",
+    "netBalance": "Balance",
+    "balanceSettled": "Settled",
+    "balanceDebt": "Unpaid balance",
+    "balanceCredit": "Credit"
   }
 }
