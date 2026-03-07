@@ -466,8 +466,8 @@
   "import": {
     "title": "Importer data",
     "type": {
-      "expense": "Importer utgifter",
-      "recurring": "Importer faste utgifter"
+      "expense": "Utgifter",
+      "recurring": "Faste utgifter"
     },
     "downloadTemplate": "Last ned mal",
     "detectedColumns": "Oppdagede kolonner",
@@ -496,14 +496,14 @@
     "title": "Import / Eksport",
     "importData": "Importer data",
     "exportTemplates": "Eksporter maler",
-    "templateHelp": "Maler bruker eksakte feltnavn. Påkrevde felt: description og amount/default_amount.",
+    "templateHelp": "Last ned en ferdig mal med riktige feltnavn for import.",
     "backup": "Sikkerhetskopi",
-    "backupDescription": "Eksporter en full JSON-sikkerhetskopi med utgifter, faste utgifter, masterdata og innstillinger.",
+    "backupDescription": "Inkluderer utgifter, faste utgifter, oppgjør, masterdata og innstillinger.",
     "exportBackup": "Eksporter full sikkerhetskopi",
     "backupExportedAt": "Sikkerhetskopi eksportert",
     "backupExportFailed": "Kunne ikke eksportere sikkerhetskopi",
     "restore": "Gjenopprett",
-    "restoreWarning": "Gjenoppretting bruker fletting. Eksisterende data kan beholdes og noen rader kan hoppes over. Lukkede perioder endres aldri.",
+    "restoreWarning": "Gjenoppretting fletter data der det er mulig. Lukkede perioder blir ikke endret.",
     "invalidBackup": "Ugyldig eller ikke-støttet sikkerhetskopifil",
     "confirmRestore": "Bekreft gjenoppretting",
     "restoring": "Gjenoppretter...",
@@ -555,6 +555,7 @@
     "shareAdjustmentTitle": "Andelsjusteringer",
     "shareAdjustmentDesc": "Grunnandel vises separat fra oppgjørsjusteringer.",
     "baseShare": "Grunnandel",
-    "creditPrevious": "Tilgode fra forrige periode"
+    "creditPrevious": "Tilgode fra forrige periode",
+    "historyEmpty": "Ingen oppføringer i historikk for denne perioden enda."
   }
 }

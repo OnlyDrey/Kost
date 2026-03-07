@@ -466,8 +466,8 @@
   "import": {
     "title": "Import data",
     "type": {
-      "expense": "Import Expenses",
-      "recurring": "Import Recurring Expenses"
+      "expense": "Expenses",
+      "recurring": "Recurring expenses"
     },
     "downloadTemplate": "Download template",
     "detectedColumns": "Detected columns",
@@ -496,14 +496,14 @@
     "title": "Import / Export",
     "importData": "Import Data",
     "exportTemplates": "Export Templates",
-    "templateHelp": "Templates use exact field names. Required fields: description and amount/default_amount.",
+    "templateHelp": "Download a ready-to-use template with correct field names.",
     "backup": "Backup",
-    "backupDescription": "Export a full JSON backup including expenses, recurring expenses, master data, and settings.",
+    "backupDescription": "Includes expenses, recurring expenses, settlements, master data and settings.",
     "exportBackup": "Export full backup",
     "backupExportedAt": "Backup exported at",
     "backupExportFailed": "Backup export failed",
     "restore": "Restore",
-    "restoreWarning": "Restore uses merge behavior. Existing data may be kept, and some rows may be skipped. Closed periods are never modified.",
+    "restoreWarning": "Restore merges data where possible. Existing closed periods are not modified.",
     "invalidBackup": "Invalid or unsupported backup file",
     "confirmRestore": "Confirm restore",
     "restoring": "Restoring...",
@@ -555,6 +555,7 @@
     "shareAdjustmentTitle": "Share adjustments",
     "shareAdjustmentDesc": "Base share is shown separately from settlement adjustments.",
     "baseShare": "Grunnandel",
-    "creditPrevious": "Tilgode fra forrige periode"
+    "creditPrevious": "Tilgode fra forrige periode",
+    "historyEmpty": "No settlement entries for this period yet."
   }
 }
