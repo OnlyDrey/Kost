@@ -12,7 +12,8 @@
     "settings": "Innstillinger",
     "subscriptions": "Faste utgifter",
     "logout": "Logg ut",
-    "importExport": "Import / Eksport"
+    "importExport": "Import / Eksport",
+    "settlement": "Oppgjør"
   },
   "overview": {
     "title": "Oversikt",
@@ -59,7 +60,8 @@
     "paidLabel": "Betalt",
     "owedBacklog": "Utestående utgifter",
     "remainingLabel": "Gjenstår",
-    "userShare": "{{name}} sin andel"
+    "userShare": "{{name}} sin andel",
+    "settlementThisPeriod": "Oppgjør denne perioden"
   },
   "invoice": {
     "title": "Utgift",
@@ -174,7 +176,8 @@
     "invoicesToDelete": "Fakturaer som slettes",
     "incomesToDelete": "Inntekter som slettes",
     "enterPasswordToDelete": "Skriv inn passord for å bekrefte sletting",
-    "passwordPlaceholder": "Skriv inn passordet ditt"
+    "passwordPlaceholder": "Skriv inn passordet ditt",
+    "settlementWarning": "Uavklarte oppgjørsvarsler fra forrige periode"
   },
   "settings": {
     "title": "Innstillinger",
@@ -513,5 +516,45 @@
       "vendors": "Leverandører i backup"
     },
     "noOpenPeriod": "Ingen åpen periode tilgjengelig. Opprett/åpne en periode før import av utgifter."
+  },
+  "settlement": {
+    "title": "Oppgjør",
+    "totalOwed": "Totalt skyldig",
+    "totalPaid": "Totalt betalt",
+    "totalCredit": "Tilgode",
+    "totalUnpaid": "Restgjeld",
+    "unresolvedWarnings": "Uavklarte varsler",
+    "overview": "Oppgjørsoversikt",
+    "fromUser": "Fra bruker",
+    "toUser": "Til bruker",
+    "baseObligation": "Grunnandel",
+    "carriedCredit": "Tilgode fra forrige",
+    "planAddition": "Tillegg fra oppgjørsplan",
+    "payments": "Registrerte innbetalinger",
+    "remaining": "Gjenstående oppgjør",
+    "registerPayment": "Registrer innbetaling",
+    "adminOnly": "Kun admin kan endre oppgjør.",
+    "payment": "Innbetaling",
+    "adjustment": "Justering",
+    "writeDown": "Nedskriving",
+    "amount": "Beløp",
+    "comment": "Kommentar",
+    "saveEntry": "Lagre oppføring",
+    "planTitle": "Oppgjørsplan",
+    "planFullNext": "Flytt hele restgjelden til neste periode",
+    "planFixedAmount": "Fast beløp per periode",
+    "planFixedPeriods": "Fordel over antall perioder",
+    "fixedAmountPerPeriod": "Fast beløp per periode",
+    "numberOfPeriods": "Antall perioder",
+    "createPlan": "Opprett plan",
+    "history": "Historikk",
+    "reversed": "Reversert",
+    "reverse": "Reversering",
+    "reversalCommentPrompt": "Skriv kommentar for reversering",
+    "unresolvedUnpaid": "Uavklart restgjeld",
+    "shareAdjustmentTitle": "Andelsjusteringer",
+    "shareAdjustmentDesc": "Grunnandel vises separat fra oppgjørsjusteringer.",
+    "baseShare": "Grunnandel",
+    "creditPrevious": "Tilgode fra forrige periode"
   }
 }

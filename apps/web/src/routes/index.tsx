@@ -11,6 +11,7 @@ import Profile from "../pages/Settings/Profile";
 import AdminUsers from "../pages/Admin/Users";
 import SubscriptionList from "../pages/Subscriptions/SubscriptionList";
 import ImportPage from "../pages/Import/ImportPage";
+import SettlementPage from "../pages/Settlement/SettlementPage";
 
 function Spinner() {
   return (
@@ -72,6 +73,7 @@ export default function AppRoutes() {
         <Route path="/subscriptions/add" element={<AddExpense />} />
         <Route path="/subscriptions/:id/edit" element={<AddExpense />} />
         <Route path="/import-export" element={<ImportPage />} />
+        <Route path="/oppgjor" element={<SettlementPage />} />
         <Route path="/import" element={<Navigate to="/import-export" replace />} />
 
         {/* Periods list stays; detail redirects to Overview with period param */}

@@ -24,6 +24,7 @@ import {
   useAddPayment,
   useCurrencyFormatter,
   useUsers,
+  useSettlementSummary,
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
@@ -128,6 +129,7 @@ export default function Overview() {
     useInvoices(resolvedPeriodId);
   const { data: vendors = [] } = useVendors();
   const { data: users = [], isLoading: usersLoading } = useUsers();
+  const { data: settlementSummary } = useSettlementSummary(resolvedPeriodId);
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
   const { data: currency = "NOK" } = useCurrency();
@@ -479,6 +481,14 @@ export default function Overview() {
                 value: fmt(paidUnpaid.owedCents),
                 colorClass: "bg-red-500",
                 onClick: () => setStatusFilter("remaining"),
+              },
+              {
+                key: "settlement",
+                icon: CircleAlert,
+                label: t("dashboard.settlementThisPeriod"),
+                value: fmt(settlementSummary?.totals.totalUnpaidCents ?? 0),
+                colorClass: "bg-orange-500",
+                onClick: () => navigate("/oppgjor"),
               },
               {
                 key: "invoices",

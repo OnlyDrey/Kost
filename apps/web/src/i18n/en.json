@@ -12,7 +12,8 @@
     "settings": "Settings",
     "subscriptions": "Recurring Expenses",
     "logout": "Logout",
-    "importExport": "Import / Export"
+    "importExport": "Import / Export",
+    "settlement": "Settlement"
   },
   "overview": {
     "title": "Overview",
@@ -59,7 +60,8 @@
     "paidLabel": "Paid",
     "owedBacklog": "Outstanding expenses",
     "remainingLabel": "Remaining",
-    "userShare": "{{name}}'s share"
+    "userShare": "{{name}}'s share",
+    "settlementThisPeriod": "Settlement this period"
   },
   "invoice": {
     "title": "Expense",
@@ -174,7 +176,8 @@
     "invoicesToDelete": "Invoices to delete",
     "incomesToDelete": "Incomes to delete",
     "enterPasswordToDelete": "Enter password to confirm deletion",
-    "passwordPlaceholder": "Enter your password"
+    "passwordPlaceholder": "Enter your password",
+    "settlementWarning": "Unresolved settlement warnings from previous period"
   },
   "settings": {
     "title": "Settings",
@@ -513,5 +516,45 @@
       "vendors": "Vendors in backup"
     },
     "noOpenPeriod": "No open period available. Create/open a period before importing expenses."
+  },
+  "settlement": {
+    "title": "Oppgjør",
+    "totalOwed": "Total owed",
+    "totalPaid": "Total paid",
+    "totalCredit": "Tilgode",
+    "totalUnpaid": "Restgjeld",
+    "unresolvedWarnings": "Unresolved warnings",
+    "overview": "Settlement overview",
+    "fromUser": "From user",
+    "toUser": "To user",
+    "baseObligation": "Base obligation",
+    "carriedCredit": "Credit from previous",
+    "planAddition": "Plan addition",
+    "payments": "Payments",
+    "remaining": "Remaining settlement",
+    "registerPayment": "Registrer innbetaling",
+    "adminOnly": "Only admins can modify settlement.",
+    "payment": "Payment",
+    "adjustment": "Adjustment",
+    "writeDown": "Write down",
+    "amount": "Amount",
+    "comment": "Comment",
+    "saveEntry": "Save entry",
+    "planTitle": "Oppgjørsplan",
+    "planFullNext": "Move full unpaid to next period",
+    "planFixedAmount": "Fixed amount per period",
+    "planFixedPeriods": "Distribute over number of periods",
+    "fixedAmountPerPeriod": "Fixed amount per period",
+    "numberOfPeriods": "Number of periods",
+    "createPlan": "Create plan",
+    "history": "Historikk",
+    "reversed": "Reversed",
+    "reverse": "Reversering",
+    "reversalCommentPrompt": "Enter reversal comment",
+    "unresolvedUnpaid": "Uavklart restgjeld",
+    "shareAdjustmentTitle": "Share adjustments",
+    "shareAdjustmentDesc": "Base share is shown separately from settlement adjustments.",
+    "baseShare": "Grunnandel",
+    "creditPrevious": "Tilgode fra forrige periode"
   }
 }

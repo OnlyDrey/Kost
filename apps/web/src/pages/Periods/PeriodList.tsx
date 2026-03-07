@@ -17,6 +17,7 @@ import {
   useReopenPeriod,
   useDeletePeriod,
   useGetPeriodDeletionInfo,
+  useSettlementWarnings,
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
 import { formatDate } from "../../utils/date";
@@ -60,6 +61,13 @@ export default function PeriodList() {
   const { data: deletionInfo } = useGetPeriodDeletionInfo(
     deletionModalOpen ? deletionPeriodId : "",
   );
+  const previousPeriodForCandidate = useMemo(() => {
+    if (!periodId || !/^\d{4}-\d{2}$/.test(periodId)) return "";
+    const [year, month] = periodId.split("-").map(Number);
+    const date = new Date(year, month - 2, 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }, [periodId]);
+  const { data: openingWarnings = [] } = useSettlementWarnings(dialogOpen ? previousPeriodForCandidate : "");
 
   const years = useMemo(() => {
     if (!periods) return [];
@@ -389,7 +397,12 @@ export default function PeriodList() {
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              {error && (
+                {openingWarnings.length > 0 && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+                  {t("period.settlementWarning")}: {openingWarnings.length}
+                </div>
+              )}
+            {error && (
                 <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
                   <AlertCircle size={15} className="flex-shrink-0" />
                   <span>{error}</span>
