@@ -16,6 +16,7 @@ const TEMPLATE_COLUMNS: Record<ImportEntityType, string[]> = {
     "description",
     "default_amount",
     "due_day",
+    "next_due_date",
     "frequency",
     "category",
     "vendor",
@@ -26,8 +27,8 @@ const TEMPLATE_COLUMNS: Record<ImportEntityType, string[]> = {
 };
 
 const TEMPLATE_EXAMPLE: Record<ImportEntityType, string[]> = {
-  expense: ["Electricity", "1200.5", "2026-03-20", "Utilities", "Power Co", "Invoice", "UNPAID", ""] ,
-  recurring: ["Netflix", "189", "15", "MONTHLY", "Entertainment", "Netflix", "Card", "true", ""],
+  expense: ["Electricity", "1200.5", "2026-03-20", "Utilities", "Power Co", "Invoice", "UNPAID", "Optional notes"],
+  recurring: ["Netflix", "189", "15", "2026-04-15", "MONTHLY", "Entertainment", "Netflix", "Card", "true", "Optional notes"],
 };
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -39,7 +40,7 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function toCsv(headers: string[], example: string[]) {
+export function toCsv(headers: string[], example: string[]) {
   return `${headers.join(",")}\n${example.join(",")}\n`;
 }
 
@@ -51,9 +52,8 @@ function escapeXml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function createXlsx(headers: string[], example: string[]): Uint8Array {
-  const values = [headers, example];
-  const rowsXml = values
+export function createXlsx(headers: string[], example: string[]): Uint8Array {
+  const rowsXml = [headers, example]
     .map(
       (row, rowIndex) => `<row r="${rowIndex + 1}">${row
         .map(
@@ -64,7 +64,7 @@ function createXlsx(headers: string[], example: string[]): Uint8Array {
     )
     .join("");
 
-  const files = {
+  return zipSync({
     "[Content_Types].xml": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -78,9 +78,7 @@ function createXlsx(headers: string[], example: string[]): Uint8Array {
 </Relationships>`),
     "xl/workbook.xml": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <sheets>
-    <sheet name="Template" sheetId="1" r:id="rId1"/>
-  </sheets>
+  <sheets><sheet name="Template" sheetId="1" r:id="rId1"/></sheets>
 </workbook>`),
     "xl/_rels/workbook.xml.rels": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -88,12 +86,10 @@ function createXlsx(headers: string[], example: string[]): Uint8Array {
 </Relationships>`),
     "xl/worksheets/sheet1.xml": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rowsXml}</sheetData></worksheet>`),
-  };
-
-  return zipSync(files);
+  });
 }
 
-function createOds(headers: string[], example: string[]): Uint8Array {
+export function createOds(headers: string[], example: string[]): Uint8Array {
   const rows = [headers, example]
     .map(
       (row) =>
@@ -117,9 +113,12 @@ function createOds(headers: string[], example: string[]): Uint8Array {
   });
 }
 
+export function getTemplateDefinition(type: ImportEntityType) {
+  return { headers: TEMPLATE_COLUMNS[type], example: TEMPLATE_EXAMPLE[type] };
+}
+
 export function downloadImportTemplate(type: ImportEntityType, format: SpreadsheetFormat): void {
-  const headers = TEMPLATE_COLUMNS[type];
-  const example = TEMPLATE_EXAMPLE[type];
+  const { headers, example } = getTemplateDefinition(type);
 
   if (format === "csv") {
     downloadBlob(new Blob([toCsv(headers, example)], { type: "text/csv;charset=utf-8" }), `${type}-import-template.csv`);

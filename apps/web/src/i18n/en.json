@@ -11,7 +11,8 @@
     "periods": "Periods",
     "settings": "Settings",
     "subscriptions": "Recurring Expenses",
-    "logout": "Logout"
+    "logout": "Logout",
+    "importExport": "Import / Export"
   },
   "overview": {
     "title": "Overview",
@@ -399,7 +400,10 @@
     "previous": "Previous",
     "active": "Active",
     "inactive": "Inactive",
-    "other": "Other"
+    "other": "Other",
+    "required": "Required",
+    "optional": "Optional",
+    "notes": "Notes"
   },
   "validation": {
     "required": "This field is required",
@@ -478,9 +482,36 @@
     "summary": {
       "imported": "Imported",
       "skipped": "Skipped",
-      "failed": "Failed"
+      "failed": "Failed",
+      "total": "Total rows"
     },
     "openExpense": "Import expenses",
-    "openRecurring": "Import recurring"
+    "openRecurring": "Import recurring",
+    "unmapped": "Unmapped"
+  },
+  "importExport": {
+    "title": "Import / Export",
+    "importData": "Import Data",
+    "exportTemplates": "Export Templates",
+    "templateHelp": "Templates use exact field names. Required fields: description and amount/default_amount.",
+    "backup": "Backup",
+    "backupDescription": "Export a full JSON backup including expenses, recurring expenses, master data, and settings.",
+    "exportBackup": "Export full backup",
+    "backupExportedAt": "Backup exported at",
+    "backupExportFailed": "Backup export failed",
+    "restore": "Restore",
+    "restoreWarning": "Restore uses merge behavior. Existing data may be kept, and some rows may be skipped. Closed periods are never modified.",
+    "invalidBackup": "Invalid or unsupported backup file",
+    "confirmRestore": "Confirm restore",
+    "restoring": "Restoring...",
+    "preview": {
+      "periods": "Periods in backup",
+      "expenses": "Expenses in backup",
+      "recurring": "Recurring expenses in backup",
+      "categories": "Categories in backup",
+      "paymentMethods": "Payment methods in backup",
+      "vendors": "Vendors in backup"
+    },
+    "noOpenPeriod": "No open period available. Create/open a period before importing expenses."
   }
 }

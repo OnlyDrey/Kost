@@ -2,11 +2,14 @@ import { strFromU8, unzipSync } from "fflate";
 import { ParsedSheet, SpreadsheetFormat } from "./types";
 import { normalizeHeader } from "./pipeline";
 
-function parseCsvText(text: string): string[][] {
+export function parseCsvText(text: string): string[][] {
   const delimiterCandidates = [",", ";", "\t", "|"];
   const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
   const delimiter = delimiterCandidates
-    .map((candidate) => ({ candidate, count: (firstLine.match(new RegExp(`\\${candidate}`, "g")) ?? []).length }))
+    .map((candidate) => ({
+      candidate,
+      count: (firstLine.match(new RegExp(`\\${candidate}`, "g")) ?? []).length,
+    }))
     .sort((a, b) => b.count - a.count)[0]?.candidate ?? ",";
 
   const rows: string[][] = [];
@@ -50,17 +53,18 @@ function parseCsvText(text: string): string[][] {
     row.push(value.trim());
     rows.push(row);
   }
+
   return rows.filter((r) => r.some((c) => c.trim().length > 0));
 }
 
-function detectHeaderRow(matrix: string[][]): number {
+export function detectHeaderRow(matrix: string[][]): number {
   return Math.max(
     0,
     matrix.findIndex((row) => row.filter((cell) => cell.trim().length > 0).length >= 2),
   );
 }
 
-function matrixToParsed(matrix: string[][]): ParsedSheet {
+export function matrixToParsed(matrix: string[][]): ParsedSheet {
   const headerIndex = detectHeaderRow(matrix);
   const rawHeaders = matrix[headerIndex] ?? [];
   const headers = rawHeaders.map((h, i) => normalizeHeader(h || `column_${i + 1}`));
@@ -75,56 +79,59 @@ function matrixToParsed(matrix: string[][]): ParsedSheet {
   return { headers, rows: rows.filter((row) => Object.values(row).some(Boolean)) };
 }
 
-function parseXmlRows(xmlText: string, rowSelector: string, cellSelector: string): string[][] {
-  const doc = new DOMParser().parseFromString(xmlText, "application/xml");
-  const rowNodes = Array.from(doc.querySelectorAll(rowSelector));
-  return rowNodes.map((rowNode) =>
-    Array.from(rowNode.querySelectorAll(cellSelector)).map((cell) =>
-      (cell.textContent ?? "").replace(/\s+/g, " ").trim(),
-    ),
-  );
-}
-
 function parseXlsx(buffer: Uint8Array): string[][] {
   const files = unzipSync(buffer);
-  const workbook = strFromU8(files["xl/workbook.xml"]);
+  const workbookFile = files["xl/workbook.xml"];
+  const workbookRelFile = files["xl/_rels/workbook.xml.rels"];
+  if (!workbookFile || !workbookRelFile) return [];
+
+  const workbook = strFromU8(workbookFile);
   const workbookDoc = new DOMParser().parseFromString(workbook, "application/xml");
   const firstSheet = workbookDoc.querySelector("sheet");
   if (!firstSheet) return [];
 
   const relId = firstSheet.getAttribute("r:id");
-  const rels = strFromU8(files["xl/_rels/workbook.xml.rels"]);
+  const rels = strFromU8(workbookRelFile);
   const relsDoc = new DOMParser().parseFromString(rels, "application/xml");
   const relationship = relsDoc.querySelector(`Relationship[Id='${relId}']`);
   const target = relationship?.getAttribute("Target") ?? "worksheets/sheet1.xml";
   const normalizedTarget = target.startsWith("/") ? target.slice(1) : `xl/${target}`;
+  const sheetFile = files[normalizedTarget];
+  if (!sheetFile) return [];
 
-  const sheet = strFromU8(files[normalizedTarget]);
-  const sheetDoc = new DOMParser().parseFromString(sheet, "application/xml");
+  const sheetDoc = new DOMParser().parseFromString(strFromU8(sheetFile), "application/xml");
   const sharedStringsFile = files["xl/sharedStrings.xml"];
   const sharedStrings = sharedStringsFile
     ? Array.from(
-        new DOMParser().parseFromString(strFromU8(sharedStringsFile), "application/xml").querySelectorAll("si t"),
+        new DOMParser()
+          .parseFromString(strFromU8(sharedStringsFile), "application/xml")
+          .querySelectorAll("si t"),
       ).map((node) => node.textContent ?? "")
     : [];
 
-  const rows = Array.from(sheetDoc.querySelectorAll("sheetData row")).map((row) => {
-    return Array.from(row.querySelectorAll("c")).map((cell) => {
+  return Array.from(sheetDoc.querySelectorAll("sheetData row")).map((row) =>
+    Array.from(row.querySelectorAll("c")).map((cell) => {
       const type = cell.getAttribute("t");
       const value = cell.querySelector("v")?.textContent ?? cell.querySelector("is t")?.textContent ?? "";
       if (type === "s") return sharedStrings[Number(value)] ?? "";
       return value;
-    });
-  });
-
-  return rows;
+    }),
+  );
 }
 
 function parseOds(buffer: Uint8Array): string[][] {
   const files = unzipSync(buffer);
   const content = files["content.xml"];
   if (!content) return [];
-  return parseXmlRows(strFromU8(content), "table\\:table table\\:table-row", "table\\:table-cell text\\:p");
+  const doc = new DOMParser().parseFromString(strFromU8(content), "application/xml");
+  const rows = Array.from(doc.getElementsByTagName("table:table-row"));
+  return rows.map((rowNode) => {
+    const cells = Array.from(rowNode.getElementsByTagName("table:table-cell"));
+    return cells.map((cell) => {
+      const textNode = cell.getElementsByTagName("text:p")[0];
+      return (textNode?.textContent ?? "").replace(/\s+/g, " ").trim();
+    });
+  });
 }
 
 export async function parseSpreadsheet(file: File): Promise<ParsedSheet> {
@@ -134,8 +141,7 @@ export async function parseSpreadsheet(file: File): Promise<ParsedSheet> {
   }
 
   if (ext === "csv") {
-    const text = await file.text();
-    return matrixToParsed(parseCsvText(text));
+    return matrixToParsed(parseCsvText(await file.text()));
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());

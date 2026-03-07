@@ -15,11 +15,11 @@ export interface ParsedSheet {
 }
 
 export interface FieldSpec<TTransformed> {
-  key: string;
+  key: Extract<keyof TTransformed, string>;
   required?: boolean;
+  labelKey: string;
   aliases: string[];
   transform?: (value: string) => unknown;
-  apply?: (target: Partial<TTransformed>, value: unknown) => void;
 }
 
 export interface ImportRowResult<TTransformed> {
@@ -44,11 +44,15 @@ export interface ImportPreview<TTransformed> {
 export interface ImportPipelineSpec<TTransformed, TPersistResult = unknown> {
   type: ImportEntityType;
   fields: FieldSpec<TTransformed>[];
-  validateRow: (row: Partial<TTransformed>, source: Record<string, string>) => ImportIssue[];
+  validateRow: (
+    row: Partial<TTransformed>,
+    source: Record<string, string>,
+  ) => ImportIssue[];
   persistRow: (row: Partial<TTransformed>) => Promise<TPersistResult>;
 }
 
 export interface ImportExecutionSummary {
+  totalRows: number;
   imported: number;
   skipped: number;
   failed: number;

@@ -11,19 +11,22 @@ export function normalizeHeader(value: string): string {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
     .replace(/^_+|_+$/g, "")
     .replace(/_+/g, "_");
 }
 
-export function mapColumns<T>(
+export function suggestColumnMapping<T>(
   headers: string[],
   fields: FieldSpec<T>[],
 ): Record<string, string | undefined> {
   const normalized = new Map(headers.map((h) => [normalizeHeader(h), h]));
   const mapped: Record<string, string | undefined> = {};
   for (const field of fields) {
-    const key = field.aliases.map(normalizeHeader).find((candidate) => normalized.has(candidate));
+    const key = field.aliases
+      .map(normalizeHeader)
+      .find((candidate) => normalized.has(candidate));
     mapped[field.key] = key ? normalized.get(key) : undefined;
   }
   return mapped;
@@ -48,26 +51,32 @@ export function buildPreview<T>(
       const sourceColumn = mappedFields[field.key];
       const raw = sourceColumn ? source[sourceColumn] ?? "" : "";
 
-      if (!sourceColumn && field.required) {
-        issues.push({ field: field.key, message: `Missing required mapping`, severity: "error" });
+      if (!sourceColumn) {
+        if (field.required) {
+          issues.push({
+            field: field.key,
+            message: "Missing required column mapping",
+            severity: "error",
+          });
+        }
         continue;
       }
 
       const trimmed = raw.trim();
       if (!trimmed) {
         if (field.required) {
-          issues.push({ field: field.key, message: `Required value missing`, severity: "error" });
+          issues.push({
+            field: field.key,
+            message: "Required value missing",
+            severity: "error",
+          });
         }
         continue;
       }
 
       try {
         const transformedValue = field.transform ? field.transform(trimmed) : trimmed;
-        if (field.apply) {
-          field.apply(transformed, transformedValue);
-        } else {
-          (transformed as Record<string, unknown>)[field.key] = transformedValue;
-        }
+        (transformed as Record<string, unknown>)[field.key] = transformedValue;
       } catch (error) {
         issues.push({
           field: field.key,
@@ -102,6 +111,7 @@ export async function executeImport<T>(
   spec: ImportPipelineSpec<T>,
 ): Promise<ImportExecutionSummary> {
   const summary: ImportExecutionSummary = {
+    totalRows: preview.counts.total,
     imported: 0,
     skipped: 0,
     failed: 0,
@@ -120,7 +130,7 @@ export async function executeImport<T>(
       if (row.severity === "warning") {
         summary.warnings.push(`Row ${row.sourceRowNumber}: imported with warnings`);
       }
-    } catch (_error) {
+    } catch {
       summary.failed += 1;
     }
   }

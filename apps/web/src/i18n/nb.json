@@ -11,7 +11,8 @@
     "periods": "Perioder",
     "settings": "Innstillinger",
     "subscriptions": "Faste utgifter",
-    "logout": "Logg ut"
+    "logout": "Logg ut",
+    "importExport": "Import / Eksport"
   },
   "overview": {
     "title": "Oversikt",
@@ -399,7 +400,10 @@
     "previous": "Forrige",
     "active": "Aktiv",
     "inactive": "Inaktiv",
-    "other": "Annet"
+    "other": "Annet",
+    "required": "Påkrevd",
+    "optional": "Valgfri",
+    "notes": "Notater"
   },
   "validation": {
     "required": "Dette feltet er påkrevd",
@@ -478,9 +482,36 @@
     "summary": {
       "imported": "Importert",
       "skipped": "Hoppet over",
-      "failed": "Feilet"
+      "failed": "Feilet",
+      "total": "Totale rader"
     },
     "openExpense": "Importer utgifter",
-    "openRecurring": "Importer faste"
+    "openRecurring": "Importer faste",
+    "unmapped": "Ikke tilordnet"
+  },
+  "importExport": {
+    "title": "Import / Eksport",
+    "importData": "Importer data",
+    "exportTemplates": "Eksporter maler",
+    "templateHelp": "Maler bruker eksakte feltnavn. Påkrevde felt: description og amount/default_amount.",
+    "backup": "Sikkerhetskopi",
+    "backupDescription": "Eksporter en full JSON-sikkerhetskopi med utgifter, faste utgifter, masterdata og innstillinger.",
+    "exportBackup": "Eksporter full sikkerhetskopi",
+    "backupExportedAt": "Sikkerhetskopi eksportert",
+    "backupExportFailed": "Kunne ikke eksportere sikkerhetskopi",
+    "restore": "Gjenopprett",
+    "restoreWarning": "Gjenoppretting bruker fletting. Eksisterende data kan beholdes og noen rader kan hoppes over. Lukkede perioder endres aldri.",
+    "invalidBackup": "Ugyldig eller ikke-støttet sikkerhetskopifil",
+    "confirmRestore": "Bekreft gjenoppretting",
+    "restoring": "Gjenoppretter...",
+    "preview": {
+      "periods": "Perioder i backup",
+      "expenses": "Utgifter i backup",
+      "recurring": "Faste utgifter i backup",
+      "categories": "Kategorier i backup",
+      "paymentMethods": "Betalingsmåter i backup",
+      "vendors": "Leverandører i backup"
+    },
+    "noOpenPeriod": "Ingen åpen periode tilgjengelig. Opprett/åpne en periode før import av utgifter."
   }
 }

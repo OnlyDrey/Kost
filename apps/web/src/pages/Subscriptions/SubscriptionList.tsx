@@ -134,12 +134,6 @@ export default function SubscriptionList() {
               </div>
             )}
             <button
-              onClick={() => navigate("/import?type=recurring")}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
-            >
-              {t("import.openRecurring")}
-            </button>
-            <button
               onClick={() => navigate("/subscriptions/add")}
               className={`w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >

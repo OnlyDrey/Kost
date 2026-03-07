@@ -71,7 +71,8 @@ export default function AppRoutes() {
         <Route path="/subscriptions" element={<SubscriptionList />} />
         <Route path="/subscriptions/add" element={<AddExpense />} />
         <Route path="/subscriptions/:id/edit" element={<AddExpense />} />
-        <Route path="/import" element={<ImportPage />} />
+        <Route path="/import-export" element={<ImportPage />} />
+        <Route path="/import" element={<Navigate to="/import-export" replace />} />
 
         {/* Periods list stays; detail redirects to Overview with period param */}
         <Route path="/periods" element={<PeriodList />} />

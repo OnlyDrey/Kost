@@ -595,14 +595,6 @@ export default function Overview() {
                   </AppSelect>
                   <Button
                     type="button"
-                    variant="secondary"
-                    onClick={() => navigate("/import?type=expense")}
-                    className="w-full sm:w-auto"
-                  >
-                    {t("import.openExpense")}
-                  </Button>
-                  <Button
-                    type="button"
                     disabled={closed}
                     onClick={() => {
                       if (closed) return;
