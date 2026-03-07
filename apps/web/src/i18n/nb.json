@@ -455,5 +455,32 @@
     "symbolAfter": "Etter beløpet",
     "currencySymbolPositionUpdated": "Valutasymbol plassering oppdatert",
     "itemsPerPage": "Per side"
+  },
+  "import": {
+    "title": "Importer data",
+    "type": {
+      "expense": "Importer utgifter",
+      "recurring": "Importer faste utgifter"
+    },
+    "downloadTemplate": "Last ned mal",
+    "detectedColumns": "Oppdagede kolonner",
+    "generatePreview": "Lag forhåndsvisning",
+    "confirmImport": "Bekreft import",
+    "importing": "Importerer...",
+    "status": "Status",
+    "issues": "Avvik",
+    "counts": {
+      "total": "Totale rader",
+      "valid": "Gyldige",
+      "warnings": "Advarsler",
+      "errors": "Feil"
+    },
+    "summary": {
+      "imported": "Importert",
+      "skipped": "Hoppet over",
+      "failed": "Feilet"
+    },
+    "openExpense": "Importer utgifter",
+    "openRecurring": "Importer faste"
   }
 }

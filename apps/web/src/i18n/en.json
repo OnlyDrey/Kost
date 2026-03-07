@@ -455,5 +455,32 @@
     "symbolAfter": "After amount",
     "currencySymbolPositionUpdated": "Currency symbol position updated",
     "itemsPerPage": "Per page"
+  },
+  "import": {
+    "title": "Import data",
+    "type": {
+      "expense": "Import Expenses",
+      "recurring": "Import Recurring Expenses"
+    },
+    "downloadTemplate": "Download template",
+    "detectedColumns": "Detected columns",
+    "generatePreview": "Generate preview",
+    "confirmImport": "Confirm import",
+    "importing": "Importing...",
+    "status": "Status",
+    "issues": "Issues",
+    "counts": {
+      "total": "Total rows",
+      "valid": "Valid",
+      "warnings": "Warnings",
+      "errors": "Errors"
+    },
+    "summary": {
+      "imported": "Imported",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "openExpense": "Import expenses",
+    "openRecurring": "Import recurring"
   }
 }
