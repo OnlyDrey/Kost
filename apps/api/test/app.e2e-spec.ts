@@ -19,6 +19,7 @@ describe("Critical path (e2e)", () => {
   let userId: string;
   const periodId = new Date().toISOString().slice(0, 7); // YYYY-MM
   let invoiceId: string;
+  let subscriptionId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -47,11 +48,14 @@ describe("Critical path (e2e)", () => {
     await prisma.invoiceDistributionRule.deleteMany();
     await prisma.invoiceLine.deleteMany();
     await prisma.invoice.deleteMany();
+    await prisma.subscription.deleteMany();
     await prisma.income.deleteMany();
     await prisma.period.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.user.deleteMany({ where: { username: "e2e_testadmin" } });
-    await prisma.family.deleteMany({ where: { name: "e2e_testadmin's Family" } });
+    await prisma.family.deleteMany({
+      where: { name: "e2e_testadmin's Family" },
+    });
     await app.close();
   });
 
@@ -130,7 +134,9 @@ describe("Critical path (e2e)", () => {
         .expect(200);
 
       expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body.some((p: { id: string }) => p.id === periodId)).toBe(true);
+      expect(res.body.some((p: { id: string }) => p.id === periodId)).toBe(
+        true,
+      );
     });
   });
 
@@ -165,7 +171,9 @@ describe("Critical path (e2e)", () => {
         .expect(200);
 
       expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body.some((inv: { id: string }) => inv.id === invoiceId)).toBe(true);
+      expect(res.body.some((inv: { id: string }) => inv.id === invoiceId)).toBe(
+        true,
+      );
     });
 
     it("POST /api/invoices/:id/payments — records a full payment", async () => {
@@ -188,6 +196,61 @@ describe("Critical path (e2e)", () => {
       expect(Array.isArray(res.body.payments)).toBe(true);
       expect(res.body.payments).toHaveLength(1);
       expect(res.body.payments[0].amountCents).toBe(50000);
+    });
+  });
+
+  describe("Subscriptions lifecycle", () => {
+    it("POST /api/subscriptions — creates a recurring expense with amount 0 and description", async () => {
+      const res = await request(app.getHttpServer())
+        .post("/api/subscriptions")
+        .set("Cookie", authCookie)
+        .send({
+          name: "Template invoice",
+          vendor: "Variable vendor",
+          category: "Utilities",
+          description: "Template description",
+          amountCents: 0,
+          distributionMethod: "BY_PERCENT",
+          distributionRules: {
+            percentRules: [{ userId, percentBasisPoints: 10000 }],
+            userIds: [userId],
+          },
+          frequency: "MONTHLY",
+          startDate: `${periodId}-01`,
+          status: "ACTIVE",
+        })
+        .expect(201);
+
+      expect(res.body.id).toBeDefined();
+      expect(res.body.amountCents).toBe(0);
+      expect(res.body.description).toBe("Template description");
+      subscriptionId = res.body.id;
+    });
+
+    it("PATCH /api/subscriptions/:id — updates recurring expense description and keeps amount 0", async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/subscriptions/${subscriptionId}`)
+        .set("Cookie", authCookie)
+        .send({
+          description: "Updated template description",
+          amountCents: 0,
+        })
+        .expect(200);
+
+      expect(res.body.id).toBe(subscriptionId);
+      expect(res.body.amountCents).toBe(0);
+      expect(res.body.description).toBe("Updated template description");
+    });
+
+    it("GET /api/subscriptions/:id — returns saved recurring expense description", async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/subscriptions/${subscriptionId}`)
+        .set("Cookie", authCookie)
+        .expect(200);
+
+      expect(res.body.id).toBe(subscriptionId);
+      expect(res.body.amountCents).toBe(0);
+      expect(res.body.description).toBe("Updated template description");
     });
   });
 

@@ -392,7 +392,10 @@ export default function AddExpense() {
     }
 
     const totalCents = amountToCents(parseFloat(amount));
-    if (isNaN(totalCents) || totalCents <= 0) {
+    const invalidAmount = isSubscription
+      ? isNaN(totalCents) || totalCents < 0
+      : isNaN(totalCents) || totalCents <= 0;
+    if (invalidAmount) {
       setError(t("validation.invalidAmount"));
       return;
     }

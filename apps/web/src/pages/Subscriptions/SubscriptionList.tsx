@@ -298,25 +298,21 @@ function SubscriptionCard({
       amountLabel={fmt(sub.amountCents)}
       showPaymentStatusPill={false}
       logoUrl={logoUrl}
-      rightContent={
-        sub.nextBillingAt || sub.lastGenerated ? (
-          <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
-            {sub.nextBillingAt && (
-              <span>
-                {t("subscription.nextBillingShort", {
-                  date: formatDate(sub.nextBillingAt),
-                })}
-              </span>
-            )}
-            {sub.lastGenerated && (
-              <span>
-                {t("subscription.lastGenerated", {
-                  date: formatDate(sub.lastGenerated),
-                })}
-              </span>
-            )}
-          </div>
-        ) : undefined
+      dateLabel={
+        sub.nextBillingAt
+          ? t("subscription.nextBillingShort", {
+              date: formatDate(sub.nextBillingAt),
+            })
+          : undefined
+      }
+      amountDetails={
+        sub.lastGenerated
+          ? [
+              t("subscription.lastGenerated", {
+                date: formatDate(sub.lastGenerated),
+              }),
+            ]
+          : undefined
       }
       actionButton={
         <ActionIconBar

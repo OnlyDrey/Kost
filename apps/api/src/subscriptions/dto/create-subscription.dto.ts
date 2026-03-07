@@ -13,7 +13,6 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { DistributionMethod, SubscriptionStatus } from "@kost/shared";
 export { DistributionMethod, SubscriptionStatus } from "@kost/shared";
 
-
 export class CreateSubscriptionDto {
   @ApiProperty({ example: "Netflix Subscription" })
   @IsString()
@@ -29,6 +28,11 @@ export class CreateSubscriptionDto {
   @IsString()
   @IsOptional()
   category?: string;
+
+  @ApiPropertyOptional({ example: "Family plan with annual discount" })
+  @IsString()
+  @IsOptional()
+  description?: string;
 
   @ApiProperty({ example: 9900, description: "Amount in cents" })
   @IsInt()
