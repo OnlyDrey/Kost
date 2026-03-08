@@ -564,6 +564,7 @@
     "netBalance": "Saldo",
     "balanceSettled": "Oppgjort",
     "balanceDebt": "Restgjeld",
-    "balanceCredit": "Tilgode"
+    "balanceCredit": "Tilgode",
+    "totalMonthlyShare": "Andel denne måneden"
   }
 }

@@ -72,16 +72,23 @@ export default function SettlementPage() {
   const userName = (id: string) =>
     users.find((user) => user.id === id)?.name ?? id;
 
-  const netBalanceCents = safeCents(
-    (summary?.totals.totalUnpaidCents ?? 0) -
-      (summary?.totals.totalCreditCents ?? 0),
+  const saldoCents = safeCents(
+    (summary?.rows ?? []).reduce(
+      (sum, row) =>
+        sum +
+        row.baseObligationCents +
+        row.plannedAdditionCents -
+        row.carriedCreditCents -
+        row.paymentsCents,
+      0,
+    ),
   );
-  const netBalanceText =
-    netBalanceCents === 0
-      ? t("settlement.balanceSettled")
-      : netBalanceCents > 0
-        ? t("settlement.balanceDebt")
-        : t("settlement.balanceCredit");
+  const saldoValueClass =
+    saldoCents > 0
+      ? "text-red-600 dark:text-red-400"
+      : saldoCents < 0
+        ? "text-green-600 dark:text-green-400"
+        : "text-gray-900 dark:text-gray-100";
 
   const submitEntry = async () => {
     await createEntry.mutateAsync({
@@ -148,13 +155,6 @@ export default function SettlementPage() {
       <TileGrid
         items={[
           {
-            key: "total-owed",
-            icon: Wallet,
-            label: t("settlement.totalOwed"),
-            value: fmt(safeCents(summary?.totals.totalOwedCents ?? 0)),
-            colorClass: "bg-amber-500",
-          },
-          {
             key: "total-paid",
             icon: CircleCheckBig,
             label: t("settlement.totalPaid"),
@@ -162,11 +162,11 @@ export default function SettlementPage() {
             colorClass: "bg-green-500",
           },
           {
-            key: "net-balance",
+            key: "saldo",
             icon: Scale,
             label: t("settlement.netBalance"),
-            value: `${netBalanceText}: ${fmt(Math.abs(netBalanceCents))}`,
-            colorClass: netBalanceCents > 0 ? "bg-red-500" : netBalanceCents < 0 ? "bg-blue-500" : "bg-slate-500",
+            value: <span className={saldoValueClass}>{fmt(saldoCents)}</span>,
+            colorClass: saldoCents > 0 ? "bg-red-500" : saldoCents < 0 ? "bg-green-500" : "bg-slate-500",
           },
           {
             key: "warnings",
@@ -174,6 +174,20 @@ export default function SettlementPage() {
             label: t("settlement.unresolvedWarnings"),
             value: String(summary?.totals.unresolvedWarningCount ?? 0),
             colorClass: "bg-orange-500",
+          },
+          {
+            key: "base-share",
+            icon: Wallet,
+            label: t("settlement.totalMonthlyShare"),
+            value: fmt(
+              safeCents(
+                (summary?.rows ?? []).reduce(
+                  (sum, row) => sum + row.baseObligationCents,
+                  0,
+                ),
+              ),
+            ),
+            colorClass: "bg-amber-500",
           },
         ]}
       />

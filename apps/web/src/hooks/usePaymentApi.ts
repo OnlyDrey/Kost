@@ -11,6 +11,9 @@ export function useAddPayment() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['periodStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+      queryClient.invalidateQueries({ queryKey: ['settlements'] });
     },
   });
 }
@@ -24,6 +27,9 @@ export function useUpdatePayment() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice(data.invoiceId) });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['periodStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+      queryClient.invalidateQueries({ queryKey: ['settlements'] });
     },
   });
 }
@@ -37,6 +43,9 @@ export function useDeletePayment() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice(variables.invoiceId) });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['periodStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentPeriod() });
+      queryClient.invalidateQueries({ queryKey: ['settlements'] });
     },
   });
 }

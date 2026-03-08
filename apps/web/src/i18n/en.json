@@ -564,6 +564,7 @@
     "netBalance": "Balance",
     "balanceSettled": "Settled",
     "balanceDebt": "Unpaid balance",
-    "balanceCredit": "Credit"
+    "balanceCredit": "Credit",
+    "totalMonthlyShare": "Share this month"
   }
 }

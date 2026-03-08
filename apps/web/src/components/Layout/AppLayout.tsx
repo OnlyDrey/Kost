@@ -27,9 +27,9 @@ import {
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
   { key: "nav.periods", icon: Calendar, path: "/periods" },
+  { key: "nav.settlement", icon: HandCoins, path: "/oppgjor" },
   { key: "nav.subscriptions", icon: RefreshCw, path: "/subscriptions" },
   { key: "nav.importExport", icon: Upload, path: "/import-export" },
-  { key: "nav.settlement", icon: HandCoins, path: "/oppgjor" },
   { key: "nav.settings", icon: Settings, path: "/settings" },
 ];
 

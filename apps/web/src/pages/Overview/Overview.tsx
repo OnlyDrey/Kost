@@ -142,6 +142,18 @@ export default function Overview() {
   const userShare = stats?.userShares?.find(
     (s) => s.userId === currentUser?.id,
   );
+  const userSettlementAdjustmentCents = useMemo(
+    () =>
+      (settlementSummary?.rows ?? [])
+        .filter((row) => row.fromUserId === currentUser?.id)
+        .reduce(
+          (sum, row) => sum + row.plannedAdditionCents - row.carriedCreditCents,
+          0,
+        ),
+    [currentUser?.id, settlementSummary?.rows],
+  );
+  const userShareWithSettlementCents =
+    (userShare?.totalShareCents ?? 0) + userSettlementAdjustmentCents;
   const periodFromList = periods.find((p) => p.id === resolvedPeriodId);
   const effectivePeriodStatus =
     period?.status ?? periodFromList?.status ?? "OPEN";
@@ -454,7 +466,7 @@ export default function Overview() {
                 key: "share",
                 icon: TrendingUp,
                 label: t("dashboard.yourShare"),
-                value: fmt(userShare?.totalShareCents ?? 0),
+                value: fmt(userShareWithSettlementCents),
                 colorClass: "bg-amber-500",
                 onClick: () => setFilter("share-user", currentUser?.id),
               },
@@ -481,14 +493,6 @@ export default function Overview() {
                 value: fmt(paidUnpaid.owedCents),
                 colorClass: "bg-red-500",
                 onClick: () => setStatusFilter("remaining"),
-              },
-              {
-                key: "settlement",
-                icon: CircleAlert,
-                label: t("dashboard.settlementThisPeriod"),
-                value: fmt(settlementSummary?.totals.totalUnpaidCents ?? 0),
-                colorClass: "bg-orange-500",
-                onClick: () => navigate("/oppgjor"),
               },
               {
                 key: "invoices",
