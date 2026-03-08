@@ -14,6 +14,7 @@ import { SubscriptionsModule } from "./subscriptions/subscriptions.module";
 import { AuditModule } from "./audit/audit.module";
 import { HealthModule } from "./health/health.module";
 import { FamilyModule } from "./family/family.module";
+import { SettlementsModule } from "./settlements/settlements.module";
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { FamilyModule } from "./family/family.module";
     AuditModule,
     HealthModule,
     FamilyModule,
+    SettlementsModule,
   ],
   providers: [
     {
