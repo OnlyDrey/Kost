@@ -56,6 +56,7 @@ interface SettlementPlan {
 interface PeriodSettlementData {
   entries: SettlementEntry[];
   plans: SettlementPlan[];
+  baseSettlements: Array<{ fromUserId: string; toUserId: string; amountCents: number }>;
 }
 
 interface PairSummary {
@@ -93,11 +94,16 @@ export class SettlementsService {
   }
 
   private parseSettlementData(raw: unknown): PeriodSettlementData {
-    if (!raw || typeof raw !== "object") return { entries: [], plans: [] };
-    const data = raw as Partial<PeriodSettlementData>;
+    if (!raw || typeof raw !== "object") return { entries: [], plans: [], baseSettlements: [] };
+    const data = raw as Partial<PeriodSettlementData> & { settlements?: Array<{ fromUserId: string; toUserId: string; amountCents: number }> };
     return {
       entries: Array.isArray(data.entries) ? data.entries as SettlementEntry[] : [],
       plans: Array.isArray(data.plans) ? data.plans as SettlementPlan[] : [],
+      baseSettlements: Array.isArray(data.baseSettlements)
+        ? data.baseSettlements
+        : Array.isArray(data.settlements)
+          ? data.settlements
+          : [],
     };
   }
 
@@ -107,7 +113,22 @@ export class SettlementsService {
   }
 
   private async savePeriodSettlementData(periodId: string, familyId: string, data: PeriodSettlementData) {
-    await this.prisma.period.update({ where: { id: periodId }, data: { settlementData: data as unknown as object } });
+    const period = await this.getPeriodOrThrow(periodId, familyId);
+    const existing = period.settlementData && typeof period.settlementData === "object"
+      ? period.settlementData as Record<string, unknown>
+      : {};
+
+    await this.prisma.period.update({
+      where: { id: periodId },
+      data: {
+        settlementData: {
+          ...existing,
+          entries: data.entries,
+          plans: data.plans,
+          baseSettlements: data.baseSettlements,
+        } as unknown as object,
+      },
+    });
   }
 
   private applyPlanCharge(plan: SettlementPlan, periodId: string, usedCents: number): number {
@@ -156,8 +177,20 @@ export class SettlementsService {
     }));
   }
 
-  private deriveBaseObligations(invoices: Array<{ totalCents: number; shares: Array<{ userId: string; shareCents: number }>; payments: Array<{ paidById: string; amountCents: number }> }>) {
+  private deriveBaseObligations(
+    invoices: Array<{ totalCents: number; shares: Array<{ userId: string; shareCents: number }>; payments: Array<{ paidById: string; amountCents: number }> }>,
+    periodData: PeriodSettlementData,
+  ) {
     const map = new Map<string, number>();
+
+    if (periodData.baseSettlements.length > 0) {
+      for (const settlement of periodData.baseSettlements) {
+        const key = pairKey(settlement.fromUserId, settlement.toUserId);
+        map.set(key, (map.get(key) ?? 0) + settlement.amountCents);
+      }
+      return map;
+    }
+
     for (const invoice of invoices) {
       if (!invoice.shares.length || !invoice.payments.length || invoice.totalCents <= 0) continue;
       for (const payment of invoice.payments) {
@@ -183,7 +216,7 @@ export class SettlementsService {
     const idx = list.findIndex((item: any) => item.period.id === periodId);
     if (idx < 0) throw new NotFoundException(`Period ${periodId} not found`);
 
-    const baseMap = this.deriveBaseObligations(list[idx].period.invoices);
+    const baseMap = this.deriveBaseObligations(list[idx].period.invoices, list[idx].data);
     const openingCredit = new Map<string, number>();
     const unresolvedWarnings: Array<{ sourcePeriodId: string; fromUserId: string; toUserId: string; amountCents: number }> = [];
     const plans = list.flatMap((item: any) => item.data.plans);
@@ -191,7 +224,7 @@ export class SettlementsService {
     // Carry credits from previous periods forward and detect unresolved unpaid without plan.
     for (let i = 0; i < idx; i += 1) {
       const currentPeriod = list[i];
-      const currentBase = this.deriveBaseObligations(currentPeriod.period.invoices);
+      const currentBase = this.deriveBaseObligations(currentPeriod.period.invoices, currentPeriod.data);
       const periodEntries = currentPeriod.data.entries.filter((entry: any) => !entry.reversedAt);
 
       const paidByPair = new Map<string, number>();

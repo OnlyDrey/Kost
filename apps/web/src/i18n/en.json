@@ -51,7 +51,7 @@
     "periodStatus": "Period Status",
     "totalInvoices": "Total Expenses",
     "totalAmount": "Total Amount",
-    "yourShare": "Your Share",
+    "yourShare": "Share incl. settlement",
     "recentInvoices": "Recent Expenses",
     "viewAll": "View All",
     "categoryBreakdown": "Category breakdown",
@@ -565,6 +565,8 @@
     "balanceSettled": "Settled",
     "balanceDebt": "Unpaid balance",
     "balanceCredit": "Credit",
-    "totalMonthlyShare": "Share this month"
+    "totalMonthlyShare": "Share this month",
+    "closedPeriodOnly": "Settlement entries can only be registered for closed periods.",
+    "paymentSaved": "Payment saved."
   }
 }

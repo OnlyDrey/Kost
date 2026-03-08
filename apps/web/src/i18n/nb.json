@@ -51,7 +51,7 @@
     "periodStatus": "Periodestatus",
     "totalInvoices": "Totalt antall utgifter",
     "totalAmount": "Totalbeløp",
-    "yourShare": "Din andel",
+    "yourShare": "Andel inkl. oppgjør",
     "recentInvoices": "Nylige utgifter",
     "viewAll": "Vis alle",
     "categoryBreakdown": "Kategorioversikt",
@@ -565,6 +565,8 @@
     "balanceSettled": "Oppgjort",
     "balanceDebt": "Restgjeld",
     "balanceCredit": "Tilgode",
-    "totalMonthlyShare": "Andel denne måneden"
+    "totalMonthlyShare": "Andel denne måneden",
+    "closedPeriodOnly": "Oppgjør kan bare registreres i lukkede perioder.",
+    "paymentSaved": "Innbetaling lagret."
   }
 }

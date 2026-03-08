@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, CircleCheckBig, Scale, Wallet } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../../stores/auth.context";
 import { amountToCents } from "../../utils/currency";
 import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 
 function safeCents(value: number): number {
   return Math.abs(value) < 1 ? 0 : value;
@@ -38,6 +39,8 @@ export default function SettlementPage() {
   const [periodId, setPeriodId] = useState(
     closedPeriods[0]?.id ?? periods[0]?.id ?? "",
   );
+  const closedPeriodIds = useMemo(() => new Set(closedPeriods.map((period) => period.id)), [closedPeriods]);
+  const isClosedPeriodSelected = closedPeriodIds.has(periodId);
 
   const { data: users = [] } = useUsers();
   const { data: summary } = useSettlementSummary(periodId);
@@ -60,6 +63,8 @@ export default function SettlementPage() {
     configuredPeriods: "",
     comment: "",
   });
+  const [entryError, setEntryError] = useState("");
+  const [entrySuccess, setEntrySuccess] = useState("");
 
   const sortedHistory = useMemo(
     () =>
@@ -71,6 +76,18 @@ export default function SettlementPage() {
 
   const userName = (id: string) =>
     users.find((user) => user.id === id)?.name ?? id;
+
+
+  useEffect(() => {
+    if (!periodId && closedPeriods.length > 0) {
+      setPeriodId(closedPeriods[0].id);
+      return;
+    }
+
+    if (periodId && closedPeriods.length > 0 && !closedPeriodIds.has(periodId)) {
+      setPeriodId(closedPeriods[0].id);
+    }
+  }, [closedPeriodIds, closedPeriods, periodId]);
 
   const saldoCents = safeCents(
     (summary?.rows ?? []).reduce(
@@ -91,16 +108,23 @@ export default function SettlementPage() {
         : "text-gray-900 dark:text-gray-100";
 
   const submitEntry = async () => {
-    await createEntry.mutateAsync({
-      periodId,
-      fromUserId: entryForm.fromUserId,
-      toUserId: entryForm.toUserId,
-      amountCents: amountToCents(Number(entryForm.amount || "0")),
-      type: "payment",
-      comment: entryForm.comment,
-      effectiveDate: entryForm.date,
-    });
-    setEntryForm((prev) => ({ ...prev, amount: "", comment: "" }));
+    setEntryError("");
+    setEntrySuccess("");
+    try {
+      await createEntry.mutateAsync({
+        periodId,
+        fromUserId: entryForm.fromUserId,
+        toUserId: entryForm.toUserId,
+        amountCents: amountToCents(Number(entryForm.amount || "0")),
+        type: "payment",
+        comment: entryForm.comment,
+        effectiveDate: entryForm.date,
+      });
+      setEntryForm((prev) => ({ ...prev, amount: "", comment: "" }));
+      setEntrySuccess(t("settlement.paymentSaved"));
+    } catch (error) {
+      setEntryError(getApiErrorMessage(t, error));
+    }
   };
 
   const submitPlan = async () => {
@@ -144,7 +168,7 @@ export default function SettlementPage() {
           onChange={(e) => setPeriodId(e.target.value)}
           className="h-10 w-full sm:w-44"
         >
-          {periods.map((period) => (
+          {(closedPeriods.length > 0 ? closedPeriods : periods).map((period) => (
             <option key={period.id} value={period.id}>
               {period.id}
             </option>
@@ -152,21 +176,27 @@ export default function SettlementPage() {
         </AppSelect>
       </div>
 
+      {!isClosedPeriodSelected && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/10 p-3 text-sm text-amber-800 dark:text-amber-300">
+          {t("settlement.closedPeriodOnly")}
+        </div>
+      )}
+
       <TileGrid
         items={[
-          {
-            key: "total-paid",
-            icon: CircleCheckBig,
-            label: t("settlement.totalPaid"),
-            value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
-            colorClass: "bg-green-500",
-          },
           {
             key: "saldo",
             icon: Scale,
             label: t("settlement.netBalance"),
             value: <span className={saldoValueClass}>{fmt(saldoCents)}</span>,
             colorClass: saldoCents > 0 ? "bg-red-500" : saldoCents < 0 ? "bg-green-500" : "bg-slate-500",
+          },
+          {
+            key: "total-paid",
+            icon: CircleCheckBig,
+            label: t("settlement.totalPaid"),
+            value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
+            colorClass: "bg-green-500",
           },
           {
             key: "warnings",
@@ -335,10 +365,13 @@ export default function SettlementPage() {
           <Button
             className="w-full sm:w-auto"
             disabled={
+              createEntry.isPending ||
               !isAdmin ||
+              !isClosedPeriodSelected ||
               !periodId ||
               !entryForm.fromUserId ||
               !entryForm.toUserId ||
+              !entryForm.date ||
               Number(entryForm.amount) <= 0 ||
               entryForm.fromUserId === entryForm.toUserId
             }
@@ -346,6 +379,8 @@ export default function SettlementPage() {
           >
             {t("settlement.saveEntry")}
           </Button>
+          {entryError && <p className="text-sm text-red-600 dark:text-red-400">{entryError}</p>}
+          {entrySuccess && <p className="text-sm text-green-600 dark:text-green-400">{entrySuccess}</p>}
         </section>
 
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
@@ -436,7 +471,7 @@ export default function SettlementPage() {
 
           <Button
             className="w-full sm:w-auto"
-            disabled={!isAdmin || !periodId || !planForm.fromUserId || !planForm.toUserId}
+            disabled={!isAdmin || !isClosedPeriodSelected || !periodId || !planForm.fromUserId || !planForm.toUserId}
             onClick={() => void submitPlan()}
           >
             {t("settlement.createPlan")}
