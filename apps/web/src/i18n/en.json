@@ -177,7 +177,8 @@
     "incomesToDelete": "Incomes to delete",
     "enterPasswordToDelete": "Enter password to confirm deletion",
     "passwordPlaceholder": "Enter your password",
-    "settlementWarning": "Unresolved settlement warnings from previous period"
+    "settlementWarning": "Unresolved settlement warnings from previous period",
+    "settlementWarningsBeforeClose": "There are {{count}} unresolved settlement warnings in the period being closed. You can still close the period, but review payments and settlements first."
   },
   "settings": {
     "title": "Settings",
@@ -519,7 +520,17 @@
     "chooseFile": "Choose file",
     "selectedFile": "Selected file",
     "noFileSelected": "No file selected",
-    "uploadFile": "Upload file"
+    "uploadFile": "Upload file",
+    "tabInput": "Input",
+    "tabOutput": "Output",
+    "tabBackup": "Backup",
+    "autoBackup": "Automatic backup",
+    "autoBackupHelp": "Creates backups automatically and keeps a limited number of copies.",
+    "autoBackupDaily": "Daily",
+    "autoBackupWeekly": "Weekly",
+    "retentionCopies": "Retention copies",
+    "backupStorageHint": "Backups are stored locally in the app backup store.",
+    "lastAutoBackup": "Last automatic run"
   },
   "settlement": {
     "title": "Oppgjør",
@@ -567,6 +578,13 @@
     "balanceCredit": "Credit",
     "totalMonthlyShare": "Share this month",
     "closedPeriodOnly": "Settlement entries can only be registered for closed periods.",
-    "paymentSaved": "Payment saved."
+    "paymentSaved": "Payment saved.",
+    "tabPayments": "Payment",
+    "tabSettlement": "Settlement",
+    "openPeriodHintTitle": "Payments in open period",
+    "openPeriodHint": "Register payments continuously. On period close, warnings are shown if settlement data is missing.",
+    "overviewEmpty": "No settlement basis for the selected period yet.",
+    "reverseAction": "Reverse",
+    "sourceElement": "Element"
   }
 }

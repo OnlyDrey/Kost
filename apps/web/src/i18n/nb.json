@@ -177,7 +177,8 @@
     "incomesToDelete": "Inntekter som slettes",
     "enterPasswordToDelete": "Skriv inn passord for å bekrefte sletting",
     "passwordPlaceholder": "Skriv inn passordet ditt",
-    "settlementWarning": "Uavklarte oppgjørsvarsler fra forrige periode"
+    "settlementWarning": "Uavklarte oppgjørsvarsler fra forrige periode",
+    "settlementWarningsBeforeClose": "Det finnes {{count}} uavklarte oppgjørsvarsler i perioden som lukkes. Du kan fortsatt lukke perioden, men kontroller innbetalinger og oppgjør først."
   },
   "settings": {
     "title": "Innstillinger",
@@ -519,7 +520,17 @@
     "chooseFile": "Velg fil",
     "selectedFile": "Valgt fil",
     "noFileSelected": "Ingen fil valgt",
-    "uploadFile": "Last opp fil"
+    "uploadFile": "Last opp fil",
+    "tabInput": "Input",
+    "tabOutput": "Output",
+    "tabBackup": "Backup",
+    "autoBackup": "Automatisk sikkerhetskopi",
+    "autoBackupHelp": "Oppretter sikkerhetskopier automatisk og beholder et begrenset antall kopier.",
+    "autoBackupDaily": "Daglig",
+    "autoBackupWeekly": "Ukentlig",
+    "retentionCopies": "Antall kopier",
+    "backupStorageHint": "Sikkerhetskopier lagres lokalt i appens backup-lager.",
+    "lastAutoBackup": "Sist automatisk"
   },
   "settlement": {
     "title": "Oppgjør",
@@ -567,6 +578,13 @@
     "balanceCredit": "Tilgode",
     "totalMonthlyShare": "Andel denne måneden",
     "closedPeriodOnly": "Oppgjør kan bare registreres i lukkede perioder.",
-    "paymentSaved": "Innbetaling lagret."
+    "paymentSaved": "Innbetaling lagret.",
+    "tabPayments": "Innbetaling",
+    "tabSettlement": "Oppgjør",
+    "openPeriodHintTitle": "Innbetaling i åpen periode",
+    "openPeriodHint": "Registrer innbetalinger løpende. Når en periode lukkes vises varsler hvis oppgjør mangler.",
+    "overviewEmpty": "Ingen oppgjørsgrunnlag for valgt periode ennå.",
+    "reverseAction": "Reverser",
+    "sourceElement": "Element"
   }
 }

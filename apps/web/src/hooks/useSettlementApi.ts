@@ -6,6 +6,7 @@ export function useSettlementSummary(periodId?: string) {
     queryKey: ["settlements", "summary", periodId],
     queryFn: () => settlementApi.getSummary(periodId!).then((res) => res.data),
     enabled: !!periodId,
+    staleTime: 30_000,
   });
 }
 
@@ -14,6 +15,7 @@ export function useSettlementWarnings(periodId?: string) {
     queryKey: ["settlements", "warnings", periodId],
     queryFn: () => settlementApi.getWarnings(periodId!).then((res) => res.data),
     enabled: !!periodId,
+    staleTime: 30_000,
   });
 }
 

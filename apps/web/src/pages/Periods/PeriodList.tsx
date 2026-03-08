@@ -19,6 +19,7 @@ import {
   useGetPeriodDeletionInfo,
   useSettlementWarnings,
 } from "../../hooks/useApi";
+import { settlementApi } from "../../services/api";
 import { useAuth } from "../../stores/auth.context";
 import { formatDate } from "../../utils/date";
 import ActionIconBar from "../../components/Common/ActionIconBar";
@@ -155,9 +156,22 @@ export default function PeriodList() {
   };
 
   const handleClose = async (id: string) => {
+    let warningCount = 0;
+    try {
+      const response = await settlementApi.getWarnings(id);
+      warningCount = response.data.length;
+    } catch {
+      warningCount = 0;
+    }
+
     const accepted = await confirm({
       title: t("period.closePeriod"),
-      message: t("period.confirmClose"),
+      message:
+        warningCount > 0
+          ? `${t("period.confirmClose")}\n\n${t("period.settlementWarningsBeforeClose", {
+              count: warningCount,
+            })}`
+          : t("period.confirmClose"),
       confirmLabel: t("period.closePeriod"),
       cancelLabel: t("common.cancel"),
       tone: "default",

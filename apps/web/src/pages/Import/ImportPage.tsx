@@ -1,10 +1,13 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DatabaseBackup, Download, Upload } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
 import { Button } from "../../components/ui/button";
+import { TabButton, TabsRow } from "../../components/ui/tabs";
 import {
   buildRestorePreview,
   downloadFullBackup,
+  exportFullBackup,
   parseBackupFile,
   restoreFromBackup,
   type BackupBundle,
@@ -62,6 +65,11 @@ export default function ImportPage() {
 
   const [restoreSummary, setRestoreSummary] = useState<RestoreSummary | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [activeTab, setActiveTab] = useState<"input" | "output" | "backup">("input");
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
+  const [autoBackupFrequency, setAutoBackupFrequency] = useState<"daily" | "weekly">("daily");
+  const [autoBackupRetention, setAutoBackupRetention] = useState(5);
+  const [lastAutoBackupAt, setLastAutoBackupAt] = useState<string | null>(null);
 
   const { data: categories = [] } = useCategories();
   const { data: vendors = [] } = useVendors();
@@ -155,13 +163,93 @@ export default function ImportPage() {
     [backupBundle],
   );
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("autoBackupSettings");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        enabled?: boolean;
+        frequency?: "daily" | "weekly";
+        retention?: number;
+        lastRunAt?: string | null;
+      };
+      setAutoBackupEnabled(Boolean(parsed.enabled));
+      if (parsed.frequency === "daily" || parsed.frequency === "weekly") {
+        setAutoBackupFrequency(parsed.frequency);
+      }
+      if (typeof parsed.retention === "number") {
+        setAutoBackupRetention(Math.max(1, Math.min(30, parsed.retention)));
+      }
+      if (parsed.lastRunAt) setLastAutoBackupAt(parsed.lastRunAt);
+    } catch {
+      // ignore invalid local config
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "autoBackupSettings",
+      JSON.stringify({
+        enabled: autoBackupEnabled,
+        frequency: autoBackupFrequency,
+        retention: autoBackupRetention,
+        lastRunAt: lastAutoBackupAt,
+      }),
+    );
+  }, [autoBackupEnabled, autoBackupFrequency, autoBackupRetention, lastAutoBackupAt]);
+
+  useEffect(() => {
+    if (!autoBackupEnabled) return;
+
+    const runIfNeeded = async () => {
+      const now = Date.now();
+      const last = lastAutoBackupAt ? new Date(lastAutoBackupAt).getTime() : 0;
+      const intervalMs = autoBackupFrequency === "daily" ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+      if (last && now - last < intervalMs) return;
+
+      try {
+        const bundle = await exportFullBackup(settings);
+        const existing = JSON.parse(localStorage.getItem("autoBackups") || "[]") as Array<{ id: string; exportedAt: string; bundle: unknown }>;
+        const next = [
+          { id: `ab_${Date.now()}`, exportedAt: bundle.metadata.exportedAt, bundle },
+          ...existing,
+        ].slice(0, autoBackupRetention);
+        localStorage.setItem("autoBackups", JSON.stringify(next));
+        setLastAutoBackupAt(bundle.metadata.exportedAt);
+      } catch {
+        // silent fail for background autobackup
+      }
+    };
+
+    void runIfNeeded();
+    const timer = window.setInterval(() => {
+      void runIfNeeded();
+    }, 60 * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [autoBackupEnabled, autoBackupFrequency, autoBackupRetention, lastAutoBackupAt, settings]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
         {t("importExport.title")}
       </h1>
 
-      <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
+      <div className="overflow-x-auto pb-1">
+        <TabsRow>
+          <TabButton active={activeTab === "input"} icon={<Upload size={16} />} onClick={() => setActiveTab("input")}>
+            {t("importExport.tabInput")}
+          </TabButton>
+          <TabButton active={activeTab === "output"} icon={<Download size={16} />} onClick={() => setActiveTab("output")}>
+            {t("importExport.tabOutput")}
+          </TabButton>
+          <TabButton active={activeTab === "backup"} icon={<DatabaseBackup size={16} />} onClick={() => setActiveTab("backup")}>
+            {t("importExport.tabBackup")}
+          </TabButton>
+        </TabsRow>
+      </div>
+
+      {activeTab === "input" && <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
         <h2 className="text-lg font-semibold">{t("importExport.importData")}</h2>
 
         <input
@@ -293,9 +381,9 @@ export default function ImportPage() {
             )}
           </div>
         )}
-      </section>
+      </section>}
 
-      <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
+      {activeTab === "output" && <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
         <h2 className="text-lg font-semibold">{t("importExport.exportTemplates")}</h2>
         <p className="text-sm text-gray-500">{t("importExport.templateHelp")}</p>
         <div className="grid grid-cols-2 gap-2">
@@ -325,11 +413,46 @@ export default function ImportPage() {
             </Button>
           </div>
         </div>
-      </section>
+      </section>}
 
-      <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
+      {activeTab === "backup" && <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
         <h2 className="text-lg font-semibold">{t("importExport.backup")}</h2>
         <p className="text-sm text-gray-500">{t("importExport.backupDescription")}</p>
+
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold">{t("importExport.autoBackup")}</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t("importExport.autoBackupHelp")}</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={autoBackupEnabled}
+              onChange={(e) => setAutoBackupEnabled(e.target.checked)}
+              className="h-4 w-4"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <AppSelect value={autoBackupFrequency} onChange={(e) => setAutoBackupFrequency(e.target.value as "daily" | "weekly")}>
+              <option value="daily">{t("importExport.autoBackupDaily")}</option>
+              <option value="weekly">{t("importExport.autoBackupWeekly")}</option>
+            </AppSelect>
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={autoBackupRetention}
+              onChange={(e) => setAutoBackupRetention(Math.max(1, Math.min(30, Number(e.target.value || "1"))))}
+              className="h-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+              placeholder={t("importExport.retentionCopies")}
+            />
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("importExport.backupStorageHint")}{lastAutoBackupAt ? ` · ${t("importExport.lastAutoBackup")}: ${new Date(lastAutoBackupAt).toLocaleString()}` : ""}
+          </p>
+        </div>
+
         <Button className="w-full sm:w-auto" onClick={() => void exportBackup()}>
           {t("importExport.exportBackup")}
         </Button>
@@ -343,9 +466,9 @@ export default function ImportPage() {
             {backupError}
           </div>
         )}
-      </section>
+      </section>}
 
-      <section className="rounded-xl border border-red-300 dark:border-red-800 bg-red-50/60 dark:bg-red-950/20 p-4 space-y-3">
+      {activeTab === "backup" && <section className="rounded-xl border border-red-300 dark:border-red-800 bg-red-50/60 dark:bg-red-950/20 p-4 space-y-3">
         <h2 className="text-lg font-semibold text-red-800 dark:text-red-300">
           {t("importExport.restore")}
         </h2>
@@ -421,7 +544,7 @@ export default function ImportPage() {
             {t("import.summary.imported")}: {restoreSummary.imported} · {t("import.summary.skipped")}: {restoreSummary.skipped} · {t("import.summary.failed")}: {restoreSummary.failed}
           </div>
         )}
-      </section>
+      </section>}
     </div>
   );
 }
