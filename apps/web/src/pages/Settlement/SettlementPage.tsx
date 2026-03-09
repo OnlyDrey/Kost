@@ -2,15 +2,17 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
-  CircleCheckBig,
-  History,
+  ArrowLeftRight,
+  CheckCircle2,
+  Clock3,
   MinusCircle,
   ReceiptText,
   Scale,
   Wallet,
 } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
-import TileGrid from "../../components/Common/TileGrid";
+import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
+import StatWidget from "../../components/Common/StatWidget";
 import { TabButton, TabsRow } from "../../components/ui/tabs";
 import AppDialog from "../../components/Common/AppDialog";
 import { Button } from "../../components/ui/button";
@@ -175,18 +177,21 @@ export default function SettlementPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {t("settlement.title")}
         </h1>
-        <AppSelect
-          value={periodId}
-          onChange={(e) => setPeriodId(e.target.value)}
-          className="h-10 px-3 pr-10 rounded-lg text-sm w-44"
-          wrapperClassName="w-44"
-        >
-          {periods.map((period) => (
-            <option key={period.id} value={period.id}>
-              {period.id} ({period.status === "OPEN" ? t("period.open") : t("period.closed")})
-            </option>
-          ))}
-        </AppSelect>
+        <div className="flex items-center gap-2">
+          <AppSelect
+            value={periodId}
+            onChange={(e) => setPeriodId(e.target.value)}
+            className="h-10 px-3 pr-10 rounded-lg text-sm w-36"
+            wrapperClassName="w-36"
+          >
+            {periods.map((period) => (
+              <option key={period.id} value={period.id}>
+                {period.id}
+              </option>
+            ))}
+          </AppSelect>
+          {selectedPeriod && <PeriodStatusBadge status={selectedPeriod.status} size="sm" />}
+        </div>
       </div>
 
       <div className="overflow-x-auto pb-1">
@@ -207,7 +212,7 @@ export default function SettlementPage() {
           </TabButton>
           <TabButton
             active={activeTab === "history"}
-            icon={<History size={16} />}
+            icon={<Clock3 size={16} />}
             onClick={() => setActiveTab("history")}
           >
             {t("settlement.history")}
@@ -217,48 +222,43 @@ export default function SettlementPage() {
 
       {activeTab === "settlement" && (
         <>
-          <TileGrid
-            items={[
-              {
-                key: "saldo",
-                icon: Scale,
-                label: t("settlement.netBalance"),
-                value: (
-                  <span className={saldoValueClass}>
-                    {saldoCents < 0 && <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />}
-                    {fmt(saldoCents)}
-                  </span>
-                ),
-                colorClass:
-                  saldoCents < 0
-                    ? "bg-red-500"
-                    : saldoCents > 0
-                      ? "bg-green-500"
-                      : "bg-slate-500",
-              },
-              {
-                key: "total-paid",
-                icon: CircleCheckBig,
-                label: t("settlement.totalPaidPeriod"),
-                value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
-                colorClass: "bg-green-500",
-              },
-              {
-                key: "base-share",
-                icon: Wallet,
-                label: t("settlement.totalMonthlyShare"),
-                value: fmt(monthShareCents),
-                colorClass: "bg-amber-500",
-              },
-              {
-                key: "warnings",
-                icon: AlertTriangle,
-                label: t("settlement.unresolvedWarnings"),
-                value: String(summary?.totals.unresolvedWarningCount ?? 0),
-                colorClass: "bg-orange-500",
-              },
-            ]}
-          />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <StatWidget
+              icon={Wallet}
+              title={t("settlement.netBalance")}
+              value={
+                <span className={saldoValueClass}>
+                  {saldoCents < 0 && <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />}
+                  {fmt(saldoCents)}
+                </span>
+              }
+              colorClass={
+                saldoCents < 0
+                  ? "bg-red-500"
+                  : saldoCents > 0
+                    ? "bg-green-500"
+                    : "bg-slate-500"
+              }
+            />
+            <StatWidget
+              icon={CheckCircle2}
+              title={t("settlement.totalPaidPeriod")}
+              value={fmt(safeCents(summary?.totals.totalPaidCents ?? 0))}
+              colorClass="bg-green-500"
+            />
+            <StatWidget
+              icon={Scale}
+              title={t("settlement.totalPeriodShare")}
+              value={fmt(monthShareCents)}
+              colorClass="bg-amber-500"
+            />
+            <StatWidget
+              icon={AlertTriangle}
+              title={t("settlement.unresolvedWarnings")}
+              value={String(summary?.totals.unresolvedWarningCount ?? 0)}
+              colorClass="bg-orange-500"
+            />
+          </div>
 
           <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ export default function SettlementPage() {
                     <div className="font-semibold">
                       {t("settlement.remaining")}: {fmt(safeCents(row.remainingCents))}
                     </div>
-                    <div>{t("settlement.baseObligation")}: {fmt(safeCents(row.baseObligationCents))}</div>
+                    <div>{t("settlement.basePeriodShare")}: {fmt(safeCents(row.baseObligationCents))}</div>
                     <div>{t("settlement.carriedCredit")}: {fmt(safeCents(row.carriedCreditCents))}</div>
                     <div>{t("settlement.payments")}: {fmt(safeCents(row.paymentsCents))}</div>
                   </div>
@@ -293,7 +293,7 @@ export default function SettlementPage() {
 
           <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Wallet size={18} className="text-primary" />
+              <ArrowLeftRight size={18} className="text-primary" />
               <h3 className="font-semibold">{t("settlement.planTitle")}</h3>
             </div>
 
@@ -483,7 +483,7 @@ export default function SettlementPage() {
       {activeTab === "history" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <History size={18} className="text-primary" />
+            <Clock3 size={18} className="text-primary" />
             <h3 className="font-semibold">{t("settlement.history")}</h3>
           </div>
           {sortedHistory.length === 0 ? (
@@ -497,13 +497,13 @@ export default function SettlementPage() {
                   key={entry.id}
                   className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm"
                 >
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(entry.effectiveDate).toLocaleDateString()}
-                  </div>
-                  <div className="mt-1 font-medium">
+                  <div className="font-medium">
                     {userName(entry.fromUserId)} → {userName(entry.toUserId)}
                   </div>
                   <div className="font-semibold">{fmt(safeCents(entry.amountCents))}</div>
+                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(entry.effectiveDate).toLocaleDateString()}
+                  </div>
                   {entry.comment && (
                     <div className="mt-1 text-gray-600 dark:text-gray-300">{entry.comment}</div>
                   )}

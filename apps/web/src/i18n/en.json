@@ -560,7 +560,7 @@
     "overview": "Settlement overview",
     "fromUser": "From user",
     "toUser": "To user",
-    "baseObligation": "Share this month",
+    "baseObligation": "Share this period",
     "carriedCredit": "Credit from previous period",
     "planAddition": "Plan addition",
     "payments": "Payments",
@@ -587,14 +587,14 @@
     "unresolvedUnpaid": "Uavklart restgjeld",
     "shareAdjustmentTitle": "Share adjustments",
     "shareAdjustmentDesc": "This month's share is shown separately from credit and plan additions.",
-    "baseShare": "Share this month",
+    "baseShare": "Share this period",
     "creditPrevious": "Tilgode fra forrige periode",
     "historyEmpty": "No settlement entries for this period yet.",
     "netBalance": "Balance",
     "balanceSettled": "Settled",
     "balanceDebt": "Unpaid balance",
     "balanceCredit": "Credit",
-    "totalMonthlyShare": "Share this month",
+    "totalMonthlyShare": "Share this period",
     "closedPeriodOnly": "Settlement entries can only be registered for closed periods.",
     "paymentSaved": "Payment saved.",
     "tabPayments": "Payment",
@@ -605,7 +605,9 @@
     "reverseAction": "Reverse",
     "sourceElement": "Element",
     "totalPaidPeriod": "Paid this period",
-    "closedPeriodPaymentBlocked": "Payments cannot be registered for closed periods."
+    "closedPeriodPaymentBlocked": "Payments cannot be registered for closed periods.",
+    "totalPeriodShare": "Share this period",
+    "basePeriodShare": "Share this period"
   },
   "data": {
     "title": "Data",
@@ -619,6 +621,9 @@
     "noBackups": "No backups yet.",
     "download": "Download",
     "restore": "Restore",
-    "delete": "Delete"
+    "delete": "Delete",
+    "templateExpenses": "Import template – Expenses",
+    "templateRecurring": "Import template – Recurring expenses",
+    "downloadCsvTemplate": "Download CSV template"
   }
 }

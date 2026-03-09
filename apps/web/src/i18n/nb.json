@@ -560,7 +560,7 @@
     "overview": "Oppgjørsoversikt",
     "fromUser": "Fra bruker",
     "toUser": "Til bruker",
-    "baseObligation": "Andel denne måneden",
+    "baseObligation": "Andel denne perioden",
     "carriedCredit": "Tilgode fra forrige periode",
     "planAddition": "Tillegg fra oppgjørsplan",
     "payments": "Registrerte innbetalinger",
@@ -587,14 +587,14 @@
     "unresolvedUnpaid": "Uavklart restgjeld",
     "shareAdjustmentTitle": "Andelsjusteringer",
     "shareAdjustmentDesc": "Andel denne måneden vises separat fra tilgode og tillegg fra oppgjørsplan.",
-    "baseShare": "Andel denne måneden",
+    "baseShare": "Andel denne perioden",
     "creditPrevious": "Tilgode fra forrige periode",
     "historyEmpty": "Ingen oppføringer i historikk for denne perioden enda.",
     "netBalance": "Saldo",
     "balanceSettled": "Oppgjort",
     "balanceDebt": "Restgjeld",
     "balanceCredit": "Tilgode",
-    "totalMonthlyShare": "Andel denne måneden",
+    "totalMonthlyShare": "Andel denne perioden",
     "closedPeriodOnly": "Oppgjør kan bare registreres i lukkede perioder.",
     "paymentSaved": "Innbetaling lagret.",
     "tabPayments": "Innbetaling",
@@ -605,7 +605,9 @@
     "reverseAction": "Reverser",
     "sourceElement": "Element",
     "totalPaidPeriod": "Betalt denne perioden",
-    "closedPeriodPaymentBlocked": "Innbetaling kan ikke registreres i lukket periode."
+    "closedPeriodPaymentBlocked": "Innbetaling kan ikke registreres i lukket periode.",
+    "totalPeriodShare": "Andel denne perioden",
+    "basePeriodShare": "Andel denne perioden"
   },
   "data": {
     "title": "Data",
@@ -619,6 +621,9 @@
     "noBackups": "Ingen sikkerhetskopier ennå.",
     "download": "Last ned",
     "restore": "Gjenopprett",
-    "delete": "Slett"
+    "delete": "Slett",
+    "templateExpenses": "Importmal – Utgifter",
+    "templateRecurring": "Importmal – Faste utgifter",
+    "downloadCsvTemplate": "Last ned CSV mal"
   }
 }

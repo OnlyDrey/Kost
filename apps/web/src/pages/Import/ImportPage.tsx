@@ -7,7 +7,7 @@ import {
   FileDown,
   FileUp,
   FolderSync,
-  HandCoins,
+  Scale,
   Layers,
   ListTree,
   Receipt,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
 import { Button } from "../../components/ui/button";
+import { Switch } from "../../components/ui/switch";
 import { TabButton, TabsRow } from "../../components/ui/tabs";
 import {
   buildRestorePreview,
@@ -42,8 +43,7 @@ import { downloadImportTemplate } from "../../features/import/template";
 import type {
   ImportEntityType,
   ImportExecutionSummary,
-  ImportPreview,
-  SpreadsheetFormat,
+  ImportPreview
 } from "../../features/import/types";
 import {
   useCategories,
@@ -53,6 +53,9 @@ import {
   useVendors,
 } from "../../hooks/useApi";
 import { familyApi, invoiceApi, subscriptionApi } from "../../services/api";
+import ExportCard from "../../components/Common/ExportCard";
+import ImportTemplateCard from "../../components/Common/ImportTemplateCard";
+import BackupListItem from "../../components/Common/BackupListItem";
 import { useSettings } from "../../stores/settings.context";
 
 type ImportCardType = "expense" | "recurring" | "vendors" | "categories" | "paymentMethods";
@@ -104,9 +107,6 @@ async function parseSimpleListFile(file: File): Promise<string[]> {
 export default function ImportPage() {
   const { t } = useTranslation();
   const { settings } = useSettings();
-
-  const [templateType, setTemplateType] = useState<ImportEntityType>("expense");
-  const [templateFormat, setTemplateFormat] = useState<SpreadsheetFormat>("csv");
 
   const [importType, setImportType] = useState<ImportEntityType>("expense");
   const [selectedImportCard, setSelectedImportCard] = useState<ImportCardType | null>(null);
@@ -186,7 +186,7 @@ export default function ImportPage() {
   const exportCards = [
     { key: "expenses", icon: Receipt, titleKey: "importExport.cardExpenses", descKey: "importExport.exportExpensesDesc" },
     { key: "recurring", icon: Repeat, titleKey: "importExport.cardRecurring", descKey: "importExport.exportRecurringDesc" },
-    { key: "settlements", icon: HandCoins, titleKey: "importExport.cardSettlement", descKey: "importExport.exportSettlementDesc" },
+    { key: "settlements", icon: Scale, titleKey: "importExport.cardSettlement", descKey: "importExport.exportSettlementDesc" },
     { key: "masterdata", icon: Layers, titleKey: "importExport.cardMasterdata", descKey: "importExport.exportMasterdataDesc" },
   ] as const;
 
@@ -564,40 +564,33 @@ export default function ImportPage() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            {exportCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <div key={card.key} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Icon size={16} className="text-primary" />
-                    <h3 className="font-medium">{t(card.titleKey)}</h3>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t(card.descKey)}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="secondary" onClick={() => void exportDataset(card.key, "csv")}>{t("data.exportCsv")}</Button>
-                    <Button variant="secondary" onClick={() => void exportDataset(card.key, "json")}>{t("data.exportJson")}</Button>
-                  </div>
-                </div>
-              );
-            })}
+            {exportCards.map((card) => (
+              <ExportCard
+                key={card.key}
+                icon={card.icon}
+                title={t(card.titleKey)}
+                description={t(card.descKey)}
+                csvLabel={t("data.exportCsv")}
+                jsonLabel={t("data.exportJson")}
+                onExportCsv={() => void exportDataset(card.key, "csv")}
+                onExportJson={() => void exportDataset(card.key, "json")}
+              />
+            ))}
           </div>
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
-            <h3 className="font-medium">{t("importExport.exportTemplates")}</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <AppSelect value={templateType} onChange={(e) => setTemplateType(e.target.value as ImportEntityType)} className="h-10">
-                <option value="expense">{t("import.type.expense")}</option>
-                <option value="recurring">{t("import.type.recurring")}</option>
-              </AppSelect>
-              <AppSelect value={templateFormat} onChange={(e) => setTemplateFormat(e.target.value as SpreadsheetFormat)} className="h-10">
-                <option value="csv">CSV</option>
-                <option value="xlsx">XLSX</option>
-                <option value="ods">ODS</option>
-              </AppSelect>
-            </div>
-            <Button className="w-full sm:w-auto" onClick={() => downloadImportTemplate(templateType, templateFormat)}>
-              {t("importExport.downloadTemplate")}
-            </Button>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <ImportTemplateCard
+              icon={Receipt}
+              title={t("data.templateExpenses")}
+              buttonLabel={t("data.downloadCsvTemplate")}
+              onDownload={() => downloadImportTemplate("expense", "csv")}
+            />
+            <ImportTemplateCard
+              icon={Repeat}
+              title={t("data.templateRecurring")}
+              buttonLabel={t("data.downloadCsvTemplate")}
+              onDownload={() => downloadImportTemplate("recurring", "csv")}
+            />
           </div>
         </section>
       )}
@@ -616,11 +609,10 @@ export default function ImportPage() {
                 <div className="text-sm font-semibold">{t("importExport.autoBackup")}</div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t("importExport.autoBackupHelp")}</p>
               </div>
-              <input
-                type="checkbox"
+              <Switch
                 checked={autoBackupEnabled}
-                onChange={(e) => setAutoBackupEnabled(e.target.checked)}
-                className="h-4 w-4"
+                onCheckedChange={setAutoBackupEnabled}
+                aria-label={t("importExport.autoBackup")}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -654,14 +646,17 @@ export default function ImportPage() {
             ) : (
               <div className="space-y-2">
                 {storedBackups.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <div>{new Date(item.exportedAt).toLocaleString()}</div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="secondary" className="rounded-full px-3" onClick={() => downloadStoredBackup(item)}>{t("data.download")}</Button>
-                      <Button variant="secondary" className="rounded-full px-3" onClick={() => void restoreStoredBackup(item)} disabled={isRestoring}>{t("data.restore")}</Button>
-                      <Button variant="danger" className="rounded-full px-3" onClick={() => deleteStoredBackup(item.id)}>{t("data.delete")}</Button>
-                    </div>
-                  </div>
+                  <BackupListItem
+                    key={item.id}
+                    dateText={new Date(item.exportedAt).toLocaleString()}
+                    downloadLabel={t("data.download")}
+                    restoreLabel={t("data.restore")}
+                    deleteLabel={t("data.delete")}
+                    onDownload={() => downloadStoredBackup(item)}
+                    onRestore={() => void restoreStoredBackup(item)}
+                    onDelete={() => deleteStoredBackup(item.id)}
+                    restoring={isRestoring}
+                  />
                 ))}
               </div>
             )}
