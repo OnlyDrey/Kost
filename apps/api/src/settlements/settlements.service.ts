@@ -335,7 +335,10 @@ export class SettlementsService {
     this.ensureAdmin(actor.role);
     if (dto.fromUserId === dto.toUserId) throw new BadRequestException("fromUserId and toUserId must differ");
 
-    await this.getPeriodOrThrow(dto.periodId, familyId);
+    const period = await this.getPeriodOrThrow(dto.periodId, familyId);
+    if (dto.type === "payment" && period.status !== PeriodStatus.OPEN) {
+      throw new BadRequestException("Settlement payments can only be registered on open periods");
+    }
 
     const data = await this.loadPeriodSettlementData(dto.periodId, familyId);
     const entry: SettlementEntry = {

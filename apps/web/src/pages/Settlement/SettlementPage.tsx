@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   CircleCheckBig,
   History,
+  MinusCircle,
   ReceiptText,
   Scale,
   Wallet,
@@ -46,6 +47,9 @@ export default function SettlementPage() {
   const [periodId, setPeriodId] = useState(periods[0]?.id ?? "");
   const { data: users = [] } = useUsers();
   const { data: summary } = useSettlementSummary(periodId);
+
+  const selectedPeriod = periods.find((period) => period.id === periodId);
+  const isOpenPeriod = selectedPeriod?.status === "OPEN";
 
   const createEntry = useCreateSettlementEntry();
   const createPlan = useCreateSettlementPlan();
@@ -95,11 +99,11 @@ export default function SettlementPage() {
   );
 
   const saldoValueClass =
-    saldoCents > 0
+    saldoCents < 0
       ? "text-red-600 dark:text-red-400"
-      : saldoCents < 0
+      : saldoCents > 0
         ? "text-green-600 dark:text-green-400"
-        : "text-gray-900 dark:text-gray-100";
+        : "text-gray-100";
 
   const monthShareCents = safeCents(
     (summary?.rows ?? []).reduce((sum, row) => sum + row.baseObligationCents, 0),
@@ -112,17 +116,6 @@ export default function SettlementPage() {
       ),
     [summary?.history],
   );
-
-  const groupedHistory = useMemo(() => {
-    const groups = new Map<string, typeof sortedHistory>();
-    for (const item of sortedHistory) {
-      const key = item.reversedEntryId || item.id;
-      const list = groups.get(key) ?? [];
-      list.push(item);
-      groups.set(key, list);
-    }
-    return Array.from(groups.entries());
-  }, [sortedHistory]);
 
   const submitEntry = async () => {
     setEntryError("");
@@ -185,12 +178,12 @@ export default function SettlementPage() {
         <AppSelect
           value={periodId}
           onChange={(e) => setPeriodId(e.target.value)}
-          className="h-10 px-3 pr-10 rounded-lg text-sm w-28 min-w-[7rem]"
-          wrapperClassName="w-28 min-w-[7rem]"
+          className="h-10 px-3 pr-10 rounded-lg text-sm w-44"
+          wrapperClassName="w-44"
         >
           {periods.map((period) => (
             <option key={period.id} value={period.id}>
-              {period.id}
+              {period.id} ({period.status === "OPEN" ? t("period.open") : t("period.closed")})
             </option>
           ))}
         </AppSelect>
@@ -222,17 +215,6 @@ export default function SettlementPage() {
         </TabsRow>
       </div>
 
-      {(activeTab === "settlement" || activeTab === "payments") && (
-        <section className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/10 p-4">
-          <h3 className="font-semibold text-amber-800 dark:text-amber-300">
-            {t("settlement.openPeriodHintTitle")}
-          </h3>
-          <p className="text-sm mt-1 text-amber-900 dark:text-amber-200">
-            {t("settlement.openPeriodHint")}
-          </p>
-        </section>
-      )}
-
       {activeTab === "settlement" && (
         <>
           <TileGrid
@@ -241,27 +223,25 @@ export default function SettlementPage() {
                 key: "saldo",
                 icon: Scale,
                 label: t("settlement.netBalance"),
-                value: <span className={saldoValueClass}>{fmt(saldoCents)}</span>,
+                value: (
+                  <span className={saldoValueClass}>
+                    {saldoCents < 0 && <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />}
+                    {fmt(saldoCents)}
+                  </span>
+                ),
                 colorClass:
-                  saldoCents > 0
+                  saldoCents < 0
                     ? "bg-red-500"
-                    : saldoCents < 0
+                    : saldoCents > 0
                       ? "bg-green-500"
                       : "bg-slate-500",
               },
               {
                 key: "total-paid",
                 icon: CircleCheckBig,
-                label: t("settlement.totalPaid"),
+                label: t("settlement.totalPaidPeriod"),
                 value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
                 colorClass: "bg-green-500",
-              },
-              {
-                key: "warnings",
-                icon: AlertTriangle,
-                label: t("settlement.unresolvedWarnings"),
-                value: String(summary?.totals.unresolvedWarningCount ?? 0),
-                colorClass: "bg-orange-500",
               },
               {
                 key: "base-share",
@@ -270,11 +250,21 @@ export default function SettlementPage() {
                 value: fmt(monthShareCents),
                 colorClass: "bg-amber-500",
               },
+              {
+                key: "warnings",
+                icon: AlertTriangle,
+                label: t("settlement.unresolvedWarnings"),
+                value: String(summary?.totals.unresolvedWarningCount ?? 0),
+                colorClass: "bg-orange-500",
+              },
             ]}
           />
 
           <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
-            <h2 className="text-lg font-semibold">{t("settlement.overview")}</h2>
+            <div className="flex items-center gap-2">
+              <Scale size={18} className="text-primary" />
+              <h2 className="text-lg font-semibold">{t("settlement.overview")}</h2>
+            </div>
             {(summary?.rows ?? []).length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t("settlement.overviewEmpty")}
@@ -289,21 +279,12 @@ export default function SettlementPage() {
                     <div className="font-semibold text-gray-900 dark:text-gray-100">
                       {userName(row.fromUserId)} → {userName(row.toUserId)}
                     </div>
-                    <div>
-                      {t("settlement.baseObligation")}: {fmt(safeCents(row.baseObligationCents))}
-                    </div>
-                    <div>
-                      {t("settlement.carriedCredit")}: {fmt(safeCents(row.carriedCreditCents))}
-                    </div>
-                    <div>
-                      {t("settlement.planAddition")}: {fmt(safeCents(row.plannedAdditionCents))}
-                    </div>
-                    <div>
-                      {t("settlement.payments")}: {fmt(safeCents(row.paymentsCents))}
-                    </div>
-                    <div className="font-semibold text-gray-900 dark:text-gray-100 pt-1">
+                    <div className="font-semibold">
                       {t("settlement.remaining")}: {fmt(safeCents(row.remainingCents))}
                     </div>
+                    <div>{t("settlement.baseObligation")}: {fmt(safeCents(row.baseObligationCents))}</div>
+                    <div>{t("settlement.carriedCredit")}: {fmt(safeCents(row.carriedCreditCents))}</div>
+                    <div>{t("settlement.payments")}: {fmt(safeCents(row.paymentsCents))}</div>
                   </div>
                 ))}
               </div>
@@ -311,7 +292,10 @@ export default function SettlementPage() {
           </section>
 
           <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
-            <h3 className="font-semibold">{t("settlement.planTitle")}</h3>
+            <div className="flex items-center gap-2">
+              <Wallet size={18} className="text-primary" />
+              <h3 className="font-semibold">{t("settlement.planTitle")}</h3>
+            </div>
 
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
@@ -403,8 +387,14 @@ export default function SettlementPage() {
 
       {activeTab === "payments" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
-          <h3 className="font-semibold">{t("settlement.registerPayment")}</h3>
+          <div className="flex items-center gap-2">
+            <ReceiptText size={18} className="text-primary" />
+            <h3 className="font-semibold">{t("settlement.registerPayment")}</h3>
+          </div>
           {!isAdmin && <p className="text-sm text-amber-600">{t("settlement.adminOnly")}</p>}
+          {!isOpenPeriod && (
+            <p className="text-sm text-amber-600">{t("settlement.closedPeriodPaymentBlocked")}</p>
+          )}
 
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
@@ -414,6 +404,7 @@ export default function SettlementPage() {
                   setEntryForm((prev) => ({ ...prev, fromUserId: e.target.value }))
                 }
                 className="h-10"
+                disabled={!isOpenPeriod}
               >
                 <option value="">{t("settlement.fromUser")}</option>
                 {users.map((user) => (
@@ -428,6 +419,7 @@ export default function SettlementPage() {
                   setEntryForm((prev) => ({ ...prev, toUserId: e.target.value }))
                 }
                 className="h-10"
+                disabled={!isOpenPeriod}
               >
                 <option value="">{t("settlement.toUser")}</option>
                 {users.map((user) => (
@@ -444,6 +436,7 @@ export default function SettlementPage() {
               }
               className={inputCls}
               placeholder={t("settlement.amount")}
+              disabled={!isOpenPeriod}
             />
             <input
               type="date"
@@ -452,6 +445,7 @@ export default function SettlementPage() {
                 setEntryForm((prev) => ({ ...prev, date: e.target.value }))
               }
               className={dateInputCls}
+              disabled={!isOpenPeriod}
             />
             <input
               value={entryForm.comment}
@@ -460,6 +454,7 @@ export default function SettlementPage() {
               }
               className={inputCls}
               placeholder={t("settlement.comment")}
+              disabled={!isOpenPeriod}
             />
           </div>
 
@@ -469,6 +464,7 @@ export default function SettlementPage() {
               createEntry.isPending ||
               !isAdmin ||
               !periodId ||
+              !isOpenPeriod ||
               !entryForm.fromUserId ||
               !entryForm.toUserId ||
               !entryForm.date ||
@@ -486,59 +482,51 @@ export default function SettlementPage() {
 
       {activeTab === "history" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-          <h3 className="font-semibold mb-2">{t("settlement.history")}</h3>
-          {groupedHistory.length === 0 ? (
+          <div className="flex items-center gap-2 mb-2">
+            <History size={18} className="text-primary" />
+            <h3 className="font-semibold">{t("settlement.history")}</h3>
+          </div>
+          {sortedHistory.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("settlement.historyEmpty")}
             </p>
           ) : (
-            <div className="space-y-3">
-              {groupedHistory.map(([key, entries]) => (
+            <div className="space-y-2">
+              {sortedHistory.map((entry) => (
                 <div
-                  key={key}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm space-y-2"
+                  key={entry.id}
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm"
                 >
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("settlement.sourceElement")}: {key}
+                    {new Date(entry.effectiveDate).toLocaleDateString()}
                   </div>
-                  {entries.map((entry) => (
-                    <div key={entry.id} className="rounded-lg border border-gray-100 dark:border-gray-800 p-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{entry.type}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(entry.effectiveDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="mt-1">
-                        {userName(entry.fromUserId)} → {userName(entry.toUserId)}
-                      </div>
-                      <div className="font-semibold">{fmt(safeCents(entry.amountCents))}</div>
-                      {entry.comment && (
-                        <div className="text-gray-600 dark:text-gray-300 mt-0.5">
-                          {entry.comment}
-                        </div>
-                      )}
-                      {entry.reversedAt && (
-                        <div className="text-xs text-red-600 mt-1">{t("settlement.reversed")}</div>
-                      )}
-                      {!entry.reversedAt && isAdmin && (
-                        <Button
-                          variant="secondary"
-                          className="mt-2 rounded-full px-4"
-                          onClick={() =>
-                            setReverseDialog({
-                              open: true,
-                              entryId: entry.id,
-                              comment: "",
-                              error: "",
-                            })
-                          }
-                        >
-                          {t("settlement.reverseAction")}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                  <div className="mt-1 font-medium">
+                    {userName(entry.fromUserId)} → {userName(entry.toUserId)}
+                  </div>
+                  <div className="font-semibold">{fmt(safeCents(entry.amountCents))}</div>
+                  {entry.comment && (
+                    <div className="mt-1 text-gray-600 dark:text-gray-300">{entry.comment}</div>
+                  )}
+                  {entry.reversedAt && (
+                    <div className="text-xs text-red-600 mt-1">{t("settlement.reversed")}</div>
+                  )}
+                  {!entry.reversedAt && isAdmin && (
+                    <Button
+                      variant="secondary"
+                      className="mt-2 rounded-full px-4"
+                      disabled={!isOpenPeriod}
+                      onClick={() =>
+                        setReverseDialog({
+                          open: true,
+                          entryId: entry.id,
+                          comment: "",
+                          error: "",
+                        })
+                      }
+                    >
+                      {t("settlement.reverseAction")}
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

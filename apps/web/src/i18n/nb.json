@@ -12,7 +12,7 @@
     "settings": "Innstillinger",
     "subscriptions": "Faste utgifter",
     "logout": "Logg ut",
-    "importExport": "Import / Eksport",
+    "importExport": "Data",
     "settlement": "Oppgjør"
   },
   "overview": {
@@ -530,7 +530,25 @@
     "autoBackupWeekly": "Ukentlig",
     "retentionCopies": "Antall kopier",
     "backupStorageHint": "Sikkerhetskopier lagres lokalt i appens backup-lager.",
-    "lastAutoBackup": "Sist automatisk"
+    "lastAutoBackup": "Sist automatisk",
+    "fileLoadedForPreview": "Filen er lastet. Lag forhåndsvisning for å fortsette.",
+    "simpleImportDone": "Import ferdig. {{count}} elementer lagt til.",
+    "cardExpenses": "Utgifter",
+    "cardRecurring": "Faste utgifter",
+    "cardVendors": "Leverandører",
+    "cardCategories": "Kategorier",
+    "cardPaymentMethods": "Betalingsmåter",
+    "cardSettlement": "Oppgjør",
+    "cardMasterdata": "Masterdata",
+    "importExpensesDesc": "Importer utgifter fra CSV, XLSX eller ODS.",
+    "importRecurringDesc": "Importer faste utgifter fra CSV, XLSX eller ODS.",
+    "importVendorsDesc": "Importer leverandørnavn fra CSV eller JSON.",
+    "importCategoriesDesc": "Importer kategorier fra CSV eller JSON.",
+    "importPaymentMethodsDesc": "Importer betalingsmåter fra CSV eller JSON.",
+    "exportExpensesDesc": "Eksporter registrerte utgifter.",
+    "exportRecurringDesc": "Eksporter faste utgifter.",
+    "exportSettlementDesc": "Eksporter oppgjørsdata per periode.",
+    "exportMasterdataDesc": "Eksporter kategorier, leverandører og betalingsmåter."
   },
   "settlement": {
     "title": "Oppgjør",
@@ -585,6 +603,22 @@
     "openPeriodHint": "Registrer innbetalinger løpende. Når en periode lukkes vises varsler hvis oppgjør mangler.",
     "overviewEmpty": "Ingen oppgjørsgrunnlag for valgt periode ennå.",
     "reverseAction": "Reverser",
-    "sourceElement": "Element"
+    "sourceElement": "Element",
+    "totalPaidPeriod": "Betalt denne perioden",
+    "closedPeriodPaymentBlocked": "Innbetaling kan ikke registreres i lukket periode."
+  },
+  "data": {
+    "title": "Data",
+    "tabImport": "Import",
+    "tabExport": "Eksport",
+    "tabBackup": "Sikkerhetskopi",
+    "exportCsv": "Eksporter CSV",
+    "exportJson": "Eksporter JSON",
+    "createBackup": "Opprett sikkerhetskopi",
+    "backupList": "Sikkerhetskopier",
+    "noBackups": "Ingen sikkerhetskopier ennå.",
+    "download": "Last ned",
+    "restore": "Gjenopprett",
+    "delete": "Slett"
   }
 }

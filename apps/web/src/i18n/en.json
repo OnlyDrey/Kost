@@ -12,7 +12,7 @@
     "settings": "Settings",
     "subscriptions": "Recurring Expenses",
     "logout": "Logout",
-    "importExport": "Import / Export",
+    "importExport": "Data",
     "settlement": "Settlement"
   },
   "overview": {
@@ -530,7 +530,25 @@
     "autoBackupWeekly": "Weekly",
     "retentionCopies": "Retention copies",
     "backupStorageHint": "Backups are stored locally in the app backup store.",
-    "lastAutoBackup": "Last automatic run"
+    "lastAutoBackup": "Last automatic run",
+    "fileLoadedForPreview": "File loaded. Generate preview to continue.",
+    "simpleImportDone": "Import complete. {{count}} entries added.",
+    "cardExpenses": "Expenses",
+    "cardRecurring": "Recurring expenses",
+    "cardVendors": "Vendors",
+    "cardCategories": "Categories",
+    "cardPaymentMethods": "Payment methods",
+    "cardSettlement": "Settlements",
+    "cardMasterdata": "Master data",
+    "importExpensesDesc": "Import expenses from CSV, XLSX or ODS.",
+    "importRecurringDesc": "Import recurring expenses from CSV, XLSX or ODS.",
+    "importVendorsDesc": "Import vendor names from CSV or JSON.",
+    "importCategoriesDesc": "Import categories from CSV or JSON.",
+    "importPaymentMethodsDesc": "Import payment methods from CSV or JSON.",
+    "exportExpensesDesc": "Export registered expenses.",
+    "exportRecurringDesc": "Export recurring expenses.",
+    "exportSettlementDesc": "Export settlement data per period.",
+    "exportMasterdataDesc": "Export categories, vendors and payment methods."
   },
   "settlement": {
     "title": "Oppgjør",
@@ -585,6 +603,22 @@
     "openPeriodHint": "Register payments continuously. On period close, warnings are shown if settlement data is missing.",
     "overviewEmpty": "No settlement basis for the selected period yet.",
     "reverseAction": "Reverse",
-    "sourceElement": "Element"
+    "sourceElement": "Element",
+    "totalPaidPeriod": "Paid this period",
+    "closedPeriodPaymentBlocked": "Payments cannot be registered for closed periods."
+  },
+  "data": {
+    "title": "Data",
+    "tabImport": "Import",
+    "tabExport": "Export",
+    "tabBackup": "Backup",
+    "exportCsv": "Export CSV",
+    "exportJson": "Export JSON",
+    "createBackup": "Create backup",
+    "backupList": "Backups",
+    "noBackups": "No backups yet.",
+    "download": "Download",
+    "restore": "Restore",
+    "delete": "Delete"
   }
 }
