@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import IconStatCard from "./IconStatCard";
 
 export interface TileItem {
   key: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   label: string;
   value: ReactNode;
   colorClass: string;
