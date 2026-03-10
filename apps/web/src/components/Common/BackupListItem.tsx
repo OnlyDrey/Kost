@@ -25,17 +25,18 @@ export default function BackupListItem({
   restoring,
 }: BackupListItemProps) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm space-y-3">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-5 text-sm space-y-4">
       <div>
         <div className="font-medium text-gray-900 dark:text-gray-100">
           {nameText}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        <div className="text-sm text-muted-foreground mt-0.5">
           {dateText}
         </div>
       </div>
       <ActionIconBar
         showLabelFromMd
+        className="gap-2 mt-3"
         items={[
           {
             key: "download",

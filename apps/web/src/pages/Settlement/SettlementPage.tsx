@@ -206,7 +206,7 @@ export default function SettlementPage() {
           <AppSelect
             value={periodId}
             onChange={(e) => setPeriodId(e.target.value)}
-            className="h-10 px-3 pr-10 rounded-lg text-sm w-36"
+            className={`${CONTROL_HEIGHT} px-3 pr-10 rounded-lg text-sm w-36`}
             wrapperClassName="w-36"
           >
             {periods.map((period) => (
@@ -264,33 +264,32 @@ export default function SettlementPage() {
                     {fmt(saldoCents)}
                   </span>
                 ),
-                colorClass:
-                  saldoCents < 0
-                    ? "bg-red-500"
-                    : saldoCents > 0
-                      ? "bg-green-500"
-                      : "bg-slate-500",
+                colorClass: "bg-green-500/20",
+                iconTextClass: "text-green-400",
               },
               {
                 key: "paid-period",
                 icon: CheckCircle2,
                 label: t("settlement.totalPaidPeriod"),
                 value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
-                colorClass: "bg-green-500",
+                colorClass: "bg-blue-500/20",
+                iconTextClass: "text-blue-400",
               },
               {
                 key: "share-period",
                 icon: Scale,
                 label: t("settlement.totalPeriodShare"),
                 value: fmt(monthShareCents),
-                colorClass: "bg-amber-500",
+                colorClass: "bg-yellow-500/20",
+                iconTextClass: "text-yellow-400",
               },
               {
                 key: "warnings",
                 icon: AlertTriangle,
                 label: t("settlement.unresolvedWarnings"),
                 value: String(summary?.totals.unresolvedWarningCount ?? 0),
-                colorClass: "bg-orange-500",
+                colorClass: "bg-orange-500/20",
+                iconTextClass: "text-orange-400",
               },
             ]}
           />
@@ -345,7 +344,7 @@ export default function SettlementPage() {
                         fromUserId: e.target.value,
                       }))
                     }
-                    className="h-10"
+                    className={CONTROL_HEIGHT}
                   >
                     <option value="">{t("settlement.fromUser")}</option>
                     {users.map((user) => (
@@ -363,7 +362,7 @@ export default function SettlementPage() {
                         toUserId: e.target.value,
                       }))
                     }
-                    className="h-10"
+                    className={CONTROL_HEIGHT}
                   >
                     <option value="">{t("settlement.toUser")}</option>
                     {users.map((user) => (
@@ -382,7 +381,7 @@ export default function SettlementPage() {
                       planType: e.target.value,
                     }))
                   }
-                  className="h-10"
+                  className={CONTROL_HEIGHT}
                 >
                   <option value="full_next_period">
                     {t("settlement.planFullNext")}
@@ -480,7 +479,7 @@ export default function SettlementPage() {
                     fromUserId: e.target.value,
                   }))
                 }
-                className="h-10"
+                className={CONTROL_HEIGHT}
                 disabled={!isOpenPeriod}
               >
                 <option value="">{t("settlement.fromUser")}</option>
@@ -498,7 +497,7 @@ export default function SettlementPage() {
                     toUserId: e.target.value,
                   }))
                 }
-                className="h-10"
+                className={CONTROL_HEIGHT}
                 disabled={!isOpenPeriod}
               >
                 <option value="">{t("settlement.toUser")}</option>

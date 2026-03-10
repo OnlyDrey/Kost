@@ -39,6 +39,7 @@ import { normalizeOverviewQuery, type OverviewStatus } from "./filtering";
 import {
   SELECT_TRIGGER,
   FOCUS_RING,
+  CONTROL_HEIGHT,
 } from "../../components/Common/focusStyles";
 import { useConfirmDialog } from "../../components/Common/ConfirmDialogProvider";
 import AppSelect from "../../components/Common/AppSelect";
@@ -70,7 +71,7 @@ function PeriodSelector({
     [periods],
   );
 
-  const inputCls = `h-10 px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`;
+  const inputCls = `${CONTROL_HEIGHT} px-3 pr-10 rounded-lg text-sm ${SELECT_TRIGGER}`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -239,6 +240,14 @@ export default function Overview() {
     const params = new URLSearchParams(searchParams);
     if (!nextCategory) params.delete("category");
     else params.set("category", nextCategory);
+    setSearchParams(params, { replace: true });
+  };
+
+  const showTotalAmount = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete("filter");
+    params.delete("shareUser");
+    params.delete("status");
     setSearchParams(params, { replace: true });
   };
 
@@ -476,7 +485,7 @@ export default function Overview() {
                 label: t("dashboard.totalAmount"),
                 value: fmt(stats?.totalAmountCents ?? 0),
                 colorClass: "bg-emerald-500",
-                onClick: () => setFilter("all"),
+                onClick: showTotalAmount,
               },
               {
                 key: "paid",
@@ -592,7 +601,7 @@ export default function Overview() {
                     onChange={(e) =>
                       setStatusFilter(e.target.value as OverviewStatus)
                     }
-                    className={`h-10 w-full rounded-lg px-3.5 text-sm ${SELECT_TRIGGER}`}
+                    className={`${CONTROL_HEIGHT} w-full rounded-lg px-3.5 text-sm ${SELECT_TRIGGER}`}
                   >
                     <option value="all">{t("invoice.statusAll")}</option>
                     <option value="unpaid">{t("invoice.statusUnpaid")}</option>

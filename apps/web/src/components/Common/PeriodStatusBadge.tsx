@@ -1,5 +1,5 @@
-import { Lock, LockOpen } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import StatusChip from "./StatusChip";
+import { CONTROL_HEIGHT } from "./focusStyles";
 
 type PeriodStatusBadgeProps = {
   status: "OPEN" | "CLOSED";
@@ -14,25 +14,15 @@ export default function PeriodStatusBadge({
   size = "sm",
   variant = "chip",
 }: PeriodStatusBadgeProps) {
-  const { t } = useTranslation();
-  const isOpen = status === "OPEN";
+  if (variant === "field") {
+    return (
+      <StatusChip
+        status={status}
+        size="md"
+        className={`${CONTROL_HEIGHT} rounded-lg ${className}`}
+      />
+    );
+  }
 
-  return (
-    <span
-      className={`inline-flex items-center font-medium ${
-        variant === "field"
-          ? "h-10 rounded-lg px-3 gap-1.5 text-sm"
-          : size === "md"
-            ? "rounded-full px-3 py-1 gap-1 text-sm"
-            : "rounded-full px-2 py-0.5 gap-1 text-xs"
-      } ${isOpen ? "bg-success/20 text-success" : "bg-danger/20 text-danger"} ${className}`.trim()}
-    >
-      {isOpen ? (
-        <LockOpen size={size === "md" ? 14 : 11} />
-      ) : (
-        <Lock size={size === "md" ? 14 : 11} />
-      )}
-      {isOpen ? t("period.open") : t("period.closed")}
-    </span>
-  );
+  return <StatusChip status={status} size={size} className={className} />;
 }

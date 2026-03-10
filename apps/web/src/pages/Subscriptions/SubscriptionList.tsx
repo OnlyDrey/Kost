@@ -34,6 +34,7 @@ import { distributionLabel } from "../../utils/distribution";
 import {
   FOCUS_RING,
   SELECT_TRIGGER,
+  CONTROL_HEIGHT,
 } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 
@@ -111,7 +112,7 @@ export default function SubscriptionList() {
                 <AppSelect
                   value={generatePeriodId}
                   onChange={(e) => setGeneratePeriodId(e.target.value)}
-                  className={`h-10 ${SELECT_TRIGGER}`}
+                  className={`${CONTROL_HEIGHT} ${SELECT_TRIGGER}`}
                 >
                   {openPeriods.map((period) => (
                     <option key={period.id} value={period.id}>
@@ -122,7 +123,7 @@ export default function SubscriptionList() {
                 <button
                   onClick={handleGenerate}
                   disabled={generateInvoices.isPending || !generatePeriodId}
-                  className={`inline-flex items-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+                  className={`inline-flex ${CONTROL_HEIGHT} items-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
                 >
                   {generateInvoices.isPending ? (
                     <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -135,7 +136,7 @@ export default function SubscriptionList() {
             )}
             <button
               onClick={() => navigate("/subscriptions/add")}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+              className={`w-full sm:w-auto flex ${CONTROL_HEIGHT} items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               <Plus size={16} />
               {t("subscription.addRecurringExpense")}
@@ -147,7 +148,7 @@ export default function SubscriptionList() {
             <AppSelect
               value={generatePeriodId}
               onChange={(e) => setGeneratePeriodId(e.target.value)}
-              className={`h-10 w-full ${SELECT_TRIGGER}`}
+              className={`${CONTROL_HEIGHT} w-full ${SELECT_TRIGGER}`}
               wrapperClassName="col-span-1"
             >
               {openPeriods.map((period) => (
@@ -159,7 +160,7 @@ export default function SubscriptionList() {
             <button
               onClick={handleGenerate}
               disabled={generateInvoices.isPending || !generatePeriodId}
-              className={`col-span-2 w-full flex items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+              className={`col-span-2 w-full flex ${CONTROL_HEIGHT} items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               {generateInvoices.isPending ? (
                 <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />

@@ -668,14 +668,14 @@ export default function AddExpense() {
                     <button
                       type="button"
                       onClick={() => navigate(backUrl)}
-                      className="col-span-3 mt-7 h-11 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className={`col-span-3 mt-7 ${CONTROL_HEIGHT} rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors`}
                     >
                       {t("common.cancel")}
                     </button>
                     <button
                       type="submit"
                       disabled={isPending}
-                      className="col-span-3 mt-7 flex h-11 items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
+                      className={`col-span-3 mt-7 flex ${CONTROL_HEIGHT} items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors`}
                     >
                       {isPending && (
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

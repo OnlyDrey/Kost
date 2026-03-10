@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FOCUS_RING } from "./focusStyles";
+import IconStatCard from "./IconStatCard";
 
 export interface TileItem {
   key: string;
@@ -7,6 +7,7 @@ export interface TileItem {
   label: string;
   value: ReactNode;
   colorClass: string;
+  iconTextClass?: string;
   onClick?: () => void;
 }
 
@@ -24,53 +25,19 @@ export default function TileGrid({
         "grid grid-cols-2 min-[700px]:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-2 sm:gap-3"
       }
     >
-      {items.map(({ key, icon: Icon, label, value, colorClass, onClick }) => {
-        const cls = `bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-3.5 shadow-sm min-w-0 ${onClick ? "cursor-pointer hover:border-primary/40 dark:hover:border-primary/40" : ""}`;
-        return onClick ? (
-          <button
+      {items.map(
+        ({ key, icon, label, value, colorClass, iconTextClass, onClick }) => (
+          <IconStatCard
             key={key}
-            type="button"
+            icon={icon}
+            label={label}
+            value={value}
+            iconBgClass={colorClass}
+            iconTextClass={iconTextClass}
             onClick={onClick}
-            className={cls + ` text-left ${FOCUS_RING}`}
-          >
-            <div className="flex items-center gap-2 mb-1.5 min-h-7">
-              <div
-                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center ${colorClass} shrink-0`}
-              >
-                <Icon
-                  size={12}
-                  className="text-white sm:w-[14px] sm:h-[14px]"
-                />
-              </div>
-              <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight line-clamp-2">
-                {label}
-              </p>
-            </div>
-            <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words leading-tight">
-              {value}
-            </p>
-          </button>
-        ) : (
-          <div key={key} className={cls}>
-            <div className="flex items-center gap-2 mb-1.5 min-h-7">
-              <div
-                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center ${colorClass} shrink-0`}
-              >
-                <Icon
-                  size={12}
-                  className="text-white sm:w-[14px] sm:h-[14px]"
-                />
-              </div>
-              <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight line-clamp-2">
-                {label}
-              </p>
-            </div>
-            <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words leading-tight">
-              {value}
-            </p>
-          </div>
-        );
-      })}
+          />
+        ),
+      )}
     </div>
   );
 }
