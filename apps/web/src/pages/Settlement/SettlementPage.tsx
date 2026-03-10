@@ -6,13 +6,13 @@ import {
   CheckCircle2,
   Clock3,
   MinusCircle,
-  ReceiptText,
   Scale,
   Wallet,
 } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import StatWidget from "../../components/Common/StatWidget";
+import SettlementSummaryCard from "../../components/Common/SettlementSummaryCard";
 import { TabButton, TabsRow } from "../../components/ui/tabs";
 import AppDialog from "../../components/Common/AppDialog";
 import { Button } from "../../components/ui/button";
@@ -34,8 +34,7 @@ function safeCents(value: number): number {
   return Math.abs(value) < 1 ? 0 : value;
 }
 
-const inputCls =
-  `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
+const inputCls = `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
 const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 type SettlementTab = "payments" | "settlement" | "history";
@@ -108,7 +107,10 @@ export default function SettlementPage() {
         : "text-gray-100";
 
   const monthShareCents = safeCents(
-    (summary?.rows ?? []).reduce((sum, row) => sum + row.baseObligationCents, 0),
+    (summary?.rows ?? []).reduce(
+      (sum, row) => sum + row.baseObligationCents,
+      0,
+    ),
   );
 
   const sortedHistory = useMemo(
@@ -190,7 +192,9 @@ export default function SettlementPage() {
               </option>
             ))}
           </AppSelect>
-          {selectedPeriod && <PeriodStatusBadge status={selectedPeriod.status} size="sm" />}
+          {selectedPeriod && (
+            <PeriodStatusBadge status={selectedPeriod.status} size="sm" />
+          )}
         </div>
       </div>
 
@@ -198,7 +202,7 @@ export default function SettlementPage() {
         <TabsRow>
           <TabButton
             active={activeTab === "payments"}
-            icon={<ReceiptText size={16} />}
+            icon={<ArrowLeftRight size={16} />}
             onClick={() => setActiveTab("payments")}
           >
             {t("settlement.tabPayments")}
@@ -222,13 +226,15 @@ export default function SettlementPage() {
 
       {activeTab === "settlement" && (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
             <StatWidget
               icon={Wallet}
               title={t("settlement.netBalance")}
               value={
                 <span className={saldoValueClass}>
-                  {saldoCents < 0 && <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />}
+                  {saldoCents < 0 && (
+                    <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
+                  )}
                   {fmt(saldoCents)}
                 </span>
               }
@@ -260,140 +266,179 @@ export default function SettlementPage() {
             />
           </div>
 
-          <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Scale size={18} className="text-primary" />
-              <h2 className="text-lg font-semibold">{t("settlement.overview")}</h2>
-            </div>
-            {(summary?.rows ?? []).length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t("settlement.overviewEmpty")}
-              </p>
-            ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Scale size={18} className="text-primary" />
+                <h2 className="text-lg font-semibold">
+                  {t("settlement.overview")}
+                </h2>
+              </div>
+              {(summary?.rows ?? []).length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("settlement.overviewEmpty")}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {(summary?.rows ?? []).map((row) => (
+                    <SettlementSummaryCard
+                      key={`${row.fromUserId}-${row.toUserId}`}
+                      direction={`${userName(row.fromUserId)} → ${userName(row.toUserId)}`}
+                      amount={fmt(safeCents(row.remainingCents))}
+                      remainingLabel={t("settlement.remaining")}
+                      baseShareLabel={t("settlement.basePeriodShare")}
+                      baseShareValue={fmt(safeCents(row.baseObligationCents))}
+                      carriedCreditLabel={t("settlement.carriedCredit")}
+                      carriedCreditValue={fmt(
+                        safeCents(row.carriedCreditCents),
+                      )}
+                      paymentsLabel={t("settlement.payments")}
+                      paymentsValue={fmt(safeCents(row.paymentsCents))}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <ArrowLeftRight size={18} className="text-primary" />
+                <h3 className="font-semibold">{t("settlement.planTitle")}</h3>
+              </div>
+
               <div className="space-y-2">
-                {(summary?.rows ?? []).map((row) => (
-                  <div
-                    key={`${row.fromUserId}-${row.toUserId}`}
-                    className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm space-y-1"
+                <div className="grid grid-cols-2 gap-2">
+                  <AppSelect
+                    value={planForm.fromUserId}
+                    onChange={(e) =>
+                      setPlanForm((prev) => ({
+                        ...prev,
+                        fromUserId: e.target.value,
+                      }))
+                    }
+                    className="h-10"
                   >
-                    <div className="font-semibold text-gray-900 dark:text-gray-100">
-                      {userName(row.fromUserId)} → {userName(row.toUserId)}
-                    </div>
-                    <div className="font-semibold">
-                      {t("settlement.remaining")}: {fmt(safeCents(row.remainingCents))}
-                    </div>
-                    <div>{t("settlement.basePeriodShare")}: {fmt(safeCents(row.baseObligationCents))}</div>
-                    <div>{t("settlement.carriedCredit")}: {fmt(safeCents(row.carriedCreditCents))}</div>
-                    <div>{t("settlement.payments")}: {fmt(safeCents(row.paymentsCents))}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                    <option value="">{t("settlement.fromUser")}</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </AppSelect>
 
-          <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <ArrowLeftRight size={18} className="text-primary" />
-              <h3 className="font-semibold">{t("settlement.planTitle")}</h3>
-            </div>
+                  <AppSelect
+                    value={planForm.toUserId}
+                    onChange={(e) =>
+                      setPlanForm((prev) => ({
+                        ...prev,
+                        toUserId: e.target.value,
+                      }))
+                    }
+                    className="h-10"
+                  >
+                    <option value="">{t("settlement.toUser")}</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </AppSelect>
+                </div>
 
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
                 <AppSelect
-                  value={planForm.fromUserId}
+                  value={planForm.planType}
                   onChange={(e) =>
-                    setPlanForm((prev) => ({ ...prev, fromUserId: e.target.value }))
+                    setPlanForm((prev) => ({
+                      ...prev,
+                      planType: e.target.value,
+                    }))
                   }
                   className="h-10"
                 >
-                  <option value="">{t("settlement.fromUser")}</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
+                  <option value="full_next_period">
+                    {t("settlement.planFullNext")}
+                  </option>
+                  <option value="fixed_amount_per_period">
+                    {t("settlement.planFixedAmount")}
+                  </option>
+                  <option value="fixed_number_of_periods">
+                    {t("settlement.planFixedPeriods")}
+                  </option>
                 </AppSelect>
 
-                <AppSelect
-                  value={planForm.toUserId}
+                {planForm.planType === "fixed_amount_per_period" && (
+                  <input
+                    value={planForm.configuredAmount}
+                    onChange={(e) =>
+                      setPlanForm((prev) => ({
+                        ...prev,
+                        configuredAmount: e.target.value,
+                      }))
+                    }
+                    className={inputCls}
+                    placeholder={t("settlement.fixedAmountPerPeriod")}
+                  />
+                )}
+
+                {planForm.planType === "fixed_number_of_periods" && (
+                  <input
+                    value={planForm.configuredPeriods}
+                    onChange={(e) =>
+                      setPlanForm((prev) => ({
+                        ...prev,
+                        configuredPeriods: e.target.value,
+                      }))
+                    }
+                    className={inputCls}
+                    placeholder={t("settlement.numberOfPeriods")}
+                  />
+                )}
+
+                <input
+                  value={planForm.comment}
                   onChange={(e) =>
-                    setPlanForm((prev) => ({ ...prev, toUserId: e.target.value }))
+                    setPlanForm((prev) => ({
+                      ...prev,
+                      comment: e.target.value,
+                    }))
                   }
-                  className="h-10"
-                >
-                  <option value="">{t("settlement.toUser")}</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </AppSelect>
+                  className={inputCls}
+                  placeholder={t("settlement.comment")}
+                />
               </div>
 
-              <AppSelect
-                value={planForm.planType}
-                onChange={(e) =>
-                  setPlanForm((prev) => ({ ...prev, planType: e.target.value }))
+              <Button
+                className="w-full sm:w-auto"
+                disabled={
+                  !isAdmin ||
+                  !periodId ||
+                  !planForm.fromUserId ||
+                  !planForm.toUserId
                 }
-                className="h-10"
+                onClick={() => void submitPlan()}
               >
-                <option value="full_next_period">{t("settlement.planFullNext")}</option>
-                <option value="fixed_amount_per_period">{t("settlement.planFixedAmount")}</option>
-                <option value="fixed_number_of_periods">{t("settlement.planFixedPeriods")}</option>
-              </AppSelect>
-
-              {planForm.planType === "fixed_amount_per_period" && (
-                <input
-                  value={planForm.configuredAmount}
-                  onChange={(e) =>
-                    setPlanForm((prev) => ({ ...prev, configuredAmount: e.target.value }))
-                  }
-                  className={inputCls}
-                  placeholder={t("settlement.fixedAmountPerPeriod")}
-                />
-              )}
-
-              {planForm.planType === "fixed_number_of_periods" && (
-                <input
-                  value={planForm.configuredPeriods}
-                  onChange={(e) =>
-                    setPlanForm((prev) => ({ ...prev, configuredPeriods: e.target.value }))
-                  }
-                  className={inputCls}
-                  placeholder={t("settlement.numberOfPeriods")}
-                />
-              )}
-
-              <input
-                value={planForm.comment}
-                onChange={(e) =>
-                  setPlanForm((prev) => ({ ...prev, comment: e.target.value }))
-                }
-                className={inputCls}
-                placeholder={t("settlement.comment")}
-              />
-            </div>
-
-            <Button
-              className="w-full sm:w-auto"
-              disabled={!isAdmin || !periodId || !planForm.fromUserId || !planForm.toUserId}
-              onClick={() => void submitPlan()}
-            >
-              {t("settlement.createPlan")}
-            </Button>
-          </section>
+                {t("settlement.createPlan")}
+              </Button>
+            </section>
+          </div>
         </>
       )}
 
       {activeTab === "payments" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <ReceiptText size={18} className="text-primary" />
+            <ArrowLeftRight size={18} className="text-primary" />
             <h3 className="font-semibold">{t("settlement.registerPayment")}</h3>
           </div>
-          {!isAdmin && <p className="text-sm text-amber-600">{t("settlement.adminOnly")}</p>}
+          {!isAdmin && (
+            <p className="text-sm text-amber-600">
+              {t("settlement.adminOnly")}
+            </p>
+          )}
           {!isOpenPeriod && (
-            <p className="text-sm text-amber-600">{t("settlement.closedPeriodPaymentBlocked")}</p>
+            <p className="text-sm text-amber-600">
+              {t("settlement.closedPeriodPaymentBlocked")}
+            </p>
           )}
 
           <div className="space-y-2">
@@ -401,7 +446,10 @@ export default function SettlementPage() {
               <AppSelect
                 value={entryForm.fromUserId}
                 onChange={(e) =>
-                  setEntryForm((prev) => ({ ...prev, fromUserId: e.target.value }))
+                  setEntryForm((prev) => ({
+                    ...prev,
+                    fromUserId: e.target.value,
+                  }))
                 }
                 className="h-10"
                 disabled={!isOpenPeriod}
@@ -416,7 +464,10 @@ export default function SettlementPage() {
               <AppSelect
                 value={entryForm.toUserId}
                 onChange={(e) =>
-                  setEntryForm((prev) => ({ ...prev, toUserId: e.target.value }))
+                  setEntryForm((prev) => ({
+                    ...prev,
+                    toUserId: e.target.value,
+                  }))
                 }
                 className="h-10"
                 disabled={!isOpenPeriod}
@@ -475,8 +526,16 @@ export default function SettlementPage() {
           >
             {t("settlement.saveEntry")}
           </Button>
-          {entryError && <p className="text-sm text-red-600 dark:text-red-400">{entryError}</p>}
-          {entrySuccess && <p className="text-sm text-green-600 dark:text-green-400">{entrySuccess}</p>}
+          {entryError && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {entryError}
+            </p>
+          )}
+          {entrySuccess && (
+            <p className="text-sm text-green-600 dark:text-green-400">
+              {entrySuccess}
+            </p>
+          )}
         </section>
       )}
 
@@ -500,15 +559,21 @@ export default function SettlementPage() {
                   <div className="font-medium">
                     {userName(entry.fromUserId)} → {userName(entry.toUserId)}
                   </div>
-                  <div className="font-semibold">{fmt(safeCents(entry.amountCents))}</div>
+                  <div className="font-semibold">
+                    {fmt(safeCents(entry.amountCents))}
+                  </div>
                   <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {new Date(entry.effectiveDate).toLocaleDateString()}
                   </div>
                   {entry.comment && (
-                    <div className="mt-1 text-gray-600 dark:text-gray-300">{entry.comment}</div>
+                    <div className="mt-1 text-gray-600 dark:text-gray-300">
+                      {entry.comment}
+                    </div>
                   )}
                   {entry.reversedAt && (
-                    <div className="text-xs text-red-600 mt-1">{t("settlement.reversed")}</div>
+                    <div className="text-xs text-red-600 mt-1">
+                      {t("settlement.reversed")}
+                    </div>
                   )}
                   {!entry.reversedAt && isAdmin && (
                     <Button
@@ -543,7 +608,9 @@ export default function SettlementPage() {
             <ul className="list-disc pl-5 text-sm mt-2 space-y-1 text-amber-900 dark:text-amber-200">
               {summary.warnings.map((warning, idx) => (
                 <li key={`${warning.sourcePeriodId}-${idx}`}>
-                  {warning.sourcePeriodId}: {userName(warning.fromUserId)} → {userName(warning.toUserId)} = {fmt(safeCents(warning.amountCents))}
+                  {warning.sourcePeriodId}: {userName(warning.fromUserId)} →{" "}
+                  {userName(warning.toUserId)} ={" "}
+                  {fmt(safeCents(warning.amountCents))}
                 </li>
               ))}
             </ul>
@@ -615,7 +682,9 @@ export default function SettlementPage() {
           className="w-full min-h-24 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
         />
         {reverseDialog.error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{reverseDialog.error}</p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {reverseDialog.error}
+          </p>
         )}
       </AppDialog>
     </div>
