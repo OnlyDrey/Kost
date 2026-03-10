@@ -27,7 +27,7 @@ export default function ImportCard({
         <h3 className="font-medium">{title}</h3>
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Button variant="secondary" className="w-full" onClick={onChooseFile}>
           {chooseFileLabel}
         </Button>

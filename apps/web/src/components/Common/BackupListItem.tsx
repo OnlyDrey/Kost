@@ -1,5 +1,5 @@
 import { Download, RotateCcw, Trash2 } from "lucide-react";
-import { Button } from "../ui/button";
+import ActionIconBar from "./ActionIconBar";
 
 type BackupListItemProps = {
   nameText: string;
@@ -25,40 +25,42 @@ export default function BackupListItem({
   restoring,
 }: BackupListItemProps) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm">
-      <div className="font-medium text-gray-900 dark:text-gray-100">
-        {nameText}
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm space-y-3">
+      <div>
+        <div className="font-medium text-gray-900 dark:text-gray-100">
+          {nameText}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          {dateText}
+        </div>
       </div>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-        {dateText}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          variant="primary"
-          className="h-9 w-9 rounded-full p-0 sm:h-10 sm:w-auto sm:px-4 sm:rounded-full"
-          onClick={onDownload}
-          icon={<Download size={16} />}
-        >
-          <span className="hidden sm:inline">{downloadLabel}</span>
-        </Button>
-        <Button
-          variant="secondary"
-          className="h-9 w-9 rounded-full p-0 text-primary sm:h-10 sm:w-auto sm:px-4 sm:rounded-full"
-          onClick={onRestore}
-          disabled={restoring}
-          icon={<RotateCcw size={16} />}
-        >
-          <span className="hidden sm:inline">{restoreLabel}</span>
-        </Button>
-        <Button
-          variant="danger"
-          className="h-9 w-9 rounded-full p-0 sm:h-10 sm:w-auto sm:px-4 sm:rounded-full"
-          onClick={onDelete}
-          icon={<Trash2 size={16} />}
-        >
-          <span className="hidden sm:inline">{deleteLabel}</span>
-        </Button>
-      </div>
+      <ActionIconBar
+        showLabelFromMd
+        items={[
+          {
+            key: "download",
+            icon: Download,
+            label: downloadLabel,
+            onClick: onDownload,
+            colorClassName: "bg-primary text-white hover:bg-primary/90",
+          },
+          {
+            key: "restore",
+            icon: RotateCcw,
+            label: restoreLabel,
+            onClick: onRestore,
+            disabled: restoring,
+            colorClassName: "bg-violet-500 text-white hover:bg-violet-400",
+          },
+          {
+            key: "delete",
+            icon: Trash2,
+            label: deleteLabel,
+            onClick: onDelete,
+            colorClassName: "bg-danger text-white hover:bg-danger/90",
+          },
+        ]}
+      />
     </div>
   );
 }

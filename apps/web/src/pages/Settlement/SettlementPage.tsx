@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowLeftRight,
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
-import StatWidget from "../../components/Common/StatWidget";
+import TileGrid from "../../components/Common/TileGrid";
 import SettlementSummaryCard from "../../components/Common/SettlementSummaryCard";
 import { TabButton, TabsRow } from "../../components/ui/tabs";
 import AppDialog from "../../components/Common/AppDialog";
@@ -37,9 +38,17 @@ function safeCents(value: number): number {
 const inputCls = `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
 const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
-type SettlementTab = "payments" | "settlement" | "history";
+type SettlementTab = "overforing" | "oppgjor" | "historikk";
+
+const routeToTab: Record<string, SettlementTab> = {
+  overforing: "overforing",
+  oppgjor: "oppgjor",
+  historikk: "historikk",
+};
 
 export default function SettlementPage() {
+  const navigate = useNavigate();
+  const { tab } = useParams<{ tab?: string }>();
   const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const fmt = useCurrencyFormatter();
@@ -56,7 +65,7 @@ export default function SettlementPage() {
   const createPlan = useCreateSettlementPlan();
   const reverseEntry = useReverseSettlementEntry();
 
-  const [activeTab, setActiveTab] = useState<SettlementTab>("settlement");
+  const activeTab = tab ? routeToTab[tab] : undefined;
   const [entryError, setEntryError] = useState("");
   const [entrySuccess, setEntrySuccess] = useState("");
 
@@ -120,6 +129,20 @@ export default function SettlementPage() {
       ),
     [summary?.history],
   );
+
+  useEffect(() => {
+    if (!activeTab) {
+      navigate("/oppgjor/overforing", { replace: true });
+    }
+  }, [activeTab, navigate]);
+
+  const handleTabChange = (nextTab: SettlementTab) => {
+    navigate(`/oppgjor/${nextTab}`);
+  };
+
+  if (!activeTab) {
+    return null;
+  }
 
   const submitEntry = async () => {
     setEntryError("");
@@ -201,70 +224,76 @@ export default function SettlementPage() {
       <div className="overflow-x-auto pb-1">
         <TabsRow>
           <TabButton
-            active={activeTab === "payments"}
+            active={activeTab === "overforing"}
             icon={<ArrowLeftRight size={16} />}
-            onClick={() => setActiveTab("payments")}
+            onClick={() => handleTabChange("overforing")}
           >
             {t("settlement.tabPayments")}
           </TabButton>
           <TabButton
-            active={activeTab === "settlement"}
+            active={activeTab === "oppgjor"}
             icon={<Scale size={16} />}
-            onClick={() => setActiveTab("settlement")}
+            onClick={() => handleTabChange("oppgjor")}
           >
             {t("settlement.tabSettlement")}
           </TabButton>
           <TabButton
-            active={activeTab === "history"}
+            active={activeTab === "historikk"}
             icon={<Clock3 size={16} />}
-            onClick={() => setActiveTab("history")}
+            onClick={() => handleTabChange("historikk")}
           >
             {t("settlement.history")}
           </TabButton>
         </TabsRow>
       </div>
 
-      {activeTab === "settlement" && (
+      {activeTab === "oppgjor" && (
         <>
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            <StatWidget
-              icon={Wallet}
-              title={t("settlement.netBalance")}
-              value={
-                <span className={saldoValueClass}>
-                  {saldoCents < 0 && (
-                    <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
-                  )}
-                  {fmt(saldoCents)}
-                </span>
-              }
-              colorClass={
-                saldoCents < 0
-                  ? "bg-red-500"
-                  : saldoCents > 0
-                    ? "bg-green-500"
-                    : "bg-slate-500"
-              }
-            />
-            <StatWidget
-              icon={CheckCircle2}
-              title={t("settlement.totalPaidPeriod")}
-              value={fmt(safeCents(summary?.totals.totalPaidCents ?? 0))}
-              colorClass="bg-green-500"
-            />
-            <StatWidget
-              icon={Scale}
-              title={t("settlement.totalPeriodShare")}
-              value={fmt(monthShareCents)}
-              colorClass="bg-amber-500"
-            />
-            <StatWidget
-              icon={AlertTriangle}
-              title={t("settlement.unresolvedWarnings")}
-              value={String(summary?.totals.unresolvedWarningCount ?? 0)}
-              colorClass="bg-orange-500"
-            />
-          </div>
+          <TileGrid
+            gridClassName="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
+            items={[
+              {
+                key: "saldo",
+                icon: Wallet,
+                label: t("settlement.netBalance"),
+                value: (
+                  <span className={saldoValueClass}>
+                    {saldoCents < 0 && (
+                      <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
+                    )}
+                    {fmt(saldoCents)}
+                  </span>
+                ),
+                colorClass:
+                  saldoCents < 0
+                    ? "bg-red-500"
+                    : saldoCents > 0
+                      ? "bg-green-500"
+                      : "bg-slate-500",
+              },
+              {
+                key: "paid-period",
+                icon: CheckCircle2,
+                label: t("settlement.totalPaidPeriod"),
+                value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
+                colorClass: "bg-green-500",
+              },
+              {
+                key: "share-period",
+                icon: Scale,
+                label: t("settlement.totalPeriodShare"),
+                value: fmt(monthShareCents),
+                colorClass: "bg-amber-500",
+              },
+              {
+                key: "warnings",
+                icon: AlertTriangle,
+                label: t("settlement.unresolvedWarnings"),
+                value: String(summary?.totals.unresolvedWarningCount ?? 0),
+                colorClass: "bg-orange-500",
+              },
+            ]}
+          />
 
           <div className="grid gap-4 md:grid-cols-2">
             <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
@@ -285,7 +314,7 @@ export default function SettlementPage() {
                       key={`${row.fromUserId}-${row.toUserId}`}
                       direction={`${userName(row.fromUserId)} → ${userName(row.toUserId)}`}
                       amount={fmt(safeCents(row.remainingCents))}
-                      remainingLabel={t("settlement.remaining")}
+                      remainingLabel={t("settlement.remainingShort")}
                       baseShareLabel={t("settlement.basePeriodShare")}
                       baseShareValue={fmt(safeCents(row.baseObligationCents))}
                       carriedCreditLabel={t("settlement.carriedCredit")}
@@ -424,7 +453,7 @@ export default function SettlementPage() {
         </>
       )}
 
-      {activeTab === "payments" && (
+      {activeTab === "overforing" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
           <div className="flex items-center gap-2">
             <ArrowLeftRight size={18} className="text-primary" />
@@ -539,7 +568,7 @@ export default function SettlementPage() {
         </section>
       )}
 
-      {activeTab === "history" && (
+      {activeTab === "historikk" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2 mb-2">
             <Clock3 size={18} className="text-primary" />
@@ -599,7 +628,7 @@ export default function SettlementPage() {
         </section>
       )}
 
-      {(activeTab === "settlement" || activeTab === "payments") &&
+      {(activeTab === "oppgjor" || activeTab === "overforing") &&
         !!summary?.warnings.length && (
           <section className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/10 p-4">
             <h3 className="font-semibold text-amber-800 dark:text-amber-300">

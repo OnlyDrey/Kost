@@ -106,6 +106,22 @@ function downloadBlob(content: string, filename: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
+function downloadListTemplate(
+  type: "vendors" | "categories" | "paymentMethods",
+) {
+  const headersByType: Record<typeof type, string> = {
+    vendors: "name",
+    categories: "name",
+    paymentMethods: "name",
+  };
+
+  downloadBlob(
+    `${headersByType[type]}\n`,
+    `${type}-import-template.csv`,
+    "text/csv;charset=utf-8",
+  );
+}
+
 async function parseSimpleListFile(file: File): Promise<string[]> {
   const text = await file.text();
   if (file.name.toLowerCase().endsWith(".json")) {
@@ -264,6 +280,21 @@ export default function ImportPage() {
       descKey: "importExport.exportMasterdataDesc",
     },
   ] as const;
+
+  const downloadTemplateForCard = (card: ImportCardType) => {
+    if (card === "expense" || card === "recurring") {
+      downloadImportTemplate(card, "xlsx");
+      return;
+    }
+
+    if (
+      card === "vendors" ||
+      card === "categories" ||
+      card === "paymentMethods"
+    ) {
+      downloadListTemplate(card);
+    }
+  };
 
   const loadStoredBackups = () => {
     const existing = JSON.parse(
@@ -621,22 +652,12 @@ export default function ImportPage() {
                   title={t(card.titleKey)}
                   description={t(card.descKey)}
                   chooseFileLabel={t("importExport.chooseFile")}
-                  templateLabel={
-                    card.key === "expense" || card.key === "recurring"
-                      ? t("data.downloadCsvTemplate")
-                      : undefined
-                  }
+                  templateLabel={t("data.downloadTemplate")}
                   onChooseFile={() => {
                     setSelectedImportCard(card.key);
                     importFileInputRef.current?.click();
                   }}
-                  onDownloadTemplate={
-                    card.key === "expense"
-                      ? () => downloadImportTemplate("expense", "csv")
-                      : card.key === "recurring"
-                        ? () => downloadImportTemplate("recurring", "csv")
-                        : undefined
-                  }
+                  onDownloadTemplate={() => downloadTemplateForCard(card.key)}
                 />
               );
             })}
@@ -833,7 +854,7 @@ export default function ImportPage() {
                     key={item.id}
                     nameText={item.name ?? formatBackupName(item.exportedAt)}
                     dateText={new Date(item.exportedAt).toLocaleString(
-                      undefined,
+                      "nb-NO",
                       { dateStyle: "long", timeStyle: "short" },
                     )}
                     downloadLabel={t("data.download")}
