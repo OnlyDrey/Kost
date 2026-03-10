@@ -563,11 +563,11 @@
     "baseObligation": "Andel denne perioden",
     "carriedCredit": "Tilgode fra forrige periode",
     "planAddition": "Tillegg fra oppgjørsplan",
-    "payments": "Registrerte innbetalinger",
+    "payments": "Registrerte overføringer",
     "remaining": "Gjenstående oppgjør",
-    "registerPayment": "Registrer innbetaling",
+    "registerPayment": "Registrer overføring",
     "adminOnly": "Kun admin kan endre oppgjør.",
-    "payment": "Innbetaling",
+    "payment": "Overføring",
     "adjustment": "Justering",
     "writeDown": "Nedskriving",
     "amount": "Beløp",
@@ -596,18 +596,19 @@
     "balanceCredit": "Tilgode",
     "totalMonthlyShare": "Andel denne perioden",
     "closedPeriodOnly": "Oppgjør kan bare registreres i lukkede perioder.",
-    "paymentSaved": "Innbetaling lagret.",
-    "tabPayments": "Innbetaling",
+    "paymentSaved": "Overføring lagret.",
+    "tabPayments": "Overføring",
     "tabSettlement": "Oppgjør",
-    "openPeriodHintTitle": "Innbetaling i åpen periode",
-    "openPeriodHint": "Registrer innbetalinger løpende. Når en periode lukkes vises varsler hvis oppgjør mangler.",
+    "openPeriodHintTitle": "Overføring i åpen periode",
+    "openPeriodHint": "Registrer overføringer løpende. Når en periode lukkes vises varsler hvis oppgjør mangler.",
     "overviewEmpty": "Ingen oppgjørsgrunnlag for valgt periode ennå.",
     "reverseAction": "Reverser",
     "sourceElement": "Element",
     "totalPaidPeriod": "Betalt denne perioden",
-    "closedPeriodPaymentBlocked": "Innbetaling kan ikke registreres i lukket periode.",
+    "closedPeriodPaymentBlocked": "Overføring kan ikke registreres i lukket periode.",
     "totalPeriodShare": "Andel denne perioden",
-    "basePeriodShare": "Andel denne perioden"
+    "basePeriodShare": "Andel denne perioden",
+    "remainingShort": "Gjenstående"
   },
   "data": {
     "title": "Data",
@@ -624,6 +625,7 @@
     "delete": "Slett",
     "templateExpenses": "Importmal – Utgifter",
     "templateRecurring": "Importmal – Faste utgifter",
-    "downloadCsvTemplate": "Last ned CSV mal"
+    "downloadCsvTemplate": "Last ned CSV mal",
+    "downloadTemplate": "Last ned mal"
   }
 }

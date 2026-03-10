@@ -563,11 +563,11 @@
     "baseObligation": "Share this period",
     "carriedCredit": "Credit from previous period",
     "planAddition": "Plan addition",
-    "payments": "Payments",
+    "payments": "Registered transfers",
     "remaining": "Remaining settlement",
-    "registerPayment": "Registrer innbetaling",
+    "registerPayment": "Register transfer",
     "adminOnly": "Only admins can modify settlement.",
-    "payment": "Payment",
+    "payment": "Transfer",
     "adjustment": "Adjustment",
     "writeDown": "Write down",
     "amount": "Amount",
@@ -580,7 +580,7 @@
     "fixedAmountPerPeriod": "Fixed amount per period",
     "numberOfPeriods": "Number of periods",
     "createPlan": "Create plan",
-    "history": "Historikk",
+    "history": "History",
     "reversed": "Reversed",
     "reverse": "Reversering",
     "reversalCommentPrompt": "Enter reversal comment",
@@ -596,18 +596,19 @@
     "balanceCredit": "Credit",
     "totalMonthlyShare": "Share this period",
     "closedPeriodOnly": "Settlement entries can only be registered for closed periods.",
-    "paymentSaved": "Payment saved.",
-    "tabPayments": "Payment",
+    "paymentSaved": "Transfer saved.",
+    "tabPayments": "Transfer",
     "tabSettlement": "Settlement",
-    "openPeriodHintTitle": "Payments in open period",
-    "openPeriodHint": "Register payments continuously. On period close, warnings are shown if settlement data is missing.",
+    "openPeriodHintTitle": "Transfers in open period",
+    "openPeriodHint": "Register transfers continuously. On period close, warnings are shown if settlement data is missing.",
     "overviewEmpty": "No settlement basis for the selected period yet.",
     "reverseAction": "Reverse",
     "sourceElement": "Element",
     "totalPaidPeriod": "Paid this period",
-    "closedPeriodPaymentBlocked": "Payments cannot be registered for closed periods.",
+    "closedPeriodPaymentBlocked": "Transfers cannot be registered for closed periods.",
     "totalPeriodShare": "Share this period",
-    "basePeriodShare": "Share this period"
+    "basePeriodShare": "Share this period",
+    "remainingShort": "Remaining"
   },
   "data": {
     "title": "Data",
@@ -624,6 +625,7 @@
     "delete": "Delete",
     "templateExpenses": "Import template – Expenses",
     "templateRecurring": "Import template – Recurring expenses",
-    "downloadCsvTemplate": "Download CSV template"
+    "downloadCsvTemplate": "Download CSV template",
+    "downloadTemplate": "Download template"
   }
 }
