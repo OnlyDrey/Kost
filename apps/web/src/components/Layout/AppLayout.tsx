@@ -11,6 +11,8 @@ import {
   ChevronRight,
   RefreshCw,
   SlidersHorizontal,
+  Database,
+  HandCoins,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../stores/auth.context";
@@ -25,7 +27,9 @@ import {
 const NAV_ITEMS = [
   { key: "nav.overview", icon: LayoutDashboard, path: "/overview" },
   { key: "nav.periods", icon: Calendar, path: "/periods" },
+  { key: "nav.settlement", icon: HandCoins, path: "/oppgjor" },
   { key: "nav.subscriptions", icon: RefreshCw, path: "/subscriptions" },
+  { key: "nav.importExport", icon: Database, path: "/import-export" },
   { key: "nav.settings", icon: Settings, path: "/settings" },
 ];
 

@@ -10,9 +10,20 @@ export interface TileItem {
   onClick?: () => void;
 }
 
-export default function TileGrid({ items }: { items: TileItem[] }) {
+export default function TileGrid({
+  items,
+  gridClassName,
+}: {
+  items: TileItem[];
+  gridClassName?: string;
+}) {
   return (
-    <div className="grid grid-cols-2 min-[700px]:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-2 sm:gap-3">
+    <div
+      className={
+        gridClassName ??
+        "grid grid-cols-2 min-[700px]:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-2 sm:gap-3"
+      }
+    >
       {items.map(({ key, icon: Icon, label, value, colorClass, onClick }) => {
         const cls = `bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-3.5 shadow-sm min-w-0 ${onClick ? "cursor-pointer hover:border-primary/40 dark:hover:border-primary/40" : ""}`;
         return onClick ? (

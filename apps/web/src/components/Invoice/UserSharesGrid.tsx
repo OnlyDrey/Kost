@@ -16,6 +16,7 @@ export default function UserSharesGrid({
   unknownLabel,
   onSelectShare,
   selectedUserId,
+  settlementAdjustments,
 }: {
   shares: ShareItem[];
   totalCents: number;
@@ -24,6 +25,10 @@ export default function UserSharesGrid({
   unknownLabel: string;
   onSelectShare?: (userId: string) => void;
   selectedUserId?: string;
+  settlementAdjustments?: Record<
+    string,
+    { creditCents: number; planAdditionCents: number; effectiveCents: number }
+  >;
 }) {
   const fmt = useCurrencyFormatter();
 
@@ -38,6 +43,7 @@ export default function UserSharesGrid({
       {shares.map((share) => {
         const selected = selectedUserId === share.userId;
         const cls = `border rounded-lg p-3 text-left ${selected ? "border-primary/50 dark:border-primary" : "border-gray-200 dark:border-gray-700"} ${onSelectShare ? "hover:border-primary/40 dark:hover:border-primary/40 cursor-pointer" : ""}`;
+        const adjustment = settlementAdjustments?.[share.userId];
         return onSelectShare ? (
           <button
             key={share.id}
@@ -56,6 +62,11 @@ export default function UserSharesGrid({
                 {((share.shareCents / totalCents) * 100).toFixed(1)}%
               </p>
             )}
+            {adjustment && (
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                {`Tilgode ${fmt(adjustment.creditCents)} · Plan +${fmt(adjustment.planAdditionCents)} · Oppgjør ${fmt(adjustment.effectiveCents)}`}
+              </p>
+            )}
           </button>
         ) : (
           <div key={share.id} className={`${cls} ${FOCUS_RING}`}>
@@ -68,6 +79,11 @@ export default function UserSharesGrid({
             {totalCents > 0 && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {((share.shareCents / totalCents) * 100).toFixed(1)}%
+              </p>
+            )}
+            {adjustment && (
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                {`Tilgode ${fmt(adjustment.creditCents)} · Plan +${fmt(adjustment.planAdditionCents)} · Oppgjør ${fmt(adjustment.effectiveCents)}`}
               </p>
             )}
           </div>

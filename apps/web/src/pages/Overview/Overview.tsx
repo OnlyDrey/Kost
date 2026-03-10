@@ -24,6 +24,7 @@ import {
   useAddPayment,
   useCurrencyFormatter,
   useUsers,
+  useSettlementSummary,
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
 import { useSettings } from "../../stores/settings.context";
@@ -128,6 +129,7 @@ export default function Overview() {
     useInvoices(resolvedPeriodId);
   const { data: vendors = [] } = useVendors();
   const { data: users = [], isLoading: usersLoading } = useUsers();
+  const { data: settlementSummary } = useSettlementSummary(resolvedPeriodId);
   const deleteInvoice = useDeleteInvoice();
   const addPayment = useAddPayment();
   const { data: currency = "NOK" } = useCurrency();
@@ -140,6 +142,18 @@ export default function Overview() {
   const userShare = stats?.userShares?.find(
     (s) => s.userId === currentUser?.id,
   );
+  const userSettlementAdjustmentCents = useMemo(
+    () =>
+      (settlementSummary?.rows ?? [])
+        .filter((row) => row.fromUserId === currentUser?.id)
+        .reduce(
+          (sum, row) => sum + row.plannedAdditionCents - row.carriedCreditCents,
+          0,
+        ),
+    [currentUser?.id, settlementSummary?.rows],
+  );
+  const userShareWithSettlementCents =
+    (userShare?.totalShareCents ?? 0) + userSettlementAdjustmentCents;
   const periodFromList = periods.find((p) => p.id === resolvedPeriodId);
   const effectivePeriodStatus =
     period?.status ?? periodFromList?.status ?? "OPEN";
@@ -452,7 +466,7 @@ export default function Overview() {
                 key: "share",
                 icon: TrendingUp,
                 label: t("dashboard.yourShare"),
-                value: fmt(userShare?.totalShareCents ?? 0),
+                value: fmt(userShareWithSettlementCents),
                 colorClass: "bg-amber-500",
                 onClick: () => setFilter("share-user", currentUser?.id),
               },
