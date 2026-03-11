@@ -69,7 +69,9 @@ export default function PeriodList() {
     const date = new Date(year, month - 2, 1);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
   }, [periodId]);
-  const { data: openingWarnings = [] } = useSettlementWarnings(dialogOpen ? previousPeriodForCandidate : "");
+  const { data: openingWarnings = [] } = useSettlementWarnings(
+    dialogOpen ? previousPeriodForCandidate : "",
+  );
 
   const years = useMemo(() => {
     if (!periods) return [];
@@ -169,9 +171,12 @@ export default function PeriodList() {
       title: t("period.closePeriod"),
       message:
         warningCount > 0
-          ? `${t("period.confirmClose")}\n\n${t("period.settlementWarningsBeforeClose", {
-              count: warningCount,
-            })}`
+          ? `${t("period.confirmClose")}\n\n${t(
+              "period.settlementWarningsBeforeClose",
+              {
+                count: warningCount,
+              },
+            )}`
           : t("period.confirmClose"),
       confirmLabel: t("period.closePeriod"),
       cancelLabel: t("common.cancel"),
@@ -412,12 +417,12 @@ export default function PeriodList() {
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
-                {openingWarnings.length > 0 && (
+              {openingWarnings.length > 0 && (
                 <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
                   {t("period.settlementWarning")}: {openingWarnings.length}
                 </div>
               )}
-            {error && (
+              {error && (
                 <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
                   <AlertCircle size={15} className="flex-shrink-0" />
                   <span>{error}</span>
@@ -442,7 +447,7 @@ export default function PeriodList() {
               <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                 <ThemedCheckbox
                   id="autoImportSubscriptions"
-                  controlSize="md"
+                  controlSize="sm"
                   checked={autoImportSubscriptions}
                   onChange={(e) => setAutoImportSubscriptions(e.target.checked)}
                 />

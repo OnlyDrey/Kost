@@ -24,13 +24,23 @@ export default function FormActionHeader({
   isPending,
   className = "",
 }: FormActionHeaderProps) {
+  const hasStatusControl = Boolean(statusLabel || statusControl);
+
   return (
     <div className={`grid grid-cols-12 gap-3 ${className}`.trim()}>
-      <div className="col-span-6 min-w-0">
-        {statusLabel ? <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{statusLabel}</label> : null}
-        {statusControl}
-      </div>
-      <div className="col-span-6 mt-7 flex items-center justify-end gap-2">
+      {hasStatusControl ? (
+        <div className="col-span-6 min-w-0">
+          {statusLabel ? (
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {statusLabel}
+            </label>
+          ) : null}
+          {statusControl}
+        </div>
+      ) : null}
+      <div
+        className={`${hasStatusControl ? "col-span-6" : "col-span-12"} flex items-end justify-end gap-2`.trim()}
+      >
         <Button type="button" variant="secondary" onClick={onCancel}>
           {cancelLabel}
         </Button>

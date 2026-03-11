@@ -14,7 +14,7 @@ export default function DataActionButtons({
   onSecondary,
 }: DataActionButtonsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 mt-3">
+    <div className="grid grid-cols-2 gap-2">
       <Button variant="secondary" className="w-full" onClick={onPrimary}>
         {primaryLabel}
       </Button>

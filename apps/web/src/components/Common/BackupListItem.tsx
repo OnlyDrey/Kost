@@ -1,4 +1,4 @@
-import { Download, RotateCcw, Trash2 } from "lucide-react";
+import { Download, RefreshCcw, Trash2 } from "lucide-react";
 import ActionIconBar from "./ActionIconBar";
 
 type BackupListItemProps = {
@@ -25,43 +25,42 @@ export default function BackupListItem({
   restoring,
 }: BackupListItemProps) {
   return (
-    <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/30 dark:bg-slate-900/30 p-4 text-sm">
-      <div className="min-w-0">
-        <div className="truncate font-semibold text-gray-900 dark:text-gray-100">
-          {nameText}
+    <div className="rounded-xl border border-gray-200/70 bg-slate-50/30 p-4 text-sm dark:border-gray-700/60 dark:bg-slate-900/30">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate font-semibold text-gray-900 dark:text-gray-100">
+            {nameText}
+          </div>
+          <div className="mt-0.5 text-sm text-muted-foreground">{dateText}</div>
         </div>
-        <div className="text-sm text-muted-foreground mt-0.5">
-          {dateText}
-        </div>
-      </div>
-      <div className="mt-3 border-t border-gray-200/60 dark:border-gray-700/60 pt-3">
+
         <ActionIconBar
           showLabelFromMd
-          className="justify-start gap-2"
+          className="shrink-0 justify-end gap-2"
           items={[
-          {
-            key: "download",
-            icon: Download,
-            label: downloadLabel,
-            onClick: onDownload,
-            colorClassName: "bg-primary text-white hover:bg-primary/90",
-          },
-          {
-            key: "restore",
-            icon: RotateCcw,
-            label: restoreLabel,
-            onClick: onRestore,
-            disabled: restoring,
-            colorClassName: "bg-violet-500 text-white hover:bg-violet-400",
-          },
-          {
-            key: "delete",
-            icon: Trash2,
-            label: deleteLabel,
-            onClick: onDelete,
-            colorClassName: "bg-danger text-white hover:bg-danger/90",
-          },
-        ]}
+            {
+              key: "download",
+              icon: Download,
+              label: downloadLabel,
+              onClick: onDownload,
+              colorClassName: "bg-primary text-white hover:bg-primary/90",
+            },
+            {
+              key: "restore",
+              icon: RefreshCcw,
+              label: restoreLabel,
+              onClick: onRestore,
+              disabled: restoring,
+              colorClassName: "bg-violet-500 text-white hover:bg-violet-400",
+            },
+            {
+              key: "delete",
+              icon: Trash2,
+              label: deleteLabel,
+              onClick: onDelete,
+              colorClassName: "bg-danger text-white hover:bg-danger/90",
+            },
+          ]}
         />
       </div>
     </div>
