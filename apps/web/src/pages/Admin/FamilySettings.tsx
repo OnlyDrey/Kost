@@ -46,6 +46,8 @@ import { Button } from "../../components/ui/button";
 import { IconButton } from "../../components/ui/icon-button";
 import { Checkbox } from "../../components/ui/checkbox";
 import { SettingsDataTable } from "../../components/settings/settings-data-table";
+import MasterdataRow from "../../components/Common/MasterdataRow";
+import RowActionButton from "../../components/Common/RowActionButton";
 
 const inputCls =
   "flex-1 px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -322,10 +324,18 @@ function ManagedList({
             const editing = editingItem === item;
 
             return (
-              <ListRow key={item}>
-                <div className="flex items-center justify-between gap-2">
-                  <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
-                    <Checkbox checked={checked} onChange={() => toggleSelected(item)} />
+              <MasterdataRow
+                key={item}
+                checked={checked}
+                checkbox={
+                  <Checkbox
+                    controlSize="md"
+                    checked={checked}
+                    onChange={() => toggleSelected(item)}
+                  />
+                }
+                content={
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center">
                     {editing ? (
                       <input
                         autoFocus
@@ -340,13 +350,15 @@ function ManagedList({
                       </span>
                     )}
                   </label>
-                  <div className="flex items-center gap-1">
+                }
+                actions={
+                  <>
                     {editing ? (
                       <>
                         <IconButton
                           onClick={submitEdit}
                           disabled={isPendingEdit}
-                          size="sm"
+                          size="md"
                           variant="success"
                           aria-label={t("common.save")}
                         >
@@ -354,34 +366,30 @@ function ManagedList({
                         </IconButton>
                         <IconButton
                           onClick={() => setEditingItem(null)}
-                          size="sm"
+                          size="md"
                           aria-label={t("common.cancel")}
                         >
                           <X size={14} />
                         </IconButton>
                       </>
                     ) : (
-                      <IconButton
+                      <RowActionButton
+                        label={t("common.edit")}
+                        icon={<Pencil size={14} />}
                         onClick={() => startEditing(item)}
-                        size="sm"
-                        variant="violet"
-                        aria-label={t("common.edit")}
-                      >
-                        <Pencil size={14} />
-                      </IconButton>
+                        tone="edit"
+                      />
                     )}
-                    <IconButton
-                      onClick={() => handleRemoveOne(item)}
+                    <RowActionButton
+                      label={t("common.delete")}
+                      icon={<Trash2 size={15} />}
+                      onClick={() => void handleRemoveOne(item)}
                       disabled={isPendingRemove}
-                      size="sm"
-                      variant="danger"
-                      aria-label={t("common.delete")}
-                    >
-                      <Trash2 size={15} />
-                    </IconButton>
-                  </div>
-                </div>
-              </ListRow>
+                      tone="delete"
+                    />
+                  </>
+                }
+              />
             );
           }}
         />
@@ -528,9 +536,9 @@ function VendorRow({
     setEditing(false);
   };
 
-  return (
-    <ListRow>
-      {editing ? (
+  if (editing) {
+    return (
+      <ListRow>
         <div className="space-y-2">
           <input
             type="text"
@@ -563,34 +571,40 @@ function VendorRow({
             </button>
           </div>
         </div>
-      ) : (
-        <div className="flex items-center justify-between gap-2">
-          <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer">
-            <Checkbox
-              checked={checked}
-              onChange={onToggle}
-            />
-            <VendorAvatar
-              vendorName={vendor.name}
-              logoUrl={vendor.logoUrl}
-              show={true}
-              size="sm"
-            />
-            <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
-              {vendor.name}
-            </span>
-          </label>
-          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            <IconButton
-              onClick={() => setEditing(true)}
-              size="sm"
-              variant="violet"
-              aria-label={t("common.edit")}
-            >
-              <Pencil size={14} />
-            </IconButton>
-            <IconButton
-              onClick={async () => {
+      </ListRow>
+    );
+  }
+
+  return (
+    <MasterdataRow
+      checked={checked}
+      checkbox={<Checkbox controlSize="md" checked={checked} onChange={onToggle} />}
+      content={
+        <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+          <VendorAvatar
+            vendorName={vendor.name}
+            logoUrl={vendor.logoUrl}
+            show={true}
+            size="sm"
+          />
+          <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
+            {vendor.name}
+          </span>
+        </label>
+      }
+      actions={
+        <>
+          <RowActionButton
+            label={t("common.edit")}
+            icon={<Pencil size={14} />}
+            onClick={() => setEditing(true)}
+            tone="edit"
+          />
+          <RowActionButton
+            label={t("common.delete")}
+            icon={<Trash2 size={14} />}
+            onClick={() => {
+              void (async () => {
                 const accepted = await confirm({
                   title: t("common.delete"),
                   message: t("globalSettings.confirmDeleteItem", {
@@ -600,18 +614,14 @@ function VendorRow({
                   tone: "danger",
                 });
                 if (accepted) onRemove(vendor.id);
-              }}
-              disabled={isPending}
-              size="sm"
-              variant="danger"
-              aria-label={t("common.delete")}
-            >
-              <Trash2 size={14} />
-            </IconButton>
-          </div>
-        </div>
-      )}
-    </ListRow>
+              })();
+            }}
+            disabled={isPending}
+            tone="delete"
+          />
+        </>
+      }
+    />
   );
 }
 

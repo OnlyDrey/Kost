@@ -34,6 +34,7 @@ import { distributionLabel } from "../../utils/distribution";
 import {
   FOCUS_RING,
   SELECT_TRIGGER,
+  CONTROL_HEIGHT,
 } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 
@@ -111,7 +112,7 @@ export default function SubscriptionList() {
                 <AppSelect
                   value={generatePeriodId}
                   onChange={(e) => setGeneratePeriodId(e.target.value)}
-                  className={`h-10 ${SELECT_TRIGGER}`}
+                  className={`${CONTROL_HEIGHT} ${SELECT_TRIGGER}`}
                 >
                   {openPeriods.map((period) => (
                     <option key={period.id} value={period.id}>
@@ -122,7 +123,7 @@ export default function SubscriptionList() {
                 <button
                   onClick={handleGenerate}
                   disabled={generateInvoices.isPending || !generatePeriodId}
-                  className={`inline-flex items-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+                  className={`inline-flex ${CONTROL_HEIGHT} items-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
                 >
                   {generateInvoices.isPending ? (
                     <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -135,7 +136,7 @@ export default function SubscriptionList() {
             )}
             <button
               onClick={() => navigate("/subscriptions/add")}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+              className={`w-full sm:w-auto flex ${CONTROL_HEIGHT} items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               <Plus size={16} />
               {t("subscription.addRecurringExpense")}
@@ -147,7 +148,7 @@ export default function SubscriptionList() {
             <AppSelect
               value={generatePeriodId}
               onChange={(e) => setGeneratePeriodId(e.target.value)}
-              className={`h-10 w-full ${SELECT_TRIGGER}`}
+              className={`${CONTROL_HEIGHT} w-full ${SELECT_TRIGGER}`}
               wrapperClassName="col-span-1"
             >
               {openPeriods.map((period) => (
@@ -159,7 +160,7 @@ export default function SubscriptionList() {
             <button
               onClick={handleGenerate}
               disabled={generateInvoices.isPending || !generatePeriodId}
-              className={`col-span-2 w-full flex items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
+              className={`col-span-2 w-full flex ${CONTROL_HEIGHT} items-center justify-center gap-2 border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 px-3 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               {generateInvoices.isPending ? (
                 <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -314,68 +315,69 @@ function SubscriptionCard({
             ]
           : undefined
       }
-      actionButton={
-        <ActionIconBar
-          tight
-          items={[
-            {
-              key: "edit",
-              icon: Pencil,
-              label: t("common.edit"),
-              onClick: onEdit,
-              colorClassName:
-                "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
-            },
-            {
-              key: "toggle",
-              icon: Power,
-              label: toggleLabel,
-              onClick: onToggle,
-              colorClassName: sub.active
-                ? "bg-success/20 text-success hover:bg-success/30"
-                : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500",
-            },
-            {
-              key: "delete",
-              icon: Trash2,
-              label: t("common.delete"),
-              onClick: onDelete,
-              destructive: true,
-              confirmMessage: deleteConfirmMessage,
-              colorClassName: "bg-danger/20 text-danger hover:bg-danger/30",
-            },
-          ]}
-        />
-      }
       footerContent={
-        <div className="flex items-center flex-wrap gap-1.5">
-          <TagPill
-            label={statusLabel}
-            variant={
-              sub.status === "ACTIVE"
-                ? "success"
-                : sub.status === "PAUSED"
-                  ? "neutral"
-                  : "danger"
-            }
-            icon={
-              sub.status === "ACTIVE" ? (
-                <Circle
-                  size={12}
-                  className="fill-current stroke-current"
-                  aria-hidden
-                />
-              ) : sub.status === "PAUSED" ? (
-                <Circle size={12} aria-hidden />
-              ) : (
-                <CircleX size={12} aria-hidden />
-              )
-            }
-          />
-          <TagPill
-            label={freqLabel(sub.frequency)}
-            variant="frequency"
-            icon={<Calendar size={12} aria-hidden />}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center flex-wrap gap-1.5">
+            <TagPill
+              label={statusLabel}
+              variant={
+                sub.status === "ACTIVE"
+                  ? "success"
+                  : sub.status === "PAUSED"
+                    ? "neutral"
+                    : "danger"
+              }
+              icon={
+                sub.status === "ACTIVE" ? (
+                  <Circle
+                    size={12}
+                    className="fill-current stroke-current"
+                    aria-hidden
+                  />
+                ) : sub.status === "PAUSED" ? (
+                  <Circle size={12} aria-hidden />
+                ) : (
+                  <CircleX size={12} aria-hidden />
+                )
+              }
+            />
+            <TagPill
+              label={freqLabel(sub.frequency)}
+              variant="frequency"
+              icon={<Calendar size={12} aria-hidden />}
+            />
+          </div>
+          <ActionIconBar
+            tight
+            items={[
+              {
+                key: "edit",
+                icon: Pencil,
+                label: t("common.edit"),
+                onClick: onEdit,
+                colorClassName:
+                  "border-violet-500/45 bg-violet-500/20 text-violet-300 hover:bg-violet-500/30",
+              },
+              {
+                key: "toggle",
+                icon: Power,
+                label: toggleLabel,
+                onClick: onToggle,
+                colorClassName: sub.active
+                  ? "border-emerald-500/45 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                  : "border-gray-500/35 bg-slate-800/70 text-gray-400 hover:bg-slate-700/70",
+              },
+              {
+                key: "delete",
+                icon: Trash2,
+                label: t("common.delete"),
+                onClick: onDelete,
+                destructive: true,
+                confirmMessage: deleteConfirmMessage,
+                colorClassName:
+                  "border-red-500/45 bg-red-500/20 text-red-300 hover:bg-red-500/30",
+              },
+            ]}
           />
         </div>
       }

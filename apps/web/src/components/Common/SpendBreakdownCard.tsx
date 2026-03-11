@@ -34,7 +34,9 @@ export default function SpendBreakdownCard({
   const [mode, setMode] = useState<Mode>("YOUR_SHARE");
   const effectiveShareUserId = selectedShareUserId || currentUserId;
   const shareLabel =
-    selectedShareUserName && selectedShareUserId
+    selectedShareUserName &&
+    selectedShareUserId &&
+    selectedShareUserId !== currentUserId
       ? t("dashboard.userShare", { name: selectedShareUserName })
       : t("dashboard.yourShare");
 

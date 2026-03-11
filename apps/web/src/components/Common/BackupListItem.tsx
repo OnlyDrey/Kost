@@ -25,18 +25,20 @@ export default function BackupListItem({
   restoring,
 }: BackupListItemProps) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm space-y-3">
-      <div>
-        <div className="font-medium text-gray-900 dark:text-gray-100">
+    <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/30 dark:bg-slate-900/30 p-4 text-sm">
+      <div className="min-w-0">
+        <div className="truncate font-semibold text-gray-900 dark:text-gray-100">
           {nameText}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        <div className="text-sm text-muted-foreground mt-0.5">
           {dateText}
         </div>
       </div>
-      <ActionIconBar
-        showLabelFromMd
-        items={[
+      <div className="mt-3 border-t border-gray-200/60 dark:border-gray-700/60 pt-3">
+        <ActionIconBar
+          showLabelFromMd
+          className="justify-start gap-2"
+          items={[
           {
             key: "download",
             icon: Download,
@@ -60,7 +62,8 @@ export default function BackupListItem({
             colorClassName: "bg-danger text-white hover:bg-danger/90",
           },
         ]}
-      />
+        />
+      </div>
     </div>
   );
 }

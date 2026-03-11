@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
-import { Button } from "../ui/button";
+import DataActionButtons from "./DataActionButtons";
+import DataTransferItemCard from "./DataTransferItemCard";
 
 type ExportCardProps = {
   icon: LucideIcon;
@@ -21,16 +22,18 @@ export default function ExportCard({
   onExportJson,
 }: ExportCardProps) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <Icon size={16} className="text-primary" />
-        <h3 className="font-medium">{title}</h3>
-      </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" onClick={onExportCsv}>{csvLabel}</Button>
-        <Button variant="secondary" onClick={onExportJson}>{jsonLabel}</Button>
-      </div>
-    </div>
+    <DataTransferItemCard
+      icon={Icon}
+      title={title}
+      description={description}
+      actions={
+        <DataActionButtons
+          primaryLabel={csvLabel}
+          secondaryLabel={jsonLabel}
+          onPrimary={onExportCsv}
+          onSecondary={onExportJson}
+        />
+      }
+    />
   );
 }

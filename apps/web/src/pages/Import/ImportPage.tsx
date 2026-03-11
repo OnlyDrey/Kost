@@ -57,6 +57,7 @@ import ExportCard from "../../components/Common/ExportCard";
 import ImportCard from "../../components/Common/ImportCard";
 import BackupListItem from "../../components/Common/BackupListItem";
 import { useSettings } from "../../stores/settings.context";
+import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
 
 type ImportCardType =
   | "expense"
@@ -628,7 +629,7 @@ export default function ImportPage() {
       </div>
 
       {activeTab === "input" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
+        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <FileUp size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabImport")}</h2>
@@ -698,7 +699,7 @@ export default function ImportPage() {
                             [field.key]: e.target.value || undefined,
                           }))
                         }
-                        className="h-10"
+                        className={CONTROL_HEIGHT}
                       >
                         <option value="">{t("import.unmapped")}</option>
                         {parsedHeaders.map((header) => (
@@ -749,7 +750,7 @@ export default function ImportPage() {
       )}
 
       {activeTab === "output" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
+        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <FileDown size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabExport")}</h2>
@@ -773,16 +774,16 @@ export default function ImportPage() {
       )}
 
       {activeTab === "backup" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
+        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <FolderSync size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabBackup")}</h2>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {t("importExport.backupDescription")}
           </p>
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-3">
+          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold">
@@ -822,7 +823,7 @@ export default function ImportPage() {
                     Math.max(1, Math.min(30, Number(e.target.value || "1"))),
                   )
                 }
-                className="h-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm"
+                className={`${CONTROL_HEIGHT} rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm`}
                 placeholder={t("importExport.retentionCopies")}
               />
             </div>
@@ -841,8 +842,8 @@ export default function ImportPage() {
             {t("data.createBackup")}
           </Button>
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
-            <h3 className="font-medium">{t("data.backupList")}</h3>
+          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-4">
+            <h3 className="text-lg font-semibold">{t("data.backupList")}</h3>
             {storedBackups.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t("data.noBackups")}

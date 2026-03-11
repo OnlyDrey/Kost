@@ -84,3 +84,9 @@
     @apply bg-bg text-text-primary;
   }
 }
+
+@layer utilities {
+  .form-control-height {
+    @apply h-11 md:h-10;
+  }
+}
