@@ -22,7 +22,7 @@ export default function ImportCard({
   onDownloadTemplate,
 }: ImportCardProps) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+    <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Icon size={16} className="text-primary" />
         <h3 className="text-lg font-semibold">{title}</h3>

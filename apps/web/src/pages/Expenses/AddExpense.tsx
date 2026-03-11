@@ -36,6 +36,7 @@ import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
 import { getApiErrorMessage } from "../../utils/apiErrors";
+import FormHeaderActions from "../../components/Common/FormHeaderActions";
 
 const inputCls =
   `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
@@ -574,7 +575,7 @@ export default function AddExpense() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(backUrl)}
@@ -587,30 +588,19 @@ export default function AddExpense() {
           </h1>
         </div>
         {!showInlineSubscriptionActions && (
-          <div className="inline-flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigate(backUrl)}
-              className="h-11 px-3.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="submit"
-              form="expense-form"
-              disabled={
-                isPending ||
-                (!isEditing && !isSubscription && !targetPeriodId) ||
-                (!isEditing && !isSubscription && targetPeriodClosed)
-              }
-              className="flex h-11 items-center gap-2 px-3.5 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-lg transition-colors"
-            >
-              {isPending && (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              {t("common.save")}
-            </button>
-          </div>
+          <FormHeaderActions
+            className="self-start"
+            cancelLabel={t("common.cancel")}
+            saveLabel={t("common.save")}
+            onCancel={() => navigate(backUrl)}
+            formId="expense-form"
+            isPending={isPending}
+            saveDisabled={
+              isPending ||
+              (!isEditing && !isSubscription && !targetPeriodId) ||
+              (!isEditing && !isSubscription && targetPeriodClosed)
+            }
+          />
         )}
       </div>
 
@@ -665,23 +655,14 @@ export default function AddExpense() {
                         <option value="CANCELED">{t("subscription.statusCanceled")}</option>
                       </AppSelect>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate(backUrl)}
-                      className={`col-span-3 mt-7 ${CONTROL_HEIGHT} rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors`}
-                    >
-                      {t("common.cancel")}
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isPending}
-                      className={`col-span-3 mt-7 flex ${CONTROL_HEIGHT} items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors`}
-                    >
-                      {isPending && (
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      )}
-                      {t("common.save")}
-                    </button>
+                    <FormHeaderActions
+                      className="col-span-6 mt-7 justify-end"
+                      cancelLabel={t("common.cancel")}
+                      saveLabel={t("common.save")}
+                      onCancel={() => navigate(backUrl)}
+                      isPending={isPending}
+                      saveDisabled={isPending}
+                    />
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">

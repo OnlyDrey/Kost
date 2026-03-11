@@ -323,9 +323,13 @@ function ManagedList({
 
             return (
               <ListRow key={item}>
-                <div className="flex items-center justify-between gap-2">
-                  <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
-                    <Checkbox checked={checked} onChange={() => toggleSelected(item)} />
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
+                    <Checkbox
+                      controlSize="md"
+                      checked={checked}
+                      onChange={() => toggleSelected(item)}
+                    />
                     {editing ? (
                       <input
                         autoFocus
@@ -340,13 +344,13 @@ function ManagedList({
                       </span>
                     )}
                   </label>
-                  <div className="flex items-center gap-1">
+                  <div className="ml-auto flex items-center gap-2">
                     {editing ? (
                       <>
                         <IconButton
                           onClick={submitEdit}
                           disabled={isPendingEdit}
-                          size="sm"
+                          size="md"
                           variant="success"
                           aria-label={t("common.save")}
                         >
@@ -354,17 +358,18 @@ function ManagedList({
                         </IconButton>
                         <IconButton
                           onClick={() => setEditingItem(null)}
-                          size="sm"
+                          size="md"
                           aria-label={t("common.cancel")}
                         >
                           <X size={14} />
                         </IconButton>
                       </>
                     ) : (
-                      <IconButton
-                        onClick={() => startEditing(item)}
-                        size="sm"
+                        <IconButton
+                          onClick={() => startEditing(item)}
+                        size="md"
                         variant="violet"
+                        className="border-violet-500/45 bg-violet-500/20 text-violet-300"
                         aria-label={t("common.edit")}
                       >
                         <Pencil size={14} />
@@ -373,8 +378,9 @@ function ManagedList({
                     <IconButton
                       onClick={() => handleRemoveOne(item)}
                       disabled={isPendingRemove}
-                      size="sm"
+                      size="md"
                       variant="danger"
+                      className="border-red-500/45 bg-red-500/20 text-red-300"
                       aria-label={t("common.delete")}
                     >
                       <Trash2 size={15} />
@@ -564,9 +570,10 @@ function VendorRow({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between gap-2">
-          <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer">
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
             <Checkbox
+              controlSize="md"
               checked={checked}
               onChange={onToggle}
             />
@@ -580,11 +587,12 @@ function VendorRow({
               {vendor.name}
             </span>
           </label>
-          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
             <IconButton
               onClick={() => setEditing(true)}
-              size="sm"
+              size="md"
               variant="violet"
+              className="border-violet-500/45 bg-violet-500/20 text-violet-300"
               aria-label={t("common.edit")}
             >
               <Pencil size={14} />
@@ -602,8 +610,9 @@ function VendorRow({
                 if (accepted) onRemove(vendor.id);
               }}
               disabled={isPending}
-              size="sm"
+              size="md"
               variant="danger"
+              className="border-red-500/45 bg-red-500/20 text-red-300"
               aria-label={t("common.delete")}
             >
               <Trash2 size={14} />

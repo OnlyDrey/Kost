@@ -216,7 +216,10 @@ export default function SettlementPage() {
             ))}
           </AppSelect>
           {selectedPeriod && (
-            <PeriodStatusBadge status={selectedPeriod.status} size="sm" />
+            <PeriodStatusBadge
+              status={selectedPeriod.status}
+              variant="field"
+            />
           )}
         </div>
       </div>
@@ -264,16 +267,16 @@ export default function SettlementPage() {
                     {fmt(saldoCents)}
                   </span>
                 ),
-                colorClass: "bg-green-500/20",
-                iconTextClass: "text-green-400",
+                colorClass: "bg-blue-500/20",
+                iconTextClass: "text-blue-400",
               },
               {
                 key: "paid-period",
                 icon: CheckCircle2,
                 label: t("settlement.totalPaidPeriod"),
                 value: fmt(safeCents(summary?.totals.totalPaidCents ?? 0)),
-                colorClass: "bg-blue-500/20",
-                iconTextClass: "text-blue-400",
+                colorClass: "bg-green-500/20",
+                iconTextClass: "text-green-400",
               },
               {
                 key: "share-period",

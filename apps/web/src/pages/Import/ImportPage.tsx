@@ -629,7 +629,7 @@ export default function ImportPage() {
       </div>
 
       {activeTab === "input" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-4">
+        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <FileUp size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabImport")}</h2>
@@ -750,7 +750,7 @@ export default function ImportPage() {
       )}
 
       {activeTab === "output" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-4">
+        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <FileDown size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabExport")}</h2>
@@ -774,7 +774,7 @@ export default function ImportPage() {
       )}
 
       {activeTab === "backup" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-4">
+        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <FolderSync size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabBackup")}</h2>
@@ -783,7 +783,7 @@ export default function ImportPage() {
             {t("importExport.backupDescription")}
           </p>
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold">
@@ -842,7 +842,7 @@ export default function ImportPage() {
             {t("data.createBackup")}
           </Button>
 
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-4">
             <h3 className="text-lg font-semibold">{t("data.backupList")}</h3>
             {storedBackups.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
