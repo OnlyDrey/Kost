@@ -36,7 +36,7 @@ import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
 import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
 import { getApiErrorMessage } from "../../utils/apiErrors";
-import FormHeaderActions from "../../components/Common/FormHeaderActions";
+import FormActionHeader from "../../components/Common/FormActionHeader";
 
 const inputCls =
   `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
@@ -571,7 +571,7 @@ export default function AddExpense() {
   const notFound = isEditing &&
     ((isSubscription && subscriptionNotFound) ||
       (!isSubscription && invoiceNotFound));
-  const showInlineSubscriptionActions = isSubscription && isEditing;
+  const showInlineSubscriptionActions = isSubscription;
 
   return (
     <div className="space-y-5">
@@ -587,13 +587,19 @@ export default function AddExpense() {
             {t(titleKey)}
           </h1>
         </div>
-        {!showInlineSubscriptionActions && (
-          <FormHeaderActions
+        {!isSubscription && (
+          <FormActionHeader
             className="self-start"
+            statusControl={null}
             cancelLabel={t("common.cancel")}
             saveLabel={t("common.save")}
             onCancel={() => navigate(backUrl)}
-            formId="expense-form"
+            onSave={() => {
+              const form = document.getElementById("expense-form") as
+                | HTMLFormElement
+                | null;
+              form?.requestSubmit();
+            }}
             isPending={isPending}
             saveDisabled={
               isPending ||
@@ -637,53 +643,35 @@ export default function AddExpense() {
             <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-gray-200 dark:bg-gray-800 lg:block" />
             {isSubscription && (
               <div className="space-y-4 md:space-y-6">
-                {showInlineSubscriptionActions ? (
-                  <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-6 min-w-0">
-                      <label className={labelCls}>{t("subscription.status")}</label>
-                      <AppSelect
-                        value={subscriptionStatus}
-                        onChange={(e) =>
-                          setSubscriptionStatus(
-                            e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
-                          )
-                        }
-                        className={inputCls}
-                      >
-                        <option value="ACTIVE">{t("subscription.statusActive")}</option>
-                        <option value="PAUSED">{t("subscription.statusPaused")}</option>
-                        <option value="CANCELED">{t("subscription.statusCanceled")}</option>
-                      </AppSelect>
-                    </div>
-                    <FormHeaderActions
-                      className="col-span-6 mt-7 justify-end"
-                      cancelLabel={t("common.cancel")}
-                      saveLabel={t("common.save")}
-                      onCancel={() => navigate(backUrl)}
-                      isPending={isPending}
-                      saveDisabled={isPending}
-                    />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="min-w-0">
-                      <label className={labelCls}>{t("subscription.status")}</label>
-                      <AppSelect
-                        value={subscriptionStatus}
-                        onChange={(e) =>
-                          setSubscriptionStatus(
-                            e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
-                          )
-                        }
-                        className={inputCls}
-                      >
-                        <option value="ACTIVE">{t("subscription.statusActive")}</option>
-                        <option value="PAUSED">{t("subscription.statusPaused")}</option>
-                        <option value="CANCELED">{t("subscription.statusCanceled")}</option>
-                      </AppSelect>
-                    </div>
-                  </div>
-                )}
+                <FormActionHeader
+                  statusLabel={t("subscription.status")}
+                  statusControl={
+                    <AppSelect
+                      value={subscriptionStatus}
+                      onChange={(e) =>
+                        setSubscriptionStatus(
+                          e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
+                        )
+                      }
+                      className={inputCls}
+                    >
+                      <option value="ACTIVE">{t("subscription.statusActive")}</option>
+                      <option value="PAUSED">{t("subscription.statusPaused")}</option>
+                      <option value="CANCELED">{t("subscription.statusCanceled")}</option>
+                    </AppSelect>
+                  }
+                  cancelLabel={t("common.cancel")}
+                  saveLabel={t("common.save")}
+                  onCancel={() => navigate(backUrl)}
+                  onSave={() => {
+                    const form = document.getElementById("expense-form") as
+                      | HTMLFormElement
+                      | null;
+                    form?.requestSubmit();
+                  }}
+                  isPending={isPending}
+                  saveDisabled={isPending}
+                />
                 <div className="min-w-0">
                   <label className={labelCls}>{t("subscription.nextBillingAt")}</label>
                   <input

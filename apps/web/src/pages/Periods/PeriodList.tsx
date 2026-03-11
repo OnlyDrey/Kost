@@ -31,6 +31,7 @@ import {
 } from "../../components/Common/focusStyles";
 import AppSelect from "../../components/Common/AppSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
+import { ThemedCheckbox } from "../../components/ui/themed-checkbox";
 
 const inputCls = `w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${FOCUS_RING}`;
 
@@ -439,12 +440,11 @@ export default function PeriodList() {
                 </p>
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <input
+                <ThemedCheckbox
                   id="autoImportSubscriptions"
-                  type="checkbox"
+                  controlSize="md"
                   checked={autoImportSubscriptions}
                   onChange={(e) => setAutoImportSubscriptions(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 cursor-pointer"
                 />
                 <label
                   htmlFor="autoImportSubscriptions"
