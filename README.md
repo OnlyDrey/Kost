@@ -8,11 +8,30 @@
 ## Overview
 
 Kost is a monorepo for a household finance PWA:
+
 - **Web app**: React 18 + Vite + TypeScript + Tailwind
 - **API**: NestJS + Prisma + PostgreSQL 16
 - **Shared package**: cross-app types and schemas
 
 The default deployment is Docker-first, running PostgreSQL and a single app container serving both API (`/api`) and the built web app (`/`).
+
+## Product modules (current UI)
+
+Main app modules in the PWA today:
+
+- **Oversikt**: period selector, status badge, summary cards, shares, and category views.
+- **Utgifter**: add/edit invoices, payment tracking, filtering and status views.
+- **Faste utgifter**: recurring expense rules, status control (`Aktiv`, `Satt på pause`, `Avsluttet`) and period generation.
+- **Oppgjør**: transfer registration, settlement planning, and history per period.
+- **Data**: import, export, and local backup/restore workflows.
+- **Perioder**: create, close, reopen, and delete period lifecycle actions.
+
+Data module capabilities currently include:
+
+- Import of expenses/recurring expenses from spreadsheet files.
+- Import of vendors/categories/payment methods from simple files.
+- Export of expenses, recurring expenses, settlement data, and masterdata (CSV/JSON).
+- Manual and automatic local backups with restore preview and restore action.
 
 ## Repository structure
 
@@ -42,6 +61,7 @@ npm ci --workspaces --include-workspace-root
 ```
 
 Required before first real run:
+
 - `JWT_SECRET`
 - `BOOTSTRAP_ADMIN_PASSWORD`
 

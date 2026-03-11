@@ -27,9 +27,11 @@ export default function FormActionHeader({
   const hasStatusControl = Boolean(statusLabel || statusControl);
 
   return (
-    <div className={`grid grid-cols-12 gap-3 ${className}`.trim()}>
+    <div
+      className={`${hasStatusControl ? "flex items-end gap-2" : "flex justify-end gap-2"} ${className}`.trim()}
+    >
       {hasStatusControl ? (
-        <div className="col-span-6 min-w-0">
+        <div className="min-w-0 flex-1">
           {statusLabel ? (
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {statusLabel}
@@ -38,9 +40,7 @@ export default function FormActionHeader({
           {statusControl}
         </div>
       ) : null}
-      <div
-        className={`${hasStatusControl ? "col-span-6" : "col-span-12"} flex items-end justify-end gap-2`.trim()}
-      >
+      <div className="flex items-center justify-end gap-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
           {cancelLabel}
         </Button>

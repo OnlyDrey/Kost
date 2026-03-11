@@ -72,3 +72,10 @@ The backend uses Prisma models for users, periods, invoices, payments, subscript
 - `VITE_ENABLE_PWA` is `false` by default to reduce stale-cache behavior in production.
 - `HEALTH_REQUIRE_WEB_ASSETS=true` makes health checks fail when API is up but web build artifacts are missing.
 - Reverse proxy + HTTPS is the recommended production topology.
+
+## Current workflow snapshot
+
+- **Period-driven accounting**: most views and calculations are scoped to a selected period (`YYYY-MM`).
+- **Recurring expenses**: subscriptions can be maintained separately and generated into invoice records for open periods.
+- **Settlement flow (oppgjør)**: register transfers, maintain settlement plans, and inspect settlement history in dedicated tabs.
+- **Data transfer**: the Data page supports imports, exports, and local backup/restore for operational continuity.

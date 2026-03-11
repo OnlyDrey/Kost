@@ -28,7 +28,10 @@ import {
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
 import { amountToCents } from "../../utils/currency";
-import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
+import {
+  CONTROL_HEIGHT,
+  SELECT_TRIGGER,
+} from "../../components/Common/focusStyles";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 
 function safeCents(value: number): number {
@@ -206,8 +209,8 @@ export default function SettlementPage() {
           <AppSelect
             value={periodId}
             onChange={(e) => setPeriodId(e.target.value)}
-            className={`${CONTROL_HEIGHT} px-3 pr-10 rounded-lg text-sm w-36`}
-            wrapperClassName="w-36"
+            className={`${CONTROL_HEIGHT} ${SELECT_TRIGGER} w-28 min-w-[7rem] px-3 pr-10 rounded-lg text-sm`}
+            wrapperClassName="w-28 min-w-[7rem]"
           >
             {periods.map((period) => (
               <option key={period.id} value={period.id}>
@@ -216,10 +219,7 @@ export default function SettlementPage() {
             ))}
           </AppSelect>
           {selectedPeriod && (
-            <PeriodStatusBadge
-              status={selectedPeriod.status}
-              variant="field"
-            />
+            <PeriodStatusBadge status={selectedPeriod.status} variant="field" />
           )}
         </div>
       </div>

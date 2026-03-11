@@ -1,4 +1,4 @@
-import { Download, RefreshCcw, Trash2 } from "lucide-react";
+import { Download, RotateCcw, Trash2 } from "lucide-react";
 import ActionIconBar from "./ActionIconBar";
 
 type BackupListItemProps = {
@@ -26,13 +26,12 @@ export default function BackupListItem({
 }: BackupListItemProps) {
   return (
     <div className="rounded-xl border border-gray-200/70 bg-slate-50/30 p-4 text-sm dark:border-gray-700/60 dark:bg-slate-900/30">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="truncate font-semibold text-gray-900 dark:text-gray-100">
-            {nameText}
-          </div>
-          <div className="mt-0.5 text-sm text-muted-foreground">{dateText}</div>
-        </div>
+      <div className="font-semibold text-gray-900 dark:text-gray-100 break-words">
+        {nameText}
+      </div>
+
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <div className="text-sm text-muted-foreground">{dateText}</div>
 
         <ActionIconBar
           showLabelFromMd
@@ -43,11 +42,11 @@ export default function BackupListItem({
               icon: Download,
               label: downloadLabel,
               onClick: onDownload,
-              colorClassName: "bg-primary text-white hover:bg-primary/90",
+              colorClassName: "bg-blue-500 text-white hover:bg-blue-400",
             },
             {
               key: "restore",
-              icon: RefreshCcw,
+              icon: RotateCcw,
               label: restoreLabel,
               onClick: onRestore,
               disabled: restoring,
