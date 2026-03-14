@@ -1,4 +1,4 @@
-export const DEFAULT_CANONICAL_LOGO_URL = "/apple-touch-icon.png";
+export const DEFAULT_CANONICAL_LOGO_URL = "/logo-mark.svg";
 export const DEFAULT_CANONICAL_ICON_BACKGROUND = "#0B1020";
 
 const HEX_COLOR_REGEX = /^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;

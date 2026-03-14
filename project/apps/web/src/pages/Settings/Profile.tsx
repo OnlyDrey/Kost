@@ -357,15 +357,6 @@ export default function Profile() {
       const normalizedTitle = brandingTitle.trim() || settings.branding.appTitle;
       const normalizedIconBg = resolveAppIconBackground(brandingAppIconBackground);
 
-      setBranding({
-        appTitle: normalizedTitle,
-        logoDataUrl: brandingLogoDataUrl.trim(),
-        logoUrl: brandingLogoUrl.trim(),
-        primaryPreset: brandingPreset,
-        appIconBackground: normalizedIconBg,
-        showVendorImages: brandingShowVendorImages,
-      });
-
       await familyApi.updateBranding({
         appTitle: normalizedTitle,
         appIconBackground: normalizedIconBg,
@@ -379,6 +370,15 @@ export default function Profile() {
         await familyApi.uploadBrandingLogo(formData);
       }
 
+
+      setBranding({
+        appTitle: normalizedTitle,
+        logoDataUrl: brandingLogoDataUrl.trim(),
+        logoUrl: brandingLogoUrl.trim(),
+        primaryPreset: brandingPreset,
+        appIconBackground: normalizedIconBg,
+        showVendorImages: brandingShowVendorImages,
+      });
       if (draftCurrency !== currency) {
         await updateCurrency.mutateAsync(draftCurrency);
       }
@@ -402,7 +402,7 @@ export default function Profile() {
 
     if (
       !file.type.startsWith("image/") ||
-      !/\.(svg|png|jpe?g|webp)$/i.test(file.name)
+      !/\.(png|jpe?g|webp)$/i.test(file.name)
     ) {
       setBrandingError(t("settings.brandingInvalidImage"));
       return;
@@ -1541,7 +1541,7 @@ export default function Profile() {
                         <input
                           ref={brandingLogoInputRef}
                           type="file"
-                          accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
+                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                           onChange={handleBrandingLogoFile}
                           className="hidden"
                         />
@@ -1609,6 +1609,10 @@ export default function Profile() {
                           src={brandingIconPreviewUrl}
                           alt={t("settings.brandingAppIconPreview")}
                           className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
+                          onError={(event) => {
+                            event.currentTarget.src = getDefaultLogoUrl();
+                            setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
+                          }}
                         />
                       </div>
                       {brandingIconWarning && (

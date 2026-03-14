@@ -331,7 +331,7 @@ export class FamilyService {
       logoSourceUrl:
         raw.sourceType === "upload"
           ? `${root}/source${raw.logoExt ?? ".png"}?v=${version}`
-          : raw.logoUrl || "/apple-touch-icon.png",
+          : raw.logoUrl || "/logo-mark.svg",
     };
   }
 
