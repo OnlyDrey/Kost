@@ -250,6 +250,7 @@
     "sectionSettings": "Settings",
     "themeSection": "Theme",
     "brandingIconGenerationFailed": "Could not generate app icon preview. Using fallback icon.",
+    "brandingPreviewFallbackWarning": "Branding preview could not be loaded from runtime API. Showing fallback preview.",
     "brandingPwaCacheNote": "For updated installed app icons, you may need to remove and reinstall the app.",
     "brandingResetDefault": "Reset to default"
   },

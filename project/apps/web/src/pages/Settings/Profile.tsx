@@ -67,6 +67,30 @@ import {
   getDefaultLogoUrl,
 } from "../../branding/brandingAssets";
 import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
+import { familyApi, type BrandingRuntimeConfig } from "../../services/api";
+
+type BrandingFormState = {
+  appTitle: string;
+  logoDataUrl: string;
+  logoFile: File | null;
+  logoUrl: string;
+  primaryPreset: BrandingPreset;
+  appIconBackground: string;
+  iconPreviewUrl: string;
+  warningMessage: string;
+  errorMessage: string;
+  successMessage: string;
+  logoUrlError: string;
+  logoLoadWarning: string;
+  iconWarning: string;
+};
+
+const ALLOWED_BRANDING_LOGO_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+]);
+const STATIC_PREVIEW_ICON = "/pwa-512x512.png";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -164,23 +188,22 @@ export default function Profile() {
   );
   const [familyPageSize, setFamilyPageSize] = useState(5);
 
-  const [brandingTitle, setBrandingTitle] = useState(
-    settings.branding.appTitle,
-  );
   const brandingLogoInputRef = useRef<HTMLInputElement>(null);
-  const [brandingLogoDataUrl, setBrandingLogoDataUrl] = useState(
-    settings.branding.logoDataUrl,
-  );
-  const [brandingLogoUrl, setBrandingLogoUrl] = useState(
-    settings.branding.logoUrl,
-  );
-  const [brandingLogoUrlError, setBrandingLogoUrlError] = useState("");
-  const [brandingPreset, setBrandingPreset] = useState<BrandingPreset>(
-    settings.branding.primaryPreset,
-  );
-  const [brandingAppIconBackground, setBrandingAppIconBackground] = useState(
-    settings.branding.appIconBackground,
-  );
+  const [brandingForm, setBrandingForm] = useState<BrandingFormState>({
+    appTitle: settings.branding.appTitle,
+    logoDataUrl: settings.branding.logoDataUrl,
+    logoFile: null,
+    logoUrl: settings.branding.logoUrl,
+    primaryPreset: settings.branding.primaryPreset,
+    appIconBackground: settings.branding.appIconBackground,
+    iconPreviewUrl: getDefaultLogoUrl(),
+    warningMessage: "",
+    errorMessage: "",
+    successMessage: "",
+    logoUrlError: "",
+    logoLoadWarning: "",
+    iconWarning: "",
+  });
   const [brandingShowVendorImages, setBrandingShowVendorImages] = useState(
     settings.branding.showVendorImages,
   );
@@ -188,12 +211,7 @@ export default function Profile() {
   const [draftCurrencyPosition, setDraftCurrencyPosition] = useState<
     "Before" | "After"
   >(symbolPosition as "Before" | "After");
-  const [brandingIconPreviewUrl, setBrandingIconPreviewUrl] =
-    useState(getDefaultLogoUrl());
-  const [brandingError, setBrandingError] = useState("");
-  const [brandingSaved, setBrandingSaved] = useState(false);
-  const [brandingLogoLoadWarning, setBrandingLogoLoadWarning] = useState("");
-  const [brandingIconWarning, setBrandingIconWarning] = useState("");
+  const [isSavingBranding, setIsSavingBranding] = useState(false);
 
   // Profile form
   const [name, setName] = useState(user?.name ?? "");
@@ -239,11 +257,15 @@ export default function Profile() {
   }, [myIncome?.id]);
 
   useEffect(() => {
-    setBrandingTitle(settings.branding.appTitle);
-    setBrandingLogoDataUrl(settings.branding.logoDataUrl);
-    setBrandingLogoUrl(settings.branding.logoUrl);
-    setBrandingPreset(settings.branding.primaryPreset);
-    setBrandingAppIconBackground(settings.branding.appIconBackground);
+    setBrandingForm((prev) => ({
+      ...prev,
+      appTitle: settings.branding.appTitle,
+      logoDataUrl: settings.branding.logoDataUrl,
+      logoFile: null,
+      logoUrl: settings.branding.logoUrl,
+      primaryPreset: settings.branding.primaryPreset,
+      appIconBackground: settings.branding.appIconBackground,
+    }));
     setBrandingShowVendorImages(settings.branding.showVendorImages);
   }, [settings.branding]);
 
@@ -258,31 +280,62 @@ export default function Profile() {
   useEffect(() => {
     const renderPreview = async () => {
       const logoSrc = getCurrentLogoSource({
-        logoDataUrl: brandingLogoDataUrl,
-        logoUrl: brandingLogoUrl,
+        logoDataUrl: brandingForm.logoDataUrl,
+        logoUrl: brandingForm.logoUrl,
       }).src;
-      const background = resolveAppIconBackground(brandingAppIconBackground);
-      try {
-        const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
-        setBrandingIconPreviewUrl(iconUrl);
-        setBrandingIconWarning("");
-      } catch {
+      const background = resolveAppIconBackground(brandingForm.appIconBackground);
+
+      const applyLocalFallback = async (warning: string) => {
         try {
-          const fallbackIcon = await renderIconDataUrl(
-            getDefaultLogoUrl(),
-            background,
-            64,
-          );
-          setBrandingIconPreviewUrl(fallbackIcon);
+          const fallbackPreview = await renderIconDataUrl(logoSrc, background, 192);
+          setBrandingForm((prev) => ({
+            ...prev,
+            iconPreviewUrl: fallbackPreview,
+            warningMessage: warning,
+          }));
+          return;
         } catch {
-          setBrandingIconPreviewUrl(getDefaultLogoUrl());
+          setBrandingForm((prev) => ({
+            ...prev,
+            iconPreviewUrl: STATIC_PREVIEW_ICON,
+            warningMessage: warning,
+          }));
         }
-        setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
+      };
+
+      try {
+        const runtime = await familyApi.getBranding();
+        if (runtime.data.isRuntimeIconOverride && runtime.data.previewIconUrl) {
+          setBrandingForm((prev) => ({
+            ...prev,
+            iconPreviewUrl: runtime.data.previewIconUrl,
+            warningMessage: "",
+            iconWarning: "",
+          }));
+          return;
+        }
+        setBrandingForm((prev) => ({
+          ...prev,
+          iconPreviewUrl: STATIC_PREVIEW_ICON,
+          warningMessage: "",
+          iconWarning: "",
+        }));
+      } catch {
+        await applyLocalFallback(t("settings.brandingPreviewFallbackWarning"));
+        setBrandingForm((prev) => ({
+          ...prev,
+          iconWarning: t("settings.brandingIconGenerationFailed"),
+        }));
       }
     };
 
     void renderPreview();
-  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground]);
+  }, [
+    brandingForm.logoDataUrl,
+    brandingForm.logoUrl,
+    brandingForm.appIconBackground,
+    t,
+  ]);
 
   useEffect(() => {
     const tab = searchParams.get("tab") as SettingsPage | "family" | null;
@@ -329,32 +382,9 @@ export default function Profile() {
 
   const handleSaveCustomization = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBrandingError("");
-
-    if (
-      brandingAppIconBackground &&
-      !isValidHexColor(brandingAppIconBackground)
-    ) {
-      setBrandingError(t("settings.brandingInvalidHex"));
-      return;
-    }
-
-    if (brandingLogoUrl.trim()) {
-      try {
-        new URL(brandingLogoUrl.trim());
-      } catch {
-        setBrandingLogoUrlError(t("settings.brandingInvalidLogoUrl"));
-        return;
-      }
-    }
-
     try {
       setBranding({
-        appTitle: brandingTitle.trim() || settings.branding.appTitle,
-        logoDataUrl: brandingLogoDataUrl.trim(),
-        logoUrl: brandingLogoUrl.trim(),
-        primaryPreset: brandingPreset,
-        appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
+        primaryPreset: brandingForm.primaryPreset,
         showVendorImages: brandingShowVendorImages,
       });
 
@@ -366,12 +396,103 @@ export default function Profile() {
         await updateCurrencySymbolPosition.mutateAsync(draftCurrencyPosition);
       }
 
-      setBrandingSaved(true);
-      window.setTimeout(() => setBrandingSaved(false), 2000);
+      setBrandingForm((prev) => ({
+        ...prev,
+        errorMessage: "",
+        successMessage: t("settings.profileUpdated"),
+      }));
     } catch (err) {
-      setBrandingError(
-        err instanceof Error ? err.message : t("errors.generic"),
-      );
+      setBrandingForm((prev) => ({
+        ...prev,
+        successMessage: "",
+        errorMessage: err instanceof Error ? err.message : t("errors.generic"),
+      }));
+    }
+  };
+
+  const handleSaveBranding = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedTitle = brandingForm.appTitle.trim();
+    const trimmedLogoUrl = brandingForm.logoUrl.trim();
+
+    if (
+      brandingForm.appIconBackground &&
+      !isValidHexColor(brandingForm.appIconBackground)
+    ) {
+      setBrandingForm((prev) => ({
+        ...prev,
+        errorMessage: t("settings.brandingInvalidHex"),
+        successMessage: "",
+      }));
+      return;
+    }
+
+    if (trimmedLogoUrl) {
+      try {
+        new URL(trimmedLogoUrl);
+      } catch {
+        setBrandingForm((prev) => ({
+          ...prev,
+          logoUrlError: t("settings.brandingInvalidLogoUrl"),
+          errorMessage: t("settings.brandingInvalidLogoUrl"),
+          successMessage: "",
+        }));
+        return;
+      }
+    }
+
+    setIsSavingBranding(true);
+    try {
+      let runtimeResponse: BrandingRuntimeConfig | null = null;
+
+      if (brandingForm.logoFile) {
+        const formData = new FormData();
+        formData.append("logo", brandingForm.logoFile);
+        const uploadResponse = await familyApi.uploadBrandingLogo(formData);
+        runtimeResponse = uploadResponse.data;
+      }
+
+      const brandingPayload = {
+        appTitle: trimmedTitle || "Kost",
+        appIconBackground: resolveAppIconBackground(brandingForm.appIconBackground),
+        logoUrl: brandingForm.logoFile ? "" : trimmedLogoUrl,
+        resetLogo: !brandingForm.logoFile && !trimmedLogoUrl && !brandingForm.logoDataUrl,
+      };
+      const updateResponse = await familyApi.updateBranding(brandingPayload);
+      runtimeResponse = updateResponse.data ?? runtimeResponse;
+
+      setBranding({
+        appTitle: trimmedTitle || "Kost",
+        logoDataUrl: brandingForm.logoDataUrl.trim(),
+        logoUrl: trimmedLogoUrl,
+        appIconBackground: resolveAppIconBackground(brandingForm.appIconBackground),
+      });
+
+      setBrandingForm((prev) => ({
+        ...prev,
+        logoFile: null,
+        logoDataUrl: prev.logoFile ? "" : prev.logoDataUrl,
+        logoUrl: prev.logoFile
+          ? runtimeResponse?.logoSourceUrl ?? prev.logoUrl
+          : trimmedLogoUrl,
+        iconPreviewUrl:
+          runtimeResponse?.isRuntimeIconOverride && runtimeResponse.previewIconUrl
+            ? runtimeResponse.previewIconUrl
+            : STATIC_PREVIEW_ICON,
+        logoUrlError: "",
+        errorMessage: "",
+        warningMessage: "",
+        successMessage: t("settings.profileUpdated"),
+      }));
+    } catch (err) {
+      setBrandingForm((prev) => ({
+        ...prev,
+        successMessage: "",
+        errorMessage: err instanceof Error ? err.message : t("errors.serverError"),
+      }));
+    } finally {
+      setIsSavingBranding(false);
     }
   };
 
@@ -379,32 +500,50 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (
-      !file.type.startsWith("image/") ||
-      !/\.(svg|png|jpe?g|webp)$/i.test(file.name)
-    ) {
-      setBrandingError(t("settings.brandingInvalidImage"));
+    if (!ALLOWED_BRANDING_LOGO_TYPES.has(file.type)) {
+      setBrandingForm((prev) => ({
+        ...prev,
+        errorMessage: t("settings.brandingInvalidImage"),
+      }));
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setBrandingLogoDataUrl(reader.result);
-        setBrandingError("");
+      const dataUrl = reader.result;
+      if (typeof dataUrl === "string") {
+        setBrandingForm((prev) => ({
+          ...prev,
+          logoFile: file,
+          logoDataUrl: dataUrl,
+          logoUrl: "",
+          logoUrlError: "",
+          logoLoadWarning: "",
+          errorMessage: "",
+          successMessage: "",
+        }));
       }
     };
-    reader.onerror = () => setBrandingError(t("settings.brandingInvalidImage"));
+    reader.onerror = () =>
+      setBrandingForm((prev) => ({
+        ...prev,
+        errorMessage: t("settings.brandingInvalidImage"),
+      }));
     reader.readAsDataURL(file);
     e.target.value = "";
   };
 
   const handleDeleteBrandingLogo = () => {
-    setBrandingLogoDataUrl("");
-    setBrandingLogoUrl("");
-    setBrandingLogoUrlError("");
-    setBrandingLogoLoadWarning("");
-    setBrandingError("");
+    setBrandingForm((prev) => ({
+      ...prev,
+      logoDataUrl: "",
+      logoFile: null,
+      logoUrl: "",
+      logoUrlError: "",
+      logoLoadWarning: "",
+      errorMessage: "",
+      successMessage: "",
+    }));
   };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1349,9 +1488,12 @@ export default function Profile() {
                       className="space-y-2"
                     >
                       <ColorFamilySelect
-                        value={brandingPreset}
+                        value={brandingForm.primaryPreset}
                         onChange={(next) =>
-                          setBrandingPreset(next as BrandingPreset)
+                          setBrandingForm((prev) => ({
+                            ...prev,
+                            primaryPreset: next as BrandingPreset,
+                          }))
                         }
                         label={t("settings.brandingPrimaryPreset")}
                       />
@@ -1422,14 +1564,14 @@ export default function Profile() {
                           </span>
                         </div>
                       </div>
-                      {brandingError && (
+                      {brandingForm.errorMessage && (
                         <p className="mt-2 text-xs text-danger">
-                          {brandingError}
+                          {brandingForm.errorMessage}
                         </p>
                       )}
-                      {brandingSaved && (
+                      {brandingForm.successMessage && (
                         <p className="mt-2 text-xs text-success">
-                          {t("settings.profileUpdated")}
+                          {brandingForm.successMessage}
                         </p>
                       )}
                     </form>
@@ -1447,18 +1589,22 @@ export default function Profile() {
                     icon={<Palette size={18} className="text-primary" />}
                     title={t("settings.brandingTitle")}
                   >
-                    <form
-                      onSubmit={handleSaveCustomization}
-                      className="space-y-4"
-                    >
+                    <form onSubmit={handleSaveBranding} className="space-y-4">
                       <div>
                         <label className={labelCls}>
                           {t("settings.brandingAppTitle")}
                         </label>
                         <input
                           type="text"
-                          value={brandingTitle}
-                          onChange={(e) => setBrandingTitle(e.target.value)}
+                          value={brandingForm.appTitle}
+                          onChange={(e) =>
+                            setBrandingForm((prev) => ({
+                              ...prev,
+                              appTitle: e.target.value,
+                              successMessage: "",
+                              errorMessage: "",
+                            }))
+                          }
                           className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
                           placeholder={t("app.title")}
                         />
@@ -1471,21 +1617,29 @@ export default function Profile() {
                           <img
                             src={
                               getCurrentLogoSource({
-                                logoDataUrl: brandingLogoDataUrl,
-                                logoUrl: brandingLogoUrl,
+                                logoDataUrl: brandingForm.logoDataUrl,
+                                logoUrl: brandingForm.logoUrl,
                               }).src
                             }
                             alt={t("settings.brandingLogoPreviewAlt")}
                             className="w-12 h-12 object-contain"
                             onError={(event) => {
-                              if (brandingLogoUrl) {
-                                setBrandingLogoLoadWarning(
-                                  t("settings.brandingLogoLoadFailed"),
-                                );
+                              if (brandingForm.logoUrl) {
+                                setBrandingForm((prev) => ({
+                                  ...prev,
+                                  logoLoadWarning: t(
+                                    "settings.brandingLogoLoadFailed",
+                                  ),
+                                }));
                               }
                               event.currentTarget.src = getDefaultLogoUrl();
                             }}
-                            onLoad={() => setBrandingLogoLoadWarning("")}
+                            onLoad={() =>
+                              setBrandingForm((prev) => ({
+                                ...prev,
+                                logoLoadWarning: "",
+                              }))
+                            }
                           />
                           <div className="flex flex-wrap items-center gap-2">
                             <button
@@ -1495,11 +1649,11 @@ export default function Profile() {
                               }
                               className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                             >
-                              {brandingLogoDataUrl || brandingLogoUrl
+                              {brandingForm.logoDataUrl || brandingForm.logoUrl
                                 ? t("settings.brandingReplaceLogo")
                                 : t("settings.brandingUploadLogo")}
                             </button>
-                            {(brandingLogoDataUrl || brandingLogoUrl) && (
+                            {(brandingForm.logoDataUrl || brandingForm.logoUrl) && (
                               <button
                                 type="button"
                                 onClick={handleDeleteBrandingLogo}
@@ -1520,7 +1674,7 @@ export default function Profile() {
                         <input
                           ref={brandingLogoInputRef}
                           type="file"
-                          accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
+                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                           onChange={handleBrandingLogoFile}
                           className="hidden"
                         />
@@ -1530,28 +1684,35 @@ export default function Profile() {
                           </label>
                           <input
                             type="url"
-                            value={brandingLogoUrl}
+                            value={brandingForm.logoUrl}
                             onChange={(e) => {
-                              setBrandingLogoUrl(e.target.value);
-                              setBrandingLogoUrlError("");
+                              setBrandingForm((prev) => ({
+                                ...prev,
+                                logoUrl: e.target.value,
+                                logoDataUrl: "",
+                                logoFile: null,
+                                logoUrlError: "",
+                                errorMessage: "",
+                                successMessage: "",
+                              }));
                             }}
                             className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
-                            placeholder="https://example.com/logo.svg"
+                            placeholder="https://example.com/logo.png"
                           />
-                          {brandingLogoUrlError && (
+                          {brandingForm.logoUrlError && (
                             <p className="text-xs text-danger mt-1">
-                              {brandingLogoUrlError}
+                              {brandingForm.logoUrlError}
                             </p>
                           )}
                         </div>
                         <p className="text-xs text-text-secondary">
-                          {brandingLogoDataUrl || brandingLogoUrl
+                          {brandingForm.logoDataUrl || brandingForm.logoUrl
                             ? t("settings.brandingCustomLogoActive")
                             : t("settings.brandingDefaultLogoActive")}
                         </p>
-                        {brandingLogoLoadWarning && (
+                        {brandingForm.logoLoadWarning && (
                           <p className="text-xs text-warning">
-                            {brandingLogoLoadWarning}
+                            {brandingForm.logoLoadWarning}
                           </p>
                         )}
                       </div>
@@ -1563,19 +1724,22 @@ export default function Profile() {
                           <input
                             type="color"
                             value={resolveAppIconBackground(
-                              brandingAppIconBackground,
+                              brandingForm.appIconBackground,
                             )}
                             onChange={(e) =>
-                              setBrandingAppIconBackground(
-                                e.target.value.toUpperCase(),
-                              )
+                              setBrandingForm((prev) => ({
+                                ...prev,
+                                appIconBackground: e.target.value.toUpperCase(),
+                                successMessage: "",
+                                errorMessage: "",
+                              }))
                             }
                             className="h-10 w-12 rounded border border-border bg-surface p-1 focus:outline-none focus:ring-2 focus:ring-primary"
                             aria-label={t("settings.brandingAppIconBackground")}
                           />
                           <span className="text-sm text-text-secondary">
                             {resolveAppIconBackground(
-                              brandingAppIconBackground,
+                              brandingForm.appIconBackground,
                             )}
                           </span>
                         </div>
@@ -1585,14 +1749,19 @@ export default function Profile() {
                           {t("settings.brandingAppIconPreview")}
                         </span>
                         <img
-                          src={brandingIconPreviewUrl}
+                          src={brandingForm.iconPreviewUrl}
                           alt={t("settings.brandingAppIconPreview")}
                           className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
                         />
                       </div>
-                      {brandingIconWarning && (
+                      {brandingForm.iconWarning && (
                         <p className="text-xs text-warning">
-                          {brandingIconWarning}
+                          {brandingForm.iconWarning}
+                        </p>
+                      )}
+                      {brandingForm.warningMessage && (
+                        <p className="text-xs text-warning">
+                          {brandingForm.warningMessage}
                         </p>
                       )}
                       <p className="text-xs text-text-secondary">
@@ -1604,17 +1773,20 @@ export default function Profile() {
                         </p>
                         <button
                           type="submit"
+                          disabled={isSavingBranding}
                           className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                         >
-                          {t("common.save")}
+                          {isSavingBranding ? `${t("common.save")}…` : t("common.save")}
                         </button>
                       </div>
-                      {brandingError && (
-                        <p className="text-xs text-danger">{brandingError}</p>
+                      {brandingForm.errorMessage && (
+                        <p className="text-xs text-danger">
+                          {brandingForm.errorMessage}
+                        </p>
                       )}
-                      {brandingSaved && (
+                      {brandingForm.successMessage && (
                         <p className="text-xs text-success">
-                          {t("settings.profileUpdated")}
+                          {brandingForm.successMessage}
                         </p>
                       )}
                     </form>

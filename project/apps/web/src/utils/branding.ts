@@ -20,6 +20,8 @@ const STATIC_ICON_PATHS = {
   pwa512: "/pwa-512x512.png",
 } as const;
 
+const MANAGED_BRANDING_ATTR = "data-kost-branding-managed";
+
 export function isValidHexColor(value: string) {
   return HEX_COLOR_REGEX.test(value.trim());
 }
@@ -43,36 +45,88 @@ export function getAppIconSource(branding?: BrandingVisualConfig) {
   return getCurrentLogo(branding);
 }
 
-function upsertLinkTag(rel: string, href: string, sizes?: string) {
+function upsertLinkTag(
+  rel: string,
+  href: string,
+  options?: { sizes?: string; type?: string; purpose?: string },
+) {
   const head = document.head;
-  const selector = `link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ""}`;
+  const sizes = options?.sizes;
+  const purpose = options?.purpose;
+  const selector = `link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ""}${purpose ? `[purpose="${purpose}"]` : ""}[${MANAGED_BRANDING_ATTR}="true"]`;
   let link = head.querySelector<HTMLLinkElement>(selector);
   if (!link) {
     link = document.createElement("link");
     link.rel = rel;
     if (sizes) link.sizes = sizes;
+    if (purpose) link.setAttribute("purpose", purpose);
+    link.setAttribute(MANAGED_BRANDING_ATTR, "true");
     head.appendChild(link);
   }
+
+  if (purpose) {
+    link.setAttribute("purpose", purpose);
+  } else {
+    link.removeAttribute("purpose");
+  }
+
+  if (options?.type) {
+    link.type = options.type;
+  } else {
+    link.removeAttribute("type");
+  }
+
   link.href = href;
 }
 
 function upsertManifest(href: string) {
-  let link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+  let link = document.querySelector<HTMLLinkElement>(
+    `link[rel="manifest"][${MANAGED_BRANDING_ATTR}="true"]`,
+  );
   if (!link) {
     link = document.createElement("link");
     link.rel = "manifest";
+    link.setAttribute(MANAGED_BRANDING_ATTR, "true");
     document.head.appendChild(link);
   }
   link.href = href;
 }
 
+function clearLegacyBrandingLinks() {
+  const rels = ["icon", "shortcut icon", "apple-touch-icon", "manifest"];
+  for (const rel of rels) {
+    const links = Array.from(document.head.querySelectorAll<HTMLLinkElement>(`link[rel="${rel}"]`));
+    links
+      .filter((link) => link.getAttribute(MANAGED_BRANDING_ATTR) !== "true")
+      .forEach((link) => link.remove());
+  }
+}
+
 function applyStaticIconLinks() {
-  upsertLinkTag("icon", STATIC_ICON_PATHS.faviconSvg);
-  upsertLinkTag("shortcut icon", STATIC_ICON_PATHS.faviconSvg);
-  upsertLinkTag("apple-touch-icon", STATIC_ICON_PATHS.apple180, "180x180");
-  upsertLinkTag("icon", STATIC_ICON_PATHS.pwa192, "192x192");
-  upsertLinkTag("icon", STATIC_ICON_PATHS.pwa512, "512x512");
+  clearLegacyBrandingLinks();
+  upsertLinkTag("icon", STATIC_ICON_PATHS.faviconSvg, { type: "image/svg+xml" });
+  upsertLinkTag("shortcut icon", STATIC_ICON_PATHS.faviconSvg, {
+    type: "image/svg+xml",
+  });
+  upsertLinkTag("apple-touch-icon", STATIC_ICON_PATHS.apple180, {
+    sizes: "180x180",
+    type: "image/png",
+  });
+  upsertLinkTag("icon", STATIC_ICON_PATHS.pwa192, {
+    sizes: "192x192",
+    type: "image/png",
+  });
+  upsertLinkTag("icon", STATIC_ICON_PATHS.pwa512, {
+    sizes: "512x512",
+    type: "image/png",
+  });
   upsertManifest(STATIC_ICON_PATHS.manifest);
+}
+
+function logBrandingDiagnostics(payload: Record<string, unknown>) {
+  if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_MODE === "true") {
+    console.info("[BrandingRuntime] icon pipeline", payload);
+  }
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -137,24 +191,79 @@ export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
   try {
     const runtime = await familyApi.getBranding();
     const {
-      assetBase,
       manifestUrl,
-      version,
+      favicon16Url,
+      favicon32Url,
+      shortcutIconUrl,
+      appleTouchIconUrl,
+      pwa192Url,
+      pwa512Url,
+      pwa192MaskableUrl,
+      pwa512MaskableUrl,
       isRuntimeIconOverride,
     } = runtime.data;
+
+    logBrandingDiagnostics({
+      isRuntimeIconOverride,
+      manifestUrl,
+      favicon16Url,
+      favicon32Url,
+      shortcutIconUrl,
+      appleTouchIconUrl,
+      pwa192Url,
+      pwa512Url,
+      pwa192MaskableUrl,
+      pwa512MaskableUrl,
+      version: runtime.data.version,
+    });
 
     if (!isRuntimeIconOverride) {
       applyStaticIconLinks();
       return;
     }
 
-    upsertLinkTag("icon", `${assetBase}/favicon-32.png?v=${version}`);
-    upsertLinkTag("shortcut icon", `${assetBase}/favicon-32.png?v=${version}`);
-    upsertLinkTag("apple-touch-icon", `${assetBase}/apple-180.png?v=${version}`, "180x180");
-    upsertLinkTag("icon", `${assetBase}/pwa-192.png?v=${version}`, "192x192");
-    upsertLinkTag("icon", `${assetBase}/pwa-512.png?v=${version}`, "512x512");
+    clearLegacyBrandingLinks();
+
+    upsertLinkTag("icon", favicon16Url || favicon32Url || STATIC_ICON_PATHS.faviconSvg, {
+      sizes: "16x16",
+      type: "image/png",
+    });
+    upsertLinkTag("icon", favicon32Url || STATIC_ICON_PATHS.faviconSvg, {
+      sizes: "32x32",
+      type: "image/png",
+    });
+    upsertLinkTag("shortcut icon", shortcutIconUrl || favicon32Url || STATIC_ICON_PATHS.faviconSvg, {
+      type: "image/png",
+    });
+    upsertLinkTag("apple-touch-icon", appleTouchIconUrl || pwa192Url || STATIC_ICON_PATHS.apple180, {
+      sizes: "180x180",
+      type: "image/png",
+    });
+    upsertLinkTag("icon", pwa192Url || STATIC_ICON_PATHS.pwa192, {
+      sizes: "192x192",
+      type: "image/png",
+    });
+    upsertLinkTag("icon", pwa512Url || STATIC_ICON_PATHS.pwa512, {
+      sizes: "512x512",
+      type: "image/png",
+    });
+    upsertLinkTag("icon", pwa192MaskableUrl || pwa192Url || STATIC_ICON_PATHS.pwa192, {
+      sizes: "192x192",
+      type: "image/png",
+      purpose: "maskable",
+    });
+    upsertLinkTag("icon", pwa512MaskableUrl || pwa512Url || STATIC_ICON_PATHS.pwa512, {
+      sizes: "512x512",
+      type: "image/png",
+      purpose: "maskable",
+    });
     upsertManifest(manifestUrl);
   } catch {
+    logBrandingDiagnostics({
+      isRuntimeIconOverride: false,
+      fallback: "static",
+      reason: "familyApi.getBranding failed",
+    });
     applyStaticIconLinks();
   }
 }

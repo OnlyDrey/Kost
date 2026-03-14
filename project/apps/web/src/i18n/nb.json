@@ -251,6 +251,7 @@
     "sectionSettings": "Innstillinger",
     "themeSection": "Tema",
     "brandingIconGenerationFailed": "Kunne ikke generere forhåndsvisning av app-ikon. Viser reserveikon.",
+    "brandingPreviewFallbackWarning": "Kunne ikke laste profil-forhåndsvisning fra runtime-API. Viser reserveforhåndsvisning.",
     "brandingPwaCacheNote": "For oppdatert installert app-ikon kan det være nødvendig å fjerne og installere appen på nytt.",
     "brandingResetDefault": "Tilbakestill til standard"
   },

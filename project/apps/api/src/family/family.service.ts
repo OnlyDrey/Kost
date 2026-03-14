@@ -327,6 +327,14 @@ export class FamilyService {
       isRuntimeIconOverride,
       assetBase: `${root}/generated`,
       manifestUrl: `${root}/manifest.webmanifest?v=${version}`,
+      favicon16Url: `${root}/generated/favicon-16.png?v=${version}`,
+      favicon32Url: `${root}/generated/favicon-32.png?v=${version}`,
+      shortcutIconUrl: `${root}/generated/favicon-32.png?v=${version}`,
+      appleTouchIconUrl: `${root}/generated/apple-touch-icon.png?v=${version}`,
+      pwa192Url: `${root}/generated/pwa-192.png?v=${version}`,
+      pwa512Url: `${root}/generated/pwa-512.png?v=${version}`,
+      pwa192MaskableUrl: `${root}/generated/pwa-192-maskable.png?v=${version}`,
+      pwa512MaskableUrl: `${root}/generated/pwa-512-maskable.png?v=${version}`,
       previewIconUrl: `${root}/generated/preview-512.png?v=${version}`,
       logoSourceUrl:
         raw.sourceType === "upload"

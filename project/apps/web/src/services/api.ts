@@ -212,6 +212,14 @@ export interface BrandingRuntimeConfig {
   previewIconUrl: string;
   assetBase: string;
   manifestUrl: string;
+  favicon16Url?: string;
+  favicon32Url?: string;
+  shortcutIconUrl?: string;
+  appleTouchIconUrl?: string;
+  pwa192Url?: string;
+  pwa512Url?: string;
+  pwa192MaskableUrl?: string;
+  pwa512MaskableUrl?: string;
   version: number;
   isRuntimeIconOverride: boolean;
 }

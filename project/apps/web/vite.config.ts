@@ -81,6 +81,36 @@ export default defineConfig({
               networkTimeoutSeconds: 10,
             }
           },
+          // Runtime branding manifest must always revalidate so installed PWA
+          // metadata can detect icon updates.
+          {
+            urlPattern: ({ url }: { url: URL }) =>
+              url.pathname.startsWith('/uploads/branding/') &&
+              url.pathname.endsWith('/manifest.webmanifest'),
+            handler: 'NetworkFirst' as const,
+            options: {
+              cacheName: 'branding-manifest-cache',
+              networkTimeoutSeconds: 5,
+              cacheableResponse: {
+                statuses: [200],
+              },
+            }
+          },
+          // Runtime-generated branding icons are versioned and can be safely
+          // cached; updated URLs are fetched when version changes.
+          {
+            urlPattern: ({ url }: { url: URL }) =>
+              url.pathname.startsWith('/uploads/branding/') &&
+              url.pathname.includes('/generated/') &&
+              /\.(png|ico)$/i.test(url.pathname),
+            handler: 'StaleWhileRevalidate' as const,
+            options: {
+              cacheName: 'branding-icons-cache',
+              cacheableResponse: {
+                statuses: [200],
+              },
+            }
+          },
         ]
       },
       devOptions: {
