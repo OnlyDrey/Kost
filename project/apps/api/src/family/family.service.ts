@@ -429,6 +429,55 @@ export class FamilyService {
     }
   }
 
+  private parseJpegDimensions(filePath: string): { width: number; height: number } | null {
+    try {
+      const buffer = readFileSync(filePath);
+      if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
+      let offset = 2;
+      while (offset + 9 < buffer.length) {
+        if (buffer[offset] !== 0xff) {
+          offset += 1;
+          continue;
+        }
+        const marker = buffer[offset + 1];
+        offset += 2;
+        if (marker === 0xd9 || marker === 0xda) break;
+        const segmentLength = buffer.readUInt16BE(offset);
+        if (segmentLength < 2 || offset + segmentLength > buffer.length) break;
+        const isSOF = [0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker);
+        if (isSOF && offset + 7 < buffer.length) {
+          const height = buffer.readUInt16BE(offset + 3);
+          const width = buffer.readUInt16BE(offset + 5);
+          return { width, height };
+        }
+        offset += segmentLength;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private detectImageMetadata(filePath: string): { type: string; width?: number; height?: number; sizeBytes?: number; exists: boolean } {
+    if (!existsSync(filePath)) return { type: "missing", exists: false };
+    const sizeBytes = statSync(filePath).size;
+    const png = this.parsePngDimensions(filePath);
+    if (png) return { type: "png", width: png.width, height: png.height, sizeBytes, exists: true };
+    const jpeg = this.parseJpegDimensions(filePath);
+    if (jpeg) return { type: "jpeg", width: jpeg.width, height: jpeg.height, sizeBytes, exists: true };
+    return { type: extname(filePath).replace(".", "") || "unknown", sizeBytes, exists: true };
+  }
+
+  private resolveBrandingGeneratorScriptPath() {
+    const candidates = [
+      join(process.cwd(), "scripts", "generate_branding_assets.py"),
+      join(process.cwd(), "..", "..", "scripts", "generate_branding_assets.py"),
+      join(process.cwd(), "..", "scripts", "generate_branding_assets.py"),
+    ];
+    const resolved = candidates.find((path) => existsSync(path));
+    return { resolved, candidates };
+  }
+
   private generatedAssetSpecs() {
     return [
       { name: "favicon-32.png", size: 32 },
@@ -477,6 +526,7 @@ export class FamilyService {
   regenerateBrandingAssets(familyId: string) {
     const config = this.readBrandingConfig(familyId);
     const defaultRasterPath = join(process.cwd(), "public", "apple-touch-icon.png");
+    const { resolved: scriptPath, candidates: scriptCandidates } = this.resolveBrandingGeneratorScriptPath();
     const sourceLabel =
       config.sourceType === "upload"
         ? join(this.getBrandingDir(familyId), `source${String(config.logoExt ?? ".png")}`)
@@ -484,10 +534,34 @@ export class FamilyService {
           ? String(config.logoUrl ?? "")
           : defaultRasterPath;
 
+    const outputDir = join(this.getBrandingDir(familyId), "generated");
+    mkdirSync(outputDir, { recursive: true });
+
+    const pythonCheck = spawnSync("python3", ["--version"], { encoding: "utf-8" });
+    const pillowCheck = spawnSync("python3", ["-c", "import PIL; print(PIL.__version__)"], {
+      encoding: "utf-8",
+    });
+
+    if (!scriptPath) {
+      console.warn("[Branding] Generator script not found; using fallback assets", {
+        familyId,
+        cwd: process.cwd(),
+        candidates: scriptCandidates,
+      });
+      this.writeFallbackBrandingAssets(familyId);
+      this.writeBrandingManifest(
+        familyId,
+        String(config.appTitle ?? "Kost"),
+        String(config.appIconBackground ?? "#0B1020"),
+        Number(config.version ?? 1),
+      );
+      return;
+    }
+
     const result = spawnSync(
       "python3",
       [
-        join(process.cwd(), "scripts", "generate_branding_assets.py"),
+        scriptPath,
         this.getBrandingDir(familyId),
         defaultRasterPath,
       ],
@@ -499,17 +573,40 @@ export class FamilyService {
     if (result.status !== 0 || !generatedValid) {
       console.warn("[Branding] Icon generation failed; using fallback assets", {
         familyId,
+        cwd: process.cwd(),
         sourceType: config.sourceType,
         source: sourceLabel,
+        sourceMetadata: this.detectImageMetadata(sourceLabel),
+        defaultSourceExists: existsSync(defaultRasterPath),
+        outputDir,
+        outputDirExists: existsSync(outputDir),
+        scriptPath,
+        pythonVersion: pythonCheck.stdout?.trim() || pythonCheck.stderr?.trim() || null,
+        pythonCheckStatus: pythonCheck.status,
+        pythonCheckError: pythonCheck.error?.message,
+        pillowVersion: pillowCheck.stdout?.trim() || null,
+        pillowCheckStatus: pillowCheck.status,
+        pillowCheckStderr: pillowCheck.stderr?.trim() || null,
+        pillowCheckError: pillowCheck.error?.message,
         status: result.status,
+        signal: result.signal,
+        stdout: result.stdout,
         stderr: result.stderr,
+        spawnError: result.error?.message,
+        generatedValid,
       });
       this.writeFallbackBrandingAssets(familyId);
     } else {
       console.info("[Branding] Icon generation succeeded", {
         familyId,
+        cwd: process.cwd(),
         sourceType: config.sourceType,
         source: sourceLabel,
+        sourceMetadata: this.detectImageMetadata(sourceLabel),
+        scriptPath,
+        outputDir,
+        pythonVersion: pythonCheck.stdout?.trim() || pythonCheck.stderr?.trim() || null,
+        pillowVersion: pillowCheck.stdout?.trim() || null,
       });
     }
 

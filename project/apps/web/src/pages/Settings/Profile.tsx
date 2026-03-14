@@ -655,7 +655,7 @@ export default function Profile() {
   const hasAvatar = Boolean(user?.avatarUrl);
 
   const AvatarBlock = () => (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+    <div className="flex flex-col items-center gap-2 flex-shrink-0">
       <div
         className={`relative w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-semibold overflow-hidden ${
           hasAvatar
@@ -675,11 +675,22 @@ export default function Profile() {
         ) : (
           <>
             <span>{user?.name.charAt(0).toUpperCase()}</span>
-            <span className="absolute bottom-0.5 right-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-primary shadow-sm">
-              <Camera size={13} />
-            </span>
           </>
         )}
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={uploadAvatar.isPending}
+          aria-label={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
+          title={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
+          className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
+        >
+          {uploadAvatar.isPending ? (
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Camera size={15} />
+          )}
+        </button>
       </div>
       <input
         ref={avatarInputRef}
@@ -688,26 +699,7 @@ export default function Profile() {
         className="hidden"
         onChange={handleAvatarFile}
       />
-      <div className="flex items-center justify-center gap-2 w-full">
-        <button
-          type="button"
-          onClick={() => avatarInputRef.current?.click()}
-          disabled={uploadAvatar.isPending}
-          aria-label={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          title={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          className={
-            hasAvatar
-              ? "inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
-              : "inline-flex min-h-10 w-full sm:w-auto px-3 items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/10 dark:bg-primary/20 text-primary hover:bg-primary/15 dark:hover:bg-primary/30 transition-colors disabled:opacity-60 text-sm font-medium"
-          }
-        >
-          {uploadAvatar.isPending ? (
-            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Camera size={14} />
-          )}
-          {!hasAvatar && <span>{t("settings.choosePhoto")}</span>}
-        </button>
+      <div className="flex items-center justify-center gap-2 min-h-8">
         {hasAvatar && (
           <button
             type="button"
@@ -727,7 +719,7 @@ export default function Profile() {
       </div>
       <div className="flex flex-col gap-1.5">
         {avatarError && <p className="text-xs text-red-500 dark:text-red-400">{avatarError}</p>}
-        <p className="text-xs text-gray-400 dark:text-gray-500">
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
           {t("settings.photoHint")}
         </p>
       </div>
