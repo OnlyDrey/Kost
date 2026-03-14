@@ -479,22 +479,41 @@ export const familyApi = {
       return await api.get<BrandingRuntimeConfig>("/family/branding");
     } catch (error: any) {
       const status = error?.response?.status;
-      if (status === 404 || status === 502 || status === 503) {
+      if (status === undefined || status === 404 || status === 502 || status === 503) {
         return api.get<BrandingRuntimeConfig>("/family/brandingproxy");
       }
       throw error;
     }
   },
 
-  updateBranding: (data: {
+  updateBranding: async (data: {
     appTitle?: string;
     appIconBackground?: string;
     logoUrl?: string;
     resetLogo?: boolean;
-  }) => api.patch<BrandingRuntimeConfig>("/family/branding", data),
+  }) => {
+    try {
+      return await api.patch<BrandingRuntimeConfig>("/family/branding", data);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === undefined || status === 404 || status === 502 || status === 503) {
+        return api.patch<BrandingRuntimeConfig>("/family/brandingproxy", data);
+      }
+      throw error;
+    }
+  },
 
-  uploadBrandingLogo: (formData: FormData) =>
-    api.post<BrandingRuntimeConfig>("/family/branding/logo", formData),
+  uploadBrandingLogo: async (formData: FormData) => {
+    try {
+      return await api.post<BrandingRuntimeConfig>("/family/branding/logo", formData);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === undefined || status === 404 || status === 502 || status === 503) {
+        return api.post<BrandingRuntimeConfig>("/family/brandingproxy/logo", formData);
+      }
+      throw error;
+    }
+  },
 };
 
 export const subscriptionApi = {

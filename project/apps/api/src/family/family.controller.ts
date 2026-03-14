@@ -176,6 +176,47 @@ export class FamilyController {
     return this.familyService.saveBrandingConfig(familyId, data);
   }
 
+  @Patch("brandingproxy")
+  @ApiOperation({ summary: "Update runtime branding configuration (proxy-compatible alias)" })
+  updateBrandingProxy(
+    @CurrentUser("familyId") familyId: string,
+    @Body()
+    data: {
+      appTitle?: string;
+      appIconBackground?: string;
+      logoUrl?: string;
+      resetLogo?: boolean;
+    },
+  ) {
+    return this.familyService.saveBrandingConfig(familyId, data);
+  }
+
+  @Post("brandingproxy/logo")
+  @ApiOperation({ summary: "Upload runtime branding logo image (proxy-compatible alias)" })
+  @UseInterceptors(
+    FileInterceptor("logo", {
+      storage: diskStorage({
+        destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+          const dir = join(process.cwd(), "uploads", "branding", "tmp");
+          mkdirSync(dir, { recursive: true });
+          cb(null, dir);
+        },
+        filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+          const ext = extname(file.originalname).toLowerCase() || ".png";
+          cb(null, `upload-${Date.now()}${ext}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  uploadBrandingLogoProxy(
+    @UploadedFile() file: MulterFile,
+    @CurrentUser("familyId") familyId: string,
+  ) {
+    if (!file) throw new BadRequestException("No file uploaded");
+    return this.familyService.uploadBrandingLogo(familyId, file);
+  }
+
   @Post("branding/logo")
   @ApiOperation({ summary: "Upload runtime branding logo image" })
   @UseInterceptors(
