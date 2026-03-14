@@ -1,7 +1,12 @@
-# Kost
+<p align="center">
+  <img src="apps/web/public/logo-mark.svg" alt="Kost logo" width="96" />
+</p>
+<h1 align="center">Kost</h1>
 
+<p align="center">
 Kost is a self-hosted family finance and expense sharing application.
 It helps households manage shared expenses, track payments, and calculate fair settlements between users.
+</p>
 
 ## Workspace Layout
 
