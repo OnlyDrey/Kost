@@ -24,6 +24,7 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
 COPY packages ./packages
 COPY apps/api ./apps/api
 COPY apps/web ./apps/web
+COPY scripts ./scripts
 
 RUN npm run build --workspace=@kost/shared
 RUN npm run generate --workspace=@kost/api
