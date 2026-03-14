@@ -4,6 +4,19 @@ import { SettingsProvider, useSettings } from "./stores/settings.context";
 import AppRoutes from "./routes";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialogProvider } from "./components/Common/ConfirmDialogProvider";
+import { useAuth } from "./stores/auth.context";
+import { applyBrandingIcons } from "./utils/branding";
+
+function RuntimeBrandingSync() {
+  const { settings } = useSettings();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    void applyBrandingIcons(settings.branding);
+  }, [settings.branding, user?.id]);
+
+  return null;
+}
 
 function AppContent() {
   const { settings } = useSettings();
@@ -42,6 +55,7 @@ function AppContent() {
   return (
     <AuthProvider>
       <ConfirmDialogProvider>
+        <RuntimeBrandingSync />
         <AppRoutes />
       </ConfirmDialogProvider>
     </AuthProvider>

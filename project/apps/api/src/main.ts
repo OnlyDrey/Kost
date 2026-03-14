@@ -86,8 +86,28 @@ async function bootstrap() {
     next();
   });
 
-  // Serve uploaded files at /uploads
-  app.use("/uploads", express.static(join(process.cwd(), "uploads")));
+  // Serve uploaded files at /uploads.
+  // Runtime branding manifests must be fetched fresh so installed PWAs pick up
+  // updated icon metadata when branding version changes.
+  app.use(
+    "/uploads",
+    express.static(join(process.cwd(), "uploads"), {
+      setHeaders(res, filePath) {
+        const normalized = filePath.replace(/\\/g, "/");
+        if (normalized.endsWith("manifest.webmanifest")) {
+          res.setHeader("Content-Type", "application/manifest+json");
+          res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+          return;
+        }
+
+        if (normalized.includes("/branding/") && normalized.endsWith(".png")) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    }),
+  );
 
   // Serve web bundle (single-container deployment mode)
   // index.html MUST NOT be cached by the browser — a stale cached shell that
