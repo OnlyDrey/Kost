@@ -456,7 +456,7 @@ export default function PeriodExpensesPage() {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-3">
           <div className="relative">
             <Search
               size={14}
@@ -489,30 +489,32 @@ export default function PeriodExpensesPage() {
             ))}
           </AppSelect>
 
-          <AppSelect
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className={`w-full px-3 text-sm ${CONTROL_HEIGHT}`}
-          >
-            <option value="ALL">{t("invoice.categoryFilter")}</option>
-            {sortedCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </AppSelect>
+          <div className="grid grid-cols-2 gap-3">
+            <AppSelect
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className={`w-full px-3 text-sm ${CONTROL_HEIGHT}`}
+            >
+              <option value="ALL">{t("invoice.categoryFilter")}</option>
+              {sortedCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </AppSelect>
 
-          <AppSelect
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
-            className={`w-full px-3 text-sm ${CONTROL_HEIGHT}`}
-          >
-            {statusOptions.map((statusOption) => (
-              <option key={statusOption.value} value={statusOption.value}>
-                {statusOption.label}
-              </option>
-            ))}
-          </AppSelect>
+            <AppSelect
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
+              className={`w-full px-3 text-sm ${CONTROL_HEIGHT}`}
+            >
+              {statusOptions.map((statusOption) => (
+                <option key={statusOption.value} value={statusOption.value}>
+                  {statusOption.label}
+                </option>
+              ))}
+            </AppSelect>
+          </div>
         </div>
       </div>
 

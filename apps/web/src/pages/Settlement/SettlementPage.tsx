@@ -20,7 +20,9 @@ import { Button } from "../../components/ui/button";
 import {
   useCreateSettlementEntry,
   useCreateSettlementPlan,
+  useCurrency,
   useCurrencyFormatter,
+  useCurrencySymbolPosition,
   usePeriods,
   useReverseSettlementEntry,
   useUpdateSettlementEntry,
@@ -28,7 +30,7 @@ import {
   useUsers,
 } from "../../hooks/useApi";
 import { useAuth } from "../../stores/auth.context";
-import { amountToCents } from "../../utils/currency";
+import { amountToCents, getCurrencySymbol } from "../../utils/currency";
 import {
   CONTROL_HEIGHT,
   SELECT_TRIGGER,
@@ -56,6 +58,9 @@ export default function SettlementPage() {
   const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const fmt = useCurrencyFormatter();
+  const { data: currency = "NOK" } = useCurrency();
+  const { data: symbolPosition = "Before" } = useCurrencySymbolPosition();
+  const currencySymbol = getCurrencySymbol(currency);
 
   const { data: periods = [] } = usePeriods();
   const [periodId, setPeriodId] = useState(periods[0]?.id ?? "");
@@ -678,9 +683,10 @@ export default function SettlementPage() {
         size="sm"
         footer={
           transactionDialog.mode === "menu" ? null : (
-            <>
+            <div className="grid w-full grid-cols-2 gap-2">
               <Button
                 variant="secondary"
+                className="w-full"
                 onClick={() =>
                   setTransactionDialog((prev) => ({
                     ...prev,
@@ -692,6 +698,7 @@ export default function SettlementPage() {
                 {t("common.cancel")}
               </Button>
               <Button
+                className="w-full"
                 onClick={() => {
                   if (transactionDialog.mode === "edit") {
                     const normalized = transactionDialog.amount
@@ -768,7 +775,7 @@ export default function SettlementPage() {
                   ? t("common.save")
                   : t("settlement.reverseAction")}
               </Button>
-            </>
+            </div>
           )
         }
       >
@@ -801,20 +808,39 @@ export default function SettlementPage() {
           </div>
         ) : transactionDialog.mode === "edit" ? (
           <div className="space-y-2">
-            <input
-              type="text"
-              inputMode="decimal"
-              value={transactionDialog.amount}
-              onChange={(e) =>
-                setTransactionDialog((prev) => ({
-                  ...prev,
-                  amount: e.target.value,
-                  error: "",
-                }))
-              }
-              className={inputCls}
-              placeholder={t("settlement.amount")}
-            />
+            <div className="relative">
+              {symbolPosition === "Before" ? (
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
+                  {currencySymbol}
+                </span>
+              ) : null}
+              <input
+                type="text"
+                inputMode="decimal"
+                value={transactionDialog.amount}
+                onChange={(e) =>
+                  setTransactionDialog((prev) => ({
+                    ...prev,
+                    amount: e.target.value,
+                    error: "",
+                  }))
+                }
+                className={`${inputCls} ${symbolPosition === "Before" ? "pl-9" : "pr-11"}`}
+                placeholder={t("settlement.amount")}
+              />
+              {symbolPosition === "After" ? (
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
+                  {currencySymbol}
+                </span>
+              ) : null}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {fmt(
+                amountToCents(
+                  Number(transactionDialog.amount.replace(",", ".") || "0"),
+                ),
+              )}
+            </p>
             <textarea
               value={transactionDialog.comment}
               onChange={(e) =>

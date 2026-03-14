@@ -82,4 +82,4 @@ The backend uses Prisma models for users, periods, invoices, payments, subscript
 - **Expenses page**: `/expenses` is period-scoped and uses grouped expense cards with responsive 1/2/4 column behavior.
 
 - **Settlement history actions**: history rows use right-aligned actions opening a transaction action dialog for edit amount or reverse operations.
-- **Data transfers**: import/export actions are consolidated by data type to reduce duplicated import/export sections.
+- **Data transfers**: import/export actions are consolidated by data type, with export options surfaced from a per-card export action dialog.

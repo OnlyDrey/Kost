@@ -50,6 +50,7 @@ import {
 } from "../../hooks/useApi";
 import { familyApi, invoiceApi, subscriptionApi } from "../../services/api";
 import DataTransferItemCard from "../../components/Common/DataTransferItemCard";
+import AppDialog from "../../components/Common/AppDialog";
 import BackupListItem from "../../components/Common/BackupListItem";
 import { useSettings } from "../../stores/settings.context";
 import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
@@ -166,6 +167,11 @@ export default function ImportPage() {
   const [isRestoring, setIsRestoring] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"data" | "backup">("data");
+  const [exportDialog, setExportDialog] = useState<{
+    open: boolean;
+    title: string;
+    options: Array<{ key: string; label: string; onClick: () => void }>;
+  }>({ open: false, title: "", options: [] });
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
   const [autoBackupFrequency, setAutoBackupFrequency] = useState<
     "daily" | "weekly"
@@ -635,51 +641,61 @@ export default function ImportPage() {
                   title={t(card.titleKey)}
                   description={card.description}
                   actions={
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {card.importKey ? (
-                        <Button
-                          variant="secondary"
-                          className="w-full"
-                          onClick={() => {
-                            setSelectedImportCard(card.importKey ?? null);
-                            importFileInputRef.current?.click();
-                          }}
-                        >
-                          {t("data.tabImport")}
-                        </Button>
-                      ) : null}
-
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="secondary"
                         className="w-full"
-                        onClick={() =>
-                          void exportDataset(card.exportKey, "csv")
-                        }
+                        disabled={!card.importKey}
+                        onClick={() => {
+                          if (!card.importKey) return;
+                          setSelectedImportCard(card.importKey);
+                          importFileInputRef.current?.click();
+                        }}
                       >
-                        {t("data.exportCsv")}
+                        {t("data.tabImport")}
                       </Button>
 
                       <Button
                         variant="secondary"
                         className="w-full"
-                        onClick={() =>
-                          void exportDataset(card.exportKey, "json")
-                        }
-                      >
-                        {t("data.exportJson")}
-                      </Button>
+                        onClick={() => {
+                          const options: Array<{
+                            key: string;
+                            label: string;
+                            onClick: () => void;
+                          }> = [
+                            {
+                              key: "csv",
+                              label: t("data.exportCsv"),
+                              onClick: () =>
+                                void exportDataset(card.exportKey, "csv"),
+                            },
+                            {
+                              key: "json",
+                              label: t("data.exportJson"),
+                              onClick: () =>
+                                void exportDataset(card.exportKey, "json"),
+                            },
+                          ];
 
-                      {card.importKey && card.supportsTemplate ? (
-                        <Button
-                          variant="secondary"
-                          className="w-full"
-                          onClick={() =>
-                            downloadTemplateForCard(card.importKey!)
+                          if (card.importKey && card.supportsTemplate) {
+                            options.push({
+                              key: "template",
+                              label: t("data.downloadTemplate"),
+                              onClick: () =>
+                                downloadTemplateForCard(card.importKey!),
+                            });
                           }
-                        >
-                          {t("data.downloadTemplate")}
-                        </Button>
-                      ) : null}
+
+                          setExportDialog({
+                            open: true,
+                            title: t(card.titleKey),
+                            options,
+                          });
+                        }}
+                      >
+                        {t("data.tabExport")}
+                      </Button>
                     </div>
                   }
                 />
@@ -963,6 +979,28 @@ export default function ImportPage() {
           </section>
         </section>
       )}
+      <AppDialog
+        open={exportDialog.open}
+        onClose={() => setExportDialog({ open: false, title: "", options: [] })}
+        title={`${t("data.tabExport")}: ${exportDialog.title}`}
+        size="sm"
+      >
+        <div className="grid grid-cols-1 gap-2">
+          {exportDialog.options.map((option) => (
+            <Button
+              key={option.key}
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                option.onClick();
+                setExportDialog({ open: false, title: "", options: [] });
+              }}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      </AppDialog>
     </div>
   );
 }

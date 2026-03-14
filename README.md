@@ -37,7 +37,7 @@ Data module capabilities currently include:
 - Import of vendors/categories/payment methods from simple files.
 - Export of expenses, recurring expenses, settlement data, and masterdata (CSV/JSON).
 - Manual and automatic local backups with restore preview and restore action.
-- Data page actions are grouped by data type (import/export/template actions shown together per type).
+- Data page actions are grouped by data type, with direct `Import` plus an `Eksport` action that opens supported export options (CSV/JSON/template where relevant).
 
 ## Repository structure
 
