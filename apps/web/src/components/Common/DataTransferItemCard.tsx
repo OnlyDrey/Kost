@@ -15,13 +15,17 @@ export default function DataTransferItemCard({
   actions,
 }: DataTransferItemCardProps) {
   return (
-    <div className="rounded-xl border border-gray-200/60 dark:border-gray-700/50 bg-transparent p-4 space-y-3">
+    <article className="rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-gray-50/40 dark:bg-slate-900/35 p-4">
       <div className="flex items-center gap-2">
-        <Icon size={16} className="text-primary" />
-        <h3 className="text-lg font-semibold">{title}</h3>
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
+          <Icon size={16} />
+        </span>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          {title}
+        </h3>
       </div>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <div className="pt-1">{actions}</div>
-    </div>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+      <div className="mt-3">{actions}</div>
+    </article>
   );
 }

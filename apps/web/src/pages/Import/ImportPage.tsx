@@ -4,9 +4,6 @@ import {
   BadgeDollarSign,
   DatabaseBackup,
   Download,
-  FileDown,
-  FileUp,
-  FolderSync,
   Scale,
   Layers,
   ListTree,
@@ -14,7 +11,6 @@ import {
   Repeat,
   Tags,
   Upload,
-  type LucideIcon,
 } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
 import { Button } from "../../components/ui/button";
@@ -53,8 +49,8 @@ import {
   useVendors,
 } from "../../hooks/useApi";
 import { familyApi, invoiceApi, subscriptionApi } from "../../services/api";
-import ExportCard from "../../components/Common/ExportCard";
-import ImportCard from "../../components/Common/ImportCard";
+import DataTransferItemCard from "../../components/Common/DataTransferItemCard";
+import AppDialog from "../../components/Common/AppDialog";
 import BackupListItem from "../../components/Common/BackupListItem";
 import { useSettings } from "../../stores/settings.context";
 import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
@@ -170,9 +166,12 @@ export default function ImportPage() {
   );
   const [isRestoring, setIsRestoring] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"input" | "output" | "backup">(
-    "input",
-  );
+  const [activeTab, setActiveTab] = useState<"data" | "backup">("data");
+  const [exportDialog, setExportDialog] = useState<{
+    open: boolean;
+    title: string;
+    options: Array<{ key: string; label: string; onClick: () => void }>;
+  }>({ open: false, title: "", options: [] });
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
   const [autoBackupFrequency, setAutoBackupFrequency] = useState<
     "daily" | "weekly"
@@ -217,70 +216,61 @@ export default function ImportPage() {
     [backupBundle],
   );
 
-  const importCards: Array<{
-    key: ImportCardType;
-    icon: LucideIcon;
-    titleKey: string;
-    descKey: string;
-  }> = [
+  const dataTypeCards = [
     {
-      key: "expense",
+      key: "expense" as const,
+      importKey: "expense" as ImportCardType,
+      exportKey: "expenses" as const,
       icon: Receipt,
       titleKey: "importExport.cardExpenses",
-      descKey: "importExport.importExpensesDesc",
+      description: `${t("importExport.importExpensesDesc")} ${t("importExport.exportExpensesDesc")}`,
+      supportsTemplate: true,
     },
     {
-      key: "recurring",
+      key: "recurring" as const,
+      importKey: "recurring" as ImportCardType,
+      exportKey: "recurring" as const,
       icon: Repeat,
       titleKey: "importExport.cardRecurring",
-      descKey: "importExport.importRecurringDesc",
+      description: `${t("importExport.importRecurringDesc")} ${t("importExport.exportRecurringDesc")}`,
+      supportsTemplate: true,
     },
     {
-      key: "vendors",
-      icon: ListTree,
-      titleKey: "importExport.cardVendors",
-      descKey: "importExport.importVendorsDesc",
-    },
-    {
-      key: "categories",
-      icon: Tags,
-      titleKey: "importExport.cardCategories",
-      descKey: "importExport.importCategoriesDesc",
-    },
-    {
-      key: "paymentMethods",
-      icon: BadgeDollarSign,
-      titleKey: "importExport.cardPaymentMethods",
-      descKey: "importExport.importPaymentMethodsDesc",
-    },
-  ];
-
-  const exportCards = [
-    {
-      key: "expenses",
-      icon: Receipt,
-      titleKey: "importExport.cardExpenses",
-      descKey: "importExport.exportExpensesDesc",
-    },
-    {
-      key: "recurring",
-      icon: Repeat,
-      titleKey: "importExport.cardRecurring",
-      descKey: "importExport.exportRecurringDesc",
-    },
-    {
-      key: "settlements",
+      key: "settlements" as const,
+      exportKey: "settlements" as const,
       icon: Scale,
       titleKey: "importExport.cardSettlement",
-      descKey: "importExport.exportSettlementDesc",
+      description: t("importExport.exportSettlementDesc"),
+      supportsTemplate: false,
     },
     {
-      key: "masterdata",
-      icon: Layers,
-      titleKey: "importExport.cardMasterdata",
-      descKey: "importExport.exportMasterdataDesc",
+      key: "vendors" as const,
+      importKey: "vendors" as ImportCardType,
+      exportKey: "vendors" as const,
+      icon: ListTree,
+      titleKey: "importExport.cardVendors",
+      description: t("importExport.importVendorsDesc"),
+      supportsTemplate: true,
     },
-  ] as const;
+    {
+      key: "categories" as const,
+      importKey: "categories" as ImportCardType,
+      exportKey: "categories" as const,
+      icon: Tags,
+      titleKey: "importExport.cardCategories",
+      description: t("importExport.importCategoriesDesc"),
+      supportsTemplate: true,
+    },
+    {
+      key: "paymentMethods" as const,
+      importKey: "paymentMethods" as ImportCardType,
+      exportKey: "paymentMethods" as const,
+      icon: BadgeDollarSign,
+      titleKey: "importExport.cardPaymentMethods",
+      description: t("importExport.importPaymentMethodsDesc"),
+      supportsTemplate: true,
+    },
+  ];
 
   const downloadTemplateForCard = (card: ImportCardType) => {
     if (card === "expense" || card === "recurring") {
@@ -467,7 +457,13 @@ export default function ImportPage() {
   };
 
   const exportDataset = async (
-    dataset: "expenses" | "recurring" | "settlements" | "masterdata",
+    dataset:
+      | "expenses"
+      | "recurring"
+      | "settlements"
+      | "vendors"
+      | "categories"
+      | "paymentMethods",
     format: "csv" | "json",
   ) => {
     const backup = await exportFullBackup(settings);
@@ -500,14 +496,12 @@ export default function ImportPage() {
           settlementData: period.settlementData ?? null,
         }))
         .filter((item) => item.settlementData);
+    } else if (dataset === "vendors") {
+      payload = backup.data.vendors.map((vendor) => ({ name: vendor.name }));
+    } else if (dataset === "categories") {
+      payload = backup.data.categories.map((name) => ({ name }));
     } else {
-      payload = [
-        {
-          categories: backup.data.categories,
-          paymentMethods: backup.data.paymentMethods,
-          vendors: backup.data.vendors.map((vendor) => vendor.name),
-        },
-      ];
+      payload = backup.data.paymentMethods.map((name) => ({ name }));
     }
 
     if (format === "json") {
@@ -605,18 +599,11 @@ export default function ImportPage() {
       <div className="overflow-x-auto pb-1">
         <TabsRow>
           <TabButton
-            active={activeTab === "input"}
+            active={activeTab === "data"}
             icon={<Upload size={16} />}
-            onClick={() => setActiveTab("input")}
+            onClick={() => setActiveTab("data")}
           >
-            {t("data.tabImport")}
-          </TabButton>
-          <TabButton
-            active={activeTab === "output"}
-            icon={<Download size={16} />}
-            onClick={() => setActiveTab("output")}
-          >
-            {t("data.tabExport")}
+            {t("data.title")}
           </TabButton>
           <TabButton
             active={activeTab === "backup"}
@@ -628,11 +615,11 @@ export default function ImportPage() {
         </TabsRow>
       </div>
 
-      {activeTab === "input" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
+      {activeTab === "data" && (
+        <section className="rounded-xl border border-gray-200/80 dark:border-gray-800/80 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
-            <FileUp size={18} className="text-primary" />
-            <h2 className="text-lg font-semibold">{t("data.tabImport")}</h2>
+            <Upload size={18} className="text-primary" />
+            <h2 className="text-lg font-semibold">{t("data.title")}</h2>
           </div>
 
           <input
@@ -643,22 +630,74 @@ export default function ImportPage() {
             onChange={(e) => void handleImportCardFile(e.target.files?.[0])}
           />
 
-          <div className="grid sm:grid-cols-2 gap-3">
-            {importCards.map((card) => {
+          <div className="grid gap-3 sm:grid-cols-2">
+            {dataTypeCards.map((card) => {
               const Icon = card.icon;
+
               return (
-                <ImportCard
+                <DataTransferItemCard
                   key={card.key}
                   icon={Icon}
                   title={t(card.titleKey)}
-                  description={t(card.descKey)}
-                  chooseFileLabel={t("importExport.chooseFile")}
-                  templateLabel={t("data.downloadTemplate")}
-                  onChooseFile={() => {
-                    setSelectedImportCard(card.key);
-                    importFileInputRef.current?.click();
-                  }}
-                  onDownloadTemplate={() => downloadTemplateForCard(card.key)}
+                  description={card.description}
+                  actions={
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="secondary"
+                        className="w-full"
+                        disabled={!card.importKey}
+                        onClick={() => {
+                          if (!card.importKey) return;
+                          setSelectedImportCard(card.importKey);
+                          importFileInputRef.current?.click();
+                        }}
+                      >
+                        {t("data.tabImport")}
+                      </Button>
+
+                      <Button
+                        variant="secondary"
+                        className="w-full"
+                        onClick={() => {
+                          const options: Array<{
+                            key: string;
+                            label: string;
+                            onClick: () => void;
+                          }> = [
+                            {
+                              key: "csv",
+                              label: t("data.exportCsv"),
+                              onClick: () =>
+                                void exportDataset(card.exportKey, "csv"),
+                            },
+                            {
+                              key: "json",
+                              label: t("data.exportJson"),
+                              onClick: () =>
+                                void exportDataset(card.exportKey, "json"),
+                            },
+                          ];
+
+                          if (card.importKey && card.supportsTemplate) {
+                            options.push({
+                              key: "template",
+                              label: t("data.downloadTemplate"),
+                              onClick: () =>
+                                downloadTemplateForCard(card.importKey!),
+                            });
+                          }
+
+                          setExportDialog({
+                            open: true,
+                            title: t(card.titleKey),
+                            options,
+                          });
+                        }}
+                      >
+                        {t("data.tabExport")}
+                      </Button>
+                    </div>
+                  }
                 />
               );
             })}
@@ -749,41 +788,17 @@ export default function ImportPage() {
         </section>
       )}
 
-      {activeTab === "output" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
-          <div className="flex items-center gap-2">
-            <FileDown size={18} className="text-primary" />
-            <h2 className="text-lg font-semibold">{t("data.tabExport")}</h2>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3">
-            {exportCards.map((card) => (
-              <ExportCard
-                key={card.key}
-                icon={card.icon}
-                title={t(card.titleKey)}
-                description={t(card.descKey)}
-                csvLabel={t("data.exportCsv")}
-                jsonLabel={t("data.exportJson")}
-                onExportCsv={() => void exportDataset(card.key, "csv")}
-                onExportJson={() => void exportDataset(card.key, "json")}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {activeTab === "backup" && (
-        <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-5">
+        <section className="rounded-xl border border-gray-200/80 dark:border-gray-800/80 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
-            <FolderSync size={18} className="text-primary" />
+            <DatabaseBackup size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabBackup")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             {t("importExport.backupDescription")}
           </p>
 
-          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold">
@@ -842,7 +857,7 @@ export default function ImportPage() {
             {t("data.createBackup")}
           </Button>
 
-          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-slate-50/40 dark:bg-slate-900/35 p-4 space-y-4">
+          <div className="space-y-4">
             <h3 className="text-lg font-semibold">{t("data.backupList")}</h3>
             {storedBackups.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -964,6 +979,28 @@ export default function ImportPage() {
           </section>
         </section>
       )}
+      <AppDialog
+        open={exportDialog.open}
+        onClose={() => setExportDialog({ open: false, title: "", options: [] })}
+        title={`${t("data.tabExport")}: ${exportDialog.title}`}
+        size="sm"
+      >
+        <div className="grid grid-cols-1 gap-2">
+          {exportDialog.options.map((option) => (
+            <Button
+              key={option.key}
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                option.onClick();
+                setExportDialog({ open: false, title: "", options: [] });
+              }}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      </AppDialog>
     </div>
   );
 }

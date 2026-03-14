@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useNavigate,
   useParams,
@@ -38,8 +38,7 @@ import { CONTROL_HEIGHT } from "../../components/Common/focusStyles";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import FormActionHeader from "../../components/Common/FormActionHeader";
 
-const inputCls =
-  `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
+const inputCls = `w-full ${CONTROL_HEIGHT} px-3.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm`;
 const dateInputCls = `${inputCls} w-full min-w-0 max-w-full box-border appearance-none`;
 
 const labelCls =
@@ -84,7 +83,10 @@ export default function AddExpense() {
   const { data: periodIncomes } = useUserIncomes(targetPeriodId);
   const { data: categories = [] } = useCategories();
   const sortedCategories = useMemo(
-    () => [...categories].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    () =>
+      [...categories].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" }),
+      ),
     [categories],
   );
   const { data: paymentMethods = [] } = usePaymentMethods();
@@ -513,7 +515,7 @@ export default function AddExpense() {
         } else {
           await createSubscription.mutateAsync(subData);
         }
-        navigate("/subscriptions");
+        goBackToContext();
       } else {
         const invoiceData: any = {
           vendor: vendor.trim(),
@@ -538,7 +540,7 @@ export default function AddExpense() {
             ...invoiceData,
           });
         }
-        navigate("/invoices");
+        goBackToContext();
       }
     } catch (err: unknown) {
       setError(getApiErrorMessage(t, err));
@@ -551,11 +553,6 @@ export default function AddExpense() {
     createSubscription.isPending ||
     updateSubscription.isPending;
 
-  const backUrl = isSubscription
-    ? "/subscriptions"
-    : selectedPeriodId
-      ? `/overview?period=${selectedPeriodId}`
-      : "/invoices";
   const titleKey = isSubscription
     ? isEditing
       ? "subscription.edit"
@@ -565,20 +562,54 @@ export default function AddExpense() {
       : "invoice.addInvoice";
 
 
-  const recordLoading = isEditing &&
+  const fallbackBackUrl = isSubscription
+    ? "/subscriptions"
+    : existingInvoice?.periodId
+      ? `/expenses?period=${existingInvoice.periodId}`
+      : selectedPeriodId
+        ? `/expenses?period=${selectedPeriodId}`
+        : "/expenses";
+
+  const returnToFromState =
+    typeof (location.state as { returnTo?: unknown } | null)?.returnTo ===
+    "string"
+      ? ((location.state as { returnTo?: string }).returnTo as string)
+      : null;
+
+  const goBackToContext = useCallback(() => {
+    if (returnToFromState) {
+      navigate(returnToFromState);
+      return;
+    }
+
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(fallbackBackUrl);
+  }, [fallbackBackUrl, navigate, returnToFromState]);
+
+  const nonSubscriptionSaveDisabled =
+    isPending ||
+    (!isEditing && !isSubscription && !targetPeriodId) ||
+    (!isEditing && !isSubscription && targetPeriodClosed);
+
+  const recordLoading =
+    isEditing &&
     ((isSubscription && loadingSubscription) ||
       (!isSubscription && loadingInvoice));
-  const notFound = isEditing &&
+  const notFound =
+    isEditing &&
     ((isSubscription && subscriptionNotFound) ||
       (!isSubscription && invoiceNotFound));
-  const showInlineSubscriptionActions = isSubscription;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate(backUrl)}
+            onClick={goBackToContext}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
           >
             <ArrowLeft size={20} />
@@ -587,27 +618,6 @@ export default function AddExpense() {
             {t(titleKey)}
           </h1>
         </div>
-        {!isSubscription && (
-          <FormActionHeader
-            className="self-start"
-            statusControl={null}
-            cancelLabel={t("common.cancel")}
-            saveLabel={t("common.save")}
-            onCancel={() => navigate(backUrl)}
-            onSave={() => {
-              const form = document.getElementById("expense-form") as
-                | HTMLFormElement
-                | null;
-              form?.requestSubmit();
-            }}
-            isPending={isPending}
-            saveDisabled={
-              isPending ||
-              (!isEditing && !isSubscription && !targetPeriodId) ||
-              (!isEditing && !isSubscription && targetPeriodClosed)
-            }
-          />
-        )}
       </div>
 
       {!isEditing && !isSubscription && !targetPeriodId && (
@@ -625,419 +635,543 @@ export default function AddExpense() {
 
       {notFound && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-red-200 dark:border-red-900/40 p-6 text-sm text-red-600 dark:text-red-400">
-          {isSubscription ? t("subscription.edit") : t("invoice.editInvoice")} - {t("common.noData")}
+          {isSubscription ? t("subscription.edit") : t("invoice.editInvoice")} -{" "}
+          {t("common.noData")}
         </div>
       )}
 
       {!recordLoading && !notFound && (
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm ">
-        <form id="expense-form" onSubmit={handleSubmit} className="space-y-5">
-          {error && (
-            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
-              <AlertCircle size={16} className="flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-5">
-            <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-gray-200 dark:bg-gray-800 lg:block" />
-            {isSubscription && (
-              <div className="space-y-4 md:space-y-6">
-                <FormActionHeader
-                  statusLabel={t("subscription.status")}
-                  statusControl={
-                    <AppSelect
-                      value={subscriptionStatus}
-                      onChange={(e) =>
-                        setSubscriptionStatus(
-                          e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
-                        )
-                      }
-                      className={inputCls}
-                    >
-                      <option value="ACTIVE">{t("subscription.statusActive")}</option>
-                      <option value="PAUSED">{t("subscription.statusPaused")}</option>
-                      <option value="CANCELED">{t("subscription.statusCanceled")}</option>
-                    </AppSelect>
-                  }
-                  cancelLabel={t("common.cancel")}
-                  saveLabel={t("common.save")}
-                  onCancel={() => navigate(backUrl)}
-                  onSave={() => {
-                    const form = document.getElementById("expense-form") as
-                      | HTMLFormElement
-                      | null;
-                    form?.requestSubmit();
-                  }}
-                  isPending={isPending}
-                  saveDisabled={isPending}
-                />
-                <div className="min-w-0">
-                  <label className={labelCls}>{t("subscription.nextBillingAt")}</label>
-                  <input
-                    type="date"
-                    value={nextBillingAt}
-                    onChange={(e) => setNextBillingAt(e.target.value)}
-                    className={dateInputCls}
-                  />
-                </div>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm ">
+          <form id="expense-form" onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm">
+                <AlertCircle size={16} className="flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-              <div className="relative">
-                <label className={labelCls}>{t("invoice.vendor")} *</label>
-                <input
-                  type="text"
-                  value={vendor}
-                  onChange={(e) => {
-                    setVendor(e.target.value);
-                    setShowVendorList(true);
-                  }}
-                  onFocus={() => setShowVendorList(true)}
-                  onBlur={() => setTimeout(() => setShowVendorList(false), 150)}
-                  required
-                  className={inputCls}
-                  placeholder={t("invoice.vendorPlaceholder")}
-                />
-                {showVendorList && vendors.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-                    {vendors
-                      .filter((v) =>
-                        v.name.toLowerCase().includes(vendor.toLowerCase()),
-                      )
-                      .map((v) => (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onMouseDown={() => {
-                            setVendor(v.name);
-                            setShowVendorList(false);
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
-                        >
-                          {v.logoUrl && (
-                            <img
-                              src={v.logoUrl}
-                              alt=""
-                              className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display =
-                                  "none";
-                              }}
-                            />
-                          )}
-                          <span>{v.name}</span>
-                        </button>
-                      ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className={labelCls}>{t("invoice.category")}</label>
-                <AppSelect
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">{t("invoice.categoryPlaceholder")}</option>
-                  {sortedCategories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </AppSelect>
-              </div>
-            </div>
-
-            <div>
-              <label className={labelCls}>{t("invoice.description")}</label>
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className={inputCls}
-                placeholder={
-                  isSubscription
-                    ? t("subscription.descriptionPlaceholder")
-                    : t("invoice.descriptionPlaceholder")
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 md:gap-6">
-              <div className="min-w-0">
-                <label className={labelCls}>{t("invoice.amount")} *</label>
-                <div className="relative flex items-center">
-                  {symbolPosition === "Before" && (
-                    <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                      {currencySymbol}
-                    </span>
-                  )}
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    required
-                    step="0.01"
-                    min="0"
-                    className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
-                    placeholder="0.00"
-                  />
-                  {symbolPosition === "After" && (
-                    <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                      {currencySymbol}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0">
-                <label className={labelCls}>{t("invoice.paymentMethod")}</label>
-                <AppSelect
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">{t("invoice.paymentMethodPlaceholder")}</option>
-                  {paymentMethods.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </AppSelect>
-              </div>
-            </div>
 
             {!isSubscription && (
-              <div>
-                <label className={labelCls}>{t("invoice.dueDate")}</label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className={dateInputCls}
-                />
-              </div>
+              <FormActionHeader
+                className="w-full"
+                cancelLabel={t("common.cancel")}
+                saveLabel={t("common.save")}
+                onCancel={goBackToContext}
+                onSave={() => {
+                  const form = document.getElementById(
+                    "expense-form",
+                  ) as HTMLFormElement | null;
+                  form?.requestSubmit();
+                }}
+                isPending={isPending}
+                saveDisabled={nonSubscriptionSaveDisabled}
+                splitButtonsWhenNoStatus
+              />
             )}
 
-            {isSubscription && (
-              <>
-                <div>
-                  <label className={labelCls}>{t("subscription.startDate")}</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={dateInputCls}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
-                    <div>
-                      <label className={labelCls}>{t("subscription.everyLabel")}</label>
-                      <input
-                        type="number"
-                        value={frequencyQuantity}
-                        onChange={(e) => setFrequencyQuantity(e.target.value)}
-                        className={inputCls}
-                        min="1"
-                        placeholder="1"
-                      />
-                    </div>
-                    <div>
-                      <label className={labelCls}>{t("subscription.frequencyLabel")}</label>
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-5">
+              <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-gray-200 dark:bg-gray-800 lg:block" />
+              {isSubscription && (
+                <div className="space-y-4 md:space-y-6">
+                  <FormActionHeader
+                    statusLabel={t("subscription.status")}
+                    statusControl={
                       <AppSelect
-                        value={frequencyUnit}
-                        onChange={(e) => setFrequencyUnit(e.target.value)}
+                        value={subscriptionStatus}
+                        onChange={(e) =>
+                          setSubscriptionStatus(
+                            e.target.value as "ACTIVE" | "PAUSED" | "CANCELED",
+                          )
+                        }
                         className={inputCls}
                       >
-                        <option value="DAY">{t("subscription.unitDay")}</option>
-                        <option value="WEEK">{t("subscription.unitWeek")}</option>
-                        <option value="MONTH">{t("subscription.unitMonth")}</option>
-                        <option value="YEAR">{t("subscription.unitYear")}</option>
+                        <option value="ACTIVE">
+                          {t("subscription.statusActive")}
+                        </option>
+                        <option value="PAUSED">
+                          {t("subscription.statusPaused")}
+                        </option>
+                        <option value="CANCELED">
+                          {t("subscription.statusCanceled")}
+                        </option>
                       </AppSelect>
-                    </div>
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t("subscription.dayOfMonth")}</label>
+                    }
+                    cancelLabel={t("common.cancel")}
+                    saveLabel={t("common.save")}
+                    onCancel={goBackToContext}
+                    onSave={() => {
+                      const form = document.getElementById(
+                        "expense-form",
+                      ) as HTMLFormElement | null;
+                      form?.requestSubmit();
+                    }}
+                    isPending={isPending}
+                    saveDisabled={isPending}
+                  />
+                  <div className="min-w-0">
+                    <label className={labelCls}>
+                      {t("subscription.nextBillingAt")}
+                    </label>
                     <input
-                      type="number"
-                      value={dayOfMonth}
-                      onChange={(e) => setDayOfMonth(e.target.value)}
-                      className={inputCls}
-                      min="1"
-                      max="31"
-                      placeholder="1"
+                      type="date"
+                      value={nextBillingAt}
+                      onChange={(e) => setNextBillingAt(e.target.value)}
+                      className={dateInputCls}
                     />
                   </div>
                 </div>
-              </>
-            )}
+              )}
 
-            <div className="lg:self-start">
-              <label className={labelCls}>
-                {t("invoice.distributionMethod")} *
-              </label>
-              <AppSelect
-                value={
-                  distributionMethod === "FIXED"
-                    ? fixedMode === "AMOUNT"
-                      ? "FIXED_AMOUNT"
-                      : "FIXED_EQUAL"
-                    : distributionMethod
-                }
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === "FIXED_EQUAL") {
-                    setDistributionMethod("FIXED");
-                    setFixedMode("EQUAL");
-                  } else if (value === "FIXED_AMOUNT") {
-                    setDistributionMethod("FIXED");
-                    setFixedMode("AMOUNT");
-                  } else {
-                    setDistributionMethod(
-                      value as "BY_INCOME" | "BY_PERCENT" | "PERSONAL",
-                    );
-                  }
-                }}
-                className={inputCls}
-              >
-                <option value="BY_INCOME">{t("invoice.incomeBased")}</option>
-                <option value="BY_PERCENT">
-                  {t("subscription.customAmount")}
-                </option>
-                <option value="FIXED_EQUAL">{t("invoice.equal")}</option>
-                <option value="FIXED_AMOUNT">
-                  {t("subscription.amountOnly")}
-                </option>
-                <option value="PERSONAL">
-                  {t("invoice.personalExpenseOption")}
-                </option>
-              </AppSelect>
-            </div>
-
-            {distributionMethod === "PERSONAL" && users && users.length > 0 && (
-              <div className="space-y-2">
-                <UserSingleSelect
-                  title={t("invoice.appliesTo")}
-                  value={personalUserId}
-                  onChange={setPersonalUserId}
-                  roleLabel={(role) =>
-                    role === "ADMIN"
-                      ? t("users.admin")
-                      : role === "CHILD"
-                        ? t("users.junior")
-                        : t("users.adult")
-                  }
-                  users={users.filter((u) => {
-                    if (!currentUser) return false;
-                    if (currentUser.role === "ADMIN") return true;
-                    if (currentUser.role === "ADULT") {
-                      return u.id === currentUser.id || u.role === "CHILD";
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="relative">
+                  <label className={labelCls}>{t("invoice.vendor")} *</label>
+                  <input
+                    type="text"
+                    value={vendor}
+                    onChange={(e) => {
+                      setVendor(e.target.value);
+                      setShowVendorList(true);
+                    }}
+                    onFocus={() => setShowVendorList(true)}
+                    onBlur={() =>
+                      setTimeout(() => setShowVendorList(false), 150)
                     }
-                    return u.id === currentUser.id;
-                  })}
+                    required
+                    className={inputCls}
+                    placeholder={t("invoice.vendorPlaceholder")}
+                  />
+                  {showVendorList && vendors.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                      {vendors
+                        .filter((v) =>
+                          v.name.toLowerCase().includes(vendor.toLowerCase()),
+                        )
+                        .map((v) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onMouseDown={() => {
+                              setVendor(v.name);
+                              setShowVendorList(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-left"
+                          >
+                            {v.logoUrl && (
+                              <img
+                                src={v.logoUrl}
+                                alt=""
+                                className="w-5 h-5 rounded object-contain bg-white flex-shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
+                            )}
+                            <span>{v.name}</span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className={labelCls}>{t("invoice.category")}</label>
+                  <AppSelect
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">{t("invoice.categoryPlaceholder")}</option>
+                    {sortedCategories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </AppSelect>
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>{t("invoice.description")}</label>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className={inputCls}
+                  placeholder={
+                    isSubscription
+                      ? t("subscription.descriptionPlaceholder")
+                      : t("invoice.descriptionPlaceholder")
+                  }
                 />
               </div>
-            )}
 
-            {distributionMethod === "BY_INCOME" &&
-              users &&
-              users.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className={labelCls + " mb-0"}>
-                      {t("invoice.selectUsers")}
-                    </label>
-                    {totalIncome === 0 && (
-                      <span className="text-xs text-amber-500 dark:text-amber-400">
-                        {t("invoice.noIncome")}
+              <div className="grid grid-cols-2 gap-3 md:gap-6">
+                <div className="min-w-0">
+                  <label className={labelCls}>{t("invoice.amount")} *</label>
+                  <div className="relative flex items-center">
+                    {symbolPosition === "Before" && (
+                      <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
+                        {currencySymbol}
+                      </span>
+                    )}
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      required
+                      step="0.01"
+                      min="0"
+                      className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
+                      placeholder="0.00"
+                    />
+                    {symbolPosition === "After" && (
+                      <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
+                        {currencySymbol}
                       </span>
                     )}
                   </div>
-                  <UserSelectionCards
-                    users={users}
-                    selectedIds={incomeUserIds}
-                    onToggle={handleToggleIncomeUser}
-                    roleLabel={(role) =>
-                      role === "ADMIN"
-                        ? t("users.admin")
-                        : role === "CHILD"
-                          ? t("users.junior")
-                          : t("users.adult")
-                    }
-                    ariaLabel={(u, selected) =>
-                      `${t("invoice.selectUsers")}: ${u.name}`
-                    }
-                    inlineContent={(u, selected) => {
-                      const pct = incomePercent(u.id);
-                      const hasIncome = activeIncomes.some(
-                        (i) => i.userId === u.id,
-                      );
-                      if (selected && pct !== null) {
-                        return (
-                          <span className="text-sm font-semibold text-primary dark:text-primary">
-                            {pct}%
-                          </span>
-                        );
-                      }
-                      if (selected && !hasIncome) {
-                        return (
-                          <span className="text-xs text-amber-500">
-                            {t("invoice.noIncomeShort")}
-                          </span>
-                        );
-                      }
-                      return null;
-                    }}
+                </div>
+                <div className="min-w-0">
+                  <label className={labelCls}>
+                    {t("invoice.paymentMethod")}
+                  </label>
+                  <AppSelect
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">
+                      {t("invoice.paymentMethodPlaceholder")}
+                    </option>
+                    {paymentMethods.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </AppSelect>
+                </div>
+              </div>
+
+              {!isSubscription && (
+                <div>
+                  <label className={labelCls}>{t("invoice.dueDate")}</label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className={dateInputCls}
                   />
-                  {selectedUserIds.length === 0 && (
-                    <p className="text-sm text-amber-500 dark:text-amber-400">
-                      {t("invoice.atLeastOneUser")}
-                    </p>
-                  )}
                 </div>
               )}
 
-            {distributionMethod === "BY_PERCENT" &&
-              users &&
-              users.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className={labelCls + " mb-0"}>
-                      {t("subscription.amountPerUser")}
+              {isSubscription && (
+                <>
+                  <div>
+                    <label className={labelCls}>
+                      {t("subscription.startDate")}
                     </label>
-                    <span className="text-sm font-medium text-primary dark:text-primary">
-                      {t("invoice.totalLabel")}{" "}
-                      {symbolPosition === "Before"
-                        ? `${currencySymbol}\u00A0`
-                        : ""}
-                      {centsToAmount(customAmountTotalCents)}
-                      {symbolPosition === "After"
-                        ? `\u00A0${currencySymbol}`
-                        : ""}
-                    </span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className={dateInputCls}
+                    />
                   </div>
-                  <UserSelectionCards
-                    users={users}
-                    selectedIds={incomeUserIds}
-                    onToggle={handleToggleIncomeUser}
-                    roleLabel={(role) =>
-                      role === "ADMIN"
-                        ? t("users.admin")
-                        : role === "CHILD"
-                          ? t("users.junior")
-                          : t("users.adult")
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                      <div>
+                        <label className={labelCls}>
+                          {t("subscription.everyLabel")}
+                        </label>
+                        <input
+                          type="number"
+                          value={frequencyQuantity}
+                          onChange={(e) => setFrequencyQuantity(e.target.value)}
+                          className={inputCls}
+                          min="1"
+                          placeholder="1"
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>
+                          {t("subscription.frequencyLabel")}
+                        </label>
+                        <AppSelect
+                          value={frequencyUnit}
+                          onChange={(e) => setFrequencyUnit(e.target.value)}
+                          className={inputCls}
+                        >
+                          <option value="DAY">
+                            {t("subscription.unitDay")}
+                          </option>
+                          <option value="WEEK">
+                            {t("subscription.unitWeek")}
+                          </option>
+                          <option value="MONTH">
+                            {t("subscription.unitMonth")}
+                          </option>
+                          <option value="YEAR">
+                            {t("subscription.unitYear")}
+                          </option>
+                        </AppSelect>
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelCls}>
+                        {t("subscription.dayOfMonth")}
+                      </label>
+                      <input
+                        type="number"
+                        value={dayOfMonth}
+                        onChange={(e) => setDayOfMonth(e.target.value)}
+                        className={inputCls}
+                        min="1"
+                        max="31"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="lg:self-start">
+                <label className={labelCls}>
+                  {t("invoice.distributionMethod")} *
+                </label>
+                <AppSelect
+                  value={
+                    distributionMethod === "FIXED"
+                      ? fixedMode === "AMOUNT"
+                        ? "FIXED_AMOUNT"
+                        : "FIXED_EQUAL"
+                      : distributionMethod
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "FIXED_EQUAL") {
+                      setDistributionMethod("FIXED");
+                      setFixedMode("EQUAL");
+                    } else if (value === "FIXED_AMOUNT") {
+                      setDistributionMethod("FIXED");
+                      setFixedMode("AMOUNT");
+                    } else {
+                      setDistributionMethod(
+                        value as "BY_INCOME" | "BY_PERCENT" | "PERSONAL",
+                      );
                     }
-                    ariaLabel={(u, selected) =>
-                      `${t("invoice.selectUsers")}: ${u.name}`
-                    }
-                    inlineContent={(u, _selected) => (
-                      <div
-                        className="flex items-center gap-1"
-                        onClick={(e) => e.stopPropagation()}
+                  }}
+                  className={inputCls}
+                >
+                  <option value="BY_INCOME">{t("invoice.incomeBased")}</option>
+                  <option value="BY_PERCENT">
+                    {t("subscription.customAmount")}
+                  </option>
+                  <option value="FIXED_EQUAL">{t("invoice.equal")}</option>
+                  <option value="FIXED_AMOUNT">
+                    {t("subscription.amountOnly")}
+                  </option>
+                  <option value="PERSONAL">
+                    {t("invoice.personalExpenseOption")}
+                  </option>
+                </AppSelect>
+              </div>
+
+              {distributionMethod === "PERSONAL" &&
+                users &&
+                users.length > 0 && (
+                  <div className="space-y-2">
+                    <UserSingleSelect
+                      title={t("invoice.appliesTo")}
+                      value={personalUserId}
+                      onChange={setPersonalUserId}
+                      roleLabel={(role) =>
+                        role === "ADMIN"
+                          ? t("users.admin")
+                          : role === "CHILD"
+                            ? t("users.junior")
+                            : t("users.adult")
+                      }
+                      users={users.filter((u) => {
+                        if (!currentUser) return false;
+                        if (currentUser.role === "ADMIN") return true;
+                        if (currentUser.role === "ADULT") {
+                          return u.id === currentUser.id || u.role === "CHILD";
+                        }
+                        return u.id === currentUser.id;
+                      })}
+                    />
+                  </div>
+                )}
+
+              {distributionMethod === "BY_INCOME" &&
+                users &&
+                users.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls + " mb-0"}>
+                        {t("invoice.selectUsers")}
+                      </label>
+                      {totalIncome === 0 && (
+                        <span className="text-xs text-amber-500 dark:text-amber-400">
+                          {t("invoice.noIncome")}
+                        </span>
+                      )}
+                    </div>
+                    <UserSelectionCards
+                      users={users}
+                      selectedIds={incomeUserIds}
+                      onToggle={handleToggleIncomeUser}
+                      roleLabel={(role) =>
+                        role === "ADMIN"
+                          ? t("users.admin")
+                          : role === "CHILD"
+                            ? t("users.junior")
+                            : t("users.adult")
+                      }
+                      ariaLabel={(u, selected) =>
+                        `${t("invoice.selectUsers")}: ${u.name}`
+                      }
+                      inlineContent={(u, selected) => {
+                        const pct = incomePercent(u.id);
+                        const hasIncome = activeIncomes.some(
+                          (i) => i.userId === u.id,
+                        );
+                        if (selected && pct !== null) {
+                          return (
+                            <span className="text-sm font-semibold text-primary dark:text-primary">
+                              {pct}%
+                            </span>
+                          );
+                        }
+                        if (selected && !hasIncome) {
+                          return (
+                            <span className="text-xs text-amber-500">
+                              {t("invoice.noIncomeShort")}
+                            </span>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    {selectedUserIds.length === 0 && (
+                      <p className="text-sm text-amber-500 dark:text-amber-400">
+                        {t("invoice.atLeastOneUser")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+              {distributionMethod === "BY_PERCENT" &&
+                users &&
+                users.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls + " mb-0"}>
+                        {t("subscription.amountPerUser")}
+                      </label>
+                      <span className="text-sm font-medium text-primary dark:text-primary">
+                        {t("invoice.totalLabel")}{" "}
+                        {symbolPosition === "Before"
+                          ? `${currencySymbol}\u00A0`
+                          : ""}
+                        {centsToAmount(customAmountTotalCents)}
+                        {symbolPosition === "After"
+                          ? `\u00A0${currencySymbol}`
+                          : ""}
+                      </span>
+                    </div>
+                    <UserSelectionCards
+                      users={users}
+                      selectedIds={incomeUserIds}
+                      onToggle={handleToggleIncomeUser}
+                      roleLabel={(role) =>
+                        role === "ADMIN"
+                          ? t("users.admin")
+                          : role === "CHILD"
+                            ? t("users.junior")
+                            : t("users.adult")
+                      }
+                      ariaLabel={(u, selected) =>
+                        `${t("invoice.selectUsers")}: ${u.name}`
+                      }
+                      inlineContent={(u, _selected) => (
+                        <div
+                          className="flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="relative flex items-center">
+                            {symbolPosition === "Before" && (
+                              <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
+                                {currencySymbol}
+                              </span>
+                            )}
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              disabled={!_selected}
+                              value={userPercents[u.id] ?? ""}
+                              onChange={(e) =>
+                                setUserPercents((prev) => ({
+                                  ...prev,
+                                  [u.id]: e.target.value,
+                                }))
+                              }
+                              className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
+                              placeholder="0"
+                            />
+                            {symbolPosition === "After" && (
+                              <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
+                                {currencySymbol}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    />
+                    {selectedUserIds.length === 0 && (
+                      <p className="text-sm text-amber-500 dark:text-amber-400">
+                        {t("invoice.atLeastOneUser")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+              {distributionMethod === "FIXED" &&
+                users &&
+                users.length > 0 &&
+                (fixedMode === "AMOUNT" ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls + " mb-0"}>
+                        {t("subscription.fixedAmountPerUser")}
+                      </label>
+                      <span
+                        className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-primary dark:text-primary" : "text-red-500 dark:text-red-400"}`}
                       >
+                        {t("subscription.remainingAmount", {
+                          amount:
+                            symbolPosition === "Before"
+                              ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
+                              : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
+                        })}
+                      </span>
+                    </div>
+                    <UserSelectionCards
+                      users={users}
+                      selectedIds={incomeUserIds}
+                      onToggle={handleToggleIncomeUser}
+                      roleLabel={(role) =>
+                        role === "ADMIN"
+                          ? t("users.admin")
+                          : role === "CHILD"
+                            ? t("users.junior")
+                            : t("users.adult")
+                      }
+                      ariaLabel={(u) =>
+                        `${t("subscription.fixedAmountPerUser")}: ${u.name}`
+                      }
+                      inlineContent={(u, _selected) => (
                         <div className="relative flex items-center">
                           {symbolPosition === "Before" && (
                             <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
@@ -1049,9 +1183,9 @@ export default function AddExpense() {
                             min="0"
                             step="0.01"
                             disabled={!_selected}
-                            value={userPercents[u.id] ?? ""}
+                            value={userFixedAmounts[u.id] ?? ""}
                             onChange={(e) =>
-                              setUserPercents((prev) => ({
+                              setUserFixedAmounts((prev) => ({
                                 ...prev,
                                 [u.id]: e.target.value,
                               }))
@@ -1065,129 +1199,56 @@ export default function AddExpense() {
                             </span>
                           )}
                         </div>
-                      </div>
-                    )}
-                  />
-                  {selectedUserIds.length === 0 && (
-                    <p className="text-sm text-amber-500 dark:text-amber-400">
-                      {t("invoice.atLeastOneUser")}
+                      )}
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t("subscription.remainingAmountHint")}
                     </p>
-                  )}
-                </div>
-              )}
-
-            {distributionMethod === "FIXED" &&
-              users &&
-              users.length > 0 &&
-              (fixedMode === "AMOUNT" ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className={labelCls + " mb-0"}>
-                      {t("subscription.fixedAmountPerUser")}
-                    </label>
-                    <span
-                      className={`text-sm font-semibold ${fixedRemainingCents >= 0 ? "text-primary dark:text-primary" : "text-red-500 dark:text-red-400"}`}
-                    >
-                      {t("subscription.remainingAmount", {
-                        amount:
-                          symbolPosition === "Before"
-                            ? `${currencySymbol}\u00A0${centsToAmount(fixedRemainingCents)}`
-                            : `${centsToAmount(fixedRemainingCents)}\u00A0${currencySymbol}`,
-                      })}
-                    </span>
                   </div>
-                  <UserSelectionCards
-                    users={users}
-                    selectedIds={incomeUserIds}
-                    onToggle={handleToggleIncomeUser}
-                    roleLabel={(role) =>
-                      role === "ADMIN"
-                        ? t("users.admin")
-                        : role === "CHILD"
-                          ? t("users.junior")
-                          : t("users.adult")
-                    }
-                    ariaLabel={(u) =>
-                      `${t("subscription.fixedAmountPerUser")}: ${u.name}`
-                    }
-                    inlineContent={(u, _selected) => (
-                      <div className="relative flex items-center">
-                        {symbolPosition === "Before" && (
-                          <span className="absolute left-2 text-xs text-gray-400 pointer-events-none select-none">
-                            {currencySymbol}
-                          </span>
-                        )}
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          disabled={!_selected}
-                          value={userFixedAmounts[u.id] ?? ""}
-                          onChange={(e) =>
-                            setUserFixedAmounts((prev) => ({
-                              ...prev,
-                              [u.id]: e.target.value,
-                            }))
-                          }
-                          className={`w-24 sm:w-28 py-1.5 text-sm text-right rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 ${symbolPosition === "Before" ? "pl-5 pr-2" : "pl-2 pr-5"}`}
-                          placeholder="0"
-                        />
-                        {symbolPosition === "After" && (
-                          <span className="absolute right-2 text-xs text-gray-400 pointer-events-none select-none">
-                            {currencySymbol}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("subscription.remainingAmountHint")}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className={labelCls + " mb-0"}>
-                      {t("invoice.selectUsersEqual")}
-                    </label>
-                    {equalPercent ? (
-                      <span className="text-sm font-medium text-primary dark:text-primary">
-                        {equalPercent}
-                        {t("invoice.eachPct")}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-amber-500">
-                        {t("invoice.atLeastOneUser")}
-                      </span>
-                    )}
-                  </div>
-                  <UserSelectionCards
-                    users={users}
-                    selectedIds={incomeUserIds}
-                    onToggle={handleToggleIncomeUser}
-                    roleLabel={(role) =>
-                      role === "ADMIN"
-                        ? t("users.admin")
-                        : role === "CHILD"
-                          ? t("users.junior")
-                          : t("users.adult")
-                    }
-                    ariaLabel={(u) =>
-                      `${t("invoice.selectUsersEqual")}: ${u.name}`
-                    }
-                    inlineContent={(_u, selected) =>
-                      selected && equalPercent ? (
-                        <span className="text-sm font-semibold text-primary dark:text-primary">
-                          {equalPercent}%
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls + " mb-0"}>
+                        {t("invoice.selectUsersEqual")}
+                      </label>
+                      {equalPercent ? (
+                        <span className="text-sm font-medium text-primary dark:text-primary">
+                          {equalPercent}
+                          {t("invoice.eachPct")}
                         </span>
-                      ) : null
-                    }
-                  />
-                </div>
-              ))}
-          </div>
-        </form>
-      </div>
+                      ) : (
+                        <span className="text-sm text-amber-500">
+                          {t("invoice.atLeastOneUser")}
+                        </span>
+                      )}
+                    </div>
+                    <UserSelectionCards
+                      users={users}
+                      selectedIds={incomeUserIds}
+                      onToggle={handleToggleIncomeUser}
+                      roleLabel={(role) =>
+                        role === "ADMIN"
+                          ? t("users.admin")
+                          : role === "CHILD"
+                            ? t("users.junior")
+                            : t("users.adult")
+                      }
+                      ariaLabel={(u) =>
+                        `${t("invoice.selectUsersEqual")}: ${u.name}`
+                      }
+                      inlineContent={(_u, selected) =>
+                        selected && equalPercent ? (
+                          <span className="text-sm font-semibold text-primary dark:text-primary">
+                            {equalPercent}%
+                          </span>
+                        ) : null
+                      }
+                    />
+                  </div>
+                ))}
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );

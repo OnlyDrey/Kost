@@ -9,6 +9,7 @@
     "dashboard": "Oversikt",
     "invoices": "Utgifter",
     "periods": "Perioder",
+    "expenses": "Utgifter",
     "settings": "Innstillinger",
     "subscriptions": "Faste utgifter",
     "logout": "Logg ut",
@@ -151,6 +152,7 @@
   "period": {
     "title": "Periode",
     "periods": "Perioder",
+    "expenses": "Utgifter",
     "currentPeriod": "Nåværende periode",
     "createPeriod": "Opprett periode",
     "closePeriod": "Lukk periode",
@@ -608,7 +610,8 @@
     "closedPeriodPaymentBlocked": "Overføring kan ikke registreres i lukket periode.",
     "totalPeriodShare": "Andel denne perioden",
     "basePeriodShare": "Andel denne perioden",
-    "remainingShort": "Gjenstående"
+    "remainingShort": "Gjenstående",
+    "invalidAmount": "Ugyldig beløp"
   },
   "data": {
     "title": "Data",

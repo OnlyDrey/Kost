@@ -8,11 +8,37 @@
 ## Overview
 
 Kost is a monorepo for a household finance PWA:
+
 - **Web app**: React 18 + Vite + TypeScript + Tailwind
 - **API**: NestJS + Prisma + PostgreSQL 16
 - **Shared package**: cross-app types and schemas
 
 The default deployment is Docker-first, running PostgreSQL and a single app container serving both API (`/api`) and the built web app (`/`).
+
+## Product modules (current UI)
+
+Main app modules in the PWA today:
+
+- **Oversikt**: period selector, status badge, summary cards, shares, and category views.
+- **Utgifter**: dedicated period expense page (`/expenses`) with filters, grouped statuses, and responsive expense card grids (1 col mobile, 2 col tablet, 4 col desktop).
+  - Add/edit flows return contextually to the previous screen (or sensible route fallback) instead of hard-redirecting to dashboard.
+- **Faste utgifter**: recurring expense rules, status control (`Aktiv`, `Satt på pause`, `Avsluttet`) and period generation.
+- **Oppgjør**: transfer registration, settlement planning, and history per period.
+- **Data**: import, export, and local backup/restore workflows.
+- **Perioder**: create, close, reopen, and delete period lifecycle actions.
+
+Status/type filter behavior:
+
+- Expense status filters always include reset (`Status`) and only show status options currently present in the active filtered dataset.
+- Expense type filters always include reset (`Type`) and only show distribution types that exist in the currently active dataset.
+
+Data module capabilities currently include:
+
+- Import of expenses/recurring expenses from spreadsheet files.
+- Import of vendors/categories/payment methods from simple files.
+- Export of expenses, recurring expenses, settlement data, and masterdata (CSV/JSON).
+- Manual and automatic local backups with restore preview and restore action.
+- Data page actions are grouped by data type, with direct `Import` plus an `Eksport` action that opens supported export options (CSV/JSON/template where relevant).
 
 ## Repository structure
 
@@ -42,6 +68,7 @@ npm ci --workspaces --include-workspace-root
 ```
 
 Required before first real run:
+
 - `JWT_SECRET`
 - `BOOTSTRAP_ADMIN_PASSWORD`
 

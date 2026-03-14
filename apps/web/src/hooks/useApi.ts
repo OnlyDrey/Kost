@@ -7,7 +7,7 @@
  * and readability.
  */
 
-export { queryKeys } from './queryKeys';
+export { queryKeys } from "./queryKeys";
 
 export {
   useInvoices,
@@ -15,7 +15,7 @@ export {
   useCreateInvoice,
   useUpdateInvoice,
   useDeleteInvoice,
-} from './useInvoiceApi';
+} from "./useInvoiceApi";
 
 export {
   usePeriods,
@@ -27,12 +27,9 @@ export {
   useGetPeriodDeletionInfo,
   useDeletePeriod,
   usePeriodStats,
-} from './usePeriodApi';
+} from "./usePeriodApi";
 
-export {
-  useUserIncomes,
-  useUpsertUserIncome,
-} from './useIncomeApi';
+export { useUserIncomes, useUpsertUserIncome } from "./useIncomeApi";
 
 export {
   useUsers,
@@ -42,7 +39,7 @@ export {
   useUploadAvatar,
   useRemoveAvatar,
   useUploadVendorLogo,
-} from './useUserApi';
+} from "./useUserApi";
 
 export {
   useChangePassword,
@@ -52,13 +49,13 @@ export {
   useEnableTwoFactor,
   useDisableTwoFactor,
   useRegenerateRecoveryCodes,
-} from './useAuthApi';
+} from "./useAuthApi";
 
 export {
   useAddPayment,
   useUpdatePayment,
   useDeletePayment,
-} from './usePaymentApi';
+} from "./usePaymentApi";
 
 export {
   useCategories,
@@ -81,7 +78,7 @@ export {
   useUpdateVendor,
   useRemoveVendor,
   useRemoveVendorsBulk,
-} from './useFamilyApi';
+} from "./useFamilyApi";
 
 export {
   useSubscriptions,
@@ -91,12 +88,13 @@ export {
   useToggleSubscription,
   useDeleteSubscription,
   useGenerateSubscriptionInvoices,
-} from './useSubscriptionApi';
+} from "./useSubscriptionApi";
 
 export {
   useSettlementSummary,
   useSettlementWarnings,
   useCreateSettlementEntry,
   useCreateSettlementPlan,
+  useUpdateSettlementEntry,
   useReverseSettlementEntry,
 } from "./useSettlementApi";

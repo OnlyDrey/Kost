@@ -72,3 +72,14 @@ The backend uses Prisma models for users, periods, invoices, payments, subscript
 - `VITE_ENABLE_PWA` is `false` by default to reduce stale-cache behavior in production.
 - `HEALTH_REQUIRE_WEB_ASSETS=true` makes health checks fail when API is up but web build artifacts are missing.
 - Reverse proxy + HTTPS is the recommended production topology.
+
+## Current workflow snapshot
+
+- **Period-driven accounting**: most views and calculations are scoped to a selected period (`YYYY-MM`).
+- **Recurring expenses**: subscriptions can be maintained separately and generated into invoice records for open periods.
+- **Settlement flow (oppgjør)**: register transfers, maintain settlement plans, and inspect settlement history in dedicated tabs.
+- **Data transfer**: the Data page supports imports, exports, and local backup/restore for operational continuity.
+- **Expenses page**: `/expenses` is period-scoped and uses grouped expense cards with responsive 1/2/4 column behavior.
+
+- **Settlement history actions**: history rows use right-aligned actions opening a transaction action dialog for edit amount or reverse operations, with compact side-by-side primary actions in the dialog.
+- **Data transfers**: import/export actions are consolidated by data type, with export options surfaced from a per-card export action dialog.

@@ -24,7 +24,9 @@ export function useCreateSettlementEntry() {
   return useMutation({
     mutationFn: settlementApi.createEntry,
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["settlements", "summary", variables.periodId] });
+      qc.invalidateQueries({
+        queryKey: ["settlements", "summary", variables.periodId],
+      });
     },
   });
 }
@@ -34,7 +36,32 @@ export function useCreateSettlementPlan() {
   return useMutation({
     mutationFn: settlementApi.createPlan,
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["settlements", "summary", variables.sourcePeriodId] });
+      qc.invalidateQueries({
+        queryKey: ["settlements", "summary", variables.sourcePeriodId],
+      });
+    },
+  });
+}
+
+export function useUpdateSettlementEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      periodId,
+      entryId,
+      amountCents,
+      comment,
+    }: {
+      periodId: string;
+      entryId: string;
+      amountCents: number;
+      comment?: string;
+    }) =>
+      settlementApi.updateEntry(periodId, entryId, { amountCents, comment }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["settlements", "summary", variables.periodId],
+      });
     },
   });
 }
@@ -42,10 +69,19 @@ export function useCreateSettlementPlan() {
 export function useReverseSettlementEntry() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ periodId, entryId, comment }: { periodId: string; entryId: string; comment: string }) =>
-      settlementApi.reverseEntry(periodId, entryId, comment),
+    mutationFn: ({
+      periodId,
+      entryId,
+      comment,
+    }: {
+      periodId: string;
+      entryId: string;
+      comment: string;
+    }) => settlementApi.reverseEntry(periodId, entryId, comment),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["settlements", "summary", variables.periodId] });
+      qc.invalidateQueries({
+        queryKey: ["settlements", "summary", variables.periodId],
+      });
     },
   });
 }

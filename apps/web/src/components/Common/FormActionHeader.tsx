@@ -11,6 +11,7 @@ type FormActionHeaderProps = {
   saveDisabled?: boolean;
   isPending?: boolean;
   className?: string;
+  splitButtonsWhenNoStatus?: boolean;
 };
 
 export default function FormActionHeader({
@@ -23,20 +24,44 @@ export default function FormActionHeader({
   saveDisabled,
   isPending,
   className = "",
+  splitButtonsWhenNoStatus = false,
 }: FormActionHeaderProps) {
+  const hasStatusControl = Boolean(statusLabel || statusControl);
+  const splitButtons = splitButtonsWhenNoStatus && !hasStatusControl;
+
   return (
-    <div className={`grid grid-cols-12 gap-3 ${className}`.trim()}>
-      <div className="col-span-6 min-w-0">
-        {statusLabel ? <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{statusLabel}</label> : null}
-        {statusControl}
-      </div>
-      <div className="col-span-6 mt-7 flex items-center justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>
+    <div
+      className={`${hasStatusControl ? "flex items-end gap-2" : "flex gap-2"} ${className}`.trim()}
+    >
+      {hasStatusControl ? (
+        <div className="min-w-0 flex-1">
+          {statusLabel ? (
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {statusLabel}
+            </label>
+          ) : null}
+          {statusControl}
+        </div>
+      ) : null}
+      <div
+        className={`${splitButtons ? "grid flex-1 grid-cols-2" : "flex"} items-center justify-end gap-2`.trim()}
+      >
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onCancel}
+          className={splitButtons ? "w-full" : ""}
+        >
           {cancelLabel}
         </Button>
-        <Button type="button" onClick={onSave} disabled={saveDisabled}>
+        <Button
+          type="button"
+          onClick={onSave}
+          disabled={saveDisabled}
+          className={splitButtons ? "w-full" : ""}
+        >
           {isPending ? (
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
           ) : null}
           {saveLabel}
         </Button>

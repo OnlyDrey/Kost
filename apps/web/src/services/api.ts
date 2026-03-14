@@ -142,7 +142,6 @@ export interface Vendor {
   updatedAt: string;
 }
 
-
 export interface SettlementPairSummary {
   fromUserId: string;
   toUserId: string;
@@ -502,16 +501,21 @@ export const subscriptionApi = {
     ),
 };
 
-
 export const settlementApi = {
   getSummary: (periodId: string) =>
-    api.get<SettlementSummary>("/settlements/summary", { params: { periodId } }),
+    api.get<SettlementSummary>("/settlements/summary", {
+      params: { periodId },
+    }),
 
   getWarnings: (periodId: string) =>
-    api.get<Array<{ sourcePeriodId: string; fromUserId: string; toUserId: string; amountCents: number }>>(
-      "/settlements/warnings",
-      { params: { periodId } },
-    ),
+    api.get<
+      Array<{
+        sourcePeriodId: string;
+        fromUserId: string;
+        toUserId: string;
+        amountCents: number;
+      }>
+    >("/settlements/warnings", { params: { periodId } }),
 
   createEntry: (data: {
     periodId: string;
@@ -527,15 +531,26 @@ export const settlementApi = {
     sourcePeriodId: string;
     fromUserId: string;
     toUserId: string;
-    planType: "full_next_period" | "fixed_amount_per_period" | "fixed_number_of_periods";
+    planType:
+      | "full_next_period"
+      | "fixed_amount_per_period"
+      | "fixed_number_of_periods";
     configuredAmountCents?: number;
     configuredPeriodCount?: number;
     startPeriodId?: string;
     comment?: string;
   }) => api.post("/settlements/plans", data),
 
+  updateEntry: (
+    periodId: string,
+    entryId: string,
+    data: { amountCents: number; comment?: string },
+  ) => api.post(`/settlements/entries/${periodId}/${entryId}/update`, data),
+
   reverseEntry: (periodId: string, entryId: string, comment: string) =>
-    api.post(`/settlements/entries/${periodId}/${entryId}/reverse`, { comment }),
+    api.post(`/settlements/entries/${periodId}/${entryId}/reverse`, {
+      comment,
+    }),
 };
 
 export default api;
