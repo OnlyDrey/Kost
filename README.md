@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/logo-mark.svg" alt="Kost logo" width="96" />
+  <img src="project/apps/web/public/logo-mark.svg" alt="Kost logo" width="96" />
 </p>
 <h1 align="center">Kost</h1>
 
