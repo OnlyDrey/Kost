@@ -389,10 +389,8 @@ export default function Profile() {
 
       setBrandingSaved(true);
       window.setTimeout(() => setBrandingSaved(false), 2000);
-    } catch (err) {
-      setBrandingError(
-        err instanceof Error ? err.message : t("errors.generic"),
-      );
+    } catch {
+      setBrandingError(t("errors.serverError"));
     }
   };
 

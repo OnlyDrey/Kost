@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { spawnSync } from "child_process";
 import { PrismaService } from "../prisma/prisma.service";
-import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSync } from "fs";
+import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSync, statSync } from "fs";
 import { extname, join } from "path";
 
 @Injectable()
@@ -406,25 +406,66 @@ export class FamilyService {
     return this.getBrandingConfig(familyId);
   }
 
+
+  private parsePngDimensions(filePath: string): { width: number; height: number } | null {
+    try {
+      const buffer = readFileSync(filePath);
+      if (buffer.length < 24) return null;
+      const signature = buffer.subarray(0, 8);
+      const expected = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+      if (!signature.equals(expected)) return null;
+      const width = buffer.readUInt32BE(16);
+      const height = buffer.readUInt32BE(20);
+      return { width, height };
+    } catch {
+      return null;
+    }
+  }
+
+  private generatedAssetSpecs() {
+    return [
+      { name: "favicon-32.png", size: 32 },
+      { name: "apple-180.png", size: 180 },
+      { name: "pwa-192.png", size: 192 },
+      { name: "pwa-512.png", size: 512 },
+      { name: "pwa-192-maskable.png", size: 192 },
+      { name: "pwa-512-maskable.png", size: 512 },
+      { name: "preview-512.png", size: 512 },
+    ] as const;
+  }
+
+  private validateGeneratedBrandingAssets(familyId: string): boolean {
+    const generatedDir = join(this.getBrandingDir(familyId), "generated");
+    return this.generatedAssetSpecs().every(({ name, size }) => {
+      const filePath = join(generatedDir, name);
+      if (!existsSync(filePath)) return false;
+      const fileStat = statSync(filePath);
+      if (fileStat.size < 512) return false;
+      const dimensions = this.parsePngDimensions(filePath);
+      return Boolean(
+        dimensions && dimensions.width === size && dimensions.height === size,
+      );
+    });
+  }
+
   private writeFallbackBrandingAssets(familyId: string) {
     const generatedDir = join(this.getBrandingDir(familyId), "generated");
-    const fallback = join(process.cwd(), "public", "pwa-512x512.png");
-    [
-      "favicon-32.png",
-      "apple-180.png",
-      "pwa-192.png",
-      "pwa-512.png",
-      "pwa-192-maskable.png",
-      "pwa-512-maskable.png",
-      "preview-512.png",
-    ].forEach((name) => {
+    const fallback = join(process.cwd(), "public", "apple-touch-icon.png");
+    this.generatedAssetSpecs().forEach(({ name }) => {
       copyFileSync(fallback, join(generatedDir, name));
     });
   }
 
   regenerateBrandingAssets(familyId: string) {
     const config = this.readBrandingConfig(familyId);
-    const defaultRasterPath = join(process.cwd(), "public", "pwa-512x512.png");
+    const defaultRasterPath = join(process.cwd(), "public", "apple-touch-icon.png");
+    const sourceLabel =
+      config.sourceType === "upload"
+        ? join(this.getBrandingDir(familyId), `source${String(config.logoExt ?? ".png")}`)
+        : config.sourceType === "url"
+          ? String(config.logoUrl ?? "")
+          : defaultRasterPath;
+
     const result = spawnSync(
       "python3",
       [
@@ -435,8 +476,23 @@ export class FamilyService {
       { encoding: "utf-8" },
     );
 
-    if (result.status !== 0) {
+    const generatedValid = this.validateGeneratedBrandingAssets(familyId);
+
+    if (result.status !== 0 || !generatedValid) {
+      console.warn("[Branding] Icon generation failed; using fallback assets", {
+        familyId,
+        sourceType: config.sourceType,
+        source: sourceLabel,
+        status: result.status,
+        stderr: result.stderr,
+      });
       this.writeFallbackBrandingAssets(familyId);
+    } else {
+      console.info("[Branding] Icon generation succeeded", {
+        familyId,
+        sourceType: config.sourceType,
+        source: sourceLabel,
+      });
     }
 
     this.writeBrandingManifest(
