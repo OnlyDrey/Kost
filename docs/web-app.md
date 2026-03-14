@@ -1,4 +1,6 @@
-# Web App Guide (`apps/web`)
+# Web App Guide (`project/apps/web`)
+
+> All command examples assume you are in `Kost/project` unless stated otherwise.
 
 ## Stack
 
@@ -12,7 +14,7 @@
 
 ## Commands
 
-Run from repository root:
+Run from repository root (`cd project` first):
 
 ```bash
 npm run dev:web

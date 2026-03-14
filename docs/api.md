@@ -1,4 +1,6 @@
-# API Guide (`apps/api`)
+# API Guide (`project/apps/api`)
+
+> All command examples assume you are in `Kost/project` unless stated otherwise.
 
 ## Stack
 
@@ -9,7 +11,7 @@
 
 ## Commands
 
-Run from repository root:
+Run from repository root (`cd project` first):
 
 ```bash
 npm run dev --workspace=apps/api

@@ -1,5 +1,7 @@
 # System Overview
 
+> All command examples assume you are in `Kost/project` unless stated otherwise.
+
 ## What you need
 
 - Basic familiarity with Docker Compose and web app deployment.
@@ -29,20 +31,20 @@ Browser
 
 ## Components
 
-### Frontend (`apps/web`)
+### Frontend (`project/apps/web`)
 
 - React 18 + TypeScript + Vite
 - React Router + React Query
 - i18next localization
 - Optional PWA support (disabled by default)
 
-### Backend (`apps/api`)
+### Backend (`project/apps/api`)
 
 - NestJS + Prisma
 - Auth with JWT in HTTP-only cookies
 - Feature modules: auth, users, family, periods, invoices, payments, subscriptions, audit, health
 
-### Shared package (`packages/shared`)
+### Shared package (`project/packages/shared`)
 
 - Shared TypeScript types and schema primitives used across workspaces
 

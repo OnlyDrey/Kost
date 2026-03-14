@@ -1,19 +1,21 @@
 # Design Tokens
 
+> All command examples assume you are in `Kost/project` unless stated otherwise.
+
 ## Token contract
 
-Semantic color tokens are defined in `apps/web/src/index.css` as RGB triplets:
+Semantic color tokens are defined in `project/apps/web/src/index.css` as RGB triplets:
 
 - Brand/state: `--color-primary`, `--color-success`, `--color-danger`, `--color-warning`, `--color-neutral`, `--color-focus`
 - Surfaces: `--color-bg`, `--color-surface`, `--color-surface-elevated`
 - Text: `--color-text-primary`, `--color-text-secondary`, `--color-text-muted`
 - Structure: `--color-border`
 
-Primary color family mappings live in `apps/web/src/theme/primaryColorFamilies.ts`.
+Primary color family mappings live in `project/apps/web/src/theme/primaryColorFamilies.ts`.
 
 ## Tailwind semantic mapping
 
-Defined in `apps/web/tailwind.config.js`:
+Defined in `project/apps/web/tailwind.config.js`:
 
 - `primary`, `success`, `danger`, `warning`, `neutral`
 - `bg`, `surface`, `surface-elevated`

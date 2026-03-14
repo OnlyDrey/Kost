@@ -1,5 +1,7 @@
 # Setup and Deployment
 
+> All command examples assume you are in `Kost/project` unless stated otherwise.
+
 ## What you need
 
 - Docker Engine + Docker Compose v2 (`docker compose`)
@@ -15,7 +17,7 @@
 
 ```bash
 git clone https://github.com/OnlyDrey/Kost.git
-cd Kost
+cd Kost/project
 cp .env.example .env
 ```
 
@@ -159,7 +161,7 @@ If you see `TLS handshake timeout` when pulling `node:22-alpine` from Docker Hub
 
 ### Standard build commands
 
-Run from repository root:
+Run from repository root (`cd project` first):
 
 ```bash
 npm run docker:image:build

@@ -1,5 +1,7 @@
 # Operations
 
+> All command examples assume you are in `Kost/project` unless stated otherwise.
+
 ## What you need
 
 - Access to Docker host and project `.env`.

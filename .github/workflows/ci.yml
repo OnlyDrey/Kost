@@ -13,6 +13,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: project
 
     steps:
       - name: Checkout code
@@ -31,8 +34,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: 'project/.nvmrc'
           cache: 'npm'
+          cache-dependency-path: 'project/package-lock.json'
 
       - name: Pin npm version
         run: npm i -g npm@10
@@ -44,10 +48,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            apps/web/.cache/tsbuildinfo
-            packages/shared/.cache/tsbuildinfo
-            apps/api/.cache/tsbuildinfo
-          key: ts-${{ runner.os }}-${{ hashFiles('package-lock.json', 'apps/web/tsconfig.json', 'apps/web/tsconfig.node.json', 'packages/shared/tsconfig.json', 'apps/api/tsconfig.json', 'apps/api/tsconfig.seed.json', 'apps/web/vite.config.ts') }}
+            project/apps/web/.cache/tsbuildinfo
+            project/packages/shared/.cache/tsbuildinfo
+            project/apps/api/.cache/tsbuildinfo
+          key: ts-${{ runner.os }}-${{ hashFiles('project/package-lock.json', 'project/apps/web/tsconfig.json', 'project/apps/web/tsconfig.node.json', 'project/packages/shared/tsconfig.json', 'project/apps/api/tsconfig.json', 'project/apps/api/tsconfig.seed.json', 'project/apps/web/vite.config.ts') }}
           restore-keys: |
             ts-${{ runner.os }}-
 
@@ -72,6 +76,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: project
 
     services:
       postgres:
@@ -95,8 +102,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: 'project/.nvmrc'
           cache: 'npm'
+          cache-dependency-path: 'project/package-lock.json'
 
       - name: Pin npm version
         run: npm i -g npm@10
@@ -110,9 +118,9 @@ jobs:
         with:
           path: |
             ~/.cache/prisma
-            node_modules/.prisma
-            apps/api/node_modules/.prisma
-          key: prisma-${{ runner.os }}-${{ hashFiles('apps/api/prisma/schema.prisma', 'apps/api/package.json', 'package-lock.json') }}
+            project/node_modules/.prisma
+            project/apps/api/node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('project/apps/api/prisma/schema.prisma', 'project/apps/api/package.json', 'project/package-lock.json') }}
           restore-keys: |
             prisma-${{ runner.os }}-
 
@@ -120,10 +128,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            apps/web/.cache/tsbuildinfo
-            packages/shared/.cache/tsbuildinfo
-            apps/api/.cache/tsbuildinfo
-          key: ts-${{ runner.os }}-${{ hashFiles('package-lock.json', 'apps/web/tsconfig.json', 'apps/web/tsconfig.node.json', 'packages/shared/tsconfig.json', 'apps/api/tsconfig.json', 'apps/api/tsconfig.seed.json', 'apps/web/vite.config.ts') }}
+            project/apps/web/.cache/tsbuildinfo
+            project/packages/shared/.cache/tsbuildinfo
+            project/apps/api/.cache/tsbuildinfo
+          key: ts-${{ runner.os }}-${{ hashFiles('project/package-lock.json', 'project/apps/web/tsconfig.json', 'project/apps/web/tsconfig.node.json', 'project/packages/shared/tsconfig.json', 'project/apps/api/tsconfig.json', 'project/apps/api/tsconfig.seed.json', 'project/apps/web/vite.config.ts') }}
           restore-keys: |
             ts-${{ runner.os }}-
 
@@ -214,6 +222,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, test]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    defaults:
+      run:
+        working-directory: project
 
     steps:
       - name: Checkout code
@@ -225,9 +236,9 @@ jobs:
         with:
           path: |
             ~/.cache/prisma
-            node_modules/.prisma
-            apps/api/node_modules/.prisma
-          key: prisma-${{ runner.os }}-${{ hashFiles('apps/api/prisma/schema.prisma', 'apps/api/package.json', 'package-lock.json') }}
+            project/node_modules/.prisma
+            project/apps/api/node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('project/apps/api/prisma/schema.prisma', 'project/apps/api/package.json', 'project/package-lock.json') }}
           restore-keys: |
             prisma-${{ runner.os }}-
 
@@ -245,8 +256,8 @@ jobs:
       - name: Build single-container app image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./project
+          file: ./project/Dockerfile
           push: false
           load: true
           tags: kost-app:ci

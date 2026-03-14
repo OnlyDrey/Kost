@@ -1,13 +1,16 @@
-# Documentation
+# Documentation Index
 
-This folder is the canonical documentation source for the Kost monorepo.
+Advanced documentation for developers and maintainers.
 
-## Core guides
+> Commands in these guides should be run from `Kost/project` unless the guide states otherwise.
 
-1. [System overview](./overview.md)
-2. [Setup and deployment](./setup-and-deployment.md)
+1. [Overview](./overview.md)
+2. [Setup and Deployment](./setup-and-deployment.md)
 3. [Operations](./operations.md)
-4. [Web app guide](./web-app.md)
-5. [API guide](./api.md)
-6. [Design tokens](./design-tokens.md)
-7. [Contributing](./contributing.md)
+4. [API Guide](./api.md)
+5. [Web App Guide](./web-app.md)
+6. [Design Tokens](./design-tokens.md)
+7. [Architecture](./architecture.md)
+8. [Development Guide](./development.md)
+9. [Docker Guide](./docker.md)
+10. [Data Management](./data.md)
