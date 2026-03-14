@@ -652,20 +652,33 @@ export default function Profile() {
   ];
 
   // ---- Avatar block ----
+  const hasAvatar = Boolean(user?.avatarUrl);
+
   const AvatarBlock = () => (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
-        {user?.avatarUrl ? (
+    <div className="flex flex-col items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+      <div
+        className={`relative w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-semibold overflow-hidden ${
+          hasAvatar
+            ? "bg-primary"
+            : "bg-primary/85 ring-2 ring-dashed ring-primary/40"
+        }`}
+      >
+        {hasAvatar ? (
           <img
-            src={user.avatarUrl}
-            alt={user.name}
+            src={user?.avatarUrl ?? undefined}
+            alt={user?.name ?? ""}
             className="w-full h-full object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         ) : (
-          user?.name.charAt(0).toUpperCase()
+          <>
+            <span>{user?.name.charAt(0).toUpperCase()}</span>
+            <span className="absolute bottom-0.5 right-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-primary shadow-sm">
+              <Camera size={13} />
+            </span>
+          </>
         )}
       </div>
       <input
@@ -680,25 +693,22 @@ export default function Profile() {
           type="button"
           onClick={() => avatarInputRef.current?.click()}
           disabled={uploadAvatar.isPending}
-          aria-label={
-            user?.avatarUrl
-              ? t("settings.changePhoto")
-              : t("settings.choosePhoto")
+          aria-label={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
+          title={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
+          className={
+            hasAvatar
+              ? "inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
+              : "inline-flex min-h-10 w-full sm:w-auto px-3 items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/10 dark:bg-primary/20 text-primary hover:bg-primary/15 dark:hover:bg-primary/30 transition-colors disabled:opacity-60 text-sm font-medium"
           }
-          title={
-            user?.avatarUrl
-              ? t("settings.changePhoto")
-              : t("settings.choosePhoto")
-          }
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
         >
           {uploadAvatar.isPending ? (
-            <span className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           ) : (
             <Camera size={14} />
           )}
+          {!hasAvatar && <span>{t("settings.choosePhoto")}</span>}
         </button>
-        {user?.avatarUrl && (
+        {hasAvatar && (
           <button
             type="button"
             onClick={handleRemoveAvatar}
@@ -716,11 +726,7 @@ export default function Profile() {
         )}
       </div>
       <div className="flex flex-col gap-1.5">
-        {avatarError && (
-          <p className="text-xs text-red-500 dark:text-red-400">
-            {avatarError}
-          </p>
-        )}
+        {avatarError && <p className="text-xs text-red-500 dark:text-red-400">{avatarError}</p>}
         <p className="text-xs text-gray-400 dark:text-gray-500">
           {t("settings.photoHint")}
         </p>
