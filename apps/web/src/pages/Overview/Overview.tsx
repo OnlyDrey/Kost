@@ -264,9 +264,63 @@ export default function Overview() {
     return { paidCents, owedCents };
   }, [invoices]);
 
-  const statusFilteredInvoices = useMemo(() => {
+  const invoicesBeforeStatusFilter = useMemo(() => {
     const base = invoices ?? [];
-    return base.filter((invoice) => {
+    const shareFiltered =
+      filter === "share-user" && shareUserId
+        ? base.filter((invoice) =>
+            (invoice.shares ?? []).some((s) => s.userId === shareUserId),
+          )
+        : base;
+
+    if (!categoryFilter) return shareFiltered;
+
+    return shareFiltered.filter(
+      (invoice) => (invoice.category || t("common.other")) === categoryFilter,
+    );
+  }, [invoices, filter, shareUserId, categoryFilter, t]);
+
+  const availableStatusSet = useMemo(() => {
+    const set = new Set<Exclude<OverviewStatus, "all">>();
+
+    for (const invoice of invoicesBeforeStatusFilter) {
+      const totalPaid = calcPaidSum(invoice.payments);
+      const remaining = calcRemaining(invoice.totalCents, totalPaid);
+      const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
+      const isOverdue = remaining > 0 && !!dueAt && dueAt < new Date();
+      const paymentStatus = calcPaymentStatus(invoice.totalCents, totalPaid);
+
+      if (paymentStatus === "PAID") set.add("paid");
+      if (paymentStatus !== "PAID") set.add("remaining");
+      if (paymentStatus === "UNPAID" && !isOverdue) set.add("unpaid");
+      if (paymentStatus === "PARTIALLY_PAID") set.add("partial");
+      if (isOverdue) set.add("overdue");
+    }
+
+    return set;
+  }, [invoicesBeforeStatusFilter]);
+
+  const statusOptions = useMemo(
+    () =>
+      [
+        { value: "all", label: t("invoice.statusAll") },
+        { value: "unpaid", label: t("invoice.statusUnpaid") },
+        { value: "remaining", label: t("dashboard.remainingLabel") },
+        { value: "partial", label: t("invoice.statusPartiallyPaid") },
+        { value: "overdue", label: t("invoice.statusOverdue") },
+        { value: "paid", label: t("invoice.statusPaid") },
+      ].filter(
+        (option) =>
+          option.value === "all" ||
+          availableStatusSet.has(
+            option.value as Exclude<OverviewStatus, "all">,
+          ),
+      ),
+    [availableStatusSet, t],
+  );
+
+  const filteredInvoices = useMemo(() => {
+    return invoicesBeforeStatusFilter.filter((invoice) => {
       const totalPaid = calcPaidSum(invoice.payments);
       const remaining = calcRemaining(invoice.totalCents, totalPaid);
       const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
@@ -280,22 +334,7 @@ export default function Overview() {
       if (statusFilter === "overdue") return isOverdue;
       return true;
     });
-  }, [invoices, statusFilter]);
-
-  const shareFilteredInvoices = useMemo(() => {
-    if (!(filter === "share-user" && shareUserId))
-      return statusFilteredInvoices;
-    return statusFilteredInvoices.filter((invoice) =>
-      (invoice.shares ?? []).some((s) => s.userId === shareUserId),
-    );
-  }, [statusFilteredInvoices, filter, shareUserId]);
-
-  const filteredInvoices = useMemo(() => {
-    if (!categoryFilter) return shareFilteredInvoices;
-    return shareFilteredInvoices.filter(
-      (invoice) => (invoice.category || t("common.other")) === categoryFilter,
-    );
-  }, [shareFilteredInvoices, categoryFilter, t]);
+  }, [invoicesBeforeStatusFilter, statusFilter]);
 
   const breakdownInvoices = filteredInvoices;
   const listInvoices = filteredInvoices;
@@ -603,18 +642,11 @@ export default function Overview() {
                     }
                     className={`${CONTROL_HEIGHT} w-full rounded-lg px-3.5 text-sm ${SELECT_TRIGGER}`}
                   >
-                    <option value="all">{t("invoice.statusAll")}</option>
-                    <option value="unpaid">{t("invoice.statusUnpaid")}</option>
-                    <option value="remaining">
-                      {t("dashboard.remainingLabel")}
-                    </option>
-                    <option value="partial">
-                      {t("invoice.statusPartiallyPaid")}
-                    </option>
-                    <option value="overdue">
-                      {t("invoice.statusOverdue")}
-                    </option>
-                    <option value="paid">{t("invoice.statusPaid")}</option>
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </AppSelect>
                   <Button
                     type="button"

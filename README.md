@@ -20,11 +20,15 @@ The default deployment is Docker-first, running PostgreSQL and a single app cont
 Main app modules in the PWA today:
 
 - **Oversikt**: period selector, status badge, summary cards, shares, and category views.
-- **Utgifter**: add/edit invoices, payment tracking, filtering and status views.
+- **Utgifter**: dedicated period expense page (`/expenses`) with filters, grouped statuses, and responsive expense card grids (1 col mobile, 2 col tablet, 4 col desktop).
 - **Faste utgifter**: recurring expense rules, status control (`Aktiv`, `Satt på pause`, `Avsluttet`) and period generation.
 - **Oppgjør**: transfer registration, settlement planning, and history per period.
 - **Data**: import, export, and local backup/restore workflows.
 - **Perioder**: create, close, reopen, and delete period lifecycle actions.
+
+Status filter behavior:
+
+- Expense status filters always include reset (`Status`) and only show status options currently present in the active filtered dataset.
 
 Data module capabilities currently include:
 

@@ -4,7 +4,6 @@ import {
   BadgeDollarSign,
   DatabaseBackup,
   Download,
-  FolderSync,
   Scale,
   Layers,
   ListTree,
@@ -774,7 +773,7 @@ export default function ImportPage() {
       {activeTab === "backup" && (
         <section className="rounded-xl border border-gray-200/80 dark:border-gray-800/80 bg-white dark:bg-gray-900 p-5 space-y-5">
           <div className="flex items-center gap-2">
-            <FolderSync size={18} className="text-primary" />
+            <DatabaseBackup size={18} className="text-primary" />
             <h2 className="text-lg font-semibold">{t("data.tabBackup")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">

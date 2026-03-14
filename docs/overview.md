@@ -79,3 +79,4 @@ The backend uses Prisma models for users, periods, invoices, payments, subscript
 - **Recurring expenses**: subscriptions can be maintained separately and generated into invoice records for open periods.
 - **Settlement flow (oppgjør)**: register transfers, maintain settlement plans, and inspect settlement history in dedicated tabs.
 - **Data transfer**: the Data page supports imports, exports, and local backup/restore for operational continuity.
+- **Expenses page**: `/expenses` is period-scoped and uses grouped expense cards with responsive 1/2/4 column behavior.

@@ -9,6 +9,7 @@
     "dashboard": "Overview",
     "invoices": "Expenses",
     "periods": "Periods",
+    "expenses": "Expenses",
     "settings": "Settings",
     "subscriptions": "Recurring Expenses",
     "logout": "Logout",

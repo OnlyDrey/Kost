@@ -6,6 +6,7 @@ import Login from "../pages/Login";
 import Overview from "../pages/Overview/Overview";
 import InvoiceDetail from "../pages/Invoices/InvoiceDetail";
 import AddExpense from "../pages/Expenses/AddExpense";
+import PeriodExpensesPage from "../pages/Expenses/PeriodExpensesPage";
 import PeriodList from "../pages/Periods/PeriodList";
 import Profile from "../pages/Settings/Profile";
 import AdminUsers from "../pages/Admin/Users";
@@ -62,7 +63,8 @@ export default function AppRoutes() {
           path="/dashboard"
           element={<Navigate to="/overview" replace />}
         />
-        <Route path="/invoices" element={<Navigate to="/overview" replace />} />
+        <Route path="/invoices" element={<Navigate to="/expenses" replace />} />
+        <Route path="/expenses" element={<PeriodExpensesPage />} />
 
         {/* Expense add / detail / edit routes still work */}
         <Route path="/invoices/add" element={<AddExpense />} />
