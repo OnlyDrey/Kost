@@ -81,5 +81,5 @@ The backend uses Prisma models for users, periods, invoices, payments, subscript
 - **Data transfer**: the Data page supports imports, exports, and local backup/restore for operational continuity.
 - **Expenses page**: `/expenses` is period-scoped and uses grouped expense cards with responsive 1/2/4 column behavior.
 
-- **Settlement history actions**: history rows use right-aligned actions opening a transaction action dialog for edit amount or reverse operations.
+- **Settlement history actions**: history rows use right-aligned actions opening a transaction action dialog for edit amount or reverse operations, with compact side-by-side primary actions in the dialog.
 - **Data transfers**: import/export actions are consolidated by data type, with export options surfaced from a per-card export action dialog.

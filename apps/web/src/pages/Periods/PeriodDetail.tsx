@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Receipt,
@@ -42,6 +42,8 @@ export default function PeriodDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}`;
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
   const { settings } = useSettings();
@@ -529,7 +531,9 @@ export default function PeriodDetail() {
                                   icon: Pencil,
                                   label: t("common.edit"),
                                   onClick: () =>
-                                    navigate(`/invoices/${invoice.id}/edit`),
+                                    navigate(`/invoices/${invoice.id}/edit`, {
+                                      state: { returnTo },
+                                    }),
                                   colorClassName:
                                     "bg-primary/20 hover:bg-primary/30 text-primary",
                                 },

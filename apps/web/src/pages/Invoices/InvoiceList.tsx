@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Plus, Search, Pencil, CheckCircle2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppSelect from "../../components/Common/AppSelect";
@@ -50,6 +50,8 @@ type StatusFilter = (typeof STATUS_OPTIONS)[number];
 export default function InvoiceList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}`;
   const { settings } = useSettings();
   const { user } = useAuth();
   const { notify } = useConfirmDialog();
@@ -273,7 +275,10 @@ export default function InvoiceList() {
                 key: "edit",
                 icon: Pencil,
                 label: t("common.edit"),
-                onClick: () => navigate(`/invoices/${invoice.id}/edit`),
+                onClick: () =>
+                  navigate(`/invoices/${invoice.id}/edit`, {
+                    state: { returnTo },
+                  }),
                 colorClassName:
                   "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
               },
@@ -306,7 +311,7 @@ export default function InvoiceList() {
           {t("invoice.invoices")}
         </h1>
         <button
-          onClick={() => navigate("/invoices/add")}
+          onClick={() => navigate("/invoices/add", { state: { returnTo } })}
           className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors"
         >
           <Plus size={16} />

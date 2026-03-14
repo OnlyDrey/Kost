@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search, Pencil, CheckCircle2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppSelect from "../../components/Common/AppSelect";
@@ -66,10 +66,13 @@ function resolvePeriodId(periods: { id: string }[], requested?: string | null) {
 export default function PeriodExpensesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { settings } = useSettings();
   const { user } = useAuth();
   const { notify } = useConfirmDialog();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const returnTo = `${location.pathname}${location.search}`;
 
   const { data: periods = [] } = usePeriods();
   const selectedPeriodId = resolvePeriodId(periods, searchParams.get("period"));
@@ -364,7 +367,7 @@ export default function PeriodExpensesPage() {
         amountTone={status === "PARTIALLY_PAID" ? "partial" : "default"}
         showPaidIcon={!isPaid}
         overdueLabel={t("invoice.statusOverdue")}
-        onClick={() => navigate(`/invoices/${invoice.id}`)}
+        onClick={() => navigate(`/invoices/${invoice.id}`, { state: { returnTo } })}
         rightContent={
           invoice.isPersonal ? (
             <div className="flex flex-col items-end gap-1">
@@ -394,7 +397,10 @@ export default function PeriodExpensesPage() {
                 key: "edit",
                 icon: Pencil,
                 label: t("common.edit"),
-                onClick: () => navigate(`/invoices/${invoice.id}/edit`),
+                onClick: () =>
+                  navigate(`/invoices/${invoice.id}/edit`, {
+                    state: { returnTo },
+                  }),
                 colorClassName:
                   "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
               },
@@ -521,7 +527,11 @@ export default function PeriodExpensesPage() {
       <div className="flex justify-end">
         <Button
           disabled={!selectedPeriodId || periodClosed}
-          onClick={() => navigate(`/invoices/add?period=${selectedPeriodId}`)}
+          onClick={() =>
+            navigate(`/invoices/add?period=${selectedPeriodId}`, {
+              state: { returnTo },
+            })
+          }
           icon={<Plus size={15} />}
         >
           {t("invoice.addInvoice")}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Pencil,
@@ -51,6 +51,8 @@ export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}`;
   const { user } = useAuth();
   const { settings } = useSettings();
   const canManagePayments = user?.role === "ADMIN";
@@ -252,7 +254,8 @@ export default function InvoiceDetail() {
                 key: "edit",
                 icon: Pencil,
                 label: t("common.edit"),
-                onClick: () => navigate(`/invoices/${id}/edit`),
+                onClick: () =>
+                  navigate(`/invoices/${id}/edit`, { state: { returnTo } }),
                 colorClassName:
                   "bg-violet-500/20 text-violet-500 hover:bg-violet-500/30",
               },

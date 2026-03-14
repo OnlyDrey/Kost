@@ -21,6 +21,7 @@ Main app modules in the PWA today:
 
 - **Oversikt**: period selector, status badge, summary cards, shares, and category views.
 - **Utgifter**: dedicated period expense page (`/expenses`) with filters, grouped statuses, and responsive expense card grids (1 col mobile, 2 col tablet, 4 col desktop).
+  - Add/edit flows return contextually to the previous screen (or sensible route fallback) instead of hard-redirecting to dashboard.
 - **Faste utgifter**: recurring expense rules, status control (`Aktiv`, `Satt på pause`, `Avsluttet`) and period generation.
 - **Oppgjør**: transfer registration, settlement planning, and history per period.
 - **Data**: import, export, and local backup/restore workflows.

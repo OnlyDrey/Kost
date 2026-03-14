@@ -780,9 +780,10 @@ export default function SettlementPage() {
         }
       >
         {transactionDialog.mode === "menu" ? (
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"
+              className="w-full"
               onClick={() =>
                 setTransactionDialog((prev) => ({
                   ...prev,
@@ -795,6 +796,7 @@ export default function SettlementPage() {
             </Button>
             <Button
               variant="secondary"
+              className="w-full"
               onClick={() =>
                 setTransactionDialog((prev) => ({
                   ...prev,
@@ -808,38 +810,40 @@ export default function SettlementPage() {
           </div>
         ) : transactionDialog.mode === "edit" ? (
           <div className="space-y-2">
-            <div className="relative">
-              {symbolPosition === "Before" ? (
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
-                  {currencySymbol}
-                </span>
-              ) : null}
-              <input
-                type="text"
-                inputMode="decimal"
-                value={transactionDialog.amount}
-                onChange={(e) =>
-                  setTransactionDialog((prev) => ({
-                    ...prev,
-                    amount: e.target.value,
-                    error: "",
-                  }))
-                }
-                className={`${inputCls} ${symbolPosition === "Before" ? "pl-9" : "pr-11"}`}
-                placeholder={t("settlement.amount")}
-              />
-              {symbolPosition === "After" ? (
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
-                  {currencySymbol}
-                </span>
-              ) : null}
+            <div className="rounded-lg border border-gray-300 bg-white px-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex h-11 items-center gap-2">
+                {symbolPosition === "Before" ? (
+                  <span className="pointer-events-none text-sm text-gray-500 dark:text-gray-400">
+                    {currencySymbol}
+                  </span>
+                ) : null}
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={transactionDialog.amount}
+                  onChange={(e) =>
+                    setTransactionDialog((prev) => ({
+                      ...prev,
+                      amount: e.target.value,
+                      error: "",
+                    }))
+                  }
+                  className="h-full w-full min-w-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-500 dark:text-gray-100"
+                  placeholder={t("settlement.amount")}
+                />
+                {symbolPosition === "After" ? (
+                  <span className="pointer-events-none text-sm text-gray-500 dark:text-gray-400">
+                    {currencySymbol}
+                  </span>
+                ) : null}
+              </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {fmt(
-                amountToCents(
-                  Number(transactionDialog.amount.replace(",", ".") || "0"),
-                ),
-              )}
+              {(() => {
+                const normalized = transactionDialog.amount.replace(",", ".").trim();
+                const value = Number(normalized || "0");
+                return fmt(amountToCents(Number.isFinite(value) ? value : 0));
+              })()}
             </p>
             <textarea
               value={transactionDialog.comment}

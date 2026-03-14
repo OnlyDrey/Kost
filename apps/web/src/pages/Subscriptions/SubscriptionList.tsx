@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Plus,
   Pencil,
@@ -41,6 +41,8 @@ import AppSelect from "../../components/Common/AppSelect";
 export default function SubscriptionList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}`;
   const { data: subscriptions = [], isLoading } = useSubscriptions();
   const { settings } = useSettings();
   const { data: currentPeriod } = useCurrentPeriod();
@@ -135,7 +137,7 @@ export default function SubscriptionList() {
               </div>
             )}
             <button
-              onClick={() => navigate("/subscriptions/add")}
+              onClick={() => navigate("/subscriptions/add", { state: { returnTo } })}
               className={`w-full sm:w-auto flex ${CONTROL_HEIGHT} items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 rounded-lg text-sm font-semibold transition-colors ${FOCUS_RING}`}
             >
               <Plus size={16} />
@@ -203,7 +205,10 @@ export default function SubscriptionList() {
                 key={sub.id}
                 sub={sub}
                 locale={settings.locale}
-                onEdit={() => navigate(`/subscriptions/${sub.id}/edit`)}
+                onEdit={() =>
+                  navigate(`/subscriptions/${sub.id}/edit`, {
+                    state: { returnTo },
+                  })}
                 onToggle={() => toggleSub.mutate(sub.id)}
                 onDelete={() => deleteSub.mutate(sub.id)}
                 deleteConfirmMessage={t("subscription.confirmDelete", {
@@ -227,7 +232,10 @@ export default function SubscriptionList() {
                 key={sub.id}
                 sub={sub}
                 locale={settings.locale}
-                onEdit={() => navigate(`/subscriptions/${sub.id}/edit`)}
+                onEdit={() =>
+                  navigate(`/subscriptions/${sub.id}/edit`, {
+                    state: { returnTo },
+                  })}
                 onToggle={() => toggleSub.mutate(sub.id)}
                 onDelete={() => deleteSub.mutate(sub.id)}
                 deleteConfirmMessage={t("subscription.confirmDelete", {

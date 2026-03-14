@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useNavigate,
   useParams,
@@ -515,7 +515,7 @@ export default function AddExpense() {
         } else {
           await createSubscription.mutateAsync(subData);
         }
-        navigate("/subscriptions");
+        goBackToContext();
       } else {
         const invoiceData: any = {
           vendor: vendor.trim(),
@@ -540,7 +540,7 @@ export default function AddExpense() {
             ...invoiceData,
           });
         }
-        navigate("/invoices");
+        goBackToContext();
       }
     } catch (err: unknown) {
       setError(getApiErrorMessage(t, err));
@@ -553,11 +553,6 @@ export default function AddExpense() {
     createSubscription.isPending ||
     updateSubscription.isPending;
 
-  const backUrl = isSubscription
-    ? "/subscriptions"
-    : selectedPeriodId
-      ? `/overview?period=${selectedPeriodId}`
-      : "/invoices";
   const titleKey = isSubscription
     ? isEditing
       ? "subscription.edit"
@@ -565,6 +560,35 @@ export default function AddExpense() {
     : isEditing
       ? "invoice.editInvoice"
       : "invoice.addInvoice";
+
+
+  const fallbackBackUrl = isSubscription
+    ? "/subscriptions"
+    : existingInvoice?.periodId
+      ? `/expenses?period=${existingInvoice.periodId}`
+      : selectedPeriodId
+        ? `/expenses?period=${selectedPeriodId}`
+        : "/expenses";
+
+  const returnToFromState =
+    typeof (location.state as { returnTo?: unknown } | null)?.returnTo ===
+    "string"
+      ? ((location.state as { returnTo?: string }).returnTo as string)
+      : null;
+
+  const goBackToContext = useCallback(() => {
+    if (returnToFromState) {
+      navigate(returnToFromState);
+      return;
+    }
+
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(fallbackBackUrl);
+  }, [fallbackBackUrl, navigate, returnToFromState]);
 
   const nonSubscriptionSaveDisabled =
     isPending ||
@@ -585,7 +609,7 @@ export default function AddExpense() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate(backUrl)}
+            onClick={goBackToContext}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
           >
             <ArrowLeft size={20} />
@@ -631,7 +655,7 @@ export default function AddExpense() {
                 className="w-full"
                 cancelLabel={t("common.cancel")}
                 saveLabel={t("common.save")}
-                onCancel={() => navigate(backUrl)}
+                onCancel={goBackToContext}
                 onSave={() => {
                   const form = document.getElementById(
                     "expense-form",
@@ -673,7 +697,7 @@ export default function AddExpense() {
                     }
                     cancelLabel={t("common.cancel")}
                     saveLabel={t("common.save")}
-                    onCancel={() => navigate(backUrl)}
+                    onCancel={goBackToContext}
                     onSave={() => {
                       const form = document.getElementById(
                         "expense-form",

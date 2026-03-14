@@ -54,6 +54,7 @@ npm run build --workspace=apps/web
 - Use shared controls (`Button`, `AppSelect`, `Input`, `ThemedCheckbox`) for consistent sizing and dark-theme treatment.
 - Keep action rows mobile-first: controls should align, share the same control height token, and avoid one-off sizing.
 - Add/Edit regular expense forms use an in-form split action row (`Avbryt` / `Lagre`, 50/50 on mobile) since no status field is shown there.
+- Expense and fixed-expense add/edit pages use contextual return navigation for `Avbryt`/`Lagre` (previous route when available, with safe fallback routes for direct links).
 - Fixed expense add/edit forms keep `Status` + `Avbryt` + `Lagre` in one shared top row/container for consistent proportions.
 - In Data/backup UI, action colors follow semantics: download (blue), restore (violet), delete (red).
 
@@ -70,4 +71,5 @@ Sidebar order in the app shell:
 7. Innstillinger
 
 - Oppgjør historikk rows place transaction actions on the right, and open a shared transaction dialog that supports both amount edit and reverse flow.
+- In the Historikk transaction action dialog, `Rediger beløp` and `Reverser` are presented as a 50/50 side-by-side action row.
 - Oppgjør edit/reverse dialog actions use a 50/50 button layout for consistent mobile ergonomics.

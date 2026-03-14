@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Receipt,
   DollarSign,
@@ -96,7 +96,9 @@ function PeriodSelector({
 export default function Overview() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const returnTo = `${location.pathname}${location.search}`;
   const { user: currentUser } = useAuth();
   const { settings } = useSettings();
 
@@ -653,7 +655,9 @@ export default function Overview() {
                     disabled={closed}
                     onClick={() => {
                       if (closed) return;
-                      navigate(`/invoices/add?period=${resolvedPeriodId}`);
+                      navigate(`/invoices/add?period=${resolvedPeriodId}`, {
+                        state: { returnTo },
+                      });
                     }}
                     icon={<Plus size={15} />}
                     className="w-full sm:w-auto"
@@ -859,9 +863,9 @@ export default function Overview() {
                                         icon: Pencil,
                                         label: t("common.edit"),
                                         onClick: () =>
-                                          navigate(
-                                            `/invoices/${invoice.id}/edit`,
-                                          ),
+                                          navigate(`/invoices/${invoice.id}/edit`, {
+                                            state: { returnTo },
+                                          }),
                                         colorClassName:
                                           "bg-violet-500/10 hover:bg-violet-500/15 dark:bg-violet-500/20 dark:hover:bg-violet-500/25 text-violet-500",
                                       },
