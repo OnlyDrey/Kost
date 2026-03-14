@@ -1,13 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Pencil,
-  CheckCircle2,
-  Trash2,
-  Receipt,
-} from "lucide-react";
+import { Plus, Search, Pencil, CheckCircle2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppSelect from "../../components/Common/AppSelect";
 import {
@@ -116,23 +109,47 @@ export default function PeriodExpensesPage() {
     [categories],
   );
 
-  const invoicesBeforeStatusFilter = useMemo(() => {
+  const invoicesBeforeMethodAndStatusFilter = useMemo(() => {
     const base = invoices ?? [];
     return base.filter((invoice) => {
       const searchText =
         `${invoice.vendor} ${invoice.description || ""} ${invoice.category}`.toLowerCase();
       const matchesSearch = searchText.includes(searchQuery.toLowerCase());
-      const matchesMethod = distributionFilterMatch(
-        invoice.distributionMethod,
-        filterMethod,
-        invoice.distribution as never,
-      );
       const matchesCategory =
         filterCategory === "ALL" || invoice.category === filterCategory;
-
-      return matchesSearch && matchesMethod && matchesCategory;
+      return matchesSearch && matchesCategory;
     });
-  }, [invoices, searchQuery, filterMethod, filterCategory]);
+  }, [invoices, searchQuery, filterCategory]);
+
+  const statusMatches = (
+    invoice: (typeof invoicesBeforeMethodAndStatusFilter)[number],
+  ) => {
+    const totalPaid = calcPaidSum(invoice.payments);
+    const remaining = calcRemaining(invoice.totalCents, totalPaid);
+    const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
+    const overdue = remaining > 0 && !!dueAt && dueAt < new Date();
+    const paymentStatus = calcPaymentStatus(invoice.totalCents, totalPaid);
+
+    if (filterStatus === "paid") return paymentStatus === "PAID";
+    if (filterStatus === "remaining") return paymentStatus !== "PAID";
+    if (filterStatus === "unpaid")
+      return paymentStatus === "UNPAID" && !overdue;
+    if (filterStatus === "partial") return paymentStatus === "PARTIALLY_PAID";
+    if (filterStatus === "overdue") return overdue;
+    return true;
+  };
+
+  const invoicesBeforeStatusFilter = useMemo(
+    () =>
+      invoicesBeforeMethodAndStatusFilter.filter((invoice) =>
+        distributionFilterMatch(
+          invoice.distributionMethod,
+          filterMethod,
+          invoice.distribution as never,
+        ),
+      ),
+    [invoicesBeforeMethodAndStatusFilter, filterMethod],
+  );
 
   const availableStatusSet = useMemo(() => {
     const set = new Set<Exclude<StatusFilter, "all">>();
@@ -172,24 +189,49 @@ export default function PeriodExpensesPage() {
     [availableStatusSet, t],
   );
 
+  const availableMethodSet = useMemo(() => {
+    const set = new Set<string>();
+
+    for (const invoice of invoicesBeforeMethodAndStatusFilter) {
+      if (!statusMatches(invoice)) continue;
+      if (invoice.distributionMethod === "BY_INCOME") set.add("BY_INCOME");
+      else if (invoice.distributionMethod === "BY_PERCENT")
+        set.add("BY_PERCENT");
+      else if (invoice.distributionMethod === "FIXED") {
+        const dist = invoice.distribution as
+          | { fixedMode?: string; mode?: string }
+          | undefined;
+        const fixedMode = dist?.fixedMode ?? dist?.mode;
+        set.add(fixedMode === "AMOUNT" ? "FIXED_AMOUNT" : "FIXED_EQUAL");
+      }
+    }
+
+    return set;
+  }, [invoicesBeforeMethodAndStatusFilter, filterStatus]);
+
+  const methodOptions = useMemo(
+    () =>
+      METHOD_OPTIONS.filter(
+        (method) => method === "ALL" || availableMethodSet.has(method),
+      ),
+    [availableMethodSet],
+  );
+
+  useEffect(() => {
+    if (filterStatus !== "all" && !availableStatusSet.has(filterStatus)) {
+      setFilterStatus("all");
+    }
+  }, [filterStatus, availableStatusSet]);
+
+  useEffect(() => {
+    if (filterMethod !== "ALL" && !availableMethodSet.has(filterMethod)) {
+      setFilterMethod("ALL");
+    }
+  }, [filterMethod, availableMethodSet]);
+
   const filteredInvoices = useMemo(
     () =>
-      invoicesBeforeStatusFilter.filter((invoice) => {
-        const totalPaid = calcPaidSum(invoice.payments);
-        const remaining = calcRemaining(invoice.totalCents, totalPaid);
-        const dueAt = invoice.dueDate ? new Date(invoice.dueDate) : null;
-        const overdue = remaining > 0 && !!dueAt && dueAt < new Date();
-        const paymentStatus = calcPaymentStatus(invoice.totalCents, totalPaid);
-
-        if (filterStatus === "paid") return paymentStatus === "PAID";
-        if (filterStatus === "remaining") return paymentStatus !== "PAID";
-        if (filterStatus === "unpaid")
-          return paymentStatus === "UNPAID" && !overdue;
-        if (filterStatus === "partial")
-          return paymentStatus === "PARTIALLY_PAID";
-        if (filterStatus === "overdue") return overdue;
-        return true;
-      }),
+      invoicesBeforeStatusFilter.filter((invoice) => statusMatches(invoice)),
     [invoicesBeforeStatusFilter, filterStatus],
   );
 
@@ -389,8 +431,7 @@ export default function PeriodExpensesPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-          <Receipt size={22} className="text-primary" />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {t("invoice.invoices")}
         </h1>
         <div className="flex items-center gap-2">
@@ -435,7 +476,7 @@ export default function PeriodExpensesPage() {
             onChange={(e) => setFilterMethod(e.target.value)}
             className={`w-full px-3 text-sm ${CONTROL_HEIGHT}`}
           >
-            {METHOD_OPTIONS.map((method) => (
+            {methodOptions.map((method) => (
               <option key={method} value={method}>
                 {method === "ALL"
                   ? t("invoice.typeFilter")

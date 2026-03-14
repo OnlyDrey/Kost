@@ -609,7 +609,8 @@
     "closedPeriodPaymentBlocked": "Transfers cannot be registered for closed periods.",
     "totalPeriodShare": "Share this period",
     "basePeriodShare": "Share this period",
-    "remainingShort": "Remaining"
+    "remainingShort": "Remaining",
+    "invalidAmount": "Invalid amount"
   },
   "data": {
     "title": "Data",

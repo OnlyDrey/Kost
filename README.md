@@ -26,9 +26,10 @@ Main app modules in the PWA today:
 - **Data**: import, export, and local backup/restore workflows.
 - **Perioder**: create, close, reopen, and delete period lifecycle actions.
 
-Status filter behavior:
+Status/type filter behavior:
 
 - Expense status filters always include reset (`Status`) and only show status options currently present in the active filtered dataset.
+- Expense type filters always include reset (`Type`) and only show distribution types that exist in the currently active dataset.
 
 Data module capabilities currently include:
 
@@ -36,6 +37,7 @@ Data module capabilities currently include:
 - Import of vendors/categories/payment methods from simple files.
 - Export of expenses, recurring expenses, settlement data, and masterdata (CSV/JSON).
 - Manual and automatic local backups with restore preview and restore action.
+- Data page actions are grouped by data type (import/export/template actions shown together per type).
 
 ## Repository structure
 

@@ -34,6 +34,7 @@ npm run build --workspace=apps/web
   - Summary cards and share/category breakdowns for the selected period.
 - **Utgifter (`/expenses`)**
   - Dedicated selected-period expense page with search/method/category/status filtering.
+  - Both `Status` and `Type` filters are dynamic: reset option is always present and other options only appear when currently available in the active dataset.
   - Grouped lists (forfalt/delbetalt/ubetalt/betalt) with responsive card grid: 1 column mobile, 2 columns tablet, 4 columns desktop.
   - `Status` filter includes reset option and only shows statuses available in the active filtered dataset.
 - **Faste utgifter (`/subscriptions`)**
@@ -41,7 +42,8 @@ npm run build --workspace=apps/web
 - **Oppgjør (`/settlement`)**
   - Tabs for overføring, oppgjør, and historikk scoped to selected period.
 - **Data (`/import`)**
-  - Import cards, export cards, and backup management (create/download/restore/delete).
+  - Grouped by data type (Utgifter, Faste utgifter, Oppgjør, Leverandører, Kategorier, Betalingsmåter) with relevant actions shown together: Import, Export CSV, Export JSON, and templates where supported.
+  - Backup management remains in dedicated backup tab (create/download/restore/delete).
 - **Perioder (`/periods`)**
   - Period lifecycle operations, warnings, and related modal flows.
 
@@ -64,3 +66,5 @@ Sidebar order in the app shell:
 5. Faste utgifter
 6. Data
 7. Innstillinger
+
+- Oppgjør historikk rows place transaction actions on the right, and open a shared transaction dialog that supports both amount edit and reverse flow.

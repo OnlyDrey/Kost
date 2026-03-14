@@ -6,7 +6,7 @@ import {
   ArrowLeftRight,
   CheckCircle2,
   Clock3,
-  MinusCircle,
+  Pencil,
   Scale,
   Wallet,
 } from "lucide-react";
@@ -23,6 +23,7 @@ import {
   useCurrencyFormatter,
   usePeriods,
   useReverseSettlementEntry,
+  useUpdateSettlementEntry,
   useSettlementSummary,
   useUsers,
 } from "../../hooks/useApi";
@@ -67,6 +68,7 @@ export default function SettlementPage() {
   const createEntry = useCreateSettlementEntry();
   const createPlan = useCreateSettlementPlan();
   const reverseEntry = useReverseSettlementEntry();
+  const updateEntry = useUpdateSettlementEntry();
 
   const activeTab = tab ? routeToTab[tab] : undefined;
   const [entryError, setEntryError] = useState("");
@@ -89,9 +91,11 @@ export default function SettlementPage() {
     comment: "",
   });
 
-  const [reverseDialog, setReverseDialog] = useState({
+  const [transactionDialog, setTransactionDialog] = useState({
     open: false,
     entryId: "",
+    mode: "menu" as "menu" | "edit" | "reverse",
+    amount: "",
     comment: "",
     error: "",
   });
@@ -260,12 +264,7 @@ export default function SettlementPage() {
                 icon: Wallet,
                 label: t("settlement.netBalance"),
                 value: (
-                  <span className={saldoValueClass}>
-                    {saldoCents < 0 && (
-                      <MinusCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
-                    )}
-                    {fmt(saldoCents)}
-                  </span>
+                  <span className={saldoValueClass}>{fmt(saldoCents)}</span>
                 ),
                 colorClass: "bg-blue-500/20",
                 iconTextClass: "text-blue-400",
@@ -572,7 +571,7 @@ export default function SettlementPage() {
 
       {activeTab === "historikk" && (
         <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <Clock3 size={18} className="text-primary" />
             <h3 className="font-semibold">{t("settlement.history")}</h3>
           </div>
@@ -585,44 +584,53 @@ export default function SettlementPage() {
               {sortedHistory.map((entry) => (
                 <div
                   key={entry.id}
-                  className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm"
+                  className="rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-700"
                 >
-                  <div className="font-medium">
-                    {userName(entry.fromUserId)} → {userName(entry.toUserId)}
-                  </div>
-                  <div className="font-semibold">
-                    {fmt(safeCents(entry.amountCents))}
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(entry.effectiveDate).toLocaleDateString()}
-                  </div>
-                  {entry.comment && (
-                    <div className="mt-1 text-gray-600 dark:text-gray-300">
-                      {entry.comment}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">
+                        {userName(entry.fromUserId)} →{" "}
+                        {userName(entry.toUserId)}
+                      </div>
+                      <div className="font-semibold">
+                        {fmt(safeCents(entry.amountCents))}
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(entry.effectiveDate).toLocaleDateString()}
+                      </div>
+                      {entry.comment && (
+                        <div className="mt-1 text-gray-600 dark:text-gray-300">
+                          {entry.comment}
+                        </div>
+                      )}
+                      {entry.reversedAt && (
+                        <div className="mt-1 text-xs text-red-600">
+                          {t("settlement.reversed")}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {entry.reversedAt && (
-                    <div className="text-xs text-red-600 mt-1">
-                      {t("settlement.reversed")}
-                    </div>
-                  )}
-                  {!entry.reversedAt && isAdmin && (
-                    <Button
-                      variant="secondary"
-                      className="mt-2 rounded-full px-4"
-                      disabled={!isOpenPeriod}
-                      onClick={() =>
-                        setReverseDialog({
-                          open: true,
-                          entryId: entry.id,
-                          comment: "",
-                          error: "",
-                        })
-                      }
-                    >
-                      {t("settlement.reverseAction")}
-                    </Button>
-                  )}
+
+                    {!entry.reversedAt && isAdmin ? (
+                      <Button
+                        variant="secondary"
+                        className="shrink-0"
+                        disabled={!isOpenPeriod}
+                        icon={<Pencil size={14} />}
+                        onClick={() =>
+                          setTransactionDialog({
+                            open: true,
+                            entryId: entry.id,
+                            mode: "menu",
+                            amount: (entry.amountCents / 100).toFixed(2),
+                            comment: entry.comment ?? "",
+                            error: "",
+                          })
+                        }
+                      >
+                        {t("common.edit")}
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>
@@ -649,72 +657,194 @@ export default function SettlementPage() {
         )}
 
       <AppDialog
-        open={reverseDialog.open}
+        open={transactionDialog.open}
         onClose={() =>
-          setReverseDialog({ open: false, entryId: "", comment: "", error: "" })
+          setTransactionDialog({
+            open: false,
+            entryId: "",
+            mode: "menu",
+            amount: "",
+            comment: "",
+            error: "",
+          })
         }
-        title={t("settlement.reversalCommentPrompt")}
+        title={
+          transactionDialog.mode === "menu"
+            ? t("settlement.history")
+            : transactionDialog.mode === "edit"
+              ? t("common.edit")
+              : t("settlement.reverseAction")
+        }
         size="sm"
         footer={
-          <>
+          transactionDialog.mode === "menu" ? null : (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  setTransactionDialog((prev) => ({
+                    ...prev,
+                    mode: "menu",
+                    error: "",
+                  }))
+                }
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  if (transactionDialog.mode === "edit") {
+                    const normalized = transactionDialog.amount
+                      .replace(",", ".")
+                      .trim();
+                    const amount = Number(normalized);
+                    if (!Number.isFinite(amount) || amount <= 0) {
+                      setTransactionDialog((prev) => ({
+                        ...prev,
+                        error: t("settlement.invalidAmount"),
+                      }));
+                      return;
+                    }
+
+                    void updateEntry
+                      .mutateAsync({
+                        periodId,
+                        entryId: transactionDialog.entryId,
+                        amountCents: amountToCents(amount),
+                        comment: transactionDialog.comment || undefined,
+                      })
+                      .then(() =>
+                        setTransactionDialog({
+                          open: false,
+                          entryId: "",
+                          mode: "menu",
+                          amount: "",
+                          comment: "",
+                          error: "",
+                        }),
+                      )
+                      .catch((error: unknown) =>
+                        setTransactionDialog((prev) => ({
+                          ...prev,
+                          error: getApiErrorMessage(t, error),
+                        })),
+                      );
+                    return;
+                  }
+
+                  if (!transactionDialog.comment.trim()) {
+                    setTransactionDialog((prev) => ({
+                      ...prev,
+                      error: t("common.required"),
+                    }));
+                    return;
+                  }
+
+                  void reverseEntry
+                    .mutateAsync({
+                      periodId,
+                      entryId: transactionDialog.entryId,
+                      comment: transactionDialog.comment.trim(),
+                    })
+                    .then(() =>
+                      setTransactionDialog({
+                        open: false,
+                        entryId: "",
+                        mode: "menu",
+                        amount: "",
+                        comment: "",
+                        error: "",
+                      }),
+                    )
+                    .catch((error: unknown) =>
+                      setTransactionDialog((prev) => ({
+                        ...prev,
+                        error: getApiErrorMessage(t, error),
+                      })),
+                    );
+                }}
+              >
+                {transactionDialog.mode === "edit"
+                  ? t("common.save")
+                  : t("settlement.reverseAction")}
+              </Button>
+            </>
+          )
+        }
+      >
+        {transactionDialog.mode === "menu" ? (
+          <div className="grid grid-cols-1 gap-2">
             <Button
               variant="secondary"
               onClick={() =>
-                setReverseDialog({
-                  open: false,
-                  entryId: "",
-                  comment: "",
+                setTransactionDialog((prev) => ({
+                  ...prev,
+                  mode: "edit",
                   error: "",
-                })
+                }))
               }
             >
-              {t("common.cancel")}
+              {t("common.edit")} {t("settlement.amount").toLowerCase()}
             </Button>
             <Button
-              onClick={() => {
-                if (!reverseDialog.comment.trim()) {
-                  setReverseDialog((prev) => ({
-                    ...prev,
-                    error: t("common.required"),
-                  }));
-                  return;
-                }
-
-                void reverseEntry
-                  .mutateAsync({
-                    periodId,
-                    entryId: reverseDialog.entryId,
-                    comment: reverseDialog.comment.trim(),
-                  })
-                  .then(() =>
-                    setReverseDialog({
-                      open: false,
-                      entryId: "",
-                      comment: "",
-                      error: "",
-                    }),
-                  );
-              }}
+              variant="secondary"
+              onClick={() =>
+                setTransactionDialog((prev) => ({
+                  ...prev,
+                  mode: "reverse",
+                  error: "",
+                }))
+              }
             >
               {t("settlement.reverseAction")}
             </Button>
-          </>
-        }
-      >
-        <textarea
-          value={reverseDialog.comment}
-          onChange={(e) =>
-            setReverseDialog((prev) => ({
-              ...prev,
-              comment: e.target.value,
-              error: "",
-            }))
-          }
-          className="w-full min-h-24 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-        />
-        {reverseDialog.error && (
+          </div>
+        ) : transactionDialog.mode === "edit" ? (
+          <div className="space-y-2">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={transactionDialog.amount}
+              onChange={(e) =>
+                setTransactionDialog((prev) => ({
+                  ...prev,
+                  amount: e.target.value,
+                  error: "",
+                }))
+              }
+              className={inputCls}
+              placeholder={t("settlement.amount")}
+            />
+            <textarea
+              value={transactionDialog.comment}
+              onChange={(e) =>
+                setTransactionDialog((prev) => ({
+                  ...prev,
+                  comment: e.target.value,
+                  error: "",
+                }))
+              }
+              className="w-full min-h-24 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+              placeholder={t("settlement.comment")}
+            />
+          </div>
+        ) : (
+          <textarea
+            value={transactionDialog.comment}
+            onChange={(e) =>
+              setTransactionDialog((prev) => ({
+                ...prev,
+                comment: e.target.value,
+                error: "",
+              }))
+            }
+            className="w-full min-h-24 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+            placeholder={t("settlement.reversalCommentPrompt")}
+          />
+        )}
+        {transactionDialog.error && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            {reverseDialog.error}
+            {transactionDialog.error}
           </p>
         )}
       </AppDialog>
