@@ -424,7 +424,7 @@ export class FamilyService {
 
   regenerateBrandingAssets(familyId: string) {
     const config = this.readBrandingConfig(familyId);
-    const defaultRasterPath = join(process.cwd(), "public", "apple-touch-icon.png");
+    const defaultRasterPath = join(process.cwd(), "public", "pwa-512x512.png");
     const result = spawnSync(
       "python3",
       [
