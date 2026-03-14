@@ -322,9 +322,16 @@ export class FamilyService {
     const version = Number(raw.version ?? 1);
     const root = this.getBrandingPublicRoot(familyId);
 
+    const isRuntimeIconOverride =
+      raw.sourceType === "upload" ||
+      (raw.sourceType === "url" && String(raw.logoUrl ?? "").trim().length > 0) ||
+      String(raw.appIconBackground ?? "#0B1020").toUpperCase() !== "#0B1020" ||
+      String(raw.appTitle ?? "Kost").trim() !== "Kost";
+
     return {
       ...raw,
       version,
+      isRuntimeIconOverride,
       assetBase: `${root}/generated`,
       manifestUrl: `${root}/manifest.webmanifest?v=${version}`,
       previewIconUrl: `${root}/generated/preview-512.png?v=${version}`,
@@ -450,9 +457,20 @@ export class FamilyService {
 
   private writeFallbackBrandingAssets(familyId: string) {
     const generatedDir = join(this.getBrandingDir(familyId), "generated");
-    const fallback = join(process.cwd(), "public", "apple-touch-icon.png");
+    const publicDir = join(process.cwd(), "public");
+    const defaultMapping: Record<string, string> = {
+      "favicon-32.png": "pwa-192x192.png",
+      "apple-180.png": "apple-touch-icon.png",
+      "pwa-192.png": "pwa-192x192.png",
+      "pwa-512.png": "pwa-512x512.png",
+      "pwa-192-maskable.png": "pwa-192x192.png",
+      "pwa-512-maskable.png": "pwa-512x512.png",
+      "preview-512.png": "pwa-512x512.png",
+    };
+
     this.generatedAssetSpecs().forEach(({ name }) => {
-      copyFileSync(fallback, join(generatedDir, name));
+      const source = join(publicDir, defaultMapping[name] ?? "pwa-512x512.png");
+      copyFileSync(source, join(generatedDir, name));
     });
   }
 

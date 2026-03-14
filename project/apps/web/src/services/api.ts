@@ -213,6 +213,7 @@ export interface BrandingRuntimeConfig {
   assetBase: string;
   manifestUrl: string;
   version: number;
+  isRuntimeIconOverride: boolean;
 }
 
 export interface Subscription {

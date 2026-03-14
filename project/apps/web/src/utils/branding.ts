@@ -12,6 +12,14 @@ export const DEFAULT_APP_ICON_BACKGROUND = DEFAULT_CANONICAL_ICON_BACKGROUND;
 
 const HEX_COLOR_REGEX = /^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
+const STATIC_ICON_PATHS = {
+  manifest: "/manifest.webmanifest",
+  faviconSvg: "/favicon.svg",
+  apple180: "/apple-touch-icon.png",
+  pwa192: "/pwa-192x192.png",
+  pwa512: "/pwa-512x512.png",
+} as const;
+
 export function isValidHexColor(value: string) {
   return HEX_COLOR_REGEX.test(value.trim());
 }
@@ -56,6 +64,15 @@ function upsertManifest(href: string) {
     document.head.appendChild(link);
   }
   link.href = href;
+}
+
+function applyStaticIconLinks() {
+  upsertLinkTag("icon", STATIC_ICON_PATHS.faviconSvg);
+  upsertLinkTag("shortcut icon", STATIC_ICON_PATHS.faviconSvg);
+  upsertLinkTag("apple-touch-icon", STATIC_ICON_PATHS.apple180, "180x180");
+  upsertLinkTag("icon", STATIC_ICON_PATHS.pwa192, "192x192");
+  upsertLinkTag("icon", STATIC_ICON_PATHS.pwa512, "512x512");
+  upsertManifest(STATIC_ICON_PATHS.manifest);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -119,7 +136,17 @@ export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
 
   try {
     const runtime = await familyApi.getBranding();
-    const { assetBase, previewIconUrl, manifestUrl, version } = runtime.data;
+    const {
+      assetBase,
+      manifestUrl,
+      version,
+      isRuntimeIconOverride,
+    } = runtime.data;
+
+    if (!isRuntimeIconOverride) {
+      applyStaticIconLinks();
+      return;
+    }
 
     upsertLinkTag("icon", `${assetBase}/favicon-32.png?v=${version}`);
     upsertLinkTag("shortcut icon", `${assetBase}/favicon-32.png?v=${version}`);
@@ -127,17 +154,7 @@ export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
     upsertLinkTag("icon", `${assetBase}/pwa-192.png?v=${version}`, "192x192");
     upsertLinkTag("icon", `${assetBase}/pwa-512.png?v=${version}`, "512x512");
     upsertManifest(manifestUrl);
-
-    if (import.meta.env.DEV) {
-      console.info("[BrandingIcons] runtime assets applied", {
-        version,
-        previewIconUrl,
-      });
-    }
   } catch {
-    const fallbackLogo = getDefaultLogoUrl();
-    upsertLinkTag("icon", fallbackLogo);
-    upsertLinkTag("shortcut icon", fallbackLogo);
-    upsertLinkTag("apple-touch-icon", fallbackLogo, "180x180");
+    applyStaticIconLinks();
   }
 }
