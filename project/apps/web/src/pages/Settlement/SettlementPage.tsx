@@ -472,6 +472,7 @@ export default function SettlementPage() {
                 onChange={(value) =>
                   setEntryForm((prev) => ({ ...prev, fromUserId: value }))
                 }
+                disabled={!isOpenPeriod}
               />
               <UserPickerSelect
                 label={t("settlement.toUser")}
@@ -481,6 +482,7 @@ export default function SettlementPage() {
                 onChange={(value) =>
                   setEntryForm((prev) => ({ ...prev, toUserId: value }))
                 }
+                disabled={!isOpenPeriod}
               />
             </div>
             <MoneyInput

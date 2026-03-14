@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { spawnSync } from "child_process";
 import { PrismaService } from "../prisma/prisma.service";
-import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "fs";
+import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSync } from "fs";
 import { extname, join } from "path";
 
 @Injectable()
@@ -209,24 +209,35 @@ export class FamilyService {
 
 
 
-  private getBrandingDir() {
-    return join(process.cwd(), "uploads", "branding");
+  private getBrandingDir(familyId: string) {
+    return join(process.cwd(), "uploads", "branding", familyId);
   }
 
-  private getBrandingConfigPath() {
-    return join(this.getBrandingDir(), "config.json");
+  private getBrandingConfigPath(familyId: string) {
+    return join(this.getBrandingDir(familyId), "config.json");
   }
 
-  private ensureBrandingDefaults() {
-    const dir = this.getBrandingDir();
+  private getBrandingPublicRoot(familyId: string) {
+    return `/uploads/branding/${familyId}`;
+  }
+
+  private ensureBrandingDefaults(familyId: string) {
+    const dir = this.getBrandingDir(familyId);
     mkdirSync(join(dir, "generated"), { recursive: true });
 
-    const configPath = this.getBrandingConfigPath();
+    const configPath = this.getBrandingConfigPath(familyId);
     if (!existsSync(configPath)) {
       writeFileSync(
         configPath,
         JSON.stringify(
-          { appTitle: "Kost", appIconBackground: "#0B1020", sourceType: "default", logoUrl: "" },
+          {
+            appTitle: "Kost",
+            appIconBackground: "#0B1020",
+            sourceType: "default",
+            logoUrl: "",
+            logoExt: ".png",
+            version: 1,
+          },
           null,
           2,
         ),
@@ -234,72 +245,208 @@ export class FamilyService {
     }
   }
 
-  getBrandingConfig() {
-    this.ensureBrandingDefaults();
-    const raw = JSON.parse(readFileSync(this.getBrandingConfigPath(), "utf-8"));
+  private readBrandingConfig(familyId: string) {
+    this.ensureBrandingDefaults(familyId);
+    return JSON.parse(readFileSync(this.getBrandingConfigPath(familyId), "utf-8"));
+  }
+
+  private writeBrandingConfig(familyId: string, config: Record<string, unknown>) {
+    writeFileSync(this.getBrandingConfigPath(familyId), JSON.stringify(config, null, 2));
+  }
+
+
+  private hasGeneratedBrandingAssets(familyId: string) {
+    const generatedDir = join(this.getBrandingDir(familyId), "generated");
+    return [
+      "favicon-32.png",
+      "apple-180.png",
+      "pwa-192.png",
+      "pwa-512.png",
+      "preview-512.png",
+    ].every((name) => existsSync(join(generatedDir, name)));
+  }
+
+  private writeBrandingManifest(familyId: string, appTitle: string, background: string, version: number) {
+    const root = this.getBrandingPublicRoot(familyId);
+    const manifest = {
+      name: appTitle,
+      short_name: appTitle,
+      description: "Shared expense tracking application",
+      lang: "nb-NO",
+      dir: "ltr",
+      theme_color: background,
+      background_color: background,
+      display: "standalone",
+      orientation: "portrait",
+      scope: "/",
+      start_url: "/",
+      icons: [
+        {
+          src: `${root}/generated/pwa-192.png?v=${version}`,
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: `${root}/generated/pwa-192-maskable.png?v=${version}`,
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "maskable",
+        },
+        {
+          src: `${root}/generated/pwa-512.png?v=${version}`,
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: `${root}/generated/pwa-512-maskable.png?v=${version}`,
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
+        },
+      ],
+    };
+    writeFileSync(
+      join(this.getBrandingDir(familyId), "manifest.webmanifest"),
+      JSON.stringify(manifest, null, 2),
+      "utf-8",
+    );
+  }
+
+  getBrandingConfig(familyId: string) {
+    const raw = this.readBrandingConfig(familyId);
+    if (!this.hasGeneratedBrandingAssets(familyId)) {
+      this.regenerateBrandingAssets(familyId);
+    }
+    const version = Number(raw.version ?? 1);
+    const root = this.getBrandingPublicRoot(familyId);
+
     return {
       ...raw,
-      assetBase: "/uploads/branding/generated",
-      previewIconUrl: `/uploads/branding/generated/preview-512.png?v=${Date.now()}`,
+      version,
+      assetBase: `${root}/generated`,
+      manifestUrl: `${root}/manifest.webmanifest?v=${version}`,
+      previewIconUrl: `${root}/generated/preview-512.png?v=${version}`,
       logoSourceUrl:
         raw.sourceType === "upload"
-          ? `/uploads/branding/source${raw.logoExt ?? ".png"}?v=${Date.now()}`
-          : raw.logoUrl || "/logo-mark.svg",
+          ? `${root}/source${raw.logoExt ?? ".png"}?v=${version}`
+          : raw.logoUrl || "/apple-touch-icon.png",
     };
   }
 
-  saveBrandingConfig(data: { appTitle?: string; appIconBackground?: string; logoUrl?: string; resetLogo?: boolean; }) {
-    this.ensureBrandingDefaults();
-    const configPath = this.getBrandingConfigPath();
-    const current = JSON.parse(readFileSync(configPath, "utf-8"));
-    const next = { ...current };
+  saveBrandingConfig(
+    familyId: string,
+    data: {
+      appTitle?: string;
+      appIconBackground?: string;
+      logoUrl?: string;
+      resetLogo?: boolean;
+    },
+  ) {
+    const current = this.readBrandingConfig(familyId);
+    const next = { ...current } as Record<string, unknown>;
+
     if (data.appTitle !== undefined) next.appTitle = data.appTitle || "Kost";
-    if (data.appIconBackground !== undefined) next.appIconBackground = data.appIconBackground || "#0B1020";
+    if (data.appIconBackground !== undefined) {
+      next.appIconBackground = data.appIconBackground || "#0B1020";
+    }
     if (data.logoUrl !== undefined) {
-      next.logoUrl = data.logoUrl;
-      if (data.logoUrl) next.sourceType = "url";
+      next.logoUrl = data.logoUrl.trim();
+      if (data.logoUrl.trim()) {
+        next.sourceType = "url";
+      } else if (next.sourceType === "url") {
+        next.sourceType = "default";
+      }
     }
     if (data.resetLogo) {
       next.sourceType = "default";
       next.logoUrl = "";
+      const ext = String(next.logoExt ?? ".png");
+      const uploaded = join(this.getBrandingDir(familyId), `source${ext}`);
+      if (existsSync(uploaded)) {
+        rmSync(uploaded, { force: true });
+      }
     }
-    writeFileSync(configPath, JSON.stringify(next, null, 2));
-    this.regenerateBrandingAssets();
-    return this.getBrandingConfig();
+
+    next.version = Number(current.version ?? 1) + 1;
+    this.writeBrandingConfig(familyId, next);
+    this.regenerateBrandingAssets(familyId);
+    return this.getBrandingConfig(familyId);
   }
 
-  uploadBrandingLogo(file: { filename: string; originalname?: string }) {
-    this.ensureBrandingDefaults();
+  uploadBrandingLogo(
+    familyId: string,
+    file: { filename: string; originalname?: string },
+  ) {
+    const current = this.readBrandingConfig(familyId);
     const ext = extname(file.originalname || file.filename || ".png") || ".png";
-    const sourcePath = join(this.getBrandingDir(), `source${ext}`);
+    const dir = this.getBrandingDir(familyId);
+    const sourcePath = join(dir, `source${ext}`);
     copyFileSync(join(process.cwd(), "uploads", "branding", "tmp", file.filename), sourcePath);
 
-    const configPath = this.getBrandingConfigPath();
-    const current = JSON.parse(readFileSync(configPath, "utf-8"));
-    current.sourceType = "upload";
-    current.logoExt = ext;
-    current.logoUrl = "";
-    writeFileSync(configPath, JSON.stringify(current, null, 2));
-    this.regenerateBrandingAssets();
-    return this.getBrandingConfig();
+    const priorExt = String(current.logoExt ?? ".png");
+    if (priorExt !== ext) {
+      const oldSource = join(dir, `source${priorExt}`);
+      if (existsSync(oldSource)) {
+        rmSync(oldSource, { force: true });
+      }
+    }
+
+    const next = {
+      ...current,
+      sourceType: "upload",
+      logoExt: ext,
+      logoUrl: "",
+      version: Number(current.version ?? 1) + 1,
+    };
+
+    this.writeBrandingConfig(familyId, next);
+    this.regenerateBrandingAssets(familyId);
+    return this.getBrandingConfig(familyId);
   }
 
-  regenerateBrandingAssets() {
-    this.ensureBrandingDefaults();
+  private writeFallbackBrandingAssets(familyId: string) {
+    const generatedDir = join(this.getBrandingDir(familyId), "generated");
+    const fallback = join(process.cwd(), "public", "pwa-512x512.png");
+    [
+      "favicon-32.png",
+      "apple-180.png",
+      "pwa-192.png",
+      "pwa-512.png",
+      "pwa-192-maskable.png",
+      "pwa-512-maskable.png",
+      "preview-512.png",
+    ].forEach((name) => {
+      copyFileSync(fallback, join(generatedDir, name));
+    });
+  }
+
+  regenerateBrandingAssets(familyId: string) {
+    const config = this.readBrandingConfig(familyId);
+    const defaultRasterPath = join(process.cwd(), "public", "apple-touch-icon.png");
     const result = spawnSync(
       "python3",
-      [join(process.cwd(), "scripts", "generate_branding_assets.py"), this.getBrandingDir(), join(process.cwd(), "public", "logo-mark.svg")],
+      [
+        join(process.cwd(), "scripts", "generate_branding_assets.py"),
+        this.getBrandingDir(familyId),
+        defaultRasterPath,
+      ],
       { encoding: "utf-8" },
     );
 
     if (result.status !== 0) {
-      const generatedDir = join(this.getBrandingDir(), "generated");
-      const fallback = join(process.cwd(), "public", "pwa-512x512.png");
-      ["favicon-32.png", "apple-180.png", "pwa-192.png", "pwa-512.png", "preview-512.png"].forEach((name) => {
-        copyFileSync(fallback, join(generatedDir, name));
-      });
+      this.writeFallbackBrandingAssets(familyId);
     }
+
+    this.writeBrandingManifest(
+      familyId,
+      String(config.appTitle ?? "Kost"),
+      String(config.appIconBackground ?? "#0B1020"),
+      Number(config.version ?? 1),
+    );
   }
+
   async uploadVendorLogo(id: string, familyId: string, file: { filename: string }) {
     const vendor = await (this.prisma as any).vendor.findFirst({ where: { id, familyId } });
     if (!vendor) throw new NotFoundException(`Vendor ${id} not found`);

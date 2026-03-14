@@ -150,13 +150,14 @@ export class FamilyController {
 
   @Get("branding")
   @ApiOperation({ summary: "Get runtime branding configuration" })
-  getBranding() {
-    return this.familyService.getBrandingConfig();
+  getBranding(@CurrentUser("familyId") familyId: string) {
+    return this.familyService.getBrandingConfig(familyId);
   }
 
   @Patch("branding")
   @ApiOperation({ summary: "Update runtime branding configuration" })
   updateBranding(
+    @CurrentUser("familyId") familyId: string,
     @Body()
     data: {
       appTitle?: string;
@@ -165,7 +166,7 @@ export class FamilyController {
       resetLogo?: boolean;
     },
   ) {
-    return this.familyService.saveBrandingConfig(data);
+    return this.familyService.saveBrandingConfig(familyId, data);
   }
 
   @Post("branding/logo")
@@ -186,9 +187,12 @@ export class FamilyController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  uploadBrandingLogo(@UploadedFile() file: MulterFile) {
+  uploadBrandingLogo(
+    @UploadedFile() file: MulterFile,
+    @CurrentUser("familyId") familyId: string,
+  ) {
     if (!file) throw new BadRequestException("No file uploaded");
-    return this.familyService.uploadBrandingLogo(file);
+    return this.familyService.uploadBrandingLogo(familyId, file);
   }
 
   // ─── Vendors ─────────────────────────────────────────────────────────────────

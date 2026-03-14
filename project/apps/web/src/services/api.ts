@@ -211,6 +211,8 @@ export interface BrandingRuntimeConfig {
   logoSourceUrl: string;
   previewIconUrl: string;
   assetBase: string;
+  manifestUrl: string;
+  version: number;
 }
 
 export interface Subscription {

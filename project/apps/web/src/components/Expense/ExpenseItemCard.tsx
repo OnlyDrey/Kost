@@ -38,7 +38,7 @@ export default function ExpenseItemCard({
   vendor,
   description,
   typeLabel,
-  category,
+  category: _category,
   frequencyLabel,
   amountLabel,
   shareLabel,
@@ -51,12 +51,12 @@ export default function ExpenseItemCard({
   actionButton,
   footerContent,
   overdueLabel,
-  showPaidIcon = true,
+  showPaidIcon: _showPaidIcon = true,
   selected = false,
-  showPaymentStatusPill = true,
+  showPaymentStatusPill: _showPaymentStatusPill = true,
   focusRingClassName,
-  amountTone = "default",
-  paymentStatus,
+  amountTone: _amountTone = "default",
+  paymentStatus: _paymentStatus,
   amountDetails,
 }: ExpenseItemCardProps) {
   const { t } = useTranslation();
@@ -117,30 +117,32 @@ export default function ExpenseItemCard({
         {frequencyLabel && <TagPill label={frequencyLabel} variant="frequency" />}
       </div>
 
-      {(amountLabel || rightContent || actionButton || dateLabel) && (
-        <div className="grid grid-cols-2 gap-2 items-start">
-          <div className="min-w-0">
-            {amountLabel && (
-              <p className={`text-lg sm:text-2xl leading-tight font-bold m-0 break-words ${amountClass}`}>
-                {amountLabel}
-              </p>
-            )}
-            {shareLabel && <p className="text-xs text-app-text-secondary mt-0.5">{shareLabel}</p>}
-            {amountDetails?.map((line) => (
-              <p key={line} className="text-xs text-app-text-secondary mt-0">
-                {line}
-              </p>
-            ))}
-          </div>
-          <div className="min-w-0 flex flex-col items-end gap-1">
-            {dateLabel && <p className="text-xs text-app-text-secondary text-right">{dateLabel}</p>}
+      {(amountLabel || rightContent || actionButton || dateLabel || shareLabel || amountDetails?.length) && (
+        <div className="space-y-1">
+          <div className="flex items-start justify-between gap-2 min-w-0">
+            <div className="min-w-0 flex-1">
+              {amountLabel && (
+                <p className={`text-lg sm:text-2xl leading-tight font-bold m-0 break-words ${amountClass}`}>
+                  {amountLabel}
+                </p>
+              )}
+            </div>
             {(rightContent || actionButton) && (
-              <div className="ml-auto flex items-center gap-2">
+              <div className="shrink-0 flex items-center gap-2">
                 {rightContent && <div className="shrink-0">{rightContent}</div>}
                 {actionButton && <div className="shrink-0">{actionButton}</div>}
               </div>
             )}
           </div>
+          {(dateLabel || shareLabel || amountDetails?.length) && (
+            <div className="space-y-0.5 min-w-0">
+              {dateLabel && <p className="text-xs text-app-text-secondary">{dateLabel}</p>}
+              {shareLabel && <p className="text-xs text-app-text-secondary mt-0">{shareLabel}</p>}
+              {amountDetails?.map((line) => (
+                <p key={line} className="text-xs text-app-text-secondary mt-0">{line}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

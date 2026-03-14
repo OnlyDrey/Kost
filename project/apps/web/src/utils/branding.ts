@@ -48,47 +48,63 @@ function upsertLinkTag(rel: string, href: string, sizes?: string) {
   link.href = href;
 }
 
-function updateManifest(appTitle: string, background: string, base: string) {
-  const manifest = {
-    name: appTitle,
-    short_name: appTitle,
-    description: "Shared expense tracking application",
-    lang: "nb-NO",
-    dir: "ltr",
-    theme_color: background,
-    background_color: background,
-    display: "standalone",
-    orientation: "portrait",
-    scope: "/",
-    start_url: "/",
-    icons: [
-      {
-        src: `${base}/pwa-192.png`,
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any maskable",
-      },
-      {
-        src: `${base}/pwa-512.png`,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any maskable",
-      },
-    ],
-  };
-
-  const blob = new Blob([JSON.stringify(manifest)], {
-    type: "application/manifest+json",
-  });
-  const manifestUrl = URL.createObjectURL(blob);
-  const manifestLink =
-    document.querySelector<HTMLLinkElement>('link[rel="manifest"]') ??
-    document.createElement("link");
-  manifestLink.rel = "manifest";
-  manifestLink.href = manifestUrl;
-  if (!manifestLink.parentElement) {
-    document.head.appendChild(manifestLink);
+function upsertManifest(href: string) {
+  let link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "manifest";
+    document.head.appendChild(link);
   }
+  link.href = href;
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    image.src = src;
+  });
+}
+
+export async function renderIconDataUrl(
+  logoSrc: string,
+  background = DEFAULT_APP_ICON_BACKGROUND,
+  size = 192,
+): Promise<string> {
+  const image = await loadImage(logoSrc);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get canvas context");
+
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, size, size);
+
+  const padding = Math.round(size * 0.18);
+  const maxWidth = size - padding * 2;
+  const maxHeight = size - padding * 2;
+  const ratio = Math.min(maxWidth / image.width, maxHeight / image.height);
+  const width = image.width * ratio;
+  const height = image.height * ratio;
+  const x = (size - width) / 2;
+  const y = (size - height) / 2;
+
+  ctx.drawImage(image, x, y, width, height);
+  return canvas.toDataURL("image/png");
+}
+
+export async function generateBrandingIconBundle(branding?: BrandingVisualConfig) {
+  const logoSource = getCurrentLogoSource(branding).src;
+  const background = getCurrentIconBackground(branding);
+  return {
+    favicon32: await renderIconDataUrl(logoSource, background, 32),
+    apple180: await renderIconDataUrl(logoSource, background, 180),
+    pwa192: await renderIconDataUrl(logoSource, background, 192),
+    pwa512: await renderIconDataUrl(logoSource, background, 512),
+  };
 }
 
 export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
@@ -103,34 +119,25 @@ export async function applyBrandingIcons(branding?: BrandingVisualConfig) {
 
   try {
     const runtime = await familyApi.getBranding();
-    const base = `${runtime.data.assetBase}?v=${Date.now()}`;
-    upsertLinkTag("icon", `${runtime.data.assetBase}/favicon-32.png?v=${Date.now()}`);
-    upsertLinkTag(
-      "apple-touch-icon",
-      `${runtime.data.assetBase}/apple-180.png?v=${Date.now()}`,
-      "180x180",
-    );
-    upsertLinkTag("icon", `${runtime.data.assetBase}/pwa-192.png?v=${Date.now()}`, "192x192");
-    upsertLinkTag("icon", `${runtime.data.assetBase}/pwa-512.png?v=${Date.now()}`, "512x512");
-    updateManifest(appTitle, getCurrentIconBackground(branding), runtime.data.assetBase);
+    const { assetBase, previewIconUrl, manifestUrl, version } = runtime.data;
+
+    upsertLinkTag("icon", `${assetBase}/favicon-32.png?v=${version}`);
+    upsertLinkTag("shortcut icon", `${assetBase}/favicon-32.png?v=${version}`);
+    upsertLinkTag("apple-touch-icon", `${assetBase}/apple-180.png?v=${version}`, "180x180");
+    upsertLinkTag("icon", `${assetBase}/pwa-192.png?v=${version}`, "192x192");
+    upsertLinkTag("icon", `${assetBase}/pwa-512.png?v=${version}`, "512x512");
+    upsertManifest(manifestUrl);
+
+    if (import.meta.env.DEV) {
+      console.info("[BrandingIcons] runtime assets applied", {
+        version,
+        previewIconUrl,
+      });
+    }
   } catch {
     const fallbackLogo = getDefaultLogoUrl();
     upsertLinkTag("icon", fallbackLogo);
     upsertLinkTag("shortcut icon", fallbackLogo);
     upsertLinkTag("apple-touch-icon", fallbackLogo, "180x180");
   }
-}
-
-export async function renderIconDataUrl(logoSrc: string, _background?: string, _size?: number): Promise<string> {
-  return logoSrc;
-}
-
-export async function generateBrandingIconBundle(branding?: BrandingVisualConfig) {
-  const src = getCurrentLogo(branding);
-  return {
-    favicon32: src,
-    apple180: src,
-    pwa192: src,
-    pwa512: src,
-  };
 }

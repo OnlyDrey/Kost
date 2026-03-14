@@ -7,6 +7,7 @@ type UserOption = {
 };
 
 interface UserPickerSelectProps {
+  disabled?: boolean;
   label: string;
   value: string;
   users: UserOption[];
@@ -32,13 +33,18 @@ export default function UserPickerSelect({
   users,
   placeholder,
   onChange,
+  disabled = false,
 }: UserPickerSelectProps) {
   const selectedUser = users.find((user) => user.id === value);
 
   return (
     <div className="space-y-1.5">
       <label className="block text-xs font-semibold text-app-text-secondary">{label}</label>
-      <AppSelect value={value} onChange={(event) => onChange(event.target.value)}>
+      <AppSelect
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+      >
         <option value="">{placeholder}</option>
         {users.map((user) => (
           <option key={user.id} value={user.id}>
