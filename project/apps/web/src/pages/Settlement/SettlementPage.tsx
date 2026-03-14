@@ -11,6 +11,8 @@ import {
   Wallet,
 } from "lucide-react";
 import AppSelect from "../../components/Common/AppSelect";
+import MoneyInput from "../../components/Common/MoneyInput";
+import UserPickerSelect from "../../components/Common/UserPickerSelect";
 import PeriodStatusBadge from "../../components/Common/PeriodStatusBadge";
 import TileGrid from "../../components/Common/TileGrid";
 import SettlementSummaryCard from "../../components/Common/SettlementSummaryCard";
@@ -342,42 +344,25 @@ export default function SettlementPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <AppSelect
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <UserPickerSelect
+                    label={t("settlement.fromUser")}
                     value={planForm.fromUserId}
-                    onChange={(e) =>
-                      setPlanForm((prev) => ({
-                        ...prev,
-                        fromUserId: e.target.value,
-                      }))
+                    users={users}
+                    placeholder={t("settlement.fromUser")}
+                    onChange={(value) =>
+                      setPlanForm((prev) => ({ ...prev, fromUserId: value }))
                     }
-                    className={CONTROL_HEIGHT}
-                  >
-                    <option value="">{t("settlement.fromUser")}</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </AppSelect>
-
-                  <AppSelect
+                  />
+                  <UserPickerSelect
+                    label={t("settlement.toUser")}
                     value={planForm.toUserId}
-                    onChange={(e) =>
-                      setPlanForm((prev) => ({
-                        ...prev,
-                        toUserId: e.target.value,
-                      }))
+                    users={users}
+                    placeholder={t("settlement.toUser")}
+                    onChange={(value) =>
+                      setPlanForm((prev) => ({ ...prev, toUserId: value }))
                     }
-                    className={CONTROL_HEIGHT}
-                  >
-                    <option value="">{t("settlement.toUser")}</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </AppSelect>
+                  />
                 </div>
 
                 <AppSelect
@@ -402,7 +387,7 @@ export default function SettlementPage() {
                 </AppSelect>
 
                 {planForm.planType === "fixed_amount_per_period" && (
-                  <input
+                  <MoneyInput
                     value={planForm.configuredAmount}
                     onChange={(e) =>
                       setPlanForm((prev) => ({
@@ -410,7 +395,8 @@ export default function SettlementPage() {
                         configuredAmount: e.target.value,
                       }))
                     }
-                    className={inputCls}
+                    currencySymbol={currencySymbol}
+                    symbolPosition={symbolPosition as "Before" | "After"}
                     placeholder={t("settlement.fixedAmountPerPeriod")}
                   />
                 )}
@@ -477,50 +463,35 @@ export default function SettlementPage() {
           )}
 
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <AppSelect
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <UserPickerSelect
+                label={t("settlement.fromUser")}
                 value={entryForm.fromUserId}
-                onChange={(e) =>
-                  setEntryForm((prev) => ({
-                    ...prev,
-                    fromUserId: e.target.value,
-                  }))
+                users={users}
+                placeholder={t("settlement.fromUser")}
+                onChange={(value) =>
+                  setEntryForm((prev) => ({ ...prev, fromUserId: value }))
                 }
-                className={CONTROL_HEIGHT}
                 disabled={!isOpenPeriod}
-              >
-                <option value="">{t("settlement.fromUser")}</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </AppSelect>
-              <AppSelect
+              />
+              <UserPickerSelect
+                label={t("settlement.toUser")}
                 value={entryForm.toUserId}
-                onChange={(e) =>
-                  setEntryForm((prev) => ({
-                    ...prev,
-                    toUserId: e.target.value,
-                  }))
+                users={users}
+                placeholder={t("settlement.toUser")}
+                onChange={(value) =>
+                  setEntryForm((prev) => ({ ...prev, toUserId: value }))
                 }
-                className={CONTROL_HEIGHT}
                 disabled={!isOpenPeriod}
-              >
-                <option value="">{t("settlement.toUser")}</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </AppSelect>
+              />
             </div>
-            <input
+            <MoneyInput
               value={entryForm.amount}
               onChange={(e) =>
                 setEntryForm((prev) => ({ ...prev, amount: e.target.value }))
               }
-              className={inputCls}
+              currencySymbol={currencySymbol}
+              symbolPosition={symbolPosition as "Before" | "After"}
               placeholder={t("settlement.amount")}
               disabled={!isOpenPeriod}
             />
@@ -810,34 +781,19 @@ export default function SettlementPage() {
           </div>
         ) : transactionDialog.mode === "edit" ? (
           <div className="space-y-2">
-            <div className="rounded-lg border border-gray-300 bg-white px-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex h-11 items-center gap-2">
-                {symbolPosition === "Before" ? (
-                  <span className="pointer-events-none text-sm text-gray-500 dark:text-gray-400">
-                    {currencySymbol}
-                  </span>
-                ) : null}
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={transactionDialog.amount}
-                  onChange={(e) =>
-                    setTransactionDialog((prev) => ({
-                      ...prev,
-                      amount: e.target.value,
-                      error: "",
-                    }))
-                  }
-                  className="h-full w-full min-w-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-500 dark:text-gray-100"
-                  placeholder={t("settlement.amount")}
-                />
-                {symbolPosition === "After" ? (
-                  <span className="pointer-events-none text-sm text-gray-500 dark:text-gray-400">
-                    {currencySymbol}
-                  </span>
-                ) : null}
-              </div>
-            </div>
+            <MoneyInput
+              value={transactionDialog.amount}
+              onChange={(e) =>
+                setTransactionDialog((prev) => ({
+                  ...prev,
+                  amount: e.target.value,
+                  error: "",
+                }))
+              }
+              currencySymbol={currencySymbol}
+              symbolPosition={symbolPosition as "Before" | "After"}
+              placeholder={t("settlement.amount")}
+            />
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {(() => {
                 const normalized = transactionDialog.amount.replace(",", ".").trim();

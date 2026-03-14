@@ -202,6 +202,20 @@ export interface SettlementSummary {
   }>;
 }
 
+
+export interface BrandingRuntimeConfig {
+  appTitle: string;
+  appIconBackground: string;
+  sourceType: "default" | "upload" | "url";
+  logoUrl?: string;
+  logoSourceUrl: string;
+  previewIconUrl: string;
+  assetBase: string;
+  manifestUrl: string;
+  version: number;
+  isRuntimeIconOverride: boolean;
+}
+
 export interface Subscription {
   id: string;
   familyId: string;
@@ -459,6 +473,47 @@ export const familyApi = {
 
   uploadVendorLogo: (id: string, formData: FormData) =>
     api.post<Vendor>(`/family/vendors/${id}/logo`, formData),
+
+  getBranding: async () => {
+    try {
+      return await api.get<BrandingRuntimeConfig>("/family/branding");
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === undefined || status === 404 || status === 502 || status === 503) {
+        return api.get<BrandingRuntimeConfig>("/family/brandingproxy");
+      }
+      throw error;
+    }
+  },
+
+  updateBranding: async (data: {
+    appTitle?: string;
+    appIconBackground?: string;
+    logoUrl?: string;
+    resetLogo?: boolean;
+  }) => {
+    try {
+      return await api.patch<BrandingRuntimeConfig>("/family/branding", data);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === undefined || status === 404 || status === 502 || status === 503) {
+        return api.patch<BrandingRuntimeConfig>("/family/brandingproxy", data);
+      }
+      throw error;
+    }
+  },
+
+  uploadBrandingLogo: async (formData: FormData) => {
+    try {
+      return await api.post<BrandingRuntimeConfig>("/family/branding/logo", formData);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === undefined || status === 404 || status === 502 || status === 503) {
+        return api.post<BrandingRuntimeConfig>("/family/brandingproxy/logo", formData);
+      }
+      throw error;
+    }
+  },
 };
 
 export const subscriptionApi = {

@@ -24,6 +24,7 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
 COPY packages ./packages
 COPY apps/api ./apps/api
 COPY apps/web ./apps/web
+COPY scripts ./scripts
 
 RUN npm run build --workspace=@kost/shared
 RUN npm run generate --workspace=@kost/api
@@ -39,7 +40,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apk add --no-cache dumb-init openssl curl
+RUN apk add --no-cache dumb-init openssl curl python3 py3-pillow
 RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 
 COPY package.json package-lock.json ./
@@ -55,6 +56,7 @@ COPY --from=builder /tmp/prisma-artifacts/@prisma ./node_modules/@prisma
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/web/dist ./apps/api/public
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY apps/api/scripts /app/apps/api/scripts
 
