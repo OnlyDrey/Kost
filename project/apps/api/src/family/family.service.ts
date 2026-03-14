@@ -256,14 +256,7 @@ export class FamilyService {
 
 
   private hasGeneratedBrandingAssets(familyId: string) {
-    const generatedDir = join(this.getBrandingDir(familyId), "generated");
-    return [
-      "favicon-32.png",
-      "apple-180.png",
-      "pwa-192.png",
-      "pwa-512.png",
-      "preview-512.png",
-    ].every((name) => existsSync(join(generatedDir, name)));
+    return this.getGeneratedAssetDiagnostics(familyId).valid;
   }
 
   private writeBrandingManifest(familyId: string, appTitle: string, background: string, version: number) {
@@ -480,36 +473,64 @@ export class FamilyService {
 
   private generatedAssetSpecs() {
     return [
-      { name: "favicon-32.png", size: 32 },
-      { name: "apple-180.png", size: 180 },
-      { name: "pwa-192.png", size: 192 },
-      { name: "pwa-512.png", size: 512 },
-      { name: "pwa-192-maskable.png", size: 192 },
-      { name: "pwa-512-maskable.png", size: 512 },
-      { name: "preview-512.png", size: 512 },
+      { name: "favicon-16.png", size: 16, minBytes: 80 },
+      { name: "favicon-32.png", size: 32, minBytes: 100 },
+      { name: "apple-touch-icon.png", size: 180, minBytes: 180 },
+      { name: "icon-192.png", size: 192, minBytes: 200 },
+      { name: "icon-512.png", size: 512, minBytes: 300 },
+      { name: "icon-192-maskable.png", size: 192, minBytes: 200 },
+      { name: "icon-512-maskable.png", size: 512, minBytes: 300 },
+      { name: "preview-512.png", size: 512, minBytes: 300 },
+      { name: "pwa-192.png", size: 192, minBytes: 200 },
+      { name: "pwa-512.png", size: 512, minBytes: 300 },
+      { name: "pwa-192-maskable.png", size: 192, minBytes: 200 },
+      { name: "pwa-512-maskable.png", size: 512, minBytes: 300 },
+      { name: "apple-180.png", size: 180, minBytes: 180 },
     ] as const;
   }
 
-  private validateGeneratedBrandingAssets(familyId: string): boolean {
+  private getGeneratedAssetDiagnostics(familyId: string) {
     const generatedDir = join(this.getBrandingDir(familyId), "generated");
-    return this.generatedAssetSpecs().every(({ name, size }) => {
+    const generated: Array<{ name: string; bytes: number; width: number | null; height: number | null }> = [];
+    const missing: string[] = [];
+
+    const valid = this.generatedAssetSpecs().every(({ name, size, minBytes }) => {
       const filePath = join(generatedDir, name);
-      if (!existsSync(filePath)) return false;
+      if (!existsSync(filePath)) {
+        missing.push(name);
+        return false;
+      }
       const fileStat = statSync(filePath);
-      if (fileStat.size < 512) return false;
       const dimensions = this.parsePngDimensions(filePath);
-      return Boolean(
-        dimensions && dimensions.width === size && dimensions.height === size,
+      generated.push({
+        name,
+        bytes: fileStat.size,
+        width: dimensions?.width ?? null,
+        height: dimensions?.height ?? null,
+      });
+      if (!dimensions) return false;
+      return (
+        dimensions.width === size &&
+        dimensions.height === size &&
+        fileStat.size >= minBytes
       );
     });
+
+    return { valid, generated, missing };
   }
 
   private writeFallbackBrandingAssets(familyId: string) {
     const generatedDir = join(this.getBrandingDir(familyId), "generated");
     const publicDir = join(process.cwd(), "public");
     const defaultMapping: Record<string, string> = {
+      "favicon-16.png": "pwa-192x192.png",
       "favicon-32.png": "pwa-192x192.png",
+      "apple-touch-icon.png": "apple-touch-icon.png",
       "apple-180.png": "apple-touch-icon.png",
+      "icon-192.png": "pwa-192x192.png",
+      "icon-512.png": "pwa-512x512.png",
+      "icon-192-maskable.png": "pwa-192x192.png",
+      "icon-512-maskable.png": "pwa-512x512.png",
       "pwa-192.png": "pwa-192x192.png",
       "pwa-512.png": "pwa-512x512.png",
       "pwa-192-maskable.png": "pwa-192x192.png",
@@ -568,9 +589,9 @@ export class FamilyService {
       { encoding: "utf-8" },
     );
 
-    const generatedValid = this.validateGeneratedBrandingAssets(familyId);
+    const validation = this.getGeneratedAssetDiagnostics(familyId);
 
-    if (result.status !== 0 || !generatedValid) {
+    if (result.status !== 0 || !validation.valid) {
       console.warn("[Branding] Icon generation failed; using fallback assets", {
         familyId,
         cwd: process.cwd(),
@@ -593,7 +614,9 @@ export class FamilyService {
         stdout: result.stdout,
         stderr: result.stderr,
         spawnError: result.error?.message,
-        generatedValid,
+        validationValid: validation.valid,
+        generatedFiles: validation.generated,
+        missingFiles: validation.missing,
       });
       this.writeFallbackBrandingAssets(familyId);
     } else {
@@ -607,6 +630,8 @@ export class FamilyService {
         outputDir,
         pythonVersion: pythonCheck.stdout?.trim() || pythonCheck.stderr?.trim() || null,
         pillowVersion: pillowCheck.stdout?.trim() || null,
+        validationValid: validation.valid,
+        generatedFiles: validation.generated,
       });
     }
 

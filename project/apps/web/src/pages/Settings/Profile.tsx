@@ -683,7 +683,7 @@ export default function Profile() {
           disabled={uploadAvatar.isPending}
           aria-label={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
           title={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
+          className="absolute bottom-0 right-0 translate-x-1 translate-y-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
         >
           {uploadAvatar.isPending ? (
             <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

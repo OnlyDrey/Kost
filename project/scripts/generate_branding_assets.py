@@ -157,8 +157,14 @@ def main() -> int:
         base = _strip_background_if_embedded_icon(base, bg_rgb, Image)
 
     output_specs = [
+        (16, "favicon-16.png", 0.18),
         (32, "favicon-32.png", 0.18),
+        (180, "apple-touch-icon.png", 0.18),
         (180, "apple-180.png", 0.18),
+        (192, "icon-192.png", 0.18),
+        (512, "icon-512.png", 0.18),
+        (192, "icon-192-maskable.png", 0.10),
+        (512, "icon-512-maskable.png", 0.10),
         (192, "pwa-192.png", 0.18),
         (512, "pwa-512.png", 0.18),
         (192, "pwa-192-maskable.png", 0.10),
