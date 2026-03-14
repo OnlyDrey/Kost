@@ -5,7 +5,6 @@
 
 <p align="center">
 Kost is a self-hosted family finance and expense sharing application.
-<br />
 It helps households manage shared expenses, track payments, and calculate fair settlements between users.
 </p>
 
