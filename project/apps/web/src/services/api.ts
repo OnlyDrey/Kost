@@ -474,7 +474,17 @@ export const familyApi = {
   uploadVendorLogo: (id: string, formData: FormData) =>
     api.post<Vendor>(`/family/vendors/${id}/logo`, formData),
 
-  getBranding: () => api.get<BrandingRuntimeConfig>("/family/branding"),
+  getBranding: async () => {
+    try {
+      return await api.get<BrandingRuntimeConfig>("/family/branding");
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 404 || status === 502 || status === 503) {
+        return api.get<BrandingRuntimeConfig>("/family/brandingproxy");
+      }
+      throw error;
+    }
+  },
 
   updateBranding: (data: {
     appTitle?: string;

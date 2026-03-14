@@ -154,6 +154,13 @@ export class FamilyController {
     return this.familyService.getBrandingConfig(familyId);
   }
 
+
+  @Get("brandingproxy")
+  @ApiOperation({ summary: "Get runtime branding configuration (proxy-compatible alias)" })
+  getBrandingProxy(@CurrentUser("familyId") familyId: string) {
+    return this.familyService.getBrandingConfig(familyId);
+  }
+
   @Patch("branding")
   @ApiOperation({ summary: "Update runtime branding configuration" })
   updateBranding(

@@ -265,7 +265,11 @@ export default function Profile() {
       const background = resolveAppIconBackground(brandingAppIconBackground);
       try {
         const runtime = await familyApi.getBranding();
-        setBrandingIconPreviewUrl(runtime.data.previewIconUrl);
+        if (runtime.data.isRuntimeIconOverride) {
+          setBrandingIconPreviewUrl(runtime.data.previewIconUrl);
+        } else {
+          setBrandingIconPreviewUrl("/pwa-512x512.png");
+        }
         setBrandingIconWarning("");
       } catch {
         try {
@@ -273,7 +277,7 @@ export default function Profile() {
           setBrandingIconPreviewUrl(iconUrl);
           setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
         } catch {
-          setBrandingIconPreviewUrl(getDefaultLogoUrl());
+          setBrandingIconPreviewUrl("/pwa-512x512.png");
           setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
         }
       }
