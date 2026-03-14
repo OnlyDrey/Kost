@@ -67,7 +67,6 @@ import {
   getDefaultLogoUrl,
 } from "../../branding/brandingAssets";
 import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
-import { familyApi } from "../../services/api";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -264,27 +263,26 @@ export default function Profile() {
       }).src;
       const background = resolveAppIconBackground(brandingAppIconBackground);
       try {
-        const runtime = await familyApi.getBranding();
-        if (runtime.data.isRuntimeIconOverride) {
-          setBrandingIconPreviewUrl(runtime.data.previewIconUrl);
-        } else {
-          setBrandingIconPreviewUrl("/pwa-512x512.png");
-        }
+        const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
+        setBrandingIconPreviewUrl(iconUrl);
         setBrandingIconWarning("");
       } catch {
         try {
-          const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
-          setBrandingIconPreviewUrl(iconUrl);
-          setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
+          const fallbackIcon = await renderIconDataUrl(
+            getDefaultLogoUrl(),
+            background,
+            64,
+          );
+          setBrandingIconPreviewUrl(fallbackIcon);
         } catch {
-          setBrandingIconPreviewUrl("/pwa-512x512.png");
-          setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
+          setBrandingIconPreviewUrl(getDefaultLogoUrl());
         }
+        setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
       }
     };
 
     void renderPreview();
-  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground, brandingSaved]);
+  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground]);
 
   useEffect(() => {
     const tab = searchParams.get("tab") as SettingsPage | "family" | null;
@@ -329,13 +327,6 @@ export default function Profile() {
     setSearchParams(params, { replace: true });
   };
 
-
-  const dataUrlToFile = async (dataUrl: string, filename: string) => {
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-    return new File([blob], filename, { type: blob.type || "image/png" });
-  };
-
   const handleSaveCustomization = async (e: React.FormEvent) => {
     e.preventDefault();
     setBrandingError("");
@@ -358,31 +349,15 @@ export default function Profile() {
     }
 
     try {
-      const normalizedTitle = brandingTitle.trim() || settings.branding.appTitle;
-      const normalizedIconBg = resolveAppIconBackground(brandingAppIconBackground);
-
-      await familyApi.updateBranding({
-        appTitle: normalizedTitle,
-        appIconBackground: normalizedIconBg,
-        logoUrl: brandingLogoUrl.trim(),
-        resetLogo: !brandingLogoDataUrl.trim() && !brandingLogoUrl.trim(),
-      });
-
-      if (brandingLogoDataUrl.trim()) {
-        const formData = new FormData();
-        formData.append("logo", await dataUrlToFile(brandingLogoDataUrl.trim(), "branding-upload.png"));
-        await familyApi.uploadBrandingLogo(formData);
-      }
-
-
       setBranding({
-        appTitle: normalizedTitle,
+        appTitle: brandingTitle.trim() || settings.branding.appTitle,
         logoDataUrl: brandingLogoDataUrl.trim(),
         logoUrl: brandingLogoUrl.trim(),
         primaryPreset: brandingPreset,
-        appIconBackground: normalizedIconBg,
+        appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
         showVendorImages: brandingShowVendorImages,
       });
+
       if (draftCurrency !== currency) {
         await updateCurrency.mutateAsync(draftCurrency);
       }
@@ -393,8 +368,10 @@ export default function Profile() {
 
       setBrandingSaved(true);
       window.setTimeout(() => setBrandingSaved(false), 2000);
-    } catch {
-      setBrandingError(t("errors.serverError"));
+    } catch (err) {
+      setBrandingError(
+        err instanceof Error ? err.message : t("errors.generic"),
+      );
     }
   };
 
@@ -404,7 +381,7 @@ export default function Profile() {
 
     if (
       !file.type.startsWith("image/") ||
-      !/\.(png|jpe?g|webp)$/i.test(file.name)
+      !/\.(svg|png|jpe?g|webp)$/i.test(file.name)
     ) {
       setBrandingError(t("settings.brandingInvalidImage"));
       return;
@@ -652,45 +629,21 @@ export default function Profile() {
   ];
 
   // ---- Avatar block ----
-  const hasAvatar = Boolean(user?.avatarUrl);
-
   const AvatarBlock = () => (
     <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <div
-        className={`relative w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-semibold overflow-hidden ${
-          hasAvatar
-            ? "bg-primary"
-            : "bg-primary/85 ring-2 ring-dashed ring-primary/40"
-        }`}
-      >
-        {hasAvatar ? (
+      <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-semibold overflow-hidden">
+        {user?.avatarUrl ? (
           <img
-            src={user?.avatarUrl ?? undefined}
-            alt={user?.name ?? ""}
+            src={user.avatarUrl}
+            alt={user.name}
             className="w-full h-full object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         ) : (
-          <>
-            <span>{user?.name.charAt(0).toUpperCase()}</span>
-          </>
+          user?.name.charAt(0).toUpperCase()
         )}
-        <button
-          type="button"
-          onClick={() => avatarInputRef.current?.click()}
-          disabled={uploadAvatar.isPending}
-          aria-label={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          title={hasAvatar ? t("settings.changePhoto") : t("settings.choosePhoto")}
-          className="absolute bottom-0 right-0 translate-x-1 translate-y-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
-        >
-          {uploadAvatar.isPending ? (
-            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Camera size={15} />
-          )}
-        </button>
       </div>
       <input
         ref={avatarInputRef}
@@ -699,8 +652,30 @@ export default function Profile() {
         className="hidden"
         onChange={handleAvatarFile}
       />
-      <div className="flex items-center justify-center gap-2 min-h-8">
-        {hasAvatar && (
+      <div className="flex items-center justify-center gap-2 w-full">
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={uploadAvatar.isPending}
+          aria-label={
+            user?.avatarUrl
+              ? t("settings.changePhoto")
+              : t("settings.choosePhoto")
+          }
+          title={
+            user?.avatarUrl
+              ? t("settings.changePhoto")
+              : t("settings.choosePhoto")
+          }
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-60"
+        >
+          {uploadAvatar.isPending ? (
+            <span className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Camera size={14} />
+          )}
+        </button>
+        {user?.avatarUrl && (
           <button
             type="button"
             onClick={handleRemoveAvatar}
@@ -718,8 +693,12 @@ export default function Profile() {
         )}
       </div>
       <div className="flex flex-col gap-1.5">
-        {avatarError && <p className="text-xs text-red-500 dark:text-red-400">{avatarError}</p>}
-        <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
+        {avatarError && (
+          <p className="text-xs text-red-500 dark:text-red-400">
+            {avatarError}
+          </p>
+        )}
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           {t("settings.photoHint")}
         </p>
       </div>
@@ -1541,7 +1520,7 @@ export default function Profile() {
                         <input
                           ref={brandingLogoInputRef}
                           type="file"
-                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                          accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp"
                           onChange={handleBrandingLogoFile}
                           className="hidden"
                         />
@@ -1609,10 +1588,6 @@ export default function Profile() {
                           src={brandingIconPreviewUrl}
                           alt={t("settings.brandingAppIconPreview")}
                           className="w-10 h-10 rounded-md border border-border bg-surface-elevated object-contain"
-                          onError={(event) => {
-                            event.currentTarget.src = getDefaultLogoUrl();
-                            setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
-                          }}
                         />
                       </div>
                       {brandingIconWarning && (
