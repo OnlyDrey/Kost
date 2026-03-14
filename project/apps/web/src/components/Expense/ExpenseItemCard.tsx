@@ -1,10 +1,9 @@
-import { CheckCircle2 } from "lucide-react";
+
 import { useTranslation } from "react-i18next";
 import TagPill from "../Common/TagPill";
 import { useSettings } from "../../stores/settings.context";
 import VendorAvatar from "../Common/VendorAvatar";
 import { FOCUS_RING_STRONG } from "../Common/focusStyles";
-import InvoiceStatusTag from "../Common/InvoiceStatusTag";
 import type { InvoiceStatus } from "../../utils/invoiceStatus";
 
 import type { ReactNode } from "react";
@@ -108,64 +107,40 @@ export default function ExpenseItemCard({
       </div>
 
       <div className="w-full flex flex-wrap gap-1">
-        {showPaymentStatusPill && (
-          <InvoiceStatusTag
-            status={
-              paymentStatus ?? (paid ? "PAID" : overdue ? "OVERDUE" : "UNPAID")
-            }
-          />
-        )}
         {overdue && (
           <TagPill
             label={overdueLabel ?? t("invoice.statusOverdue")}
             variant="danger"
           />
         )}
-        {paid && showPaidIcon && (
-          <span className="inline-flex items-center gap-1 text-success text-xs">
-            <CheckCircle2 size={12} className="text-success" />
-          </span>
-        )}
         <TagPill label={typeLabel} variant="type" />
-        {category && <TagPill label={category} variant="category" />}
-        {frequencyLabel && (
-          <TagPill label={frequencyLabel} variant="frequency" />
-        )}
+        {frequencyLabel && <TagPill label={frequencyLabel} variant="frequency" />}
       </div>
 
-      {(amountLabel || rightContent || actionButton) && (
-        <div className="flex items-center justify-between gap-2 min-w-0">
-          <div className="min-w-0 flex-1">
+      {(amountLabel || rightContent || actionButton || dateLabel) && (
+        <div className="grid grid-cols-2 gap-2 items-start">
+          <div className="min-w-0">
             {amountLabel && (
-              <p
-                className={`text-xl sm:text-2xl leading-none font-bold m-0 ${amountClass}`}
-              >
+              <p className={`text-lg sm:text-2xl leading-tight font-bold m-0 break-words ${amountClass}`}>
                 {amountLabel}
               </p>
             )}
+            {shareLabel && <p className="text-xs text-app-text-secondary mt-0.5">{shareLabel}</p>}
+            {amountDetails?.map((line) => (
+              <p key={line} className="text-xs text-app-text-secondary mt-0">
+                {line}
+              </p>
+            ))}
           </div>
-          {(rightContent || actionButton) && (
-            <div className="ml-auto flex items-center gap-2">
-              {rightContent && <div className="shrink-0">{rightContent}</div>}
-              {actionButton && <div className="shrink-0">{actionButton}</div>}
-            </div>
-          )}
-        </div>
-      )}
-
-      {(shareLabel || amountDetails?.length || dateLabel) && (
-        <div className="space-y-0.5">
-          {shareLabel && (
-            <p className="text-xs text-app-text-secondary mt-0">{shareLabel}</p>
-          )}
-          {amountDetails?.map((line) => (
-            <p key={line} className="text-xs text-app-text-secondary mt-0">
-              {line}
-            </p>
-          ))}
-          {dateLabel && (
-            <p className="text-xs text-app-text-secondary">{dateLabel}</p>
-          )}
+          <div className="min-w-0 flex flex-col items-end gap-1">
+            {dateLabel && <p className="text-xs text-app-text-secondary text-right">{dateLabel}</p>}
+            {(rightContent || actionButton) && (
+              <div className="ml-auto flex items-center gap-2">
+                {rightContent && <div className="shrink-0">{rightContent}</div>}
+                {actionButton && <div className="shrink-0">{actionButton}</div>}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

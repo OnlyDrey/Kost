@@ -31,6 +31,7 @@ import {
   getCurrencySymbol,
 } from "../../utils/currency";
 import UserSelectionCards from "../../components/Distribution/UserSelectionCards";
+import MoneyInput from "../../components/Common/MoneyInput";
 import UserSingleSelect from "../../components/Distribution/UserSingleSelect";
 import { useAuth } from "../../stores/auth.context";
 import { isPeriodClosed } from "../../utils/periodStatus";
@@ -807,28 +808,15 @@ export default function AddExpense() {
               <div className="grid grid-cols-2 gap-3 md:gap-6">
                 <div className="min-w-0">
                   <label className={labelCls}>{t("invoice.amount")} *</label>
-                  <div className="relative flex items-center">
-                    {symbolPosition === "Before" && (
-                      <span className="absolute left-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                        {currencySymbol}
-                      </span>
-                    )}
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      required
-                      step="0.01"
-                      min="0"
-                      className={`${inputCls} text-right ${symbolPosition === "Before" ? "pl-8" : "pr-8"}`}
-                      placeholder="0.00"
-                    />
-                    {symbolPosition === "After" && (
-                      <span className="absolute right-3.5 text-sm text-gray-500 dark:text-gray-400 pointer-events-none select-none">
-                        {currencySymbol}
-                      </span>
-                    )}
-                  </div>
+                  <MoneyInput
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    min="0"
+                    currencySymbol={currencySymbol}
+                    symbolPosition={symbolPosition as "Before" | "After"}
+                    placeholder="0.00"
+                  />
                 </div>
                 <div className="min-w-0">
                   <label className={labelCls}>

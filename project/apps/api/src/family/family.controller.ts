@@ -146,6 +146,51 @@ export class FamilyController {
     return this.familyService.updateCurrencySymbolPosition(familyId, position?.trim());
   }
 
+  // ─── Runtime branding ─────────────────────────────────────────────────────────
+
+  @Get("branding")
+  @ApiOperation({ summary: "Get runtime branding configuration" })
+  getBranding() {
+    return this.familyService.getBrandingConfig();
+  }
+
+  @Patch("branding")
+  @ApiOperation({ summary: "Update runtime branding configuration" })
+  updateBranding(
+    @Body()
+    data: {
+      appTitle?: string;
+      appIconBackground?: string;
+      logoUrl?: string;
+      resetLogo?: boolean;
+    },
+  ) {
+    return this.familyService.saveBrandingConfig(data);
+  }
+
+  @Post("branding/logo")
+  @ApiOperation({ summary: "Upload runtime branding logo image" })
+  @UseInterceptors(
+    FileInterceptor("logo", {
+      storage: diskStorage({
+        destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+          const dir = join(process.cwd(), "uploads", "branding", "tmp");
+          mkdirSync(dir, { recursive: true });
+          cb(null, dir);
+        },
+        filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+          const ext = extname(file.originalname).toLowerCase() || ".png";
+          cb(null, `upload-${Date.now()}${ext}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  uploadBrandingLogo(@UploadedFile() file: MulterFile) {
+    if (!file) throw new BadRequestException("No file uploaded");
+    return this.familyService.uploadBrandingLogo(file);
+  }
+
   // ─── Vendors ─────────────────────────────────────────────────────────────────
 
   @Get("vendors")

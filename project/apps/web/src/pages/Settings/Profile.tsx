@@ -67,6 +67,7 @@ import {
   getDefaultLogoUrl,
 } from "../../branding/brandingAssets";
 import { SUPPORTED_CURRENCIES } from "../../constants/currencyOptions";
+import { familyApi } from "../../services/api";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm";
@@ -263,26 +264,23 @@ export default function Profile() {
       }).src;
       const background = resolveAppIconBackground(brandingAppIconBackground);
       try {
-        const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
-        setBrandingIconPreviewUrl(iconUrl);
+        const runtime = await familyApi.getBranding();
+        setBrandingIconPreviewUrl(runtime.data.previewIconUrl);
         setBrandingIconWarning("");
       } catch {
         try {
-          const fallbackIcon = await renderIconDataUrl(
-            getDefaultLogoUrl(),
-            background,
-            64,
-          );
-          setBrandingIconPreviewUrl(fallbackIcon);
+          const iconUrl = await renderIconDataUrl(logoSrc, background, 192);
+          setBrandingIconPreviewUrl(iconUrl);
+          setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
         } catch {
           setBrandingIconPreviewUrl(getDefaultLogoUrl());
+          setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
         }
-        setBrandingIconWarning(t("settings.brandingIconGenerationFailed"));
       }
     };
 
     void renderPreview();
-  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground]);
+  }, [brandingLogoDataUrl, brandingLogoUrl, brandingAppIconBackground, brandingSaved]);
 
   useEffect(() => {
     const tab = searchParams.get("tab") as SettingsPage | "family" | null;
@@ -327,6 +325,13 @@ export default function Profile() {
     setSearchParams(params, { replace: true });
   };
 
+
+  const dataUrlToFile = async (dataUrl: string, filename: string) => {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    return new File([blob], filename, { type: blob.type || "image/png" });
+  };
+
   const handleSaveCustomization = async (e: React.FormEvent) => {
     e.preventDefault();
     setBrandingError("");
@@ -349,14 +354,30 @@ export default function Profile() {
     }
 
     try {
+      const normalizedTitle = brandingTitle.trim() || settings.branding.appTitle;
+      const normalizedIconBg = resolveAppIconBackground(brandingAppIconBackground);
+
       setBranding({
-        appTitle: brandingTitle.trim() || settings.branding.appTitle,
+        appTitle: normalizedTitle,
         logoDataUrl: brandingLogoDataUrl.trim(),
         logoUrl: brandingLogoUrl.trim(),
         primaryPreset: brandingPreset,
-        appIconBackground: resolveAppIconBackground(brandingAppIconBackground),
+        appIconBackground: normalizedIconBg,
         showVendorImages: brandingShowVendorImages,
       });
+
+      await familyApi.updateBranding({
+        appTitle: normalizedTitle,
+        appIconBackground: normalizedIconBg,
+        logoUrl: brandingLogoUrl.trim(),
+        resetLogo: !brandingLogoDataUrl.trim() && !brandingLogoUrl.trim(),
+      });
+
+      if (brandingLogoDataUrl.trim()) {
+        const formData = new FormData();
+        formData.append("logo", await dataUrlToFile(brandingLogoDataUrl.trim(), "branding-upload.png"));
+        await familyApi.uploadBrandingLogo(formData);
+      }
 
       if (draftCurrency !== currency) {
         await updateCurrency.mutateAsync(draftCurrency);

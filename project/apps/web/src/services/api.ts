@@ -202,6 +202,17 @@ export interface SettlementSummary {
   }>;
 }
 
+
+export interface BrandingRuntimeConfig {
+  appTitle: string;
+  appIconBackground: string;
+  sourceType: "default" | "upload" | "url";
+  logoUrl?: string;
+  logoSourceUrl: string;
+  previewIconUrl: string;
+  assetBase: string;
+}
+
 export interface Subscription {
   id: string;
   familyId: string;
@@ -459,6 +470,18 @@ export const familyApi = {
 
   uploadVendorLogo: (id: string, formData: FormData) =>
     api.post<Vendor>(`/family/vendors/${id}/logo`, formData),
+
+  getBranding: () => api.get<BrandingRuntimeConfig>("/family/branding"),
+
+  updateBranding: (data: {
+    appTitle?: string;
+    appIconBackground?: string;
+    logoUrl?: string;
+    resetLogo?: boolean;
+  }) => api.patch<BrandingRuntimeConfig>("/family/branding", data),
+
+  uploadBrandingLogo: (formData: FormData) =>
+    api.post<BrandingRuntimeConfig>("/family/branding/logo", formData),
 };
 
 export const subscriptionApi = {

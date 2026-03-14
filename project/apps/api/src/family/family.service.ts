@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
+import { spawnSync } from "child_process";
 import { PrismaService } from "../prisma/prisma.service";
-import { existsSync, unlinkSync } from "fs";
-import { join } from "path";
+import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "fs";
+import { extname, join } from "path";
 
 @Injectable()
 export class FamilyService {
@@ -206,6 +207,99 @@ export class FamilyService {
     if (existsSync(filePath)) unlinkSync(filePath);
   }
 
+
+
+  private getBrandingDir() {
+    return join(process.cwd(), "uploads", "branding");
+  }
+
+  private getBrandingConfigPath() {
+    return join(this.getBrandingDir(), "config.json");
+  }
+
+  private ensureBrandingDefaults() {
+    const dir = this.getBrandingDir();
+    mkdirSync(join(dir, "generated"), { recursive: true });
+
+    const configPath = this.getBrandingConfigPath();
+    if (!existsSync(configPath)) {
+      writeFileSync(
+        configPath,
+        JSON.stringify(
+          { appTitle: "Kost", appIconBackground: "#0B1020", sourceType: "default", logoUrl: "" },
+          null,
+          2,
+        ),
+      );
+    }
+  }
+
+  getBrandingConfig() {
+    this.ensureBrandingDefaults();
+    const raw = JSON.parse(readFileSync(this.getBrandingConfigPath(), "utf-8"));
+    return {
+      ...raw,
+      assetBase: "/uploads/branding/generated",
+      previewIconUrl: `/uploads/branding/generated/preview-512.png?v=${Date.now()}`,
+      logoSourceUrl:
+        raw.sourceType === "upload"
+          ? `/uploads/branding/source${raw.logoExt ?? ".png"}?v=${Date.now()}`
+          : raw.logoUrl || "/logo-mark.svg",
+    };
+  }
+
+  saveBrandingConfig(data: { appTitle?: string; appIconBackground?: string; logoUrl?: string; resetLogo?: boolean; }) {
+    this.ensureBrandingDefaults();
+    const configPath = this.getBrandingConfigPath();
+    const current = JSON.parse(readFileSync(configPath, "utf-8"));
+    const next = { ...current };
+    if (data.appTitle !== undefined) next.appTitle = data.appTitle || "Kost";
+    if (data.appIconBackground !== undefined) next.appIconBackground = data.appIconBackground || "#0B1020";
+    if (data.logoUrl !== undefined) {
+      next.logoUrl = data.logoUrl;
+      if (data.logoUrl) next.sourceType = "url";
+    }
+    if (data.resetLogo) {
+      next.sourceType = "default";
+      next.logoUrl = "";
+    }
+    writeFileSync(configPath, JSON.stringify(next, null, 2));
+    this.regenerateBrandingAssets();
+    return this.getBrandingConfig();
+  }
+
+  uploadBrandingLogo(file: { filename: string; originalname?: string }) {
+    this.ensureBrandingDefaults();
+    const ext = extname(file.originalname || file.filename || ".png") || ".png";
+    const sourcePath = join(this.getBrandingDir(), `source${ext}`);
+    copyFileSync(join(process.cwd(), "uploads", "branding", "tmp", file.filename), sourcePath);
+
+    const configPath = this.getBrandingConfigPath();
+    const current = JSON.parse(readFileSync(configPath, "utf-8"));
+    current.sourceType = "upload";
+    current.logoExt = ext;
+    current.logoUrl = "";
+    writeFileSync(configPath, JSON.stringify(current, null, 2));
+    this.regenerateBrandingAssets();
+    return this.getBrandingConfig();
+  }
+
+  regenerateBrandingAssets() {
+    this.ensureBrandingDefaults();
+    const result = spawnSync(
+      "python3",
+      [join(process.cwd(), "scripts", "generate_branding_assets.py"), this.getBrandingDir(), join(process.cwd(), "public", "logo-mark.svg")],
+      { encoding: "utf-8" },
+    );
+
+    if (result.status !== 0) {
+      const generatedDir = join(this.getBrandingDir(), "generated");
+      const fallback = join(process.cwd(), "public", "pwa-512x512.png");
+      ["favicon-32.png", "apple-180.png", "pwa-192.png", "pwa-512.png", "preview-512.png"].forEach((name) => {
+        copyFileSync(fallback, join(generatedDir, name));
+      });
+    }
+  }
   async uploadVendorLogo(id: string, familyId: string, file: { filename: string }) {
     const vendor = await (this.prisma as any).vendor.findFirst({ where: { id, familyId } });
     if (!vendor) throw new NotFoundException(`Vendor ${id} not found`);
